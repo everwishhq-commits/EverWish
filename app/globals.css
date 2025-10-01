@@ -1,9 +1,12 @@
-/* app/globals.css */
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes progress {
+  0% { width: 10%; }
+  100% { width: 100%; }
 }
-h1 {
-  text-align: center;
-  margin-top: 50px;
+
+.animate-progress {
+  animation: progress 3s ease-in-out forwards;
 }
