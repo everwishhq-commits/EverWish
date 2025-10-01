@@ -1,15 +1,15 @@
 // app/layout.js
+import './globals.css';
+
 export const metadata = {
-  title: "Everwish",
-  description: "Choose your card and surprise instantly ✨",
+  title: 'Everwish',
+  description: 'Digital cards app',
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body>
-        {children}
-      </body>
+    <html lang="es">
+      <body>{children}</body>
     </html>
   );
 }
