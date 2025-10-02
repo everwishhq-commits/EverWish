@@ -2,26 +2,15 @@
 import { useEffect, useState } from "react";
 
 export default function Splash() {
-  const [progress, setProgress] = useState(10);
-  const [hidden, setHidden] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (progress < 100) {
-      const interval = setInterval(() => {
-        setProgress((prev) => {
-          const next = prev + 10;
-          if (next >= 100) {
-            clearInterval(interval);
-            setTimeout(() => setHidden(true), 500); // espera un poco antes de ocultar
-          }
-          return next;
-        });
-      }, 300); // 3 segundos total
-      return () => clearInterval(interval);
-    }
-  }, [progress]);
+    // Splash dura 3 segundos
+    const timer = setTimeout(() => setLoading(false), 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
-  if (hidden) return null;
+  if (!loading) return null; // Cuando termina, desaparece
 
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center bg-white z-50">
@@ -29,15 +18,24 @@ export default function Splash() {
       <img
         src="/logo.png"
         alt="Everwish Logo"
-        className="w-40 h-40 object-contain animate-pulse"
+        className="h-32 w-auto animate-pulse"
       />
-      {/* Barra de progreso */}
-      <div className="w-1/2 h-2 bg-pink-200 rounded-full mt-4 overflow-hidden">
-        <div
-          className="h-2 bg-pink-500 transition-all duration-300"
-          style={{ width: `${progress}%` }}
-        />
+
+      {/* Barra de carga */}
+      <div className="w-40 h-2 bg-gray-200 rounded-full mt-6 overflow-hidden">
+        <div className="h-2 bg-pink-500 animate-[progress_3s_linear_forwards]"></div>
       </div>
+
+      <style jsx>{`
+        @keyframes progress {
+          from {
+            width: 10%;
+          }
+          to {
+            width: 100%;
+          }
+        }
+      `}</style>
     </div>
   );
 }
