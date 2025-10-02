@@ -1,5 +1,5 @@
-import Header from "./components/Header";
-import Splash from "./components/Splash";
+import Header from "./components/header";
+import Splash from "./components/splash";
 
 export default function Page() {
   return (
