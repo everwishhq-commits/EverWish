@@ -1,49 +1,45 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
-    window.addEventListener("scroll", onScroll, { passive: true });
+    const onScroll = () => {
+      setScrolled(window.scrollY > 50);
+    };
+    window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   return (
-    <header className="fixed top-0 left-0 w-full bg-white shadow z-40">
-      {/* Contenedor interno para controlar transición */}
-      <div className="relative mx-auto w-full max-w-6xl">
-        {/* Altura del header (varía según estado) */}
-        <div className={`${scrolled ? "h-16" : "h-28"} transition-all duration-700 ease-in-out`} />
-
-        {/* LOGO: posición absoluta que se anima del centro a la izquierda */}
+    <header
+      className={`fixed top-0 w-full z-40 bg-white shadow transition-all duration-500 ${
+        scrolled ? "py-2" : "py-6"
+      }`}
+    >
+      <div className="max-w-6xl mx-auto flex flex-col items-center md:flex-row md:justify-between px-4">
+        {/* Logo */}
         <div
-          className={`absolute top-3 transition-all duration-700 ease-in-out
-            ${scrolled ? "left-4 -translate-x-0 scale-90" : "left-1/2 -translate-x-1/2 scale-100"}`}
+          className={`transition-all duration-500 ${
+            scrolled ? "scale-75 self-start md:self-center" : "scale-100"
+          }`}
         >
-          <Image
-            src="/logo.png"
-            alt="Everwish"
-            width={170}
-            height={64}
-            priority
-            className="object-contain"
-          />
+          <Image src="/logo.png" alt="everwish" width={160} height={60} />
         </div>
 
-        {/* MENÚ: inicia debajo del logo; con scroll sube y se alinea a la derecha */}
+        {/* Menú */}
         <nav
-          className={`transition-all duration-700 ease-in-out flex flex-wrap items-center gap-x-6 gap-y-2
-            text-gray-800 font-medium
-            ${scrolled ? "h-16 pl-28 justify-end" : "h-auto pt-20 justify-center"}`}
+          className={`flex gap-6 mt-3 md:mt-0 transition-all duration-500 ${
+            scrolled ? "justify-start" : "justify-center"
+          }`}
         >
-          <a href="#">Login</a>
-          <a href="#">Cart</a>
-          <a href="#">Planes</a>
-          <a href="#">Promo</a>
-          <a href="#">Categorías</a>
+          <a href="#" className="hover:text-pink-600">Login</a>
+          <a href="#" className="hover:text-pink-600">Cart</a>
+          <a href="#" className="hover:text-pink-600">Planes</a>
+          <a href="#" className="hover:text-pink-600">Promo</a>
+          <a href="#" className="hover:text-pink-600">Categorías</a>
         </nav>
       </div>
     </header>
