@@ -11,7 +11,7 @@ const categories = [
 
 export default function Categories() {
   return (
-    <div className="bg-white p-8 rounded-lg shadow-md">
+    <div className="bg-white p-8 rounded-lg shadow-md mt-12">
       <h2 className="text-2xl font-bold mb-6">Categories</h2>
       <div className="flex flex-wrap justify-center gap-8">
         {categories.map((cat, i) => (
