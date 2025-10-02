@@ -12,7 +12,16 @@ export default function Home() {
   if (loading) {
     return (
       <div className="fixed inset-0 flex flex-col items-center justify-center bg-black text-white">
-        <img src="/logo.png" alt="Everwish Logo" className="w-40 h-auto animate-pulse" />
+        {/* círculo con el logo */}
+        <div className="flex items-center justify-center w-48 h-48 rounded-full bg-white shadow-lg">
+          <img
+            src="/logo.png"
+            alt="Everwish Logo"
+            className="w-32 h-auto animate-pulse"
+          />
+        </div>
+
+        {/* barra de progreso */}
         <div className="w-56 h-2 bg-gray-700 rounded-full mt-6 overflow-hidden">
           <div
             className="h-2 bg-pink-500 rounded-full animate-[progress_3s_linear_forwards]"
