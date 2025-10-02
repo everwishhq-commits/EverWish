@@ -15,41 +15,37 @@ export default function Header() {
 
   return (
     <header
-      className={`fixed top-0 left-0 w-full bg-white shadow transition-all duration-500 z-40 ${
-        scrolled ? "h-14" : "h-24"
-      }`}
+      className={`fixed top-0 left-0 w-full bg-white shadow transition-all duration-500 z-40
+      ${scrolled ? "h-16 flex-row justify-between px-6" : "h-28 flex-col items-center"}
+      flex`}
     >
-      <div className="flex flex-col items-center justify-center md:flex-row md:justify-between h-full px-6">
-        {/* Logo */}
-        <div
-          className={`transition-all duration-500 ${
-            scrolled
-              ? "w-20 md:w-24 absolute left-6 top-1/2 -translate-y-1/2"
-              : "w-28 md:w-32"
-          }`}
-        >
-          <Image
-            src="/logo.png"
-            alt="Everwish Logo"
-            width={150}
-            height={60}
-            className="object-contain"
-          />
-        </div>
-
-        {/* Menú */}
-        <nav
-          className={`transition-all duration-500 text-gray-800 font-medium text-sm md:text-base flex flex-wrap gap-x-6 gap-y-2 justify-center ${
-            scrolled ? "ml-28" : "mt-16"
-          }`}
-        >
-          <a href="#">Login</a>
-          <a href="#">Cart</a>
-          <a href="#">Planes</a>
-          <a href="#">Promo</a>
-          <a href="#">Categorías</a>
-        </nav>
+      {/* Logo */}
+      <div
+        className={`transition-all duration-500 ${
+          scrolled ? "w-20" : "w-28"
+        }`}
+      >
+        <Image
+          src="/logo.png"
+          alt="Everwish Logo"
+          width={160}
+          height={70}
+          className="object-contain"
+        />
       </div>
+
+      {/* Menú */}
+      <nav
+        className={`flex gap-6 font-medium text-gray-800 text-sm md:text-base transition-all duration-500 ${
+          scrolled ? "mt-0" : "mt-3"
+        }`}
+      >
+        <a href="#">Login</a>
+        <a href="#">Cart</a>
+        <a href="#">Planes</a>
+        <a href="#">Promo</a>
+        <a href="#">Categorías</a>
+      </nav>
     </header>
   );
 }
