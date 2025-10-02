@@ -24,8 +24,8 @@ export default function Carousel() {
       <Swiper
         centeredSlides={true}
         slidesPerView={3}          // siempre 3 visibles
-        initialSlide={1}           // inicia con 3 (izq, centro, der)
-        spaceBetween={-40}
+        initialSlide={1}
+        spaceBetween={-60}         // más juntos para que se note el efecto
         autoplay={{
           delay: 4000,
           disableOnInteraction: false,
@@ -40,14 +40,24 @@ export default function Carousel() {
               <div
                 className={`rounded-2xl shadow-lg p-6 flex flex-col items-center 
                             justify-center bg-white transition-all duration-500
-                            ${isActive ? "scale-125 z-20" : "scale-90 opacity-70"}`}
+                            ${
+                              isActive
+                                ? "scale-150 z-30 -translate-y-4"  // central más grande y elevado
+                                : "scale-90 opacity-70 z-10"       // laterales más pequeñas
+                            }`}
               >
                 <img
                   src={card.image}
                   alt={card.title}
-                  className="w-32 h-32 object-contain mb-4 rounded-xl"
+                  className="w-40 h-40 object-contain mb-4 rounded-xl"
                 />
-                <h3 className="text-lg font-semibold">{card.title}</h3>
+                <h3
+                  className={`font-semibold transition-all ${
+                    isActive ? "text-xl" : "text-base"
+                  }`}
+                >
+                  {card.title}
+                </h3>
               </div>
             )}
           </SwiperSlide>
