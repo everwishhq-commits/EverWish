@@ -2,8 +2,7 @@
 import { useState } from "react";
 import Splash from "./components/splash";
 import Header from "./components/header";
-import Carousel from "./components/carousel";
-import Categories from "./components/categories";
+import Categories from "./components/categories"; // 👈 importar categorías
 
 export default function Page() {
   const [loading, setLoading] = useState(true);
@@ -14,27 +13,20 @@ export default function Page() {
       {!loading && (
         <>
           <Header />
-          <main className="pt-32 md:pt-36 px-4 max-w-6xl mx-auto text-center">
-            {/* Mensaje principal */}
+          <main className="pt-32 md:pt-36 px-4 max-w-4xl mx-auto text-center">
             <h1 className="text-3xl md:text-5xl font-extrabold">
               Discover a new world
             </h1>
-            <p className="mt-4 text-gray-700 text-lg">
-              Bienvenido a Everwish ✨
-            </p>
+            <p className="mt-4 text-gray-600">Bienvenido a Everwish ✨</p>
 
-            {/* Carrusel */}
-            <div className="mt-12">
-              <Carousel />
-            </div>
+            {/* Carrusel o scroll de prueba */}
+            <div className="h-[50vh] mt-10"></div>
 
             {/* Categorías */}
-            <div className="mt-16">
-              <Categories />
-            </div>
+            <Categories />
 
-            {/* Scroll para ver animaciones */}
-            <div className="h-[100vh]"></div>
+            {/* más contenido abajo para probar scroll */}
+            <div className="h-[100vh] mt-10 bg-gradient-to-b from-white to-pink-50"></div>
           </main>
         </>
       )}
