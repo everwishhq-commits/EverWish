@@ -1,5 +1,5 @@
 import "./components/globals.css";
-import Header from "./components/Header";
+import Header from "./components/header";
 
 export const metadata = {
   title: "Everwish",
