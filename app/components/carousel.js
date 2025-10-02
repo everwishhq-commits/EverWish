@@ -32,8 +32,9 @@ export default function Carousel() {
         coverflowEffect={{
           rotate: 0,
           stretch: 0,
-          depth: 200,
-          modifier: 2,
+          depth: 300,   // 🔑 más profundidad
+          modifier: 3,  // 🔑 agranda más la del centro
+          scale: 0.7,   // 🔑 laterales más pequeñas
           slideShadows: false,
         }}
         pagination={{ clickable: true }}
@@ -43,7 +44,7 @@ export default function Carousel() {
         {cards.map((card) => (
           <SwiperSlide
             key={card.id}
-            className="!w-48 !h-64 md:!w-72 md:!h-96 flex items-center justify-center"
+            className="!w-40 !h-56 md:!w-64 md:!h-80 flex items-center justify-center"
           >
             <div
               className={`${card.color} w-full h-full rounded-3xl flex flex-col items-center justify-center shadow-xl`}
@@ -51,7 +52,7 @@ export default function Carousel() {
               <img
                 src={card.img}
                 alt={card.title}
-                className="w-20 h-20 mb-4 object-contain"
+                className="w-16 h-16 mb-4 object-contain"
               />
               <p className="font-semibold text-lg">{card.title}</p>
             </div>
