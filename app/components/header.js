@@ -6,16 +6,14 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
+    const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
     <header
-      className={`fixed top-0 left-0 w-full z-50 bg-white shadow transition-all duration-500 ${
+      className={`fixed top-0 left-0 w-full z-40 bg-white shadow transition-all duration-500 ${
         scrolled ? "py-2" : "py-6"
       }`}
     >
@@ -26,7 +24,7 @@ export default function Header() {
             scrolled ? "scale-75" : "scale-100"
           }`}
         >
-          <Image src="/logo.png" alt="everwish" width={160} height={60} />
+          <Image src="/logo.png" alt="everwish" width={140} height={60} />
         </div>
 
         {/* Menú */}
