@@ -1,24 +1,23 @@
 "use client";
-import { Cake, Star, Baby, Heart, GraduationCap, Gift } from "lucide-react";
 
 const categories = [
-  { name: "Birthday", color: "bg-pink-200", icon: <Cake size={32} /> },
-  { name: "Congratulations", color: "bg-yellow-200", icon: <Star size={32} /> },
-  { name: "Baby", color: "bg-blue-200", icon: <Baby size={32} /> },
-  { name: "Love", color: "bg-red-200", icon: <Heart size={32} /> },
-  { name: "Graduation", color: "bg-green-200", icon: <GraduationCap size={32} /> },
-  { name: "Gifts", color: "bg-purple-200", icon: <Gift size={32} /> },
+  { name: "Birthday", color: "bg-pink-200", icon: "🎂" },
+  { name: "Congratulations", color: "bg-yellow-200", icon: "⭐" },
+  { name: "Baby", color: "bg-blue-200", icon: "👶" },
+  { name: "Love", color: "bg-red-200", icon: "❤️" },
+  { name: "Graduation", color: "bg-green-200", icon: "🎓" },
+  { name: "Gifts", color: "bg-purple-200", icon: "🎁" },
 ];
 
 export default function Categories() {
   return (
-    <div>
+    <div className="bg-white p-8 rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-6">Categories</h2>
       <div className="flex flex-wrap justify-center gap-8">
         {categories.map((cat, i) => (
           <div key={i} className="flex flex-col items-center">
             <div
-              className={`w-20 h-20 ${cat.color} rounded-full flex items-center justify-center shadow-md`}
+              className={`w-20 h-20 ${cat.color} rounded-full flex items-center justify-center shadow-md text-3xl`}
             >
               {cat.icon}
             </div>
