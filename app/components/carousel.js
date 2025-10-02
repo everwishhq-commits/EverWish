@@ -24,16 +24,16 @@ export default function Carousel() {
         effect="coverflow"
         grabCursor={true}
         centeredSlides={true}
-        slidesPerView="auto"
+        slidesPerView={"auto"}
         autoplay={{
           delay: 3000,
           disableOnInteraction: false,
         }}
         coverflowEffect={{
-          rotate: 0,
-          stretch: 0,
-          depth: 200,
-          modifier: 2,
+          rotate: 0,     // sin girar
+          stretch: 0,    // separación
+          depth: 150,    // profundidad para que las laterales se vean atrás
+          modifier: 2,   // intensidad del efecto (ajusta el tamaño central)
           slideShadows: false,
         }}
         pagination={{ clickable: true }}
@@ -43,15 +43,15 @@ export default function Carousel() {
         {cards.map((card) => (
           <SwiperSlide
             key={card.id}
-            className="w-52 h-72 md:w-60 md:h-80 rounded-2xl shadow-lg flex items-center justify-center transition-transform duration-300"
+            className="w-40 h-60 md:w-60 md:h-80 flex items-center justify-center"
           >
             <div
-              className={`${card.color} w-full h-full rounded-2xl flex flex-col items-center justify-center`}
+              className={`${card.color} w-full h-full rounded-2xl flex flex-col items-center justify-center shadow-lg`}
             >
               <img
                 src={card.img}
                 alt={card.title}
-                className="w-20 h-20 mb-4 object-contain"
+                className="w-16 h-16 mb-4 object-contain"
               />
               <p className="font-semibold">{card.title}</p>
             </div>
