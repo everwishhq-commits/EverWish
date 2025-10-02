@@ -1,16 +1,17 @@
-// app/layout.js
 import "./globals.css";
+import Header from "./components/Header";
 
 export const metadata = {
   title: "Everwish",
-  description: "Discover a new world ✨",
+  description: "Descubre un nuevo mundo de tarjetas digitales",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="es">
-      <body>
-        {children}
+      <body className="bg-white text-gray-900">
+        <Header />
+        <main className="pt-28">{children}</main>
       </body>
     </html>
   );
