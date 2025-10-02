@@ -9,7 +9,7 @@ export default function Splash() {
     if (progress < 100) {
       const timer = setTimeout(() => {
         setProgress(progress + 10);
-      }, 300); // 3 seg hasta 100
+      }, 300); // cada 0.3s aumenta
       return () => clearTimeout(timer);
     } else {
       const timer = setTimeout(() => {
@@ -23,17 +23,17 @@ export default function Splash() {
 
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center bg-white z-50">
-      {/* Logo */}
+      {/* Logo en el centro */}
       <img
         src="/logo.png"
         alt="Logo"
-        className="w-32 h-32 mb-6 animate-pulse"
+        className="w-40 h-40 mb-6 animate-pulse"
       />
 
-      {/* Barra de carga */}
-      <div className="w-48 h-2 bg-gray-200 rounded-full overflow-hidden">
+      {/* Barra de carga debajo del logo */}
+      <div className="w-56 h-3 bg-gray-200 rounded-full overflow-hidden">
         <div
-          className="h-2 bg-pink-500 transition-all duration-300"
+          className="h-3 bg-pink-500 transition-all duration-300"
           style={{ width: `${progress}%` }}
         />
       </div>
