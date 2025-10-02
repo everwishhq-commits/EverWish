@@ -4,10 +4,10 @@ export default function Home() {
   return (
     <>
       <Splash />
-      <main className="pt-16 md:pt-20">
-        <h1 className="text-center text-3xl font-bold mt-10">
-          Welcome to Everwish
-        </h1>
+
+      <main className="p-6 text-center">
+        <h1 className="text-3xl font-bold">Bienvenido a Everwish 🎉</h1>
+        <p className="mt-4 text-lg">Aquí irá el contenido de la página</p>
       </main>
     </>
   );
