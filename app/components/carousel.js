@@ -15,56 +15,70 @@ const slides = [
 export default function Carousel() {
   const [current, setCurrent] = useState(0);
 
-  // autoplay lento
+  // autoplay cada 5s
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrent((prev) => (prev + 1) % slides.length);
-    }, 5000); // 5s entre cada slide
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
 
-  // manejar manual click
-  const goToSlide = (index) => {
-    setCurrent(index);
+  // swipe para móvil
+  let startX = 0;
+  let endX = 0;
+
+  const handleTouchStart = (e) => {
+    startX = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e) => {
+    endX = e.changedTouches[0].clientX;
+    if (startX - endX > 50) {
+      setCurrent((prev) => (prev + 1) % slides.length); // swipe left
+    } else if (endX - startX > 50) {
+      setCurrent((prev) => (prev - 1 + slides.length) % slides.length); // swipe right
+    }
   };
 
   return (
-    <div className="relative w-full max-w-3xl mx-auto mt-8 overflow-hidden">
-      <div className="flex items-center justify-center space-x-6">
+    <div
+      className="relative w-full max-w-4xl mx-auto mt-8 overflow-hidden"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      <div className="flex items-center justify-center space-x-3">
         {slides.map((slide, index) => {
-          // calcular posición relativa al slide actual
           const offset = (index - current + slides.length) % slides.length;
 
-          let scale = "scale-0 opacity-0 hidden"; // por defecto no se muestra
+          let size = "scale-0 opacity-0 hidden";
           let zIndex = "z-0";
+
           if (offset === 0) {
-            scale = "scale-100 opacity-100 z-20"; // principal
+            size = "scale-110 opacity-100 z-20"; // central grande
             zIndex = "z-20";
           } else if (offset === 1 || offset === slides.length - 1) {
-            scale = "scale-90 opacity-80 z-10"; // laterales
+            size = "scale-90 opacity-70 z-10"; // laterales más pequeñas
             zIndex = "z-10";
           }
 
           return (
             <div
               key={index}
-              className={`transition-all duration-700 ease-in-out transform ${scale} ${zIndex} w-48 h-64 rounded-2xl flex flex-col items-center justify-center shadow-lg ${slide.color}`}
+              className={`transition-all duration-700 ease-in-out transform ${size} ${zIndex} w-52 h-72 md:w-64 md:h-80 rounded-2xl flex flex-col items-center justify-center shadow-lg ${slide.color}`}
             >
-              <span className="text-5xl">{slide.icon}</span>
-              <p className="mt-4 font-semibold text-gray-700">
-                {slide.title}
-              </p>
+              <span className="text-6xl">{slide.icon}</span>
+              <p className="mt-4 font-semibold text-gray-700">{slide.title}</p>
             </div>
           );
         })}
       </div>
 
-      {/* dots abajo */}
+      {/* dots */}
       <div className="flex justify-center mt-6 space-x-2">
         {slides.map((_, index) => (
           <button
             key={index}
-            onClick={() => goToSlide(index)}
+            onClick={() => setCurrent(index)}
             className={`w-3 h-3 rounded-full ${
               index === current ? "bg-pink-500" : "bg-gray-300"
             }`}
