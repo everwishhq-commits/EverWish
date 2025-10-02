@@ -5,6 +5,7 @@ import Header from "./components/header";
 import Carousel from "./components/carousel";
 import Categories from "./components/categories";
 import Reviews from "./components/reviews";
+import Footer from "./components/footer";
 
 export default function Page() {
   const [loading, setLoading] = useState(true);
@@ -12,32 +13,36 @@ export default function Page() {
   return (
     <>
       {loading && <Splash onFinish={() => setLoading(false)} />}
-
       {!loading && (
         <>
           <Header />
-          <main className="pt-28 md:pt-28">
-            {/* Títulos */}
-            <section className="max-w-4xl mx-auto px-4 text-center">
-              <h1 className="text-3xl md:text-5xl font-extrabold">
-                Discover a new world
-              </h1>
-              <p className="mt-4 text-gray-600">Bienvenido a Everwish ✨</p>
-            </section>
+          <main className="pt-32 md:pt-36 px-4 max-w-5xl mx-auto text-center">
+            {/* Hero */}
+            <h1 className="text-3xl md:text-5xl font-extrabold text-gray-900">
+              With Everwish, share every moment that matters
+            </h1>
+            <p className="mt-4 text-lg text-gray-600">
+              Make it special today ✨
+            </p>
 
-            {/* Carrusel TOP 10 */}
-            <section className="mt-8 px-4">
+            {/* Carousel */}
+            <div className="mt-12">
               <Carousel />
+            </div>
+
+            {/* Categories */}
+            <section className="mt-16 bg-white py-12 rounded-2xl shadow-md">
+              <Categories />
             </section>
 
-            {/* Banda blanca: categorías + reviews */}
-            <section className="mt-10 bg-white rounded-t-3xl shadow-[0_-6px_20px_rgba(0,0,0,0.06)]">
-              <div className="max-w-5xl mx-auto px-4 py-10">
-                <Categories />
-                <Reviews />
-              </div>
+            {/* Reviews */}
+            <section className="mt-16">
+              <Reviews />
             </section>
           </main>
+
+          {/* Footer */}
+          <Footer />
         </>
       )}
     </>
