@@ -4,61 +4,42 @@ import Image from "next/image";
 
 export default function Splash({ onFinish }) {
   const [progress, setProgress] = useState(0);
-  const [starVisible, setStarVisible] = useState(false);
+  const [fade, setFade] = useState(false);
 
   useEffect(() => {
-    let step1 = setTimeout(() => {
-      setProgress(50);
-      setStarVisible(true);
-      setTimeout(() => setStarVisible(false), 500);
-    }, 1000);
+    let step1 = setTimeout(() => setProgress(50), 500);   // 0 → 50%
+    let step2 = setTimeout(() => setProgress(100), 1000); // 50 → 100%
 
-    let step2 = setTimeout(() => {
-      setProgress(100);
-      setStarVisible(true);
-      setTimeout(() => setStarVisible(false), 500);
+    let fadeAnim = setInterval(() => setFade(f => !f), 500); // parpadeo logo
+
+    let finish = setTimeout(() => {
+      clearInterval(fadeAnim);
+      onFinish();
     }, 2000);
-
-    let finish = setTimeout(() => onFinish(), 3000);
 
     return () => {
       clearTimeout(step1);
       clearTimeout(step2);
       clearTimeout(finish);
+      clearInterval(fadeAnim);
     };
   }, [onFinish]);
 
   return (
-    <div className="fixed inset-0 flex flex-col items-center justify-center bg-white z-50">
-      <div className="relative inline-block">
-        {/* Logo */}
-        <Image
-          src="/logo.png"
-          alt="Everwish Logo"
-          width={300}
-          height={300}
-          priority
-        />
-
-        {/* Estrella sobre la i */}
-        {starVisible && (
-          <span
-            className="absolute text-yellow-400 text-2xl animate-pulse"
-            style={{
-              left: "64%",  // mueve horizontal
-              top: "58%",   // mueve vertical
-              transform: "translate(-50%, -50%)"
-            }}
-          >
-            ⭐
-          </span>
-        )}
+    <div className="flex flex-col items-center justify-center h-screen bg-white">
+      {/* Logo parpadeando */}
+      <div
+        className={`transition-opacity duration-500 ${
+          fade ? "opacity-100" : "opacity-40"
+        }`}
+      >
+        <Image src="/logo.png" alt="Everwish Logo" width={180} height={180} />
       </div>
 
-      {/* Barra más pequeña */}
-      <div className="w-28 h-1.5 bg-gray-200 rounded-full mt-5 overflow-hidden">
+      {/* Barra más arriba */}
+      <div className="w-48 h-2 bg-gray-200 rounded-full overflow-hidden mt-4">
         <div
-          className="h-full bg-pink-500 transition-all duration-1000"
+          className="h-full bg-pink-500 transition-all duration-500"
           style={{ width: `${progress}%` }}
         />
       </div>
