@@ -17,11 +17,10 @@ export default function Header() {
   return (
     <header
       className={`fixed top-0 left-0 w-full z-40 bg-white shadow transition-all duration-500 ${
-        scrolled ? "py-2" : "py-6"
+        scrolled ? "py-2" : "py-4"
       }`}
     >
-      <div className="max-w-6xl mx-auto flex flex-wrap items-center px-4 gap-y-2 
-                      justify-center md:justify-between">
+      <div className="max-w-6xl mx-auto flex flex-wrap items-center px-4 gap-y-2">
         
         {/* Logo */}
         <div
@@ -32,16 +31,16 @@ export default function Header() {
           <Image
             src="/logo.png"
             alt="everwish"
-            width={scrolled ? 100 : 140}
+            width={scrolled ? 100 : 130}
             height={60}
             priority
           />
         </div>
 
-        {/* Menú */}
+        {/* Menú pegado al logo */}
         <nav
-          className="flex flex-wrap justify-center gap-4 
-                     text-sm sm:text-base md:text-lg"
+          className="flex flex-wrap flex-1 justify-start md:justify-start gap-4 
+                     text-sm sm:text-base md:text-lg ml-6"
         >
           <a href="#" className="hover:text-pink-600">Login</a>
           <a href="#" className="hover:text-pink-600">Cart</a>
