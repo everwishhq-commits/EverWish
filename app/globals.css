@@ -5,4 +5,7 @@
 /* tus estilos globales extra van aquí */
 body {
   font-family: sans-serif;
+  background-color: #EAF6FA; /* fondo pastel azul clarito */
+  margin: 0;
+  padding: 0;
 }
