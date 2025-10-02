@@ -6,46 +6,46 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   return (
-    <header
-      className={`fixed top-0 left-0 w-full bg-white shadow transition-all duration-500 z-40
-      ${scrolled ? "h-16 flex-row justify-between px-6" : "h-28 flex-col items-center"}
-      flex`}
-    >
-      {/* Logo */}
-      <div
-        className={`transition-all duration-500 ${
-          scrolled ? "w-20" : "w-28"
-        }`}
-      >
-        <Image
-          src="/logo.png"
-          alt="Everwish Logo"
-          width={160}
-          height={70}
-          className="object-contain"
-        />
-      </div>
+    <header className="fixed top-0 left-0 w-full bg-white shadow z-40">
+      {/* Contenedor interno para controlar transición */}
+      <div className="relative mx-auto w-full max-w-6xl">
+        {/* Altura del header (varía según estado) */}
+        <div className={`${scrolled ? "h-16" : "h-28"} transition-all duration-700 ease-in-out`} />
 
-      {/* Menú */}
-      <nav
-        className={`flex gap-6 font-medium text-gray-800 text-sm md:text-base transition-all duration-500 ${
-          scrolled ? "mt-0" : "mt-3"
-        }`}
-      >
-        <a href="#">Login</a>
-        <a href="#">Cart</a>
-        <a href="#">Planes</a>
-        <a href="#">Promo</a>
-        <a href="#">Categorías</a>
-      </nav>
+        {/* LOGO: posición absoluta que se anima del centro a la izquierda */}
+        <div
+          className={`absolute top-3 transition-all duration-700 ease-in-out
+            ${scrolled ? "left-4 -translate-x-0 scale-90" : "left-1/2 -translate-x-1/2 scale-100"}`}
+        >
+          <Image
+            src="/logo.png"
+            alt="Everwish"
+            width={170}
+            height={64}
+            priority
+            className="object-contain"
+          />
+        </div>
+
+        {/* MENÚ: inicia debajo del logo; con scroll sube y se alinea a la derecha */}
+        <nav
+          className={`transition-all duration-700 ease-in-out flex flex-wrap items-center gap-x-6 gap-y-2
+            text-gray-800 font-medium
+            ${scrolled ? "h-16 pl-28 justify-end" : "h-auto pt-20 justify-center"}`}
+        >
+          <a href="#">Login</a>
+          <a href="#">Cart</a>
+          <a href="#">Planes</a>
+          <a href="#">Promo</a>
+          <a href="#">Categorías</a>
+        </nav>
+      </div>
     </header>
   );
 }
