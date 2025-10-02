@@ -13,11 +13,11 @@ export default function Header({ show }) {
   return (
     <header
       className={`fixed top-0 left-0 w-full bg-white shadow-md transition-all duration-700 z-40 ${
-        show ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-10"
+        show ? "opacity-100" : "opacity-0"
       }`}
     >
       <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col items-center md:flex-row md:justify-between md:items-center">
-        {/* Logo */}
+        {/* Logo en header */}
         <img
           src="/logo.png"
           alt="Everwish Logo"
