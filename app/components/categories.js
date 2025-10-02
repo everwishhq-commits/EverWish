@@ -1,25 +1,31 @@
 "use client";
-import { Star, Heart, Baby, Cake } from "lucide-react";
+import { Cake, Star, Baby, Heart, GraduationCap, Gift } from "lucide-react";
+
+const categories = [
+  { name: "Cumpleaños", color: "bg-pink-200", icon: <Cake size={32} /> },
+  { name: "Felicidades", color: "bg-yellow-200", icon: <Star size={32} /> },
+  { name: "Bebé", color: "bg-blue-200", icon: <Baby size={32} /> },
+  { name: "Amor", color: "bg-red-200", icon: <Heart size={32} /> },
+  { name: "Graduación", color: "bg-green-200", icon: <GraduationCap size={32} /> },
+  { name: "Regalos", color: "bg-purple-200", icon: <Gift size={32} /> },
+];
 
 export default function Categories() {
-  const items = [
-    { label: "Cumpleaños", icon: <Cake className="w-6 h-6 text-pink-500" /> },
-    { label: "Felicidades", icon: <Star className="w-6 h-6 text-yellow-500" /> },
-    { label: "Bebé", icon: <Baby className="w-6 h-6 text-sky-500" /> },
-    { label: "Amor", icon: <Heart className="w-6 h-6 text-red-500" /> },
-  ];
-
   return (
-    <div className="flex justify-center gap-6 mt-8 flex-wrap">
-      {items.map((item, i) => (
-        <div
-          key={i}
-          className="flex flex-col items-center bg-white shadow-md rounded-full p-4 w-20 h-20 justify-center"
-        >
-          {item.icon}
-          <span className="text-xs font-semibold mt-1">{item.label}</span>
-        </div>
-      ))}
+    <div>
+      <h2 className="text-2xl font-bold mb-6">Categorías</h2>
+      <div className="flex flex-wrap justify-center gap-8">
+        {categories.map((cat, i) => (
+          <div key={i} className="flex flex-col items-center">
+            <div
+              className={`w-20 h-20 ${cat.color} rounded-full flex items-center justify-center shadow-md`}
+            >
+              {cat.icon}
+            </div>
+            <p className="mt-2 text-sm font-semibold">{cat.name}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
