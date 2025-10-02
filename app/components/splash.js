@@ -1,59 +1,45 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function Splash({ onFinish }) {
   const [progress, setProgress] = useState(0);
-  const [moveToHeader, setMoveToHeader] = useState(false);
+  const [fade, setFade] = useState(false);
 
   useEffect(() => {
-    let step = 0;
-    const interval = setInterval(() => {
-      setProgress((old) => {
-        if (step === 0) {
-          step++;
-          return 50; // primero va al 50
-        } else {
-          clearInterval(interval);
-          return 100; // luego al 100
-        }
-      });
-    }, 1500);
-
-    const timeout = setTimeout(() => {
-      setMoveToHeader(true); // activa la animación de subida
-      setTimeout(() => {
-        onFinish(); // después de subir, activa el header real
-      }, 1200);
-    }, 3000);
+    let timeout1 = setTimeout(() => setProgress(50), 800); // primera mitad
+    let timeout2 = setTimeout(() => setProgress(100), 1600); // segunda mitad
+    let timeout3 = setTimeout(() => {
+      setFade(true);
+      setTimeout(onFinish, 800); // terminar splash
+    }, 2200);
 
     return () => {
-      clearInterval(interval);
-      clearTimeout(timeout);
+      clearTimeout(timeout1);
+      clearTimeout(timeout2);
+      clearTimeout(timeout3);
     };
   }, [onFinish]);
 
   return (
-    <div className="fixed inset-0 flex flex-col items-center justify-center bg-white z-50 overflow-hidden">
-      {/* Logo que sube */}
+    <div
+      className={`fixed inset-0 flex flex-col items-center justify-center bg-white z-50 transition-opacity duration-700 ${
+        fade ? "opacity-0" : "opacity-100"
+      }`}
+    >
+      {/* Logo con fade */}
       <img
         src="/logo.png"
         alt="Everwish Logo"
-        className={`w-32 h-32 transition-all duration-1000 ${
-          moveToHeader
-            ? "absolute top-5 left-10 w-14 h-14" // se mueve arriba izquierda, más pequeño
-            : "relative"
-        }`}
+        className="w-32 h-32 mb-6 animate-pulse"
       />
 
       {/* Barra rosa */}
-      {!moveToHeader && (
-        <div className="w-40 h-2 bg-gray-200 rounded-full mt-6 overflow-hidden">
-          <div
-            className="h-2 bg-pink-500 transition-all duration-1500"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      )}
+      <div className="w-40 h-2 bg-pink-200 rounded-full overflow-hidden">
+        <div
+          className="h-full bg-pink-500 transition-all duration-700"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
     </div>
   );
 }
