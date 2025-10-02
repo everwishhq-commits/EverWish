@@ -12,7 +12,7 @@ export default function RootLayout({ children }) {
       <body>
         {!splashDone && <Splash onFinish={() => setSplashDone(true)} />}
         {splashDone && <Header show={splashDone} />}
-        <main className="pt-32">{children}</main>
+        <main className="pt-40">{children}</main>
       </body>
     </html>
   );
