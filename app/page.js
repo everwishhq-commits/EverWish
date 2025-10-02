@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import Splash from "./components/Splash";
+import Splash from "./components/splash"; // 👈 minúscula aquí
 
 export default function Home() {
   const [showSplash, setShowSplash] = useState(true);
