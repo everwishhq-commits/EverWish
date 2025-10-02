@@ -1,14 +1,19 @@
+"use client";
 import "./globals.css";
-
-export const metadata = {
-  title: "Everwish",
-  description: "Elige tu tarjeta y sorprende en segundos",
-};
+import { useState } from "react";
+import Splash from "./components/splash";
+import Header from "./components/header";
 
 export default function RootLayout({ children }) {
+  const [splashDone, setSplashDone] = useState(false);
+
   return (
     <html lang="es">
-      <body>{children}</body>
+      <body>
+        {!splashDone && <Splash onFinish={() => setSplashDone(true)} />}
+        {splashDone && <Header show={splashDone} />}
+        <main className="pt-32">{children}</main>
+      </body>
     </html>
   );
 }
