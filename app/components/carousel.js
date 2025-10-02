@@ -23,9 +23,9 @@ export default function Carousel() {
     <div className="py-10">
       <Swiper
         centeredSlides={true}
-        slidesPerView={3}          // siempre 3 visibles
+        slidesPerView={3}
         initialSlide={1}
-        spaceBetween={-60}         // más juntos para que se note el efecto
+        spaceBetween={-80}
         autoplay={{
           delay: 4000,
           disableOnInteraction: false,
@@ -38,12 +38,12 @@ export default function Carousel() {
           <SwiperSlide key={index}>
             {({ isActive }) => (
               <div
-                className={`rounded-2xl shadow-lg p-6 flex flex-col items-center 
+                className={`rounded-2xl shadow-lg flex flex-col items-center 
                             justify-center bg-white transition-all duration-500
                             ${
                               isActive
-                                ? "scale-150 z-30 -translate-y-4"  // central más grande y elevado
-                                : "scale-90 opacity-70 z-10"       // laterales más pequeñas
+                                ? "scale-110 translate-y-0 z-30 h-96" // central alta y al frente
+                                : "scale-90 translate-y-10 opacity-70 z-10 h-72" // laterales más bajas
                             }`}
               >
                 <img
