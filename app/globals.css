@@ -1,12 +1,8 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 @keyframes progress {
   0% { width: 10%; }
   100% { width: 100%; }
 }
 
 .animate-progress {
-  animation: progress 3s ease-in-out forwards;
+  animation: progress 3s linear forwards;
 }
