@@ -1,13 +1,18 @@
-import Splash from "./components/splash";
+"use client";
+import { useState } from "react";
+import Splash from "./components/Splash";
 
 export default function Home() {
+  const [showSplash, setShowSplash] = useState(true);
+
   return (
     <>
-      <Splash />
-      <main className="flex flex-col items-center justify-center h-screen">
-        <h1 className="text-3xl font-bold">Welcome to Everwish</h1>
-        <p className="mt-4 text-gray-600">Discover a new world of creations</p>
-      </main>
+      {showSplash && <Splash onFinish={() => setShowSplash(false)} />}
+      {!showSplash && (
+        <main className="flex items-center justify-center h-screen">
+          <h1 className="text-3xl font-bold">Bienvenido a Everwish</h1>
+        </main>
+      )}
     </>
   );
 }
