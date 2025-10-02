@@ -1,27 +1,31 @@
 "use client";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
+
 import "swiper/css";
 import "swiper/css/pagination";
 
-const cards = [
-  { id: 1, title: "Birthday", img: "/cards/birthday.png" },
-  { id: 2, title: "Congrats", img: "/cards/congrats.png" },
-  { id: 3, title: "Baby", img: "/cards/baby.png" },
-  { id: 4, title: "Love", img: "/cards/love.png" },
-  { id: 5, title: "Graduation", img: "/cards/graduation.png" },
-  { id: 6, title: "Condolences", img: "/cards/condolences.png" },
-  { id: 7, title: "Gifts", img: "/cards/gifts.png" },
-  { id: 8, title: "Anniversary", img: "/cards/anniversary.png" },
+const templates = [
+  { title: "Template 1", image: "/templates/template1.png" },
+  { title: "Template 2", image: "/templates/template2.png" },
+  { title: "Template 3", image: "/templates/template3.png" },
+  { title: "Template 4", image: "/templates/template4.png" },
+  { title: "Template 5", image: "/templates/template5.png" },
+  { title: "Template 6", image: "/templates/template6.png" },
+  { title: "Template 7", image: "/templates/template7.png" },
+  { title: "Template 8", image: "/templates/template8.png" },
+  { title: "Template 9", image: "/templates/template9.png" },
+  { title: "Template 10", image: "/templates/template10.png" },
 ];
 
 export default function Carousel() {
   return (
-    <div className="w-full flex flex-col items-center py-6 bg-[#EAF6FA]">
+    <div className="py-10">
       <Swiper
         centeredSlides={true}
-        slidesPerView={3} // 🔑 siempre 3 visibles (dos lados + central)
-        spaceBetween={-60} // 🔑 se superponen un poco
+        slidesPerView={3}              // 3 visibles siempre
+        initialSlide={1}               // inicia en el segundo (1 izq, 2 centro, 3 der)
+        spaceBetween={-60}             // superposición suave
         autoplay={{
           delay: 3500,
           disableOnInteraction: false,
@@ -30,27 +34,20 @@ export default function Carousel() {
         modules={[Pagination, Autoplay]}
         className="w-full max-w-5xl"
       >
-        {cards.map((card) => (
-          <SwiperSlide
-            key={card.id}
-            className="flex justify-center transition-all duration-500"
-          >
-            {({ isActive }) => (
-              <div
-                className={`${
-                  isActive
-                    ? "scale-125 shadow-2xl z-20" // 🔑 la central más grande
-                    : "scale-90 opacity-70"
-                } bg-white rounded-3xl p-4 flex items-center justify-center transition-all duration-500`}
-                style={{ width: "260px", height: "360px" }} // 🔑 tamaño base
-              >
-                <img
-                  src={card.img}
-                  alt={card.title}
-                  className="w-full h-full object-cover rounded-2xl"
-                />
-              </div>
-            )}
+        {templates.map((card, index) => (
+          <SwiperSlide key={index}>
+            <div
+              className="rounded-2xl shadow-lg p-6 flex flex-col items-center 
+                         justify-center bg-white transition-all duration-500 
+                         scale-90 swiper-slide-active:scale-125"
+            >
+              <img
+                src={card.image}
+                alt={card.title}
+                className="w-32 h-32 object-contain mb-4 rounded-xl"
+              />
+              <h3 className="text-lg font-semibold">{card.title}</h3>
+            </div>
           </SwiperSlide>
         ))}
       </Swiper>
