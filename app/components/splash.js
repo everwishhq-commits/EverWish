@@ -7,21 +7,18 @@ export default function Splash({ onFinish }) {
   const [starVisible, setStarVisible] = useState(false);
 
   useEffect(() => {
-    // Primer pulso (0 → 50)
     let step1 = setTimeout(() => {
       setProgress(50);
       setStarVisible(true);
-      setTimeout(() => setStarVisible(false), 500); // parpadeo
+      setTimeout(() => setStarVisible(false), 500);
     }, 1000);
 
-    // Segundo pulso (50 → 100)
     let step2 = setTimeout(() => {
       setProgress(100);
       setStarVisible(true);
-      setTimeout(() => setStarVisible(false), 500); // parpadeo
+      setTimeout(() => setStarVisible(false), 500);
     }, 2000);
 
-    // Finalizar splash
     let finish = setTimeout(() => onFinish(), 3000);
 
     return () => {
@@ -34,7 +31,7 @@ export default function Splash({ onFinish }) {
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center bg-white z-50">
       <div className="relative inline-block">
-        {/* Logo (igual que ya tienes) */}
+        {/* Logo */}
         <Image
           src="/logo.png"
           alt="Everwish Logo"
@@ -46,8 +43,12 @@ export default function Splash({ onFinish }) {
         {/* Estrella sobre la i */}
         {starVisible && (
           <span
-            className="absolute text-yellow-400 text-3xl 
-                       left-[72%] top-[40%] animate-pulse"
+            className="absolute text-yellow-400 text-2xl animate-pulse"
+            style={{
+              left: "64%",  // mueve horizontal
+              top: "58%",   // mueve vertical
+              transform: "translate(-50%, -50%)"
+            }}
           >
             ⭐
           </span>
