@@ -1,80 +1,56 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 
 const cards = [
-  { title: "Mágico Unicornio", emoji: "🦄", bg: "from-pink-100 to-purple-100" },
-  { title: "Feliz Cumple", emoji: "🎂", bg: "from-rose-100 to-orange-100" },
-  { title: "Te Quiero", emoji: "❤️", bg: "from-red-100 to-pink-100" },
-  { title: "Nuevo Bebé", emoji: "👶", bg: "from-blue-100 to-cyan-100" },
-  { title: "Graduación", emoji: "🎓", bg: "from-green-100 to-emerald-100" },
-  { title: "Amistad", emoji: "🤝", bg: "from-sky-100 to-indigo-100" },
-  { title: "Súper Mamá", emoji: "👩‍👧", bg: "from-fuchsia-100 to-pink-100" },
-  { title: "Gracias", emoji: "🙏", bg: "from-amber-100 to-yellow-100" },
-  { title: "Aniversario", emoji: "💍", bg: "from-violet-100 to-purple-100" },
-  { title: "Mejórate", emoji: "🌼", bg: "from-lime-100 to-green-100" },
+  { title: "Birthday", color: "bg-pink-200", emoji: "🎂" },
+  { title: "Anniversary", color: "bg-purple-200", emoji: "💍" },
+  { title: "Baby", color: "bg-blue-200", emoji: "👶" },
+  { title: "Love", color: "bg-red-200", emoji: "❤️" },
+  { title: "Graduation", color: "bg-green-200", emoji: "🎓" },
+  { title: "Condolences", color: "bg-gray-200", emoji: "🕊️" },
 ];
 
 export default function Carousel() {
-  const [index, setIndex] = useState(0);
+  const [current, setCurrent] = useState(0);
 
-  // Avance automático
   useEffect(() => {
-    const id = setInterval(() => {
-      setIndex((i) => (i + 1) % cards.length);
-    }, 2200);
-    return () => clearInterval(id);
+    const timer = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % cards.length);
+    }, 3000); // transición lenta 3s
+    return () => clearInterval(timer);
   }, []);
 
-  const left = (i) => (i - 1 + cards.length) % cards.length;
-  const right = (i) => (i + 1) % cards.length;
-
   return (
-    <div className="w-full flex flex-col items-center">
-      {/* Viewport */}
-      <div className="relative w-full max-w-3xl h-72 md:h-80 overflow-hidden flex items-center justify-center">
-        {cards.map((c, i) => {
-          let pos = "opacity-0 scale-75 pointer-events-none";
-          let translate = "translate-x-0";
-          let z = "z-0";
-          if (i === index) {
-            pos = "opacity-100 scale-100";
-            translate = "translate-x-0";
-            z = "z-20";
-          } else if (i === left(index)) {
-            pos = "opacity-90 scale-95";
-            translate = "-translate-x-28 md:-translate-x-36";
-            z = "z-10";
-          } else if (i === right(index)) {
-            pos = "opacity-90 scale-95";
-            translate = "translate-x-28 md:translate-x-36";
-            z = "z-10";
-          }
+    <div className="relative flex flex-col items-center">
+      <div className="flex items-center justify-center space-x-4">
+        {cards.map((card, i) => {
+          const isActive = i === current;
+          const isPrev = i === (current - 1 + cards.length) % cards.length;
+          const isNext = i === (current + 1) % cards.length;
+
+          let scale = "scale-90 opacity-50";
+          if (isActive) scale = "scale-110 opacity-100 z-10";
+          else if (isPrev || isNext) scale = "scale-95 opacity-80";
 
           return (
             <div
               key={i}
-              className={`absolute transition-all duration-500 ease-out ${z} ${pos} ${translate}`}
+              className={`${card.color} rounded-2xl shadow-lg p-10 transition-all duration-700 ${scale}`}
             >
-              <div className={`w-56 h-72 md:w-64 md:h-80 rounded-3xl shadow-xl bg-gradient-to-br ${c.bg} flex flex-col items-center justify-center ring-1 ring-black/5`}>
-                <div className="text-6xl mb-3">{c.emoji}</div>
-                <div className="text-base md:text-lg font-semibold text-gray-700 px-3 text-center">
-                  {c.title}
-                </div>
-              </div>
+              <div className="text-5xl mb-4">{card.emoji}</div>
+              <p className="font-semibold text-lg">{card.title}</p>
             </div>
           );
         })}
       </div>
-
-      {/* Dots */}
-      <div className="mt-4 flex gap-2">
+      <div className="flex space-x-2 mt-4">
         {cards.map((_, i) => (
           <span
             key={i}
-            className={`h-1.5 rounded-full transition-all ${
-              i === index ? "w-6 bg-pink-500" : "w-3 bg-gray-300"
+            className={`h-2 w-2 rounded-full ${
+              i === current ? "bg-pink-500" : "bg-gray-300"
             }`}
-          />
+          ></span>
         ))}
       </div>
     </div>
