@@ -3,6 +3,7 @@ import { useState } from "react";
 import Splash from "./components/splash";
 import Header from "./components/header";
 import Carousel from "./components/carousel";
+import Categories from "./components/categories";
 
 export default function Page() {
   const [loading, setLoading] = useState(true);
@@ -22,28 +23,17 @@ export default function Page() {
               Bienvenido a Everwish ✨
             </p>
 
-            {/* Carrusel Top 10 */}
+            {/* Carrusel */}
             <div className="mt-12">
               <Carousel />
             </div>
 
-            {/* Placeholder para categorías */}
-            <section className="mt-20">
-              <h2 className="text-2xl font-bold mb-6">Categorías</h2>
-              <div className="flex flex-wrap justify-center gap-6">
-                <div className="w-24 h-24 bg-white rounded-full shadow-md flex items-center justify-center">
-                  🎂
-                </div>
-                <div className="w-24 h-24 bg-white rounded-full shadow-md flex items-center justify-center">
-                  🎓
-                </div>
-                <div className="w-24 h-24 bg-white rounded-full shadow-md flex items-center justify-center">
-                  👶
-                </div>
-              </div>
-            </section>
+            {/* Categorías */}
+            <div className="mt-16">
+              <Categories />
+            </div>
 
-            {/* Scroll para ver movimiento */}
+            {/* Scroll para ver animaciones */}
             <div className="h-[100vh]"></div>
           </main>
         </>
