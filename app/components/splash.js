@@ -2,45 +2,55 @@
 import { useEffect, useState } from "react";
 
 export default function Splash({ onFinish }) {
-  const [progress, setProgress] = useState(10);
-  const [visible, setVisible] = useState(true);
+  const [progress, setProgress] = useState(0);
+  const [show, setShow] = useState(true);
 
   useEffect(() => {
-    let step = 90 / 30; // (100-10)/30 frames en 3 seg aprox
-    let count = 0;
+    // Paso 1: cargar al 10% rápido
+    setTimeout(() => {
+      setProgress(10);
+    }, 300); // 0.3 seg
 
-    const interval = setInterval(() => {
-      count++;
-      setProgress((p) => Math.min(100, p + step));
+    // Paso 2: cargar hasta 100% en 3 segundos
+    let timeout = setTimeout(() => {
+      let current = 10;
+      const interval = setInterval(() => {
+        current += 10;
+        if (current >= 100) {
+          current = 100;
+          clearInterval(interval);
+          setTimeout(() => {
+            setShow(false);
+            if (onFinish) onFinish();
+          }, 500); // espera medio segundo antes de quitar
+        }
+        setProgress(current);
+      }, 300); // cada 0.3 seg suma 10
+    }, 600);
 
-      if (count >= 30) {
-        clearInterval(interval);
-        setTimeout(() => {
-          setVisible(false);
-          if (onFinish) onFinish();
-        }, 500);
-      }
-    }, 100); // cada 100ms
+    return () => clearTimeout(timeout);
   }, [onFinish]);
 
-  if (!visible) return null;
+  if (!show) return null;
 
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center bg-white z-50">
-      {/* Logo parpadeando */}
+      {/* Logo con parpadeo */}
       <img
         src="/logo.png"
         alt="Everwish Logo"
-        className="w-40 h-40 animate-pulse mb-6"
+        className="w-32 h-32 animate-pulse"
       />
 
-      {/* Barra rosada */}
-      <div className="w-64 h-3 bg-gray-200 rounded-full overflow-hidden">
+      {/* Barra de progreso */}
+      <div className="w-64 h-3 bg-gray-200 rounded-full mt-6">
         <div
-          className="h-3 bg-pink-500 transition-all duration-100 ease-linear"
+          className="h-3 bg-pink-500 rounded-full transition-all duration-300"
           style={{ width: `${progress}%` }}
         ></div>
       </div>
+
+      <p className="mt-2 text-sm text-gray-500">{progress}%</p>
     </div>
   );
 }
