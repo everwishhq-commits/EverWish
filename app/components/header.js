@@ -1,14 +1,18 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Header() {
-  const [scrolled, setScrolled] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 30);
+      if (window.scrollY > 10) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -16,37 +20,33 @@ export default function Header() {
 
   return (
     <header
-      className={`fixed top-0 left-0 w-full z-40 bg-white shadow transition-all duration-500 ${
-        scrolled ? "py-2" : "py-4"
-      }`}
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
+        isScrolled ? "h-14 shadow-md" : "h-20"
+      } bg-white flex items-center`}
     >
-      <div className="max-w-6xl mx-auto flex flex-wrap items-center px-4 gap-y-2">
-        
+      <div className="w-full max-w-7xl mx-auto flex flex-wrap items-center justify-between px-4">
         {/* Logo */}
         <div
-          className={`transition-all duration-500 ${
-            scrolled ? "scale-75" : "scale-100"
+          className={`flex-shrink-0 transition-all duration-500 ${
+            isScrolled ? "w-24" : "w-32"
           }`}
         >
           <Image
             src="/logo.png"
-            alt="everwish"
-            width={scrolled ? 100 : 130}
-            height={60}
-            priority
+            alt="Everwish"
+            width={150}
+            height={80}
+            className="object-contain w-full h-auto"
           />
         </div>
 
-        {/* Menú pegado al logo */}
-        <nav
-          className="flex flex-wrap flex-1 justify-start md:justify-start gap-4 
-                     text-sm sm:text-base md:text-lg ml-6"
-        >
-          <a href="#" className="hover:text-pink-600">Login</a>
-          <a href="#" className="hover:text-pink-600">Cart</a>
-          <a href="#" className="hover:text-pink-600">Planes</a>
-          <a href="#" className="hover:text-pink-600">Promo</a>
-          <a href="#" className="hover:text-pink-600">Categorías</a>
+        {/* Menú */}
+        <nav className="flex flex-wrap justify-center gap-6 text-gray-800 font-bold text-sm md:text-base mt-2 md:mt-0">
+          <Link href="/login">Login</Link>
+          <Link href="/cart">Cart</Link>
+          <Link href="/planes">Planes</Link>
+          <Link href="/promo">Promo</Link>
+          <Link href="/categorias">Categorías</Link>
         </nav>
       </div>
     </header>
