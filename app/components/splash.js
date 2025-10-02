@@ -7,7 +7,7 @@ export default function Splash() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 3000); // 3 segundos
+    }, 3000); 
     return () => clearTimeout(timer);
   }, []);
 
@@ -15,11 +15,11 @@ export default function Splash() {
 
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center bg-white z-50">
-      {/* Logo con efecto parpadeo */}
+      {/* Logo más pequeño y forzado */}
       <img
         src="/logo.png"
         alt="Everwish Logo"
-        className="w-28 h-28 mb-6 animate-pulse" // más pequeño (antes w-40 h-40)
+        className="w-[120px] h-[120px] mb-6 object-contain animate-pulse" 
       />
 
       {/* Barra rosada */}
