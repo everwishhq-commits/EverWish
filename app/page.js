@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
-import Splash from "./components/Splash";
-import Header from "./components/Header";
+import Splash from "./components/splash";
+import Header from "./components/header";
 
 export default function Home() {
   const [showSplash, setShowSplash] = useState(true);
