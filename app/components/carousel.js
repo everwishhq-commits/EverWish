@@ -14,11 +14,11 @@ const items = [
 export default function Carousel() {
   const [index, setIndex] = useState(0);
 
-  // Auto slide cada 4s
+  // Auto slide cada 5 segundos
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex((prev) => (prev + 1) % items.length);
-    }, 4000);
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -27,33 +27,32 @@ export default function Carousel() {
   return (
     <div className="relative w-full flex flex-col items-center mt-6">
       {/* Carrusel */}
-      <div className="relative h-56 w-full flex items-center justify-center overflow-hidden">
+      <div className="relative h-64 w-full flex items-center justify-center overflow-hidden">
         {items.map((item, i) => {
           const offset = (i - index + items.length) % items.length;
           let style =
-            "absolute transition-all duration-700 ease-in-out transform";
+            "absolute transition-all duration-700 ease-in-out transform flex flex-col items-center justify-center rounded-2xl shadow-md";
 
-          // central resaltada
-          if (offset === 0)
+          // central
+          if (offset === 0) {
             style +=
-              " scale-110 opacity-100 z-20 shadow-xl animate-bounce-slow";
-
-          // tarjeta a la derecha
-          else if (offset === 1)
-            style += " translate-x-40 scale-90 opacity-70 z-10";
-
-          // tarjeta a la izquierda
-          else if (offset === items.length - 1)
-            style += "-translate-x-40 scale-90 opacity-70 z-10";
-
-          // resto ocultas
-          else style += " opacity-0 scale-75";
+              " w-48 h-64 scale-110 z-20 opacity-100 shadow-xl bg-white";
+          }
+          // derecha inmediata
+          else if (offset === 1) {
+            style +=
+              " w-40 h-56 translate-x-44 scale-90 z-10 opacity-80";
+          }
+          // izquierda inmediata
+          else if (offset === items.length - 1) {
+            style +=
+              " w-40 h-56 -translate-x-44 scale-90 z-10 opacity-80";
+          } else {
+            style += " opacity-0 scale-75";
+          }
 
           return (
-            <div
-              key={i}
-              className={`${item.color} ${style} rounded-2xl w-40 h-52 flex flex-col items-center justify-center shadow-md`}
-            >
+            <div key={i} className={`${item.color} ${style}`}>
               <span className="text-4xl">{item.icon}</span>
               <p className="mt-2 font-semibold">{item.title}</p>
             </div>
@@ -73,22 +72,6 @@ export default function Carousel() {
           ></button>
         ))}
       </div>
-
-      {/* Animación bounce sutil */}
-      <style jsx>{`
-        @keyframes bounce-slow {
-          0%,
-          100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-4px);
-          }
-        }
-        .animate-bounce-slow {
-          animation: bounce-slow 1.5s ease-in-out;
-        }
-      `}</style>
     </div>
   );
 }
