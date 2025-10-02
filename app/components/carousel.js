@@ -20,12 +20,12 @@ const templates = [
 
 export default function Carousel() {
   return (
-    <div className="py-10">
+    <div className="py-10 bg-[#EAF6FA]">
       <Swiper
         centeredSlides={true}
         slidesPerView={3}
         initialSlide={1}
-        spaceBetween={-80}
+        spaceBetween={-60}
         autoplay={{
           delay: 4000,
           disableOnInteraction: false,
@@ -38,31 +38,26 @@ export default function Carousel() {
           <SwiperSlide key={index}>
             {({ isActive }) => (
               <div
-                className={`rounded-2xl shadow-lg flex flex-col items-center 
+                className={`rounded-2xl shadow-lg p-4 flex flex-col items-center
                             justify-center bg-white transition-all duration-500
-                            ${
-                              isActive
-                                ? "scale-110 translate-y-0 z-30 h-96" // central alta y al frente
-                                : "scale-90 translate-y-10 opacity-70 z-10 h-72" // laterales más bajas
-                            }`}
+                            ${isActive ? "scale-125 z-20" : "scale-90 opacity-70"}`}
+                style={{ width: "260px", height: "380px" }}  /* altura fija para evitar que cambie altura */
               >
                 <img
                   src={card.image}
                   alt={card.title}
-                  className="w-40 h-40 object-contain mb-4 rounded-xl"
+                  className="w-full h-full object-cover rounded-2xl"
                 />
-                <h3
-                  className={`font-semibold transition-all ${
-                    isActive ? "text-xl" : "text-base"
-                  }`}
-                >
-                  {card.title}
-                </h3>
               </div>
             )}
           </SwiperSlide>
         ))}
       </Swiper>
+
+      {/* Dots justo debajo del carrusel */}
+      <div className="flex justify-center mt-4">
+        <div className="swiper-pagination" />
+      </div>
     </div>
   );
 }
