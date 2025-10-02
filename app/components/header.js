@@ -16,8 +16,8 @@ export default function Header({ show }) {
         show ? "opacity-100" : "opacity-0"
       }`}
     >
-      <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col items-center md:flex-row md:justify-between md:items-center">
-        {/* Logo en header */}
+      <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col items-center transition-all duration-700">
+        {/* Logo */}
         <img
           src="/logo.png"
           alt="Everwish Logo"
@@ -28,14 +28,14 @@ export default function Header({ show }) {
 
         {/* Menú */}
         <nav
-          className={`mt-3 md:mt-0 flex space-x-6 text-gray-700 font-medium transition-all duration-700 ${
-            scrolled ? "self-end" : ""
+          className={`flex flex-wrap justify-center gap-4 mt-2 transition-all duration-700 ${
+            scrolled ? "self-end -mt-10" : ""
           }`}
         >
           <a href="#">Login</a>
           <a href="#">Cart</a>
           <a href="#">Planes</a>
-          <a href="#">Promo del Mes</a>
+          <a href="#">Promo</a>
           <a href="#">Categorías</a>
         </nav>
       </div>
