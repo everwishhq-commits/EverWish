@@ -34,9 +34,9 @@ export default function Carousel() {
   const handleTouchEnd = (e) => {
     endX = e.changedTouches[0].clientX;
     if (startX - endX > 50) {
-      setCurrent((prev) => (prev + 1) % slides.length); // swipe left
+      setCurrent((prev) => (prev + 1) % slides.length); // next
     } else if (endX - startX > 50) {
-      setCurrent((prev) => (prev - 1 + slides.length) % slides.length); // swipe right
+      setCurrent((prev) => (prev - 1 + slides.length) % slides.length); // prev
     }
   };
 
@@ -46,25 +46,35 @@ export default function Carousel() {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      <div className="flex items-center justify-center space-x-3">
+      <div className="flex justify-center items-center">
         {slides.map((slide, index) => {
           const offset = (index - current + slides.length) % slides.length;
 
-          let size = "scale-0 opacity-0 hidden";
-          let zIndex = "z-0";
-
+          // posición de cada tarjeta según su offset
+          let style = "hidden"; // ocultar las demás
           if (offset === 0) {
-            size = "scale-110 opacity-100 z-20"; // central grande
-            zIndex = "z-20";
+            style =
+              "z-20 transform scale-110 w-56 h-72 md:w-64 md:h-80"; // central grande
           } else if (offset === 1 || offset === slides.length - 1) {
-            size = "scale-90 opacity-70 z-10"; // laterales más pequeñas
-            zIndex = "z-10";
+            style =
+              "z-10 transform scale-90 opacity-80 w-40 h-60 md:w-48 md:h-72"; // laterales
           }
 
           return (
             <div
               key={index}
-              className={`transition-all duration-700 ease-in-out transform ${size} ${zIndex} w-52 h-72 md:w-64 md:h-80 rounded-2xl flex flex-col items-center justify-center shadow-lg ${slide.color}`}
+              className={`absolute transition-all duration-700 ease-in-out flex flex-col items-center justify-center rounded-2xl shadow-lg ${slide.color} ${style}`}
+              style={{
+                transform: `${
+                  offset === 0
+                    ? "translateX(0)"
+                    : offset === 1
+                    ? "translateX(180px)"
+                    : offset === slides.length - 1
+                    ? "translateX(-180px)"
+                    : "translateX(9999px)" // escondidos
+                }`,
+              }}
             >
               <span className="text-6xl">{slide.icon}</span>
               <p className="mt-4 font-semibold text-gray-700">{slide.title}</p>
@@ -74,7 +84,7 @@ export default function Carousel() {
       </div>
 
       {/* dots */}
-      <div className="flex justify-center mt-6 space-x-2">
+      <div className="flex justify-center mt-80 space-x-2">
         {slides.map((_, index) => (
           <button
             key={index}
