@@ -1,24 +1,21 @@
-"use client";
-import { useState } from "react";
-import Splash from "./components/splash";
-import Header from "./components/header";
+import Header from "./components/Header";
+import Splash from "./components/Splash";
 
-export default function Home() {
-  const [showSplash, setShowSplash] = useState(true);
-
+export default function Page() {
   return (
     <>
-      {showSplash ? (
-        <Splash onFinish={() => setShowSplash(false)} />
-      ) : (
-        <>
-          <Header show={!showSplash} />
-          <main className="pt-28 text-center">
-            <h1 className="text-3xl font-bold">Discover a new world</h1>
-            <p className="mt-4">Bienvenido a Everwish ✨</p>
-          </main>
-        </>
-      )}
+      <Splash />
+      <Header />
+      {/* padding para no tapar el contenido (coincide con h-28 / h-16) */}
+      <main className="pt-32 md:pt-36">
+        <section className="max-w-3xl mx-auto px-4 text-center mt-4">
+          <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight">
+            Discover a new world
+          </h1>
+          <p className="mt-4 text-gray-600">Bienvenido a Everwish ✨</p>
+          {/* aquí irán carrusel, categorías, etc. */}
+        </section>
+      </main>
     </>
   );
 }
