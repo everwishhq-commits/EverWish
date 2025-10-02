@@ -30,7 +30,7 @@ export default function Carousel() {
           delay: 4000,
           disableOnInteraction: false,
         }}
-        pagination={{ clickable: true }}
+        pagination={{ clickable: true, el: ".custom-pagination" }}
         modules={[Pagination, Autoplay]}
         className="w-full max-w-5xl"
       >
@@ -38,26 +38,29 @@ export default function Carousel() {
           <SwiperSlide key={index}>
             {({ isActive }) => (
               <div
-                className={`rounded-2xl shadow-lg p-4 flex flex-col items-center
-                            justify-center bg-white transition-all duration-500
-                            ${isActive ? "scale-125 z-20" : "scale-90 opacity-70"}`}
-                style={{ width: "260px", height: "380px" }}  /* altura fija para evitar que cambie altura */
+                className={`rounded-2xl shadow-lg flex flex-col items-center justify-between bg-white transition-all duration-500
+                  ${isActive ? "scale-125 z-20" : "scale-90 opacity-70"}`}
+                style={{
+                  aspectRatio: "3/4", // más alto que ancho
+                  height: "400px",    // altura fija para todo el carrusel
+                }}
               >
                 <img
                   src={card.image}
                   alt={card.title}
-                  className="w-full h-full object-cover rounded-2xl"
+                  className="w-full h-3/4 object-contain rounded-t-2xl"
                 />
+                <h3 className="text-lg font-semibold text-center py-2">
+                  {card.title}
+                </h3>
               </div>
             )}
           </SwiperSlide>
         ))}
       </Swiper>
 
-      {/* Dots justo debajo del carrusel */}
-      <div className="flex justify-center mt-4">
-        <div className="swiper-pagination" />
-      </div>
+      {/* Dots debajo, fijos */}
+      <div className="flex justify-center mt-4 custom-pagination" />
     </div>
   );
 }
