@@ -6,51 +6,47 @@ export default function Splash({ onFinish }) {
   const [show, setShow] = useState(true);
 
   useEffect(() => {
-    // Paso 1: cargar al 10% rápido
-    setTimeout(() => {
-      setProgress(10);
-    }, 300); // 0.3 seg
+    // Etapa 1: llegar rápido al 50%
+    setTimeout(() => setProgress(50), 500);
 
-    // Paso 2: cargar hasta 100% en 3 segundos
-    let timeout = setTimeout(() => {
-      let current = 10;
+    // Etapa 2: llegar al 100% más lento
+    setTimeout(() => {
+      let current = 50;
       const interval = setInterval(() => {
         current += 10;
         if (current >= 100) {
-          current = 100;
           clearInterval(interval);
+          setProgress(100);
+          // Espera medio segundo y cierra
           setTimeout(() => {
             setShow(false);
             if (onFinish) onFinish();
-          }, 500); // espera medio segundo antes de quitar
+          }, 500);
+        } else {
+          setProgress(current);
         }
-        setProgress(current);
-      }, 300); // cada 0.3 seg suma 10
-    }, 600);
-
-    return () => clearTimeout(timeout);
+      }, 300); // sube cada 0.3s hasta 100
+    }, 1000); // inicia después de 1s
   }, [onFinish]);
 
   if (!show) return null;
 
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center bg-white z-50">
-      {/* Logo con parpadeo */}
+      {/* Logo más grande y parpadeando */}
       <img
         src="/logo.png"
         alt="Everwish Logo"
-        className="w-32 h-32 animate-pulse"
+        className="w-40 h-40 animate-pulse"
       />
 
-      {/* Barra de progreso */}
-      <div className="w-64 h-3 bg-gray-200 rounded-full mt-6">
+      {/* Barra de carga (sin texto ni % ) */}
+      <div className="w-64 h-3 bg-gray-200 rounded-full mt-8">
         <div
-          className="h-3 bg-pink-500 rounded-full transition-all duration-300"
+          className="h-3 bg-pink-500 rounded-full transition-all duration-500"
           style={{ width: `${progress}%` }}
         ></div>
       </div>
-
-      <p className="mt-2 text-sm text-gray-500">{progress}%</p>
     </div>
   );
 }
