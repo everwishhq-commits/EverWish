@@ -23,8 +23,9 @@ export default function Carousel() {
     <div className="py-10">
       <Swiper
         centeredSlides={true}
-        slidesPerView={3}
-        spaceBetween={-30}
+        slidesPerView={3}          // siempre 3 visibles
+        initialSlide={1}           // inicia con 3 (izq, centro, der)
+        spaceBetween={-40}
         autoplay={{
           delay: 4000,
           disableOnInteraction: false,
