@@ -9,12 +9,12 @@ export default function Splash() {
     if (progress < 100) {
       const timer = setTimeout(() => {
         setProgress(progress + 10);
-      }, 300); // cada 0.3 segundos sube 10 → en 3 seg llega a 100
+      }, 300); // 3 seg hasta 100
       return () => clearTimeout(timer);
     } else {
       const timer = setTimeout(() => {
         setIsVisible(false);
-      }, 500); // medio segundo después desaparece
+      }, 500);
       return () => clearTimeout(timer);
     }
   }, [progress]);
@@ -27,7 +27,7 @@ export default function Splash() {
       <img
         src="/logo.png"
         alt="Logo"
-        className="w-32 h-32 mb-6 animate-pulse" 
+        className="w-32 h-32 mb-6 animate-pulse"
       />
 
       {/* Barra de carga */}
