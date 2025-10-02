@@ -17,7 +17,7 @@ export default function Carousel() {
   useEffect(() => {
     const timer = setInterval(() => {
       setIndex((prev) => (prev + 1) % items.length);
-    }, 4000); // movimiento automático
+    }, 4000); // autoplay
     return () => clearInterval(timer);
   }, []);
 
@@ -25,46 +25,29 @@ export default function Carousel() {
   const prevSlide = () => setIndex((prev) => (prev - 1 + items.length) % items.length);
 
   return (
-    <div className="relative w-full flex flex-col items-center mt-10">
-      {/* Contenedor del carrusel */}
-      <div className="flex items-center justify-center w-full overflow-hidden">
-        <div className="relative flex w-full justify-center">
-          {items.map((item, i) => {
-            const offset = (i - index + items.length) % items.length;
+    <div className="relative flex flex-col items-center mt-10">
+      <div className="flex justify-center items-center relative w-full max-w-xl h-72 overflow-hidden">
+        {items.map((item, i) => {
+          const offset = (i - index + items.length) % items.length;
 
-            let position =
-              "absolute transition-all duration-700 ease-in-out scale-75 opacity-40";
-            if (offset === 0)
-              position =
-                "absolute transition-all duration-700 ease-in-out scale-100 opacity-100 z-20";
-            else if (offset === 1 || offset === items.length - 1)
-              position =
-                "absolute transition-all duration-700 ease-in-out scale-90 opacity-80 z-10";
+          // posición de cada tarjeta
+          let style = "scale-0 opacity-0"; // ocultar por defecto
+          if (offset === 0) style = "scale-100 opacity-100 z-20"; // central
+          else if (offset === 1) style = "translate-x-40 scale-90 opacity-80 z-10"; // derecha
+          else if (offset === items.length - 1) style = "-translate-x-40 scale-90 opacity-80 z-10"; // izquierda
 
-            return (
-              <div
-                key={i}
-                className={`flex flex-col items-center justify-center w-40 h-52 md:w-56 md:h-72 rounded-2xl shadow-lg ${item.color} ${position}`}
-                style={{
-                  left:
-                    offset === 0
-                      ? "50%"
-                      : offset === 1
-                      ? "70%"
-                      : offset === items.length - 1
-                      ? "30%"
-                      : "-9999px",
-                  transform: "translateX(-50%)",
-                }}
-              >
-                <span className="text-4xl">{item.icon}</span>
-                <p className="mt-2 text-base md:text-lg font-semibold">
-                  {item.title}
-                </p>
-              </div>
-            );
-          })}
-        </div>
+          return (
+            <div
+              key={i}
+              className={`absolute w-44 h-60 md:w-56 md:h-72 flex flex-col items-center justify-center rounded-2xl shadow-lg transition-all duration-700 ease-in-out ${item.color} ${style}`}
+            >
+              <span className="text-4xl">{item.icon}</span>
+              <p className="mt-2 text-base md:text-lg font-semibold">
+                {item.title}
+              </p>
+            </div>
+          );
+        })}
       </div>
 
       {/* Dots */}
