@@ -1,97 +1,59 @@
 "use client";
 import { useState, useEffect } from "react";
 
-const slides = [
+const items = [
   { title: "Anniversary", color: "bg-purple-200", icon: "💍" },
   { title: "Baby", color: "bg-blue-200", icon: "👶" },
-  { title: "Love", color: "bg-red-200", icon: "❤️" },
+  { title: "Love", color: "bg-pink-200", icon: "❤️" },
   { title: "Graduation", color: "bg-green-200", icon: "🎓" },
   { title: "Condolences", color: "bg-gray-200", icon: "🕊️" },
-  { title: "Birthday", color: "bg-pink-200", icon: "🎂" },
-  { title: "Congrats", color: "bg-yellow-200", icon: "⭐" },
+  { title: "Birthday", color: "bg-yellow-200", icon: "🎂" },
   { title: "Gifts", color: "bg-orange-200", icon: "🎁" },
 ];
 
 export default function Carousel() {
-  const [current, setCurrent] = useState(0);
+  const [index, setIndex] = useState(0);
 
-  // autoplay cada 5s
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % slides.length);
-    }, 5000);
-    return () => clearInterval(interval);
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % items.length);
+    }, 4000); // transición lenta
+    return () => clearInterval(timer);
   }, []);
 
-  // swipe para móvil
-  let startX = 0;
-  let endX = 0;
-
-  const handleTouchStart = (e) => {
-    startX = e.touches[0].clientX;
-  };
-
-  const handleTouchEnd = (e) => {
-    endX = e.changedTouches[0].clientX;
-    if (startX - endX > 50) {
-      setCurrent((prev) => (prev + 1) % slides.length); // next
-    } else if (endX - startX > 50) {
-      setCurrent((prev) => (prev - 1 + slides.length) % slides.length); // prev
-    }
-  };
+  const nextSlide = () => setIndex((prev) => (prev + 1) % items.length);
+  const prevSlide = () => setIndex((prev) => (prev - 1 + items.length) % items.length);
 
   return (
-    <div
-      className="relative w-full max-w-4xl mx-auto mt-8 overflow-hidden"
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-    >
-      <div className="flex justify-center items-center">
-        {slides.map((slide, index) => {
-          const offset = (index - current + slides.length) % slides.length;
-
-          // posición de cada tarjeta según su offset
-          let style = "hidden"; // ocultar las demás
-          if (offset === 0) {
-            style =
-              "z-20 transform scale-110 w-56 h-72 md:w-64 md:h-80"; // central grande
-          } else if (offset === 1 || offset === slides.length - 1) {
-            style =
-              "z-10 transform scale-90 opacity-80 w-40 h-60 md:w-48 md:h-72"; // laterales
+    <div className="relative w-full flex flex-col items-center mt-8">
+      {/* Carrusel */}
+      <div className="flex items-center justify-center space-x-4 transition-all duration-700 ease-in-out">
+        {items.map((item, i) => {
+          let position = "scale-75 opacity-50";
+          if (i === index) position = "scale-100 opacity-100 z-10";
+          else if (i === (index - 1 + items.length) % items.length || i === (index + 1) % items.length) {
+            position = "scale-90 opacity-80";
           }
 
           return (
             <div
-              key={index}
-              className={`absolute transition-all duration-700 ease-in-out flex flex-col items-center justify-center rounded-2xl shadow-lg ${slide.color} ${style}`}
-              style={{
-                transform: `${
-                  offset === 0
-                    ? "translateX(0)"
-                    : offset === 1
-                    ? "translateX(180px)"
-                    : offset === slides.length - 1
-                    ? "translateX(-180px)"
-                    : "translateX(9999px)" // escondidos
-                }`,
-              }}
+              key={i}
+              className={`transition-all duration-700 ease-in-out w-40 h-52 md:w-56 md:h-72 rounded-2xl shadow-lg flex flex-col items-center justify-center ${item.color} ${position}`}
             >
-              <span className="text-6xl">{slide.icon}</span>
-              <p className="mt-4 font-semibold text-gray-700">{slide.title}</p>
+              <span className="text-4xl">{item.icon}</span>
+              <p className="mt-2 text-base md:text-lg font-semibold">{item.title}</p>
             </div>
           );
         })}
       </div>
 
-      {/* dots */}
-      <div className="flex justify-center mt-80 space-x-2">
-        {slides.map((_, index) => (
+      {/* Dots */}
+      <div className="flex mt-4 space-x-2">
+        {items.map((_, i) => (
           <button
-            key={index}
-            onClick={() => setCurrent(index)}
-            className={`w-3 h-3 rounded-full ${
-              index === current ? "bg-pink-500" : "bg-gray-300"
-            }`}
+            key={i}
+            onClick={() => setIndex(i)}
+            className={`w-3 h-3 rounded-full ${i === index ? "bg-pink-500" : "bg-gray-300"}`}
           />
         ))}
       </div>
