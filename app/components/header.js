@@ -5,10 +5,7 @@ export default function Header({ show }) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
-
+    const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -19,18 +16,22 @@ export default function Header({ show }) {
         show ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-10"
       }`}
     >
-      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-        {/* Logo ya colocado en el header */}
+      <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col items-center md:flex-row md:justify-between md:items-center">
+        {/* Logo */}
         <img
           src="/logo.png"
           alt="Everwish Logo"
           className={`transition-all duration-700 ${
-            scrolled ? "w-12 h-12" : "w-16 h-16"
+            scrolled ? "w-12 h-12 self-start" : "w-20 h-20"
           }`}
         />
 
         {/* Menú */}
-        <nav className="flex space-x-6 text-gray-700 font-medium">
+        <nav
+          className={`mt-3 md:mt-0 flex space-x-6 text-gray-700 font-medium transition-all duration-700 ${
+            scrolled ? "self-end" : ""
+          }`}
+        >
           <a href="#">Login</a>
           <a href="#">Cart</a>
           <a href="#">Planes</a>
