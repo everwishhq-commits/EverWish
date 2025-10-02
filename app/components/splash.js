@@ -6,44 +6,35 @@ export default function Splash({ onFinish }) {
   const [show, setShow] = useState(true);
 
   useEffect(() => {
-    // Etapa 1: llegar rápido al 50%
-    setTimeout(() => setProgress(50), 500);
+    // Fase 1: directo a 50% en 1s
+    setTimeout(() => setProgress(50), 200);
 
-    // Etapa 2: llegar al 100% más lento
+    // Fase 2: directo a 100% en 2s
     setTimeout(() => {
-      let current = 50;
-      const interval = setInterval(() => {
-        current += 10;
-        if (current >= 100) {
-          clearInterval(interval);
-          setProgress(100);
-          // Espera medio segundo y cierra
-          setTimeout(() => {
-            setShow(false);
-            if (onFinish) onFinish();
-          }, 500);
-        } else {
-          setProgress(current);
-        }
-      }, 300); // sube cada 0.3s hasta 100
-    }, 1000); // inicia después de 1s
+      setProgress(100);
+      // Ocultar después de 0.5s
+      setTimeout(() => {
+        setShow(false);
+        if (onFinish) onFinish();
+      }, 500);
+    }, 2000);
   }, [onFinish]);
 
   if (!show) return null;
 
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center bg-white z-50">
-      {/* Logo más grande y parpadeando */}
+      {/* Logo grande con parpadeo */}
       <img
         src="/logo.png"
         alt="Everwish Logo"
-        className="w-40 h-40 animate-pulse"
+        className="w-44 h-44 animate-pulse"
       />
 
-      {/* Barra de carga (sin texto ni % ) */}
-      <div className="w-64 h-3 bg-gray-200 rounded-full mt-8">
+      {/* Barra más corta y debajo del logo */}
+      <div className="w-32 h-2 bg-gray-200 rounded-full mt-6">
         <div
-          className="h-3 bg-pink-500 rounded-full transition-all duration-500"
+          className="h-2 bg-pink-500 rounded-full transition-all duration-1000"
           style={{ width: `${progress}%` }}
         ></div>
       </div>
