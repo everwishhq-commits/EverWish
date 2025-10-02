@@ -1,33 +1,28 @@
 "use client";
-import { useState } from "react";
-import Image from "next/image";
+
 import { Swiper, SwiperSlide } from "swiper/react";
 import { EffectCoverflow, Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/effect-coverflow";
 import "swiper/css/pagination";
 
-const top10 = [
-  { img: "/top10/birthday.png" },
-  { img: "/top10/love.png" },
-  { img: "/top10/baby.png" },
-  { img: "/top10/graduation.png" },
-  { img: "/top10/gift.png" },
-  { img: "/top10/condolences.png" },
-  { img: "/top10/anniversary.png" },
-  // ...agregas hasta 10
+const cards = [
+  { id: 1, title: "Card 1", image: "/card1.png" },
+  { id: 2, title: "Card 2", image: "/card2.png" },
+  { id: 3, title: "Card 3", image: "/card3.png" },
+  { id: 4, title: "Card 4", image: "/card4.png" },
+  { id: 5, title: "Card 5", image: "/card5.png" },
 ];
 
-export default function Top10Carousel() {
+export default function Carousel() {
   return (
-    <div className="w-full max-w-3xl mx-auto">
+    <div className="w-full py-10 bg-white rounded-lg shadow-md">
+      <h2 className="text-2xl font-bold text-center mb-6">Top 10</h2>
       <Swiper
-        modules={[EffectCoverflow, Pagination, Autoplay]}
-        effect="coverflow"
-        grabCursor
-        centeredSlides
-        slidesPerView="auto"
-        loop
+        effect={"coverflow"}
+        grabCursor={true}
+        centeredSlides={true}
+        slidesPerView={"auto"}
         autoplay={{
           delay: 3000,
           disableOnInteraction: false,
@@ -35,27 +30,24 @@ export default function Top10Carousel() {
         coverflowEffect={{
           rotate: 0,
           stretch: 0,
-          depth: 150,
+          depth: 200,
           modifier: 2,
-          scale: 0.8,
+          slideShadows: false,
         }}
         pagination={{ clickable: true }}
-        className="py-10"
+        modules={[EffectCoverflow, Pagination, Autoplay]}
+        className="w-full max-w-4xl"
       >
-        {top10.map((item, index) => (
+        {cards.map((card) => (
           <SwiperSlide
-            key={index}
-            className="w-[200px] md:w-[250px] lg:w-[280px] rounded-2xl shadow-lg"
+            key={card.id}
+            className="w-64 h-80 flex items-center justify-center bg-pink-200 rounded-2xl overflow-hidden shadow-lg"
           >
-            <div className="rounded-2xl overflow-hidden">
-              <Image
-                src={item.img}
-                alt={`Top ${index + 1}`}
-                width={300}
-                height={400}
-                className="object-contain w-full h-full rounded-2xl bg-white"
-              />
-            </div>
+            <img
+              src={card.image}
+              alt={card.title}
+              className="object-cover w-full h-full"
+            />
           </SwiperSlide>
         ))}
       </Swiper>
