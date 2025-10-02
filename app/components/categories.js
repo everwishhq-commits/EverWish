@@ -1,28 +1,31 @@
 "use client";
+import { Cake, Star, Baby, Heart, GraduationCap, Gift } from "lucide-react";
 
 const categories = [
-  { name: "Cumpleaños", color: "bg-pink-100", emoji: "🎂" },
-  { name: "Felicidades", color: "bg-yellow-100", emoji: "⭐" },
-  { name: "Bebé",        color: "bg-blue-100",  emoji: "👶" },
-  { name: "Amor",        color: "bg-red-100",   emoji: "❤️" },
-  { name: "Graduación",  color: "bg-green-100", emoji: "🎓" },
-  { name: "Regalos",     color: "bg-purple-100",emoji: "🎁" },
+  { name: "Birthday", color: "bg-pink-200", icon: <Cake size={32} /> },
+  { name: "Congratulations", color: "bg-yellow-200", icon: <Star size={32} /> },
+  { name: "Baby", color: "bg-blue-200", icon: <Baby size={32} /> },
+  { name: "Love", color: "bg-red-200", icon: <Heart size={32} /> },
+  { name: "Graduation", color: "bg-green-200", icon: <GraduationCap size={32} /> },
+  { name: "Gifts", color: "bg-purple-200", icon: <Gift size={32} /> },
 ];
 
 export default function Categories() {
   return (
-    <section aria-labelledby="cats-title">
-      <h2 id="cats-title" className="text-2xl font-bold text-center mb-8">Categorías</h2>
+    <div>
+      <h2 className="text-2xl font-bold mb-6">Categories</h2>
       <div className="flex flex-wrap justify-center gap-8">
         {categories.map((cat, i) => (
           <div key={i} className="flex flex-col items-center">
-            <div className={`w-20 h-20 ${cat.color} rounded-full flex items-center justify-center shadow-lg border border-white text-3xl`}>
-              {cat.emoji}
+            <div
+              className={`w-20 h-20 ${cat.color} rounded-full flex items-center justify-center shadow-md`}
+            >
+              {cat.icon}
             </div>
-            <p className="mt-2 text-sm font-semibold text-gray-700">{cat.name}</p>
+            <p className="mt-2 text-sm font-semibold">{cat.name}</p>
           </div>
         ))}
       </div>
-    </section>
+    </div>
   );
 }
