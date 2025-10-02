@@ -23,11 +23,10 @@ export default function Carousel() {
     <div className="py-10">
       <Swiper
         centeredSlides={true}
-        slidesPerView={3}              // 3 visibles siempre
-        initialSlide={1}               // inicia en el segundo (1 izq, 2 centro, 3 der)
-        spaceBetween={-60}             // superposición suave
+        slidesPerView={3}
+        spaceBetween={-30}
         autoplay={{
-          delay: 3500,
+          delay: 4000,
           disableOnInteraction: false,
         }}
         pagination={{ clickable: true }}
@@ -36,18 +35,20 @@ export default function Carousel() {
       >
         {templates.map((card, index) => (
           <SwiperSlide key={index}>
-            <div
-              className="rounded-2xl shadow-lg p-6 flex flex-col items-center 
-                         justify-center bg-white transition-all duration-500 
-                         scale-90 swiper-slide-active:scale-125"
-            >
-              <img
-                src={card.image}
-                alt={card.title}
-                className="w-32 h-32 object-contain mb-4 rounded-xl"
-              />
-              <h3 className="text-lg font-semibold">{card.title}</h3>
-            </div>
+            {({ isActive }) => (
+              <div
+                className={`rounded-2xl shadow-lg p-6 flex flex-col items-center 
+                            justify-center bg-white transition-all duration-500
+                            ${isActive ? "scale-125 z-20" : "scale-90 opacity-70"}`}
+              >
+                <img
+                  src={card.image}
+                  alt={card.title}
+                  className="w-32 h-32 object-contain mb-4 rounded-xl"
+                />
+                <h3 className="text-lg font-semibold">{card.title}</h3>
+              </div>
+            )}
           </SwiperSlide>
         ))}
       </Swiper>
