@@ -1,20 +1,23 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 
+// 👉 Tus imágenes en /public/cards/
 const items = [
-  { title: "Anniversary", color: "bg-purple-200", icon: "💍" },
-  { title: "Baby", color: "bg-blue-200", icon: "👶" },
-  { title: "Love", color: "bg-pink-200", icon: "❤️" },
-  { title: "Graduation", color: "bg-green-200", icon: "🎓" },
-  { title: "Condolences", color: "bg-gray-200", icon: "🕊️" },
-  { title: "Birthday", color: "bg-yellow-200", icon: "🎂" },
-  { title: "Gifts", color: "bg-orange-200", icon: "🎁" },
+  { title: "Anniversary", img: "/cards/anniversary.png" },
+  { title: "Baby", img: "/cards/baby.png" },
+  { title: "Love", img: "/cards/love.png" },
+  { title: "Graduation", img: "/cards/graduation.png" },
+  { title: "Condolences", img: "/cards/condolences.png" },
+  { title: "Birthday", img: "/cards/birthday.png" },
+  { title: "Gifts", img: "/cards/gifts.png" },
 ];
 
 export default function Carousel() {
   const [index, setIndex] = useState(0);
+  const touchStartX = useRef(null);
 
-  // Auto slide cada 5 segundos
+  // ⏱ auto slide cada 5s
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex((prev) => (prev + 1) % items.length);
@@ -24,37 +27,64 @@ export default function Carousel() {
 
   const handleDotClick = (i) => setIndex(i);
 
+  // 👉 Swipe touch
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e) => {
+    if (!touchStartX.current) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX.current - touchEndX;
+
+    if (diff > 50) {
+      // swipe left
+      setIndex((prev) => (prev + 1) % items.length);
+    } else if (diff < -50) {
+      // swipe right
+      setIndex((prev) => (prev - 1 + items.length) % items.length);
+    }
+    touchStartX.current = null;
+  };
+
   return (
-    <div className="relative w-full flex flex-col items-center mt-6">
+    <div
+      className="relative w-full flex flex-col items-center mt-6"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       {/* Carrusel */}
-      <div className="relative h-64 w-full flex items-center justify-center overflow-hidden">
+      <div className="relative h-72 w-full flex items-center justify-center overflow-hidden">
         {items.map((item, i) => {
           const offset = (i - index + items.length) % items.length;
           let style =
-            "absolute transition-all duration-700 ease-in-out transform flex flex-col items-center justify-center rounded-2xl shadow-md";
+            "absolute transition-all duration-700 ease-in-out transform flex flex-col items-center justify-center rounded-2xl shadow-md bg-white overflow-hidden";
 
-          // central
           if (offset === 0) {
-            style +=
-              " w-48 h-64 scale-110 z-20 opacity-100 shadow-xl bg-white";
-          }
-          // derecha inmediata
-          else if (offset === 1) {
-            style +=
-              " w-40 h-56 translate-x-44 scale-90 z-10 opacity-80";
-          }
-          // izquierda inmediata
-          else if (offset === items.length - 1) {
-            style +=
-              " w-40 h-56 -translate-x-44 scale-90 z-10 opacity-80";
+            // central (grande)
+            style += " w-56 h-72 scale-125 z-20 opacity-100 shadow-xl";
+          } else if (offset === 1) {
+            // derecha
+            style += " w-40 h-60 translate-x-48 scale-90 z-10 opacity-80";
+          } else if (offset === items.length - 1) {
+            // izquierda
+            style += " w-40 h-60 -translate-x-48 scale-90 z-10 opacity-80";
           } else {
             style += " opacity-0 scale-75";
           }
 
           return (
-            <div key={i} className={`${item.color} ${style}`}>
-              <span className="text-4xl">{item.icon}</span>
-              <p className="mt-2 font-semibold">{item.title}</p>
+            <div key={i} className={style}>
+              <Image
+                src={item.img}
+                alt={item.title}
+                width={224}
+                height={288}
+                className="object-cover w-full h-full"
+              />
+              <p className="absolute bottom-2 text-sm font-semibold bg-white/70 px-2 py-1 rounded">
+                {item.title}
+              </p>
             </div>
           );
         })}
