@@ -17,21 +17,18 @@ export default function Page() {
         <>
           <Header />
           <main className="pt-32 md:pt-36 px-4 max-w-5xl mx-auto text-center">
-            {/* Hero */}
-            <h1 className="text-3xl md:text-5xl font-extrabold text-gray-900">
+            <h1 className="text-3xl md:text-5xl font-extrabold">
               With Everwish, share every moment that matters
             </h1>
-            <p className="mt-4 text-lg text-gray-600">
-              Make it special today ✨
-            </p>
+            <p className="mt-4 text-lg text-gray-700">Make it special today ✨</p>
 
             {/* Carousel */}
-            <div className="mt-12">
+            <div className="mt-10">
               <Carousel />
             </div>
 
             {/* Categories */}
-            <section className="mt-16 bg-white py-12 rounded-2xl shadow-md">
+            <section className="mt-16 bg-white rounded-t-3xl shadow-lg py-12 px-4">
               <Categories />
             </section>
 
@@ -41,7 +38,6 @@ export default function Page() {
             </section>
           </main>
 
-          {/* Footer */}
           <Footer />
         </>
       )}
