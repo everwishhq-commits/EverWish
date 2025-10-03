@@ -20,12 +20,12 @@ const templates = [
 
 export default function Carousel() {
   return (
-    <div className="py-10 bg-[#EAF6FA]">
+    <div className="py-10">
       <Swiper
         centeredSlides={true}
         slidesPerView={3}
         initialSlide={1}
-        spaceBetween={-60}
+        spaceBetween={-80}
         autoplay={{
           delay: 4000,
           disableOnInteraction: false,
@@ -38,19 +38,24 @@ export default function Carousel() {
           <SwiperSlide key={index}>
             {({ isActive }) => (
               <div
-                className={`rounded-2xl shadow-lg flex flex-col items-center justify-between bg-white transition-all duration-500
-                  ${isActive ? "scale-125 z-20" : "scale-90 opacity-70"}`}
-                style={{
-                  aspectRatio: "3/4", // más alto que ancho
-                  height: "400px",    // altura fija para todo el carrusel
-                }}
+                className={`rounded-2xl shadow-lg flex flex-col items-center 
+                            justify-center bg-white transition-all duration-500
+                            ${
+                              isActive
+                                ? "scale-110 translate-y-0 z-30 h-96" // central más grande
+                                : "scale-90 translate-y-10 opacity-70 z-10 h-72" // laterales más bajas
+                            }`}
               >
                 <img
                   src={card.image}
                   alt={card.title}
-                  className="w-full h-3/4 object-contain rounded-t-2xl"
+                  className="w-40 h-40 object-contain mb-4 rounded-xl"
                 />
-                <h3 className="text-lg font-semibold text-center py-2">
+                <h3
+                  className={`font-semibold transition-all ${
+                    isActive ? "text-xl" : "text-base"
+                  }`}
+                >
                   {card.title}
                 </h3>
               </div>
@@ -59,7 +64,7 @@ export default function Carousel() {
         ))}
       </Swiper>
 
-      {/* Dots debajo, fijos */}
+      {/* Dots fijos debajo, no mueven el bloque */}
       <div className="flex justify-center mt-4 custom-pagination" />
     </div>
   );
