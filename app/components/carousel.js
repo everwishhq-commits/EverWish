@@ -33,15 +33,15 @@ export default function Carousel() {
         className="w-full max-w-5xl min-h-[460px]"
         breakpoints={{
           0: {
-            slidesPerView: 1.15, // central completa + pedacito de laterales en mobile
-            spaceBetween: -30,
+            slidesPerView: 1.2, // central + pedacito de laterales
+            spaceBetween: -20,
           },
           640: {
-            slidesPerView: 1.4, // tablet
-            spaceBetween: -50,
+            slidesPerView: 1.4, // tablets chicas
+            spaceBetween: -40,
           },
           1024: {
-            slidesPerView: 3, // desktop
+            slidesPerView: 3,
             spaceBetween: -80,
           },
         }}
@@ -54,8 +54,8 @@ export default function Carousel() {
                             justify-between bg-white transition-all duration-500
                             ${
                               isActive
-                                ? "scale-110 translate-y-0 z-30 h-[420px] w-[280px]" // central más grande
-                                : "scale-90 translate-y-8 opacity-70 z-10 h-[360px] w-[240px]" // laterales más chicas
+                                ? "scale-110 translate-y-0 z-30 h-[420px] w-[280px]" // central
+                                : "scale-90 translate-y-8 opacity-70 z-10 h-[360px] w-[240px]" // laterales
                             }`}
               >
                 <img
