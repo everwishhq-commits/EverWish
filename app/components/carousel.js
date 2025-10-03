@@ -23,33 +23,36 @@ export default function Carousel() {
     <div className="py-10">
       <Swiper
         centeredSlides={true}
-        slidesPerView={3}
         initialSlide={1}
-        spaceBetween={-80}
         autoplay={{
           delay: 4000,
           disableOnInteraction: false,
         }}
         pagination={{ clickable: true, el: ".custom-pagination" }}
         modules={[Pagination, Autoplay]}
-        className="w-full max-w-5xl"
+        className="w-full max-w-5xl min-h-[420px]"
+        breakpoints={{
+          0: { slidesPerView: 1.2, spaceBetween: -40, centeredSlides: true }, // móvil: central + pedacitos laterales
+          768: { slidesPerView: 3, spaceBetween: -80, centeredSlides: true }, // tablet
+          1024: { slidesPerView: 3, spaceBetween: -100, centeredSlides: true }, // desktop
+        }}
       >
         {templates.map((card, index) => (
-          <SwiperSlide key={index} className="flex items-center justify-center h-[440px]">
+          <SwiperSlide key={index}>
             {({ isActive }) => (
               <div
                 className={`rounded-2xl shadow-lg flex flex-col items-center 
                             justify-center bg-white transition-all duration-500
                             ${
                               isActive
-                                ? "scale-110 z-30 h-[400px]" // central más alto
-                                : "scale-90 opacity-70 z-10 h-[300px]" // laterales más bajos
+                                ? "scale-110 translate-y-0 z-30 h-96"
+                                : "scale-90 translate-y-10 opacity-70 z-10 h-72"
                             }`}
               >
                 <img
                   src={card.image}
                   alt={card.title}
-                  className="w-32 h-32 object-contain mb-4 rounded-xl"
+                  className="w-40 h-40 object-contain mb-4 rounded-xl"
                 />
                 <h3
                   className={`font-semibold transition-all ${
