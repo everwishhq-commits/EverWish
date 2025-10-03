@@ -12,19 +12,16 @@ const templates = [
   { title: "Condolences", icon: "🕊️", color: "bg-gray-200" },
   { title: "Gifts", icon: "🎁", color: "bg-orange-200" },
   { title: "Thank You", icon: "🙏", color: "bg-purple-200" },
-  { title: "Anniversary", icon: "💍", color: "bg-red-200" },
-  { title: "Get Well", icon: "🌸", color: "bg-teal-200" },
-  { title: "New Home", icon: "🏡", color: "bg-indigo-200" },
 ];
 
 export default function Carousel() {
   return (
-    <div className="py-12">
+    <div className="py-10">
       <Swiper
         loop={true} // 🔄 ciclo infinito
         centeredSlides={true}
-        slidesPerView={3} // siempre 3 visibles
-        spaceBetween={-40} // para que se superpongan un poco
+        slidesPerView={3}
+        spaceBetween={-50} // superposición ligera
         autoplay={{
           delay: 4000,
           disableOnInteraction: false,
@@ -40,8 +37,8 @@ export default function Carousel() {
                 className={`rounded-2xl shadow-lg flex flex-col items-center justify-center transition-all duration-500 aspect-[3/4] ${card.color}
                 ${
                   isActive
-                    ? "scale-110 z-30" // central más grande
-                    : "scale-90 opacity-70 z-10" // laterales más pequeñas
+                    ? "scale-115 z-40" // más grande y adelante
+                    : "scale-90 opacity-70 z-10" // laterales
                 }`}
               >
                 <span className="text-5xl md:text-6xl mb-4">{card.icon}</span>
@@ -58,8 +55,8 @@ export default function Carousel() {
         ))}
       </Swiper>
 
-      {/* Dots debajo */}
-      <div className="flex justify-center mt-4 mb-4 custom-pagination" />
+      {/* Dots más cerca del carrusel */}
+      <div className="flex justify-center mt-2 mb-6 custom-pagination" />
     </div>
   );
 }
