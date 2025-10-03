@@ -21,9 +21,9 @@ export default function Carousel() {
         loop={true}
         centeredSlides={true}
         slidesPerView={3}
-        spaceBetween={-60}
+        spaceBetween={30} // separación clara entre tarjetas
         autoplay={{
-          delay: 4000,
+          delay: 3000,
           disableOnInteraction: false,
         }}
         pagination={{ clickable: true, el: ".custom-pagination" }}
@@ -37,8 +37,8 @@ export default function Carousel() {
                 className={`rounded-2xl shadow-lg flex flex-col items-center justify-center aspect-[3/4] transition-all duration-500 ${card.color}
                 ${
                   isActive
-                    ? "scale-110 z-[50]"   // central bien arriba
-                    : "scale-95 opacity-70 z-[10]" // laterales detrás
+                    ? "scale-110 z-[50]"   // zoom al centro
+                    : "scale-90 opacity-70 z-[10]" // laterales más pequeñas
                 }`}
               >
                 <span className="text-5xl md:text-6xl mb-4">{card.icon}</span>
@@ -55,7 +55,7 @@ export default function Carousel() {
         ))}
       </Swiper>
 
-      {/* Dots */}
+      {/* Dots debajo */}
       <div className="flex justify-center mt-3 mb-6 custom-pagination" />
     </div>
   );
