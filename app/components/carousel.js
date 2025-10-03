@@ -16,11 +16,11 @@ const templates = [
 
 export default function Carousel() {
   return (
-    // 🔴 Contenedor expandido y bajado
-    <div className="relative mt-12 py-12 min-h-[560px] overflow-visible">
+    // 🔴 Contenedor más alto y con más espacio
+    <div className="relative mt-14 py-16 min-h-[620px] overflow-visible">
       <Swiper
         centeredSlides={true}
-        loop={true} // 🔄 ciclo infinito
+        loop={true}
         autoplay={{
           delay: 4000,
           disableOnInteraction: false,
@@ -28,23 +28,23 @@ export default function Carousel() {
         pagination={{ clickable: true }}
         modules={[Pagination, Autoplay]}
         breakpoints={{
-          320: { slidesPerView: 3, spaceBetween: 10 },   // móvil: 3 visibles
-          640: { slidesPerView: 3, spaceBetween: 20 },   // tablet
-          1024: { slidesPerView: 3, spaceBetween: 40 },  // desktop
+          320: { slidesPerView: 3, spaceBetween: 10 },   // móvil → 3 visibles, más compactas
+          640: { slidesPerView: 3, spaceBetween: 25 },   // tablet
+          1024: { slidesPerView: 3, spaceBetween: 50 },  // desktop
         }}
-        className="w-full max-w-5xl overflow-visible"
+        className="w-full max-w-6xl overflow-visible"
       >
         {templates.map((card, index) => (
           <SwiperSlide key={index}>
             {({ isActive }) => (
               <div
                 className={`rounded-2xl shadow-lg flex flex-col items-center justify-center transition-all duration-500 aspect-[3/4] ${card.color}
-                ${isActive ? "scale-115 z-30" : "scale-90 opacity-70 z-10"}`}
+                ${isActive ? "scale-125 z-30" : "scale-95 opacity-70 z-10"}`}
               >
-                <span className="text-6xl mb-4">{card.icon}</span>
+                <span className="text-7xl mb-6">{card.icon}</span>
                 <h3
                   className={`font-semibold ${
-                    isActive ? "text-xl" : "text-base"
+                    isActive ? "text-2xl" : "text-lg"
                   }`}
                 >
                   {card.title}
@@ -55,8 +55,8 @@ export default function Carousel() {
         ))}
       </Swiper>
 
-      {/* Dots más pegados a las tarjetas */}
-      <div className="flex justify-center mt-4 mb-10 custom-pagination" />
+      {/* Dots más cerca de las tarjetas, y menos espacio con categorías */}
+      <div className="flex justify-center mt-6 mb-6 custom-pagination" />
     </div>
   );
 }
