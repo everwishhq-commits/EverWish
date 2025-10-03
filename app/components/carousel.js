@@ -16,8 +16,7 @@ const templates = [
 
 export default function Carousel() {
   return (
-    // 🔴 Contenedor más alto y con más espacio
-    <div className="relative mt-14 py-16 min-h-[620px] overflow-visible">
+    <div className="relative mt-16 py-12 md:py-20 min-h-[480px] md:min-h-[680px] overflow-visible">
       <Swiper
         centeredSlides={true}
         loop={true}
@@ -28,23 +27,30 @@ export default function Carousel() {
         pagination={{ clickable: true }}
         modules={[Pagination, Autoplay]}
         breakpoints={{
-          320: { slidesPerView: 3, spaceBetween: 10 },   // móvil → 3 visibles, más compactas
-          640: { slidesPerView: 3, spaceBetween: 25 },   // tablet
-          1024: { slidesPerView: 3, spaceBetween: 50 },  // desktop
+          320: { slidesPerView: 3, spaceBetween: 10 },   // móvil
+          640: { slidesPerView: 3, spaceBetween: 20 },   // tablet
+          1024: { slidesPerView: 3, spaceBetween: 40 },  // desktop
         }}
-        className="w-full max-w-6xl overflow-visible"
+        className="w-full max-w-6xl overflow-visible !pb-16"
       >
         {templates.map((card, index) => (
           <SwiperSlide key={index}>
             {({ isActive }) => (
               <div
-                className={`rounded-2xl shadow-lg flex flex-col items-center justify-center transition-all duration-500 aspect-[3/4] ${card.color}
-                ${isActive ? "scale-125 z-30" : "scale-95 opacity-70 z-10"}`}
+                className={`
+                  rounded-2xl shadow-lg flex flex-col items-center justify-center 
+                  transition-all duration-500 aspect-[3/4] ${card.color}
+                  ${
+                    isActive
+                      ? "scale-105 md:scale-125 z-30" // 🔹 en cel zoom leve, en desktop zoom grande
+                      : "scale-90 md:scale-95 opacity-70 z-10"
+                  }
+                `}
               >
-                <span className="text-7xl mb-6">{card.icon}</span>
+                <span className="text-5xl md:text-7xl mb-4 md:mb-6">{card.icon}</span>
                 <h3
                   className={`font-semibold ${
-                    isActive ? "text-2xl" : "text-lg"
+                    isActive ? "text-lg md:text-2xl" : "text-base md:text-lg"
                   }`}
                 >
                   {card.title}
@@ -55,8 +61,8 @@ export default function Carousel() {
         ))}
       </Swiper>
 
-      {/* Dots más cerca de las tarjetas, y menos espacio con categorías */}
-      <div className="flex justify-center mt-6 mb-6 custom-pagination" />
+      {/* Dots */}
+      <div className="flex justify-center mt-6 custom-pagination" />
     </div>
   );
 }
