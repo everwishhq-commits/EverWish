@@ -16,35 +16,34 @@ const templates = [
 
 export default function Carousel() {
   return (
-    <div className="relative py-14 overflow-visible"> 
+    <div className="relative py-16 min-h-[500px] overflow-visible">
       <Swiper
-        loop={true}
         centeredSlides={true}
-        slidesPerView={3}
-        spaceBetween={30}
+        loop={true} // 🔄 ciclo infinito
         autoplay={{
-          delay: 3000,
+          delay: 4000,
           disableOnInteraction: false,
         }}
-        pagination={{ clickable: true, el: ".custom-pagination" }}
+        pagination={{ clickable: true }}
         modules={[Pagination, Autoplay]}
-        className="w-full max-w-5xl overflow-visible" // 🔥 importante: no cortar
+        breakpoints={{
+          320: { slidesPerView: 3, spaceBetween: 10 },   // móvil: 3 visibles
+          640: { slidesPerView: 3, spaceBetween: 20 },   // tablet
+          1024: { slidesPerView: 3, spaceBetween: 40 },  // desktop
+        }}
+        className="w-full max-w-5xl overflow-visible"
       >
         {templates.map((card, index) => (
           <SwiperSlide key={index}>
             {({ isActive }) => (
               <div
-                className={`rounded-2xl shadow-lg flex flex-col items-center justify-center aspect-[3/4] transition-all duration-500 ${card.color}
-                ${
-                  isActive
-                    ? "scale-110 z-50"   // zoom central
-                    : "scale-90 opacity-70 z-10"
-                }`}
+                className={`rounded-2xl shadow-lg flex flex-col items-center justify-center transition-all duration-500 aspect-[3/4] ${card.color}
+                ${isActive ? "scale-110 z-30" : "scale-90 opacity-70 z-10"}`}
               >
-                <span className="text-5xl md:text-6xl mb-4">{card.icon}</span>
+                <span className="text-6xl mb-4">{card.icon}</span>
                 <h3
                   className={`font-semibold ${
-                    isActive ? "text-lg md:text-xl" : "text-sm md:text-base"
+                    isActive ? "text-xl" : "text-base"
                   }`}
                 >
                   {card.title}
@@ -55,8 +54,8 @@ export default function Carousel() {
         ))}
       </Swiper>
 
-      {/* Dots más cerca del carrusel */}
-      <div className="flex justify-center mt-6 mb-6 custom-pagination" />
+      {/* Dots debajo del carrusel */}
+      <div className="flex justify-center mt-6 custom-pagination" />
     </div>
   );
 }
