@@ -22,6 +22,7 @@ export default function Carousel() {
     <div className="py-10">
       <Swiper
         centeredSlides={true}
+        initialSlide={1}  // 👈 arranca con 3 visibles (0 izquierda, 1 centro, 2 derecha)
         autoplay={{
           delay: 4000,
           disableOnInteraction: false,
@@ -29,7 +30,7 @@ export default function Carousel() {
         pagination={{ clickable: true }}
         modules={[Pagination, Autoplay]}
         breakpoints={{
-          320: { slidesPerView: 1.2, spaceBetween: 20 },   // móvil
+          320: { slidesPerView: 1.2, spaceBetween: 20 },   // móvil (se ven 3, central grande)
           640: { slidesPerView: 2.2, spaceBetween: 30 },   // tablet
           1024: { slidesPerView: 3, spaceBetween: -40 },   // desktop
         }}
@@ -43,8 +44,8 @@ export default function Carousel() {
                             justify-center bg-white transition-all duration-500 mx-auto
                             ${
                               isActive
-                                ? "scale-110 w-[85%] h-[420px] z-30" // central más grande y alto
-                                : "scale-90 w-[70%] h-[360px] opacity-70 z-10" // laterales más pequeñas
+                                ? "scale-110 w-[80%] h-[420px] z-30" // tarjeta central más alta
+                                : "scale-90 w-[70%] h-[360px] opacity-70 z-10" // laterales más bajas
                             }`}
               >
                 <img
