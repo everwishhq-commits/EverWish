@@ -32,8 +32,8 @@ export default function Page() {
               <Carousel />
             </div>
 
-            {/* Categories */}
-            <section className="mt-10 md:mt-12 lg:mt-16 bg-white rounded-t-3xl shadow-lg py-8 md:py-10 lg:py-12 px-4">
+            {/* Categories (subida más cerca del carrusel) */}
+            <section className="mt-6 md:mt-8 lg:mt-10 bg-white rounded-t-3xl shadow-lg py-8 md:py-10 lg:py-12 px-4">
               <Categories />
             </section>
 
