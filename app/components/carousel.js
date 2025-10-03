@@ -19,7 +19,7 @@ export default function Carousel() {
     <div className="relative py-16 min-h-[550px] overflow-visible">
       <Swiper
         centeredSlides={true}
-        loop={true} // 🔄 ciclo infinito
+        loop={true}
         autoplay={{
           delay: 4000,
           disableOnInteraction: false,
@@ -27,7 +27,7 @@ export default function Carousel() {
         pagination={{ clickable: true }}
         modules={[Pagination, Autoplay]}
         breakpoints={{
-          320: { slidesPerView: 3, spaceBetween: 10 },   // móvil: 3 visibles
+          320: { slidesPerView: 3, spaceBetween: 10 },   // móvil
           640: { slidesPerView: 3, spaceBetween: 20 },   // tablet
           1024: { slidesPerView: 3, spaceBetween: 40 },  // desktop
         }}
@@ -39,7 +39,10 @@ export default function Carousel() {
               <div
                 className={`rounded-2xl shadow-lg flex flex-col items-center justify-center 
                             transition-all duration-500 ${card.color}
-                            ${isActive ? "scale-120 z-30 h-[500px]" : "scale-90 opacity-70 z-10 h-[420px]"}`}
+                ${isActive 
+                  ? "scale-125 z-50 h-[500px]"   // tarjeta central: más grande y encima
+                  : "scale-90 opacity-70 z-10 h-[420px]"}`
+                }
               >
                 <span className={`${isActive ? "text-7xl" : "text-5xl"} mb-4`}>
                   {card.icon}
