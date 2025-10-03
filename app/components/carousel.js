@@ -23,16 +23,19 @@ export default function Carousel() {
     <div className="py-10">
       <Swiper
         centeredSlides={true}
-        slidesPerView={3}
         initialSlide={1}
-        spaceBetween={-80}
         autoplay={{
           delay: 4000,
           disableOnInteraction: false,
         }}
         pagination={{ clickable: true, el: ".custom-pagination" }}
         modules={[Pagination, Autoplay]}
-        className="w-full max-w-5xl min-h-[420px]" // altura fija para que no mueva lo de abajo
+        className="w-full max-w-5xl min-h-[460px]"
+        breakpoints={{
+          0: { slidesPerView: 1.15, spaceBetween: -30 },
+          640: { slidesPerView: 1.4, spaceBetween: -50 },
+          1024: { slidesPerView: 3, spaceBetween: -80 },
+        }}
       >
         {templates.map((card, index) => (
           <SwiperSlide key={index}>
@@ -42,8 +45,8 @@ export default function Carousel() {
                             justify-center bg-white transition-all duration-500
                             ${
                               isActive
-                                ? "scale-110 translate-y-0 z-30 h-96" // central más grande
-                                : "scale-90 translate-y-10 opacity-70 z-10 h-72" // laterales más bajas
+                                ? "scale-110 z-30 h-[420px] -translate-y-4" // más alta y centrada
+                                : "scale-90 opacity-70 z-10 h-[340px] translate-y-6" // más pequeñas y bajitas
                             }`}
               >
                 <img
