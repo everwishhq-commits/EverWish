@@ -1,8 +1,11 @@
 "use client";
 import { useState } from "react";
+import dynamic from "next/dynamic"; // 👈 import dinámico
+
 import Splash from "./components/splash";
 import Header from "./components/header";
-import Carousel from "./components/carousel";
+// 👇 import dinámico del carrusel, sin SSR
+const Carousel = dynamic(() => import("./components/carousel"), { ssr: false });
 import Categories from "./components/categories";
 import Reviews from "./components/reviews";
 import Footer from "./components/footer";
