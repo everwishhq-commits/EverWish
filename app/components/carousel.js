@@ -16,10 +16,10 @@ const templates = [
 
 export default function Carousel() {
   return (
-    <div className="relative py-16 min-h-[520px] overflow-visible">
+    <div className="relative mt-10 md:mt-14 lg:mt-16">
       <Swiper
         centeredSlides={true}
-        loop={true} // 🔄 ciclo infinito
+        loop={true} // ciclo infinito
         autoplay={{
           delay: 4000,
           disableOnInteraction: false,
@@ -27,18 +27,18 @@ export default function Carousel() {
         pagination={{ clickable: true }}
         modules={[Pagination, Autoplay]}
         breakpoints={{
-          320: { slidesPerView: 3, spaceBetween: 10 },   // móvil
+          320: { slidesPerView: 3, spaceBetween: 12 },   // móvil: 3 visibles
           640: { slidesPerView: 3, spaceBetween: 20 },   // tablet
-          1024: { slidesPerView: 3, spaceBetween: 40 },  // desktop
+          1024: { slidesPerView: 3, spaceBetween: 32 },  // desktop
         }}
-        className="w-full max-w-5xl overflow-visible"
+        className="w-full max-w-6xl overflow-visible !pb-28" // 👈 más espacio interno abajo
       >
         {templates.map((card, index) => (
           <SwiperSlide key={index}>
             {({ isActive }) => (
               <div
                 className={`rounded-2xl shadow-lg flex flex-col items-center justify-center transition-all duration-500 aspect-[3/4] ${card.color}
-                ${isActive ? "scale-120 z-30" : "scale-90 opacity-70 z-10"}`}
+                ${isActive ? "scale-120 z-30" : "scale-95 opacity-70 z-10"}`}
               >
                 <span className="text-6xl mb-4">{card.icon}</span>
                 <h3
@@ -55,7 +55,7 @@ export default function Carousel() {
       </Swiper>
 
       {/* Dots debajo del carrusel */}
-      <div className="flex justify-center mt-6 custom-pagination" />
+      <div className="flex justify-center mt-6 mb-6 custom-pagination" />
     </div>
   );
 }
