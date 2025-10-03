@@ -24,25 +24,24 @@ export default function Carousel() {
       <Swiper
         centeredSlides={true}
         initialSlide={1}
-        spaceBetween={-60}
         autoplay={{
           delay: 4000,
           disableOnInteraction: false,
         }}
         pagination={{ clickable: true, el: ".custom-pagination" }}
         modules={[Pagination, Autoplay]}
-        className="w-full max-w-5xl min-h-[420px]"
+        className="w-full max-w-5xl min-h-[460px]"
         breakpoints={{
           0: {
-            slidesPerView: 1, // en celulares solo 1 grande
-            spaceBetween: 0,
+            slidesPerView: 1.15, // central completa + pedacito de laterales en mobile
+            spaceBetween: -30,
           },
           640: {
-            slidesPerView: 1.5, // en móviles grandes: 1 central y medio de los lados
-            spaceBetween: -40,
+            slidesPerView: 1.4, // tablet
+            spaceBetween: -50,
           },
           1024: {
-            slidesPerView: 3, // escritorio: 3 visibles
+            slidesPerView: 3, // desktop
             spaceBetween: -80,
           },
         }}
@@ -52,21 +51,21 @@ export default function Carousel() {
             {({ isActive }) => (
               <div
                 className={`rounded-2xl shadow-lg flex flex-col items-center 
-                            justify-center bg-white transition-all duration-500
+                            justify-between bg-white transition-all duration-500
                             ${
                               isActive
-                                ? "scale-110 translate-y-0 z-30 h-96"
-                                : "scale-90 translate-y-10 opacity-70 z-10 h-72"
+                                ? "scale-110 translate-y-0 z-30 h-[420px] w-[280px]" // central más grande
+                                : "scale-90 translate-y-8 opacity-70 z-10 h-[360px] w-[240px]" // laterales más chicas
                             }`}
               >
                 <img
                   src={card.image}
                   alt={card.title}
-                  className="w-32 h-32 md:w-40 md:h-40 object-contain mb-2 rounded-xl"
+                  className="w-full h-3/4 object-cover rounded-t-2xl"
                 />
                 <h3
-                  className={`font-semibold transition-all ${
-                    isActive ? "text-lg md:text-xl" : "text-sm md:text-base"
+                  className={`py-2 font-semibold transition-all ${
+                    isActive ? "text-lg" : "text-sm"
                   }`}
                 >
                   {card.title}
