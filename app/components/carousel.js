@@ -16,7 +16,7 @@ const templates = [
 
 export default function Carousel() {
   return (
-    <div className="relative mt-4 py-8 min-h-[520px] overflow-visible">
+    <div className="relative mt-0 py-8 min-h-[520px] overflow-visible">
       <Swiper
         centeredSlides={true}
         loop={true}
@@ -27,10 +27,10 @@ export default function Carousel() {
         pagination={{ clickable: true, el: ".custom-pagination" }}
         modules={[Pagination, Autoplay]}
         breakpoints={{
-          320: { slidesPerView: 1.4, spaceBetween: 10 },  
-          480: { slidesPerView: 2.2, spaceBetween: 15 },  
-          640: { slidesPerView: 3, spaceBetween: 20 },    
-          1024: { slidesPerView: 3, spaceBetween: 40 },   
+          320: { slidesPerView: 1.4, spaceBetween: 10 },
+          480: { slidesPerView: 2.2, spaceBetween: 15 },
+          640: { slidesPerView: 3, spaceBetween: 20 },
+          1024: { slidesPerView: 3, spaceBetween: 40 },
         }}
         className="w-full max-w-5xl overflow-visible"
       >
@@ -41,7 +41,7 @@ export default function Carousel() {
                 className={`rounded-2xl shadow-lg flex flex-col items-center justify-center 
                             transition-all duration-500 ${card.color}
                 ${isActive 
-                  ? "scale-125 z-50 h-[480px]"   
+                  ? "scale-125 z-50 h-[480px]" 
                   : "scale-90 opacity-70 z-10 h-[400px]"}`
                 }
               >
@@ -61,8 +61,8 @@ export default function Carousel() {
         ))}
       </Swiper>
 
-      {/* Dots más abajo */}
-      <div className="flex justify-center mt-6 mb-4 custom-pagination" />
+      {/* Dots más abajo y con mejor espacio */}
+      <div className="flex justify-center mt-8 mb-6 custom-pagination" />
     </div>
   );
 }
