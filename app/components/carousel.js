@@ -1,4 +1,5 @@
 "use client";
+
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
@@ -16,36 +17,36 @@ const templates = [
 
 export default function Carousel() {
   return (
-    <div className="relative mt-10 md:mt-14 lg:mt-16 overflow-visible">
+    <div className="relative pt-12 pb-24 md:pt-16 md:pb-28 lg:pt-20 lg:pb-32 min-h-[600px] overflow-visible">
       <Swiper
-        centeredSlides={true}
-        loop={true} // 🔄 ciclo infinito
-        autoplay={{
-          delay: 4000,
-          disableOnInteraction: false,
-        }}
-        pagination={{ clickable: true }}
+        centeredSlides
+        loop                     // ➜ ciclo infinito
+        autoplay={{ delay: 4000, disableOnInteraction: false }}
+        pagination={{ clickable: true, el: ".custom-pagination" }}
         modules={[Pagination, Autoplay]}
         breakpoints={{
-          320: { slidesPerView: 3, spaceBetween: 12 },   // móvil
-          640: { slidesPerView: 3, spaceBetween: 20 },   // tablet
-          1024: { slidesPerView: 3, spaceBetween: 32 },  // desktop
+          320:  { slidesPerView: 3, spaceBetween: 12 }, // móvil: 3 visibles
+          640:  { slidesPerView: 3, spaceBetween: 20 }, // tablet
+          1024: { slidesPerView: 3, spaceBetween: 32 }, // desktop
         }}
-        className="w-full max-w-6xl overflow-visible pb-20" // 👈 más espacio abajo
+        className="w-full max-w-6xl overflow-visible"
       >
-        {templates.map((card, index) => (
-          <SwiperSlide key={index}>
+        {templates.map((card, i) => (
+          <SwiperSlide key={i}>
             {({ isActive }) => (
               <div
-                className={`rounded-2xl shadow-lg flex flex-col items-center justify-center transition-all duration-500 aspect-[3/4] ${card.color}
-                ${isActive ? "scale-[1.25] z-30" : "scale-90 opacity-70 z-10"}`}
+                className={[
+                  "rounded-2xl shadow-lg flex flex-col items-center justify-center",
+                  "transition-all duration-500",
+                  "aspect-[3/4]",          // formato vertical
+                  card.color,
+                  isActive
+                    ? "scale-[1.25] z-30" // centro más grande
+                    : "scale-90 opacity-70 z-10",
+                ].join(" ")}
               >
                 <span className="text-6xl mb-4">{card.icon}</span>
-                <h3
-                  className={`font-semibold ${
-                    isActive ? "text-xl" : "text-base"
-                  }`}
-                >
+                <h3 className={`font-semibold ${isActive ? "text-xl" : "text-base"}`}>
                   {card.title}
                 </h3>
               </div>
@@ -54,8 +55,8 @@ export default function Carousel() {
         ))}
       </Swiper>
 
-      {/* Dots más pegados al carrusel */}
-      <div className="flex justify-center mt-2 mb-8 custom-pagination" />
+      {/* Dots debajo del carrusel (pegados) */}
+      <div className="custom-pagination flex justify-center mt-6" />
     </div>
   );
 }
