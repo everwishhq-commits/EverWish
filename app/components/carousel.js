@@ -31,7 +31,7 @@ export default function Carousel() {
         breakpoints={{
           320: { slidesPerView: 1.2, spaceBetween: 20 },   // móvil
           640: { slidesPerView: 2.2, spaceBetween: 30 },   // tablet
-          1024: { slidesPerView: 3, spaceBetween: -60 },   // desktop
+          1024: { slidesPerView: 3, spaceBetween: -40 },   // desktop
         }}
         className="w-full max-w-5xl"
       >
@@ -40,39 +40,33 @@ export default function Carousel() {
             {({ isActive }) => (
               <div
                 className={`rounded-2xl shadow-lg flex flex-col items-center 
-                            justify-center bg-white transition-all duration-500
+                            justify-center bg-white transition-all duration-500 mx-auto
                             ${
                               isActive
-                                ? "scale-105 z-30"
-                                : "scale-90 opacity-70 z-10"
+                                ? "scale-110 w-[85%] h-[420px] z-30" // central más grande y alto
+                                : "scale-90 w-[70%] h-[360px] opacity-70 z-10" // laterales más pequeñas
                             }`}
               >
-                <div
-                  className={`w-full max-w-xs flex flex-col justify-between items-center p-4 
-                              ${
-                                isActive
-                                  ? "aspect-[3/4] sm:aspect-[4/5] lg:aspect-[16/9]"
-                                  : "aspect-[3/4] sm:aspect-[4/5] lg:aspect-[16/9]"
-                              }`}
+                <img
+                  src={card.image}
+                  alt={card.title}
+                  className="w-32 h-32 object-contain mb-4 rounded-xl"
+                />
+                <h3
+                  className={`font-semibold transition-all ${
+                    isActive ? "text-lg" : "text-sm"
+                  }`}
                 >
-                  <img
-                    src={card.image}
-                    alt={card.title}
-                    className="w-28 h-28 object-contain mb-4 rounded-xl"
-                  />
-                  <h3
-                    className={`font-semibold transition-all text-center ${
-                      isActive ? "text-lg" : "text-sm"
-                    }`}
-                  >
-                    {card.title}
-                  </h3>
-                </div>
+                  {card.title}
+                </h3>
               </div>
             )}
           </SwiperSlide>
         ))}
       </Swiper>
+
+      {/* Dots más abajo */}
+      <div className="flex justify-center mt-6" />
     </div>
   );
 }
