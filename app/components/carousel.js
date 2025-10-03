@@ -23,19 +23,21 @@ export default function Carousel() {
     <div className="py-10">
       <Swiper
         centeredSlides={true}
+        slidesPerView={1.2} // 👈 en móvil se verá 1 central y cachitos de los lados
+        breakpoints={{
+          640: { slidesPerView: 1.5, spaceBetween: -40 }, // tablet chica
+          768: { slidesPerView: 2.2, spaceBetween: -60 }, // tablet mediana
+          1024: { slidesPerView: 3, spaceBetween: -80 },  // desktop
+        }}
         initialSlide={1}
+        spaceBetween={-50}
         autoplay={{
           delay: 4000,
           disableOnInteraction: false,
         }}
         pagination={{ clickable: true, el: ".custom-pagination" }}
         modules={[Pagination, Autoplay]}
-        className="w-full max-w-5xl min-h-[460px]"
-        breakpoints={{
-          0: { slidesPerView: 1.15, spaceBetween: -30 },
-          640: { slidesPerView: 1.4, spaceBetween: -50 },
-          1024: { slidesPerView: 3, spaceBetween: -80 },
-        }}
+        className="w-full max-w-5xl min-h-[480px]"
       >
         {templates.map((card, index) => (
           <SwiperSlide key={index}>
@@ -45,18 +47,18 @@ export default function Carousel() {
                             justify-center bg-white transition-all duration-500
                             ${
                               isActive
-                                ? "scale-110 z-30 h-[420px] -translate-y-4" // más alta y centrada
-                                : "scale-90 opacity-70 z-10 h-[340px] translate-y-6" // más pequeñas y bajitas
+                                ? "scale-110 z-30 h-[420px] -translate-y-2"
+                                : "scale-90 opacity-70 z-10 h-[320px] translate-y-4"
                             }`}
               >
                 <img
                   src={card.image}
                   alt={card.title}
-                  className="w-40 h-40 object-contain mb-4 rounded-xl"
+                  className="w-32 h-32 object-contain mb-4 rounded-xl"
                 />
                 <h3
                   className={`font-semibold transition-all ${
-                    isActive ? "text-xl" : "text-base"
+                    isActive ? "text-lg sm:text-xl" : "text-sm sm:text-base"
                   }`}
                 >
                   {card.title}
