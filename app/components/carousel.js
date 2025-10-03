@@ -19,7 +19,7 @@ const templates = [
 
 export default function Carousel() {
   return (
-    <div className="mt-14"> {/* 👈 margen superior más grande, baja el carrusel */}
+    <div className="mt-20"> {/* 🔥 más margen superior */}
       <Swiper
         centeredSlides={true}
         initialSlide={1}
@@ -30,23 +30,18 @@ export default function Carousel() {
         pagination={{ clickable: true, el: ".custom-pagination" }}
         modules={[Pagination, Autoplay]}
         breakpoints={{
-          320: { slidesPerView: 1.2, spaceBetween: 20 },   // móvil
-          640: { slidesPerView: 2.2, spaceBetween: 30 },   // tablet
+          320: { slidesPerView: 1.1, spaceBetween: 10 },   // móvil
+          640: { slidesPerView: 2.2, spaceBetween: 20 },   // tablet
           1024: { slidesPerView: 3, spaceBetween: -40 },   // desktop
         }}
-        className="w-full max-w-5xl min-h-[480px]"
+        className="w-full max-w-5xl min-h-[500px]" // altura fija, evita que mueva categorías
       >
         {templates.map((card, index) => (
           <SwiperSlide key={index}>
             {({ isActive }) => (
               <div
-                className={`rounded-2xl shadow-lg flex flex-col items-center justify-center bg-white transition-all duration-500
-                  aspect-[3/4] 
-                  ${
-                    isActive
-                      ? "scale-110 z-30"
-                      : "scale-90 opacity-70 z-10"
-                  }`}
+                className={`rounded-2xl shadow-lg flex flex-col items-center justify-center bg-white transition-all duration-500 aspect-[3/4]
+                  ${isActive ? "scale-110 z-30" : "scale-90 opacity-70 z-10"}`}
               >
                 <img
                   src={card.image}
@@ -66,8 +61,8 @@ export default function Carousel() {
         ))}
       </Swiper>
 
-      {/* Dots bien pegados al carrusel */}
-      <div className="flex justify-center mt-4 mb-8 custom-pagination" />
+      {/* 🔥 Dots bien pegados, con simetría arriba/abajo */}
+      <div className="flex justify-center mt-2 mb-6 custom-pagination" />
     </div>
   );
 }
