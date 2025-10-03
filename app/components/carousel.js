@@ -1,7 +1,6 @@
 "use client";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
-
 import "swiper/css";
 import "swiper/css/pagination";
 
@@ -20,54 +19,60 @@ const templates = [
 
 export default function Carousel() {
   return (
-    <div className="py-14"> {/* un poco más de espacio arriba */}
+    <div className="py-10">
       <Swiper
         centeredSlides={true}
-        initialSlide={1}
         autoplay={{
           delay: 4000,
           disableOnInteraction: false,
         }}
-        pagination={{ clickable: true, el: ".custom-pagination" }}
+        pagination={{ clickable: true }}
         modules={[Pagination, Autoplay]}
-        className="w-full max-w-5xl min-h-[420px]"
         breakpoints={{
-          0: { slidesPerView: 1.1, spaceBetween: -30, centeredSlides: true }, // móvil
-          640: { slidesPerView: 1.3, spaceBetween: -40, centeredSlides: true }, // tablet
-          1024: { slidesPerView: 3, spaceBetween: -80, centeredSlides: true }, // desktop
+          320: { slidesPerView: 1.2, spaceBetween: 20 },   // móvil
+          640: { slidesPerView: 2.2, spaceBetween: 30 },   // tablet
+          1024: { slidesPerView: 3, spaceBetween: -60 },   // desktop
         }}
+        className="w-full max-w-5xl"
       >
         {templates.map((card, index) => (
           <SwiperSlide key={index}>
             {({ isActive }) => (
               <div
                 className={`rounded-2xl shadow-lg flex flex-col items-center 
-                            justify-center bg-white transition-all duration-500 overflow-hidden
+                            justify-center bg-white transition-all duration-500
                             ${
                               isActive
-                                ? "scale-110 translate-y-0 z-30 h-96 md:aspect-[16/9]"
-                                : "scale-90 translate-y-10 opacity-70 z-10 h-72 md:aspect-[16/9]"
+                                ? "scale-105 z-30"
+                                : "scale-90 opacity-70 z-10"
                             }`}
               >
-                <img
-                  src={card.image}
-                  alt={card.title}
-                  className="w-full h-full object-cover"
-                />
-                <h3
-                  className={`absolute bottom-4 font-semibold bg-white/80 px-3 py-1 rounded-lg
-                              ${isActive ? "text-lg" : "text-sm"}`}
+                <div
+                  className={`w-full max-w-xs flex flex-col justify-between items-center p-4 
+                              ${
+                                isActive
+                                  ? "aspect-[3/4] sm:aspect-[4/5] lg:aspect-[16/9]"
+                                  : "aspect-[3/4] sm:aspect-[4/5] lg:aspect-[16/9]"
+                              }`}
                 >
-                  {card.title}
-                </h3>
+                  <img
+                    src={card.image}
+                    alt={card.title}
+                    className="w-28 h-28 object-contain mb-4 rounded-xl"
+                  />
+                  <h3
+                    className={`font-semibold transition-all text-center ${
+                      isActive ? "text-lg" : "text-sm"
+                    }`}
+                  >
+                    {card.title}
+                  </h3>
+                </div>
               </div>
             )}
           </SwiperSlide>
         ))}
       </Swiper>
-
-      {/* Dots fijos debajo */}
-      <div className="flex justify-center mt-4 custom-pagination" />
     </div>
   );
 }
