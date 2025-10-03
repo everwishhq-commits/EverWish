@@ -19,7 +19,7 @@ const templates = [
 
 export default function Carousel() {
   return (
-    <div className="py-10">
+    <div className="pt-6"> {/* 👈 menos padding arriba para no cortar esquinas */}
       <Swiper
         centeredSlides={true}
         initialSlide={1}
@@ -41,7 +41,7 @@ export default function Carousel() {
             {({ isActive }) => (
               <div
                 className={`rounded-2xl shadow-lg flex flex-col items-center justify-center bg-white transition-all duration-500
-                  aspect-[3/4]  // 👈 formato vertical fijo
+                  aspect-[3/4] 
                   ${
                     isActive
                       ? "scale-110 z-30"
@@ -66,8 +66,8 @@ export default function Carousel() {
         ))}
       </Swiper>
 
-      {/* 👇 dots fijos debajo del carrusel */}
-      <div className="flex justify-center mt-6 custom-pagination" />
+      {/* Dots más pegados al carrusel */}
+      <div className="flex justify-center mt-2 custom-pagination" />
     </div>
   );
 }
