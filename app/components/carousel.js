@@ -38,11 +38,9 @@ export default function Carousel() {
                 ${
                   isActive
                     ? "scale-110 z-30" // central siempre adelante
-                    : isPrev
-                    ? "scale-95 opacity-70 z-20 -translate-x-4" // izquierda detrás
-                    : isNext
-                    ? "scale-95 opacity-70 z-20 translate-x-4" // derecha detrás
-                    : "scale-90 opacity-50 z-10"
+                    : (isPrev || isNext)
+                    ? "scale-95 opacity-70 z-10" // laterales siempre detrás
+                    : "scale-90 opacity-50 z-0"
                 }`}
               >
                 <span className="text-5xl md:text-6xl mb-4">{card.icon}</span>
