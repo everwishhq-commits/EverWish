@@ -23,14 +23,13 @@ export default function Carousel() {
     <div className="py-10">
       <Swiper
         centeredSlides={true}
-        slidesPerView={1.2} // 👈 en móvil se verá 1 central y cachitos de los lados
+        slidesPerView={1.2}
         breakpoints={{
-          640: { slidesPerView: 1.5, spaceBetween: -40 }, // tablet chica
-          768: { slidesPerView: 2.2, spaceBetween: -60 }, // tablet mediana
-          1024: { slidesPerView: 3, spaceBetween: -80 },  // desktop
+          640: { slidesPerView: 1.5, spaceBetween: -40 },
+          768: { slidesPerView: 2.2, spaceBetween: -60 },
+          1024: { slidesPerView: 3, spaceBetween: -80 },
         }}
         initialSlide={1}
-        spaceBetween={-50}
         autoplay={{
           delay: 4000,
           disableOnInteraction: false,
@@ -47,8 +46,8 @@ export default function Carousel() {
                             justify-center bg-white transition-all duration-500
                             ${
                               isActive
-                                ? "scale-110 z-30 h-[420px] -translate-y-2"
-                                : "scale-90 opacity-70 z-10 h-[320px] translate-y-4"
+                                ? "scale-110 z-30 h-[420px] translate-y-[-20px]" // se levanta un poco para dar aire arriba
+                                : "scale-90 opacity-70 z-10 h-[320px] translate-y-6" // laterales más bajas
                             }`}
               >
                 <img
