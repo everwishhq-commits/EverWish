@@ -32,7 +32,7 @@ export default function Carousel() {
         }}
         pagination={{ clickable: true, el: ".custom-pagination" }}
         modules={[Pagination, Autoplay]}
-        className="w-full max-w-5xl"
+        className="w-full max-w-5xl min-h-[420px]" // altura fija para que no mueva lo de abajo
       >
         {templates.map((card, index) => (
           <SwiperSlide key={index}>
@@ -64,7 +64,7 @@ export default function Carousel() {
         ))}
       </Swiper>
 
-      {/* Dots fijos debajo, no mueven el bloque */}
+      {/* Dots fijos debajo */}
       <div className="flex justify-center mt-4 custom-pagination" />
     </div>
   );
