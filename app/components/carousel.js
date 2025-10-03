@@ -18,10 +18,10 @@ export default function Carousel() {
   return (
     <div className="py-10">
       <Swiper
-        loop={true} // 🔄 ciclo infinito
+        loop={true} // 🔄 infinito
         centeredSlides={true}
-        slidesPerView={3}
-        spaceBetween={-50} // superposición ligera
+        slidesPerView={3} // siempre 3 visibles
+        spaceBetween={-40} // se enciman un poco
         autoplay={{
           delay: 4000,
           disableOnInteraction: false,
@@ -37,8 +37,8 @@ export default function Carousel() {
                 className={`rounded-2xl shadow-lg flex flex-col items-center justify-center transition-all duration-500 aspect-[3/4] ${card.color}
                 ${
                   isActive
-                    ? "scale-115 z-40" // más grande y adelante
-                    : "scale-90 opacity-70 z-10" // laterales
+                    ? "scale-110 z-30" // central un poco más grande
+                    : "scale-90 opacity-70 z-10" // laterales más pequeñas
                 }`}
               >
                 <span className="text-5xl md:text-6xl mb-4">{card.icon}</span>
@@ -56,7 +56,7 @@ export default function Carousel() {
       </Swiper>
 
       {/* Dots más cerca del carrusel */}
-      <div className="flex justify-center mt-2 mb-6 custom-pagination" />
+      <div className="flex justify-center mt-3 mb-6 custom-pagination" />
     </div>
   );
 }
