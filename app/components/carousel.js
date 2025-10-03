@@ -20,7 +20,7 @@ const templates = [
 
 export default function Carousel() {
   return (
-    <div className="py-10">
+    <div className="py-14"> {/* un poco más de espacio arriba */}
       <Swiper
         centeredSlides={true}
         initialSlide={1}
@@ -32,9 +32,9 @@ export default function Carousel() {
         modules={[Pagination, Autoplay]}
         className="w-full max-w-5xl min-h-[420px]"
         breakpoints={{
-          0: { slidesPerView: 1.2, spaceBetween: -40, centeredSlides: true }, // móvil: central + pedacitos laterales
-          768: { slidesPerView: 3, spaceBetween: -80, centeredSlides: true }, // tablet
-          1024: { slidesPerView: 3, spaceBetween: -100, centeredSlides: true }, // desktop
+          0: { slidesPerView: 1.1, spaceBetween: -30, centeredSlides: true }, // móvil
+          640: { slidesPerView: 1.3, spaceBetween: -40, centeredSlides: true }, // tablet
+          1024: { slidesPerView: 3, spaceBetween: -80, centeredSlides: true }, // desktop
         }}
       >
         {templates.map((card, index) => (
@@ -42,22 +42,21 @@ export default function Carousel() {
             {({ isActive }) => (
               <div
                 className={`rounded-2xl shadow-lg flex flex-col items-center 
-                            justify-center bg-white transition-all duration-500
+                            justify-center bg-white transition-all duration-500 overflow-hidden
                             ${
                               isActive
-                                ? "scale-110 translate-y-0 z-30 h-96"
-                                : "scale-90 translate-y-10 opacity-70 z-10 h-72"
+                                ? "scale-110 translate-y-0 z-30 h-96 md:aspect-[16/9]"
+                                : "scale-90 translate-y-10 opacity-70 z-10 h-72 md:aspect-[16/9]"
                             }`}
               >
                 <img
                   src={card.image}
                   alt={card.title}
-                  className="w-40 h-40 object-contain mb-4 rounded-xl"
+                  className="w-full h-full object-cover"
                 />
                 <h3
-                  className={`font-semibold transition-all ${
-                    isActive ? "text-xl" : "text-base"
-                  }`}
+                  className={`absolute bottom-4 font-semibold bg-white/80 px-3 py-1 rounded-lg
+                              ${isActive ? "text-lg" : "text-sm"}`}
                 >
                   {card.title}
                 </h3>
