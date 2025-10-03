@@ -21,7 +21,7 @@ export default function Carousel() {
         loop={true}
         centeredSlides={true}
         slidesPerView={3}
-        spaceBetween={-40}
+        spaceBetween={-60}
         autoplay={{
           delay: 4000,
           disableOnInteraction: false,
@@ -32,13 +32,17 @@ export default function Carousel() {
       >
         {templates.map((card, index) => (
           <SwiperSlide key={index}>
-            {({ isActive }) => (
+            {({ isActive, isPrev, isNext }) => (
               <div
-                className={`rounded-2xl shadow-lg flex flex-col items-center justify-center transition-all duration-500 aspect-[3/4] ${card.color}
+                className={`rounded-2xl shadow-lg flex flex-col items-center justify-center aspect-[3/4] transition-all duration-500 ${card.color}
                 ${
                   isActive
-                    ? "scale-110 z-30"   // central al frente
-                    : "scale-90 opacity-70 z-10" // laterales detrás
+                    ? "scale-110 z-30" // central siempre adelante
+                    : isPrev
+                    ? "scale-95 opacity-70 z-20 -translate-x-4" // izquierda detrás
+                    : isNext
+                    ? "scale-95 opacity-70 z-20 translate-x-4" // derecha detrás
+                    : "scale-90 opacity-50 z-10"
                 }`}
               >
                 <span className="text-5xl md:text-6xl mb-4">{card.icon}</span>
@@ -55,7 +59,7 @@ export default function Carousel() {
         ))}
       </Swiper>
 
-      {/* Dots debajo */}
+      {/* Dots */}
       <div className="flex justify-center mt-3 mb-6 custom-pagination" />
     </div>
   );
