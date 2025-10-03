@@ -5,21 +5,17 @@ import "swiper/css";
 import "swiper/css/pagination";
 
 const templates = [
-  { title: "Template 1", image: "/templates/template1.png" },
-  { title: "Template 2", image: "/templates/template2.png" },
-  { title: "Template 3", image: "/templates/template3.png" },
-  { title: "Template 4", image: "/templates/template4.png" },
-  { title: "Template 5", image: "/templates/template5.png" },
-  { title: "Template 6", image: "/templates/template6.png" },
-  { title: "Template 7", image: "/templates/template7.png" },
-  { title: "Template 8", image: "/templates/template8.png" },
-  { title: "Template 9", image: "/templates/template9.png" },
-  { title: "Template 10", image: "/templates/template10.png" },
+  { title: "Birthday", icon: "🎂", color: "bg-yellow-200" },
+  { title: "Baby", icon: "👶", color: "bg-blue-200" },
+  { title: "Love", icon: "❤️", color: "bg-pink-200" },
+  { title: "Graduation", icon: "🎓", color: "bg-green-200" },
+  { title: "Condolences", icon: "🕊️", color: "bg-gray-200" },
+  { title: "Gifts", icon: "🎁", color: "bg-orange-200" },
 ];
 
 export default function Carousel() {
   return (
-    <div className="mt-28"> {/* 🔥 más espacio arriba */}
+    <div className="mt-20">
       <Swiper
         centeredSlides={true}
         initialSlide={1}
@@ -34,23 +30,19 @@ export default function Carousel() {
           640: { slidesPerView: 2.2, spaceBetween: 20 },   // tablet
           1024: { slidesPerView: 3, spaceBetween: -40 },   // desktop
         }}
-        className="w-full max-w-5xl min-h-[500px]"
+        className="w-full max-w-5xl min-h-[480px]"
       >
         {templates.map((card, index) => (
           <SwiperSlide key={index}>
             {({ isActive }) => (
               <div
-                className={`rounded-2xl shadow-lg flex flex-col items-center justify-center bg-white transition-all duration-500 aspect-[3/4]
-                  ${isActive ? "scale-110 z-30" : "scale-90 opacity-70 z-10"}`}
+                className={`rounded-2xl shadow-lg flex flex-col items-center justify-center transition-all duration-500 aspect-[3/4] ${card.color}
+                ${isActive ? "scale-110 z-30" : "scale-90 opacity-70 z-10"}`}
               >
-                <img
-                  src={card.image}
-                  alt={card.title}
-                  className="w-32 h-32 object-contain mb-4 rounded-xl"
-                />
+                <span className="text-6xl mb-4">{card.icon}</span>
                 <h3
                   className={`font-semibold ${
-                    isActive ? "text-lg" : "text-sm"
+                    isActive ? "text-xl" : "text-base"
                   }`}
                 >
                   {card.title}
@@ -61,7 +53,7 @@ export default function Carousel() {
         ))}
       </Swiper>
 
-      {/* 🔥 dots pegados a la tarjeta pero con simetría */}
+      {/* Dots debajo del carrusel */}
       <div className="flex justify-center mt-4 mb-8 custom-pagination" />
     </div>
   );
