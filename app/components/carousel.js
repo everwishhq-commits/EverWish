@@ -21,20 +21,16 @@ export default function Carousel() {
   return (
     <div className="py-12">
       <Swiper
-        loop={true}  // 🔄 ciclo infinito
+        loop={true} // 🔄 ciclo infinito
         centeredSlides={true}
-        initialSlide={0}
+        slidesPerView={3} // siempre 3 visibles
+        spaceBetween={-40} // para que se superpongan un poco
         autoplay={{
           delay: 4000,
           disableOnInteraction: false,
         }}
         pagination={{ clickable: true, el: ".custom-pagination" }}
         modules={[Pagination, Autoplay]}
-        breakpoints={{
-          320: { slidesPerView: 1.1, spaceBetween: 20 },   // móvil
-          640: { slidesPerView: 2.2, spaceBetween: 30 },   // tablet
-          1024: { slidesPerView: 3, spaceBetween: 40 },    // desktop
-        }}
         className="w-full max-w-5xl"
       >
         {templates.map((card, index) => (
@@ -42,12 +38,16 @@ export default function Carousel() {
             {({ isActive }) => (
               <div
                 className={`rounded-2xl shadow-lg flex flex-col items-center justify-center transition-all duration-500 aspect-[3/4] ${card.color}
-                ${isActive ? "scale-105 z-30" : "scale-95 opacity-70 z-10"}`}
+                ${
+                  isActive
+                    ? "scale-110 z-30" // central más grande
+                    : "scale-90 opacity-70 z-10" // laterales más pequeñas
+                }`}
               >
-                <span className="text-6xl mb-4">{card.icon}</span>
+                <span className="text-5xl md:text-6xl mb-4">{card.icon}</span>
                 <h3
                   className={`font-semibold ${
-                    isActive ? "text-xl" : "text-base"
+                    isActive ? "text-lg md:text-xl" : "text-sm md:text-base"
                   }`}
                 >
                   {card.title}
@@ -58,7 +58,7 @@ export default function Carousel() {
         ))}
       </Swiper>
 
-      {/* Dots más cerca de categorías */}
+      {/* Dots debajo */}
       <div className="flex justify-center mt-4 mb-4 custom-pagination" />
     </div>
   );
