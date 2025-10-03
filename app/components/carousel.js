@@ -16,7 +16,7 @@ const templates = [
 
 export default function Carousel() {
   return (
-    <div className="relative py-12 min-h-[520px] overflow-visible">
+    <div className="relative mt-4 py-8 min-h-[520px] overflow-visible">
       <Swiper
         centeredSlides={true}
         loop={true}
@@ -24,13 +24,13 @@ export default function Carousel() {
           delay: 4000,
           disableOnInteraction: false,
         }}
-        pagination={{ clickable: true }}
+        pagination={{ clickable: true, el: ".custom-pagination" }}
         modules={[Pagination, Autoplay]}
         breakpoints={{
-          320: { slidesPerView: 1.4, spaceBetween: 10 },  // móvil: se ven bien sin cortar
-          480: { slidesPerView: 2.2, spaceBetween: 15 },  // pantallas pequeñas
-          640: { slidesPerView: 3, spaceBetween: 20 },    // tablet
-          1024: { slidesPerView: 3, spaceBetween: 40 },   // desktop
+          320: { slidesPerView: 1.4, spaceBetween: 10 },  
+          480: { slidesPerView: 2.2, spaceBetween: 15 },  
+          640: { slidesPerView: 3, spaceBetween: 20 },    
+          1024: { slidesPerView: 3, spaceBetween: 40 },   
         }}
         className="w-full max-w-5xl overflow-visible"
       >
@@ -41,7 +41,7 @@ export default function Carousel() {
                 className={`rounded-2xl shadow-lg flex flex-col items-center justify-center 
                             transition-all duration-500 ${card.color}
                 ${isActive 
-                  ? "scale-125 z-50 h-[480px]"   // tarjeta central grande
+                  ? "scale-125 z-50 h-[480px]"   
                   : "scale-90 opacity-70 z-10 h-[400px]"}`
                 }
               >
@@ -61,8 +61,8 @@ export default function Carousel() {
         ))}
       </Swiper>
 
-      {/* Dots más pegados al carrusel */}
-      <div className="flex justify-center mt-4 mb-6 custom-pagination" />
+      {/* Dots más abajo */}
+      <div className="flex justify-center mt-6 mb-4 custom-pagination" />
     </div>
   );
 }
