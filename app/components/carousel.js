@@ -16,7 +16,7 @@ const templates = [
 
 export default function Carousel() {
   return (
-    <div className="relative py-16 min-h-[500px] overflow-visible">
+    <div className="relative py-8 min-h-[460px] overflow-visible">
       <Swiper
         centeredSlides={true}
         loop={true} // 🔄 ciclo infinito
@@ -38,7 +38,7 @@ export default function Carousel() {
             {({ isActive }) => (
               <div
                 className={`rounded-2xl shadow-lg flex flex-col items-center justify-center transition-all duration-500 aspect-[3/4] ${card.color}
-                ${isActive ? "scale-110 z-30" : "scale-90 opacity-70 z-10"}`}
+                ${isActive ? "scale-115 z-30" : "scale-90 opacity-70 z-10"}`}
               >
                 <span className="text-6xl mb-4">{card.icon}</span>
                 <h3
@@ -54,8 +54,8 @@ export default function Carousel() {
         ))}
       </Swiper>
 
-      {/* Dots debajo del carrusel */}
-      <div className="flex justify-center mt-6 custom-pagination" />
+      {/* Dots justo debajo, más pegados */}
+      <div className="flex justify-center mt-3 mb-6 custom-pagination" />
     </div>
   );
 }
