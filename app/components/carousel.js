@@ -11,14 +11,19 @@ const templates = [
   { title: "Graduation", icon: "🎓", color: "bg-green-200" },
   { title: "Condolences", icon: "🕊️", color: "bg-gray-200" },
   { title: "Gifts", icon: "🎁", color: "bg-orange-200" },
+  { title: "Thank You", icon: "🙏", color: "bg-purple-200" },
+  { title: "Anniversary", icon: "💍", color: "bg-red-200" },
+  { title: "Get Well", icon: "🌸", color: "bg-teal-200" },
+  { title: "New Home", icon: "🏡", color: "bg-indigo-200" },
 ];
 
 export default function Carousel() {
   return (
     <div className="py-12">
       <Swiper
+        loop={true}  // 🔄 ciclo infinito
         centeredSlides={true}
-        initialSlide={1}
+        initialSlide={0}
         autoplay={{
           delay: 4000,
           disableOnInteraction: false,
@@ -53,8 +58,8 @@ export default function Carousel() {
         ))}
       </Swiper>
 
-      {/* Dots debajo del carrusel */}
-      <div className="flex justify-center mt-4 mb-8 custom-pagination" />
+      {/* Dots más cerca de categorías */}
+      <div className="flex justify-center mt-4 mb-4 custom-pagination" />
     </div>
   );
 }
