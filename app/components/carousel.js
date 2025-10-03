@@ -20,52 +20,40 @@ const templates = [
 
 export default function Carousel() {
   return (
-    <div className="pt-6 pb-4">
+    <div className="py-10">
       <Swiper
         centeredSlides={true}
+        slidesPerView={3}
         initialSlide={1}
+        spaceBetween={-80}
         autoplay={{
           delay: 4000,
           disableOnInteraction: false,
         }}
         pagination={{ clickable: true, el: ".custom-pagination" }}
         modules={[Pagination, Autoplay]}
-        className="w-full max-w-5xl min-h-[460px]"
-        breakpoints={{
-          0: {
-            slidesPerView: 1,
-            spaceBetween: 0,
-          },
-          640: {
-            slidesPerView: 1.3, // central + laterales recortadas
-            spaceBetween: -40,
-          },
-          1024: {
-            slidesPerView: 3,
-            spaceBetween: -80,
-          },
-        }}
+        className="w-full max-w-5xl min-h-[420px]" // altura fija para que no mueva lo de abajo
       >
         {templates.map((card, index) => (
           <SwiperSlide key={index}>
             {({ isActive }) => (
               <div
                 className={`rounded-2xl shadow-lg flex flex-col items-center 
-                            justify-between bg-white transition-all duration-500
+                            justify-center bg-white transition-all duration-500
                             ${
                               isActive
-                                ? "scale-110 translate-y-0 z-30 h-[420px] w-[280px]" // central más grande y vertical
-                                : "scale-90 translate-y-8 opacity-70 z-10 h-[360px] w-[240px]" // laterales más pequeñas
+                                ? "scale-110 translate-y-0 z-30 h-96" // central más grande
+                                : "scale-90 translate-y-10 opacity-70 z-10 h-72" // laterales más bajas
                             }`}
               >
                 <img
                   src={card.image}
                   alt={card.title}
-                  className="w-full h-3/4 object-cover rounded-t-2xl"
+                  className="w-40 h-40 object-contain mb-4 rounded-xl"
                 />
                 <h3
-                  className={`py-2 font-semibold transition-all ${
-                    isActive ? "text-lg" : "text-sm"
+                  className={`font-semibold transition-all ${
+                    isActive ? "text-xl" : "text-base"
                   }`}
                 >
                   {card.title}
@@ -76,8 +64,8 @@ export default function Carousel() {
         ))}
       </Swiper>
 
-      {/* Dots fijos */}
-      <div className="flex justify-center mt-3 custom-pagination" />
+      {/* Dots fijos debajo */}
+      <div className="flex justify-center mt-4 custom-pagination" />
     </div>
   );
 }
