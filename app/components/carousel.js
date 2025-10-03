@@ -16,7 +16,7 @@ const templates = [
 
 export default function Carousel() {
   return (
-    <div className="relative mt-2 py-6 min-h-[500px] overflow-visible">
+    <div className="relative -mt-4 py-6 min-h-[520px] overflow-visible">
       <Swiper
         centeredSlides={true}
         loop={true}
@@ -39,11 +39,12 @@ export default function Carousel() {
             {({ isActive }) => (
               <div
                 className={`rounded-2xl shadow-lg flex flex-col items-center justify-center 
-                  transition-all duration-500 ${card.color}
-                  ${isActive 
-                    ? "scale-125 z-50 h-[460px]" 
-                    : "scale-90 opacity-70 z-10 h-[380px]"}
-                `}
+                            transition-all duration-500 ${card.color}
+                ${
+                  isActive
+                    ? "scale-125 z-50 h-[480px]"
+                    : "scale-90 opacity-70 z-10 h-[400px]"
+                }`}
               >
                 <span className={`${isActive ? "text-7xl" : "text-5xl"} mb-4`}>
                   {card.icon}
@@ -61,8 +62,8 @@ export default function Carousel() {
         ))}
       </Swiper>
 
-      {/* Dots (no se tocan, solo bajan un poco más) */}
-      <div className="flex justify-center mt-6 mb-2 custom-pagination" />
+      {/* Dots y margen ajustado */}
+      <div className="flex justify-center mt-4 mb-2 custom-pagination" />
     </div>
   );
 }
