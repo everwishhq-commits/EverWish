@@ -32,15 +32,13 @@ export default function Carousel() {
       >
         {templates.map((card, index) => (
           <SwiperSlide key={index}>
-            {({ isActive, isPrev, isNext }) => (
+            {({ isActive }) => (
               <div
                 className={`rounded-2xl shadow-lg flex flex-col items-center justify-center aspect-[3/4] transition-all duration-500 ${card.color}
                 ${
                   isActive
-                    ? "scale-110 z-30" // central siempre adelante
-                    : (isPrev || isNext)
-                    ? "scale-95 opacity-70 z-10" // laterales siempre detrás
-                    : "scale-90 opacity-50 z-0"
+                    ? "scale-110 z-[50]"   // central bien arriba
+                    : "scale-95 opacity-70 z-[10]" // laterales detrás
                 }`}
               >
                 <span className="text-5xl md:text-6xl mb-4">{card.icon}</span>
