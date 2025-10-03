@@ -19,7 +19,7 @@ const templates = [
 
 export default function Carousel() {
   return (
-    <div className="pt-6"> {/* 👈 menos padding arriba para no cortar esquinas */}
+    <div className="mt-14"> {/* 👈 margen superior más grande, baja el carrusel */}
       <Swiper
         centeredSlides={true}
         initialSlide={1}
@@ -66,8 +66,8 @@ export default function Carousel() {
         ))}
       </Swiper>
 
-      {/* Dots más pegados al carrusel */}
-      <div className="flex justify-center mt-2 custom-pagination" />
+      {/* Dots bien pegados al carrusel */}
+      <div className="flex justify-center mt-4 mb-8 custom-pagination" />
     </div>
   );
 }
