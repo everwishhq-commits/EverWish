@@ -16,7 +16,8 @@ const templates = [
 
 export default function Carousel() {
   return (
-    <div className="relative py-8 min-h-[460px] overflow-visible">
+    // 🔴 Contenedor expandido y bajado
+    <div className="relative mt-12 py-12 min-h-[560px] overflow-visible">
       <Swiper
         centeredSlides={true}
         loop={true} // 🔄 ciclo infinito
@@ -54,8 +55,8 @@ export default function Carousel() {
         ))}
       </Swiper>
 
-      {/* Dots justo debajo, más pegados */}
-      <div className="flex justify-center mt-3 mb-6 custom-pagination" />
+      {/* Dots más pegados a las tarjetas */}
+      <div className="flex justify-center mt-4 mb-10 custom-pagination" />
     </div>
   );
 }
