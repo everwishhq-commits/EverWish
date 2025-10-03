@@ -19,7 +19,7 @@ const templates = [
 
 export default function Carousel() {
   return (
-    <div className="mt-20"> {/* 🔥 más margen superior */}
+    <div className="mt-28"> {/* 🔥 más espacio arriba */}
       <Swiper
         centeredSlides={true}
         initialSlide={1}
@@ -34,7 +34,7 @@ export default function Carousel() {
           640: { slidesPerView: 2.2, spaceBetween: 20 },   // tablet
           1024: { slidesPerView: 3, spaceBetween: -40 },   // desktop
         }}
-        className="w-full max-w-5xl min-h-[500px]" // altura fija, evita que mueva categorías
+        className="w-full max-w-5xl min-h-[500px]"
       >
         {templates.map((card, index) => (
           <SwiperSlide key={index}>
@@ -61,8 +61,8 @@ export default function Carousel() {
         ))}
       </Swiper>
 
-      {/* 🔥 Dots bien pegados, con simetría arriba/abajo */}
-      <div className="flex justify-center mt-2 mb-6 custom-pagination" />
+      {/* 🔥 dots pegados a la tarjeta pero con simetría */}
+      <div className="flex justify-center mt-4 mb-8 custom-pagination" />
     </div>
   );
 }
