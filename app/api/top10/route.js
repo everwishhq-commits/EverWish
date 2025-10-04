@@ -1,15 +1,17 @@
-// pages/api/top10.js
 import fs from "fs";
 import path from "path";
 
-export default function handler(req, res) {
+export async function GET() {
   const dir = path.join(process.cwd(), "public/top10");
   const files = fs.readdirSync(dir);
 
-  const images = files.map((file) => ({
-    src: `/top10/${file}`,
-    title: file.replace(/\.[^/.]+$/, ""), // quitar extensión
-  }));
+  // Solo imágenes
+  const images = files
+    .filter(file => /\.(png|jpg|jpeg|gif|webp)$/i.test(file))
+    .map(file => `/top10/${file}`);
 
-  res.status(200).json(images);
+  return new Response(JSON.stringify(images), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
 }
