@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Star } from "lucide-react";
 
 const reviews = [
   { text: "Everwish made my day truly special!", author: "Sophia R.", rating: 5 },
@@ -23,17 +22,17 @@ export default function Reviews() {
             key={i}
             className="bg-white rounded-xl shadow p-6 text-sm text-gray-700 text-center"
           >
-            {/* ⭐ Estrellas */}
+            {/* ⭐ Estrellas con emoji */}
             <div className="flex justify-center mb-3">
               {Array.from({ length: 5 }, (_, index) => (
-                <Star
+                <span
                   key={index}
-                  className={`h-5 w-5 ${
-                    index < review.rating
-                      ? "text-yellow-400 fill-yellow-400"
-                      : "text-gray-300"
+                  className={`text-lg ${
+                    index < review.rating ? "text-yellow-400" : "text-gray-300"
                   }`}
-                />
+                >
+                  ★
+                </span>
               ))}
             </div>
             <p className="italic">"{review.text}"</p>
