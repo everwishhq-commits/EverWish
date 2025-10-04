@@ -1,47 +1,54 @@
 "use client";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination } from "swiper/modules";
+import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 
 const templates = [
-  { title: "Birthday", icon: "🎂", color: "bg-yellow-100" },
-  { title: "Baby", icon: "👶", color: "bg-blue-100" },
-  { title: "Love", icon: "❤️", color: "bg-pink-100" },
-  { title: "Graduation", icon: "🎓", color: "bg-green-100" },
-  { title: "Condolences", icon: "🕊️", color: "bg-gray-100" },
-  { title: "Gifts", icon: "🎁", color: "bg-orange-100" },
-  { title: "Thank You", icon: "🙏", color: "bg-purple-100" },
+  { title: "Birthday", icon: "🎂", color: "bg-yellow-200" },
+  { title: "Baby", icon: "👶", color: "bg-blue-200" },
+  { title: "Love", icon: "❤️", color: "bg-pink-200" },
+  { title: "Graduation", icon: "🎓", color: "bg-green-200" },
+  { title: "Condolences", icon: "🕊️", color: "bg-gray-200" },
+  { title: "Gifts", icon: "🎁", color: "bg-orange-200" },
+  { title: "Thank You", icon: "🙏", color: "bg-purple-200" },
 ];
 
 export default function Carousel() {
   return (
-    <div className="relative w-full flex flex-col items-center">
+    <div className="relative mt-2 py-6 min-h-[520px] overflow-visible">
       <Swiper
         centeredSlides={true}
         loop={true}
-        pagination={{ clickable: true }}
-        modules={[Pagination]}
-        breakpoints={{
-          320: { slidesPerView: 1.2, spaceBetween: 20 }, // 📱 móvil → una tarjeta al centro y bordes a los lados
-          640: { slidesPerView: 2.5, spaceBetween: 30 }, // tablet
-          1024: { slidesPerView: 3, spaceBetween: 40 },  // desktop
+        autoplay={{
+          delay: 4000,
+          disableOnInteraction: false,
         }}
-        className="w-full max-w-md"
+        pagination={{ clickable: true, el: ".custom-pagination" }}
+        modules={[Pagination, Autoplay]}
+        breakpoints={{
+          320: { slidesPerView: 1.2, spaceBetween: 15 },   // móvil
+          640: { slidesPerView: 1.6, spaceBetween: 20 },   // tablet
+          1024: { slidesPerView: 2.5, spaceBetween: 30 },  // desktop medio
+          1280: { slidesPerView: 3, spaceBetween: 40 },    // desktop grande
+        }}
+        className="w-full overflow-visible"
       >
         {templates.map((card, index) => (
           <SwiperSlide key={index}>
             {({ isActive }) => (
               <div
-                className={`rounded-3xl flex flex-col items-center justify-center 
-                  transition-all duration-500 ${card.color}
-                  ${isActive ? "scale-105 shadow-lg" : "scale-95 opacity-70"}
-                  w-full aspect-[3/4]`}
+                className={`rounded-2xl shadow-lg flex flex-col items-center justify-center transition-all duration-500 ${card.color}
+                ${isActive
+                  ? "scale-110 z-50 h-[400px] md:h-[420px] lg:h-[480px]"  // central más grande
+                  : "scale-90 opacity-70 z-10 h-[320px] md:h-[360px] lg:h-[400px]"}`}
               >
-                <span className="text-6xl mb-3">{card.icon}</span>
+                <span className={`${isActive ? "text-7xl" : "text-5xl"} mb-4`}>
+                  {card.icon}
+                </span>
                 <h3
-                  className={`font-bold ${
-                    isActive ? "text-xl" : "text-base text-gray-600"
+                  className={`font-semibold ${
+                    isActive ? "text-2xl" : "text-base"
                   }`}
                 >
                   {card.title}
@@ -52,8 +59,8 @@ export default function Carousel() {
         ))}
       </Swiper>
 
-      {/* Dots cerca de la tarjeta */}
-      <div className="custom-pagination mt-3" />
+      {/* Dots debajo del carrusel */}
+      <div className="flex justify-center mt-6 mb-4 custom-pagination" />
     </div>
   );
 }
