@@ -1,0 +1,22 @@
+[
+  {
+    "title": "Have a Magical Day",
+    "image": "/top10/1-unicorn.png",
+    "category": "Birthday"
+  },
+  {
+    "title": "Welcome Little One",
+    "image": "/top10/2-elephant.png",
+    "category": "Baby"
+  },
+  {
+    "title": "Besos y Abrazos",
+    "image": "/top10/3-besos.png",
+    "category": "Love"
+  },
+  {
+    "title": "Graduation Card",
+    "image": "/top10/4-graduation.png",
+    "category": "Graduation"
+  }
+]
