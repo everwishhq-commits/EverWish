@@ -1,18 +1,18 @@
 "use client";
+import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 
 export default function Carousel() {
-  // 👇 Aquí lista de imágenes en public/top10
-  const images = [
-    "/top10/have-a-magical-day.png",
-    "/top10/welcome-little-one.png",
-    "/top10/besos-y-abrazos.png",
-    "/top10/unicornio.png",
-    "/top10/elefante.png"
-  ];
+  const [images, setImages] = useState([]);
+
+  useEffect(() => {
+    fetch("/api/top10")
+      .then(res => res.json())
+      .then(data => setImages(data));
+  }, []);
 
   return (
     <div className="relative mt-2 py-6 min-h-[420px] overflow-visible">
