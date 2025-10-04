@@ -1,49 +1,45 @@
 "use client";
-import { useEffect, useState } from "react";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination, Autoplay } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/pagination";
+import { useState } from "react";
+import Splash from "./components/splash";
+import Header from "./components/header";
+import Carousel from "./components/carousel";
+import Categories from "./components/categories";
+import Reviews from "./components/reviews";
+import Footer from "./components/footer";
 
-export default function Carousel() {
-  const [images, setImages] = useState([]);
-
-  useEffect(() => {
-    fetch("/api/top10")
-      .then(res => res.json())
-      .then(data => setImages(data));
-  }, []);
+export default function Page() {
+  const [loading, setLoading] = useState(true);
 
   return (
-    <div className="relative mt-2 py-6 min-h-[420px] overflow-visible">
-      <Swiper
-        centeredSlides={true}
-        loop={true}
-        autoplay={{ delay: 4000, disableOnInteraction: false }}
-        pagination={{ clickable: true }}
-        modules={[Pagination, Autoplay]}
-        breakpoints={{
-          320: { slidesPerView: 1.1, spaceBetween: 10 },
-          480: { slidesPerView: 1.4, spaceBetween: 15 },
-          640: { slidesPerView: 2, spaceBetween: 20 },
-          1024: { slidesPerView: 3, spaceBetween: 30 },
-        }}
-        className="w-full max-w-5xl"
-      >
-        {images.map((src, index) => (
-          <SwiperSlide key={index}>
-            <div className="bg-white rounded-2xl shadow-lg flex items-center justify-center h-[400px]">
-              <img
-                src={src}
-                alt={`card-${index}`}
-                className="w-full h-full object-contain rounded-2xl"
-              />
-            </div>
-          </SwiperSlide>
-        ))}
-      </Swiper>
+    <>
+      {loading && <Splash onFinish={() => setLoading(false)} />}
+      {!loading && (
+        <>
+          <Header />
+          <main className="pt-24 md:pt-28 lg:pt-32 px-4 max-w-5xl mx-auto text-center">
+            <h1 className="text-3xl md:text-5xl font-extrabold">
+              Share every moment that matters with Everwish
+            </h1>
+            <p className="mt-3 text-lg text-gray-700">Make it special today ✨</p>
 
-      <div className="flex justify-center mt-4 mb-2 custom-pagination" />
-    </div>
+            {/* Carrusel un poco más abajo */}
+            <div className="mt-8 md:mt-10">
+              <Carousel />
+            </div>
+
+            {/* Categories más arriba */}
+            <section className="mt-10 bg-white rounded-t-3xl shadow-lg py-12 px-4">
+              <Categories />
+            </section>
+
+            <section className="mt-16">
+              <Reviews />
+            </section>
+          </main>
+
+          <Footer />
+        </>
+      )}
+    </>
   );
 }
