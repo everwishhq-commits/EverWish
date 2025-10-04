@@ -1,66 +1,44 @@
 "use client";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination, Autoplay } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/pagination";
-
-const templates = [
-  { title: "Birthday", icon: "🎂", color: "bg-yellow-200" },
-  { title: "Baby", icon: "👶", color: "bg-blue-200" },
-  { title: "Love", icon: "❤️", color: "bg-pink-200" },
-  { title: "Graduation", icon: "🎓", color: "bg-green-200" },
-  { title: "Condolences", icon: "🕊️", color: "bg-gray-200" },
-  { title: "Gifts", icon: "🎁", color: "bg-orange-200" },
-  { title: "Thank You", icon: "🙏", color: "bg-purple-200" },
-];
+import Image from "next/image";
+import cards from "../data/cards.json"; // 👈 Importamos las tarjetas desde JSON
 
 export default function Carousel() {
   return (
-    <div className="relative mt-2 py-6 min-h-[520px] overflow-visible">
-      <Swiper
-        centeredSlides={true}
-        loop={true}
-        autoplay={{
-          delay: 4000,
-          disableOnInteraction: false,
-        }}
-        pagination={{ clickable: true, el: ".custom-pagination" }}
-        modules={[Pagination, Autoplay]}
-        breakpoints={{
-          320: { slidesPerView: 1.2, spaceBetween: 15 },   // móvil
-          640: { slidesPerView: 1.6, spaceBetween: 20 },   // tablet
-          1024: { slidesPerView: 2.5, spaceBetween: 30 },  // desktop medio
-          1280: { slidesPerView: 3, spaceBetween: 40 },    // desktop grande
-        }}
-        className="w-full overflow-visible"
-      >
-        {templates.map((card, index) => (
-          <SwiperSlide key={index}>
-            {({ isActive }) => (
-              <div
-                className={`rounded-2xl shadow-lg flex flex-col items-center justify-center transition-all duration-500 ${card.color}
-                ${isActive
-                  ? "scale-110 z-50 h-[400px] md:h-[420px] lg:h-[480px]"  // central más grande
-                  : "scale-90 opacity-70 z-10 h-[320px] md:h-[360px] lg:h-[400px]"}`}
-              >
-                <span className={`${isActive ? "text-7xl" : "text-5xl"} mb-4`}>
-                  {card.icon}
-                </span>
-                <h3
-                  className={`font-semibold ${
-                    isActive ? "text-2xl" : "text-base"
-                  }`}
-                >
-                  {card.title}
-                </h3>
-              </div>
-            )}
-          </SwiperSlide>
-        ))}
-      </Swiper>
+    <div className="relative mt-6">
+      {/* Contenedor horizontal con scroll */}
+      <div className="flex gap-6 overflow-x-auto px-4 pb-6 scrollbar-hide snap-x snap-mandatory">
+        {cards.map((card, index) => (
+          <div
+            key={index}
+            className="min-w-[260px] max-w-[260px] bg-white rounded-2xl shadow-lg flex flex-col items-center justify-between p-4 snap-center transition-transform hover:scale-105"
+          >
+            {/* Imagen */}
+            <Image
+              src={card.image}
+              alt={card.title}
+              width={220}
+              height={300}
+              className="rounded-xl object-cover"
+            />
 
-      {/* Dots debajo del carrusel */}
-      <div className="flex justify-center mt-6 mb-4 custom-pagination" />
+            {/* Texto */}
+            <div className="mt-3 text-center">
+              <h3 className="font-bold text-lg">{card.title}</h3>
+              <p className="text-sm text-gray-500">{card.category}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Indicador dots (estático, opcional) */}
+      <div className="flex justify-center gap-2 mt-2">
+        {cards.map((_, idx) => (
+          <span
+            key={idx}
+            className="w-2 h-2 rounded-full bg-gray-400 opacity-60"
+          ></span>
+        ))}
+      </div>
     </div>
   );
 }
