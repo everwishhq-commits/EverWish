@@ -16,11 +16,12 @@ export default function Page() {
       {!loading && (
         <>
           <Header />
-          <main className="pt-32 md:pt-36 px-4 max-w-5xl mx-auto text-center">
+          {/* 👇 aquí bajamos el padding-top */}
+          <main className="pt-20 md:pt-24 lg:pt-28 px-4 max-w-5xl mx-auto text-center">
             <h1 className="text-3xl md:text-5xl font-extrabold">
               Share every moment that matters with Everwish
             </h1>
-            <p className="mt-4 text-lg text-gray-700">Make it special today ✨</p>
+            <p className="mt-3 text-lg text-gray-700">Make it special today ✨</p>
 
             {/* Carousel */}
             <div className="mt-10">
