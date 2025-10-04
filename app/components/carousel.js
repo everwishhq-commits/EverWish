@@ -1,67 +1,35 @@
 "use client";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination, Autoplay } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/pagination";
 
-const templates = [
-  { title: "Birthday", icon: "🎂", color: "bg-yellow-200" },
-  { title: "Baby", icon: "👶", color: "bg-blue-200" },
-  { title: "Love", icon: "❤️", color: "bg-pink-200" },
-  { title: "Graduation", icon: "🎓", color: "bg-green-200" },
-  { title: "Condolences", icon: "🕊️", color: "bg-gray-200" },
-  { title: "Gifts", icon: "🎁", color: "bg-orange-200" },
-  { title: "Thank You", icon: "🙏", color: "bg-purple-200" },
+const categories = [
+  { name: "Birthday", icon: "🎂", color: "bg-yellow-200" },
+  { name: "Baby", icon: "👶", color: "bg-blue-200" },
+  { name: "Love", icon: "❤️", color: "bg-pink-200" },
+  { name: "Graduation", icon: "🎓", color: "bg-green-200" },
+  { name: "Condolences", icon: "🕊️", color: "bg-gray-200" },
+  { name: "Gifts", icon: "🎁", color: "bg-orange-200" },
+  { name: "Thank You", icon: "🙏", color: "bg-purple-200" },
 ];
 
-export default function Carousel() {
+export default function Categories() {
   return (
-    <div className="relative mt-6 py-8 min-h-[520px] overflow-visible">
-      <Swiper
-        centeredSlides={true}
-        loop={true}
-        autoplay={{
-          delay: 3500,
-          disableOnInteraction: false,
-        }}
-        pagination={{ clickable: true, el: ".custom-pagination" }}
-        modules={[Pagination, Autoplay]}
-        breakpoints={{
-          320: { slidesPerView: 1.2, spaceBetween: 10 },   // 📱 móvil → 1 y parte de los lados
-          640: { slidesPerView: 2.2, spaceBetween: 20 },   // 📲 tablet
-          1024: { slidesPerView: 3, spaceBetween: 40 },    // 💻 desktop
-        }}
-        className="w-full max-w-6xl overflow-visible"
-      >
-        {templates.map((card, index) => (
-          <SwiperSlide key={index}>
-            {({ isActive }) => (
-              <div
-                className={`rounded-2xl shadow-lg flex flex-col items-center justify-center 
-                            transition-all duration-500 aspect-[3/4] ${card.color}
-                ${isActive 
-                  ? "scale-125 z-50 h-[480px]"   // 🔥 la del medio más grande
-                  : "scale-90 opacity-70 z-10 h-[400px]"}`
-                }
-              >
-                <span className={`${isActive ? "text-7xl" : "text-5xl"} mb-4`}>
-                  {card.icon}
-                </span>
-                <h3
-                  className={`font-semibold ${
-                    isActive ? "text-2xl" : "text-base"
-                  }`}
-                >
-                  {card.title}
-                </h3>
-              </div>
-            )}
-          </SwiperSlide>
+    <div className="bg-white rounded-t-3xl shadow-lg py-10 px-4">
+      <h2 className="text-2xl md:text-3xl font-bold mb-8 text-center">
+        Categories
+      </h2>
+      <div className="flex flex-wrap justify-center gap-8">
+        {categories.map((cat, i) => (
+          <div key={i} className="flex flex-col items-center">
+            <div
+              className={`w-20 h-20 md:w-24 md:h-24 ${cat.color} rounded-full flex items-center justify-center shadow-md`}
+            >
+              <span className="text-3xl md:text-4xl">{cat.icon}</span>
+            </div>
+            <p className="mt-3 text-sm md:text-base font-semibold text-gray-700">
+              {cat.name}
+            </p>
+          </div>
         ))}
-      </Swiper>
-
-      {/* Dots fijos */}
-      <div className="flex justify-center mt-6 mb-4 custom-pagination" />
+      </div>
     </div>
   );
 }
