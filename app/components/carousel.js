@@ -1,28 +1,29 @@
 "use client";
-import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 
+const templates = [
+  { title: "Have a Magical Day", category: "Birthday", image: "/top10/unicorn.png" },
+  { title: "Welcome Little One", category: "Baby", image: "/top10/elephant.png" },
+  { title: "Besos y Abrazos", category: "Love", image: "/top10/besos.png" },
+  { title: "Graduation Day", category: "Graduation", image: "/top10/graduation.png" },
+  { title: "Thank You", category: "Thanks", image: "/top10/thankyou.png" },
+  { title: "Love Forever", category: "Love", image: "/top10/love.png" },
+  { title: "Baby Celebration", category: "Baby", image: "/top10/baby.png" },
+  { title: "Special Gift", category: "Gifts", image: "/top10/gifts.png" },
+  { title: "Condolences", category: "Condolences", image: "/top10/condolences.png" },
+  { title: "Birthday Wishes", category: "Birthday", image: "/top10/birthday.png" }
+];
+
 export default function Carousel() {
-  const [cards, setCards] = useState([]);
-
-  useEffect(() => {
-    fetch("/cards.json")
-      .then((res) => res.json())
-      .then((data) => setCards(data));
-  }, []);
-
   return (
     <div className="relative mt-4 py-6 min-h-[480px] overflow-visible">
       <Swiper
         centeredSlides={true}
         loop={true}
-        autoplay={{
-          delay: 4000,
-          disableOnInteraction: false,
-        }}
+        autoplay={{ delay: 4000, disableOnInteraction: false }}
         pagination={{ clickable: true, el: ".custom-pagination" }}
         modules={[Pagination, Autoplay]}
         breakpoints={{
@@ -33,7 +34,7 @@ export default function Carousel() {
         }}
         className="w-full max-w-5xl overflow-visible"
       >
-        {cards.map((card, index) => (
+        {templates.map((card, index) => (
           <SwiperSlide key={index}>
             {({ isActive }) => (
               <div
@@ -45,11 +46,7 @@ export default function Carousel() {
                   alt={card.title}
                   className="w-full h-3/4 object-contain rounded-t-2xl"
                 />
-                <h3
-                  className={`font-bold mt-2 ${
-                    isActive ? "text-xl" : "text-base"
-                  }`}
-                >
+                <h3 className={`font-bold mt-2 ${isActive ? "text-xl" : "text-base"}`}>
                   {card.title}
                 </h3>
                 <p className="text-sm text-gray-500">{card.category}</p>
