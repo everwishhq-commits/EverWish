@@ -16,25 +16,28 @@ export default function Page() {
       {!loading && (
         <>
           <Header />
-          {/* 👇 padding reducido y sin max-w aquí */}
-          <main className="pt-20 md:pt-24 lg:pt-28 px-4 mx-auto text-center">
+          <main className="pt-24 md:pt-28 lg:pt-32 px-4 max-w-5xl mx-auto text-center">
+            
+            {/* Título */}
             <h1 className="text-3xl md:text-5xl font-extrabold">
               Share every moment that matters with Everwish
             </h1>
-            <p className="mt-3 text-lg text-gray-700">Make it special today ✨</p>
+            
+            {/* Subtítulo */}
+            <p className="mt-4 text-lg text-gray-700">Make it special today ✨</p>
 
-            {/* Carousel más cerca del título */}
-            <div className="mt-6 md:mt-8">
+            {/* Carrusel */}
+            <div className="mt-8">
               <Carousel />
             </div>
 
-            {/* Categories más pegadas al carrusel */}
-            <section className="mt-8 md:mt-10 bg-white rounded-t-3xl shadow-lg py-12 px-4 max-w-5xl mx-auto">
+            {/* Categorías */}
+            <section className="mt-12 bg-white rounded-t-3xl shadow-lg py-12 px-4">
               <Categories />
             </section>
 
             {/* Reviews */}
-            <section className="mt-12 md:mt-14 max-w-5xl mx-auto">
+            <section className="mt-16">
               <Reviews />
             </section>
           </main>
