@@ -18,7 +18,7 @@ export default function Page() {
           <Header />
           <main className="pt-32 md:pt-36 px-4 max-w-5xl mx-auto text-center">
             <h1 className="text-3xl md:text-5xl font-extrabold">
-              With Everwish, share every moment that matters
+              Share every moment that matters with Everwish
             </h1>
             <p className="mt-4 text-lg text-gray-700">Make it special today ✨</p>
 
