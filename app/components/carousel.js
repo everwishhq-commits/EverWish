@@ -16,7 +16,7 @@ const templates = [
 
 export default function Carousel() {
   return (
-    <div className="relative -mt-6 py-6 min-h-[520px] overflow-visible">
+    <div className="relative -mt-8 py-6 min-h-[520px] overflow-visible">
       <Swiper
         centeredSlides={true}
         loop={true}
