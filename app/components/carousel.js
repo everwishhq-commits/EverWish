@@ -3,19 +3,19 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
-import { useEffect, useState } from "react";
 
 export default function Carousel() {
-  const [cards, setCards] = useState([]);
-
-  useEffect(() => {
-    fetch("/top10.json")
-      .then((res) => res.json())
-      .then((data) => setCards(data));
-  }, []);
+  // 👇 Aquí lista de imágenes en public/top10
+  const images = [
+    "/top10/have-a-magical-day.png",
+    "/top10/welcome-little-one.png",
+    "/top10/besos-y-abrazos.png",
+    "/top10/unicornio.png",
+    "/top10/elefante.png"
+  ];
 
   return (
-    <div className="relative mt-2 py-6 min-h-[520px] overflow-visible">
+    <div className="relative mt-2 py-6 min-h-[420px] overflow-visible">
       <Swiper
         centeredSlides={true}
         loop={true}
@@ -30,22 +30,19 @@ export default function Carousel() {
         }}
         className="w-full max-w-5xl"
       >
-        {cards.map((card, index) => (
+        {images.map((src, index) => (
           <SwiperSlide key={index}>
-            <div className="bg-white rounded-2xl shadow-lg flex flex-col items-center justify-center transition-all duration-500 h-[400px]">
+            <div className="bg-white rounded-2xl shadow-lg flex items-center justify-center h-[400px]">
               <img
-                src={card.src}
-                alt={card.title}
-                className="w-full h-64 object-contain rounded-t-2xl"
+                src={src}
+                alt={`card-${index}`}
+                className="w-full h-full object-contain rounded-2xl"
               />
-              <h3 className="mt-2 font-bold text-lg">{card.title}</h3>
-              <p className="text-gray-500 text-sm">{card.category}</p>
             </div>
           </SwiperSlide>
         ))}
       </Swiper>
 
-      {/* Dots */}
       <div className="flex justify-center mt-4 mb-2 custom-pagination" />
     </div>
   );
