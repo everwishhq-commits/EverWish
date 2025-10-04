@@ -17,23 +17,29 @@ export default function Page() {
         <>
           <Header />
           <main className="pt-20 md:pt-24 lg:pt-28 px-4 max-w-5xl mx-auto text-center">
+            
+            {/* Título */}
             <h1 className="text-3xl md:text-5xl font-extrabold">
               Share every moment that matters with Everwish
             </h1>
-            <p className="mt-3 text-lg text-gray-700">Make it special today ✨</p>
+            
+            {/* Subtítulo */}
+            <p className="mt-3 md:mt-4 lg:mt-5 text-lg text-gray-700">
+              Make it special today ✨
+            </p>
 
-            {/* Carousel */}
-            <div className="mt-10">
+            {/* Carrusel */}
+            <div className="mt-6 md:mt-8 lg:mt-10">
               <Carousel />
             </div>
 
-            {/* Categories */}
-            <section className="mt-8 bg-white rounded-t-3xl shadow-lg py-10 px-4">
+            {/* Categorías */}
+            <section className="mt-6 md:mt-8 lg:mt-10 bg-white rounded-t-3xl shadow-lg py-10 md:py-12 lg:py-14 px-4">
               <Categories />
             </section>
 
             {/* Reviews */}
-            <section className="mt-16">
+            <section className="mt-12 md:mt-14 lg:mt-16">
               <Reviews />
             </section>
           </main>
