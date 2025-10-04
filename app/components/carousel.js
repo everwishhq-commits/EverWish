@@ -16,35 +16,33 @@ const templates = [
 
 export default function Carousel() {
   return (
-    <div className="relative -mt-8 py-6 min-h-[520px] overflow-visible">
+    <div className="relative mt-6 py-8 min-h-[520px] overflow-visible">
       <Swiper
         centeredSlides={true}
         loop={true}
         autoplay={{
-          delay: 4000,
+          delay: 3500,
           disableOnInteraction: false,
         }}
         pagination={{ clickable: true, el: ".custom-pagination" }}
         modules={[Pagination, Autoplay]}
         breakpoints={{
-          320: { slidesPerView: 1.4, spaceBetween: 10 },
-          480: { slidesPerView: 2.2, spaceBetween: 15 },
-          640: { slidesPerView: 3, spaceBetween: 20 },
-          1024: { slidesPerView: 3, spaceBetween: 40 },
+          320: { slidesPerView: 1.2, spaceBetween: 10 },   // 📱 móvil → 1 y parte de los lados
+          640: { slidesPerView: 2.2, spaceBetween: 20 },   // 📲 tablet
+          1024: { slidesPerView: 3, spaceBetween: 40 },    // 💻 desktop
         }}
-        className="w-full max-w-5xl overflow-visible"
+        className="w-full max-w-6xl overflow-visible"
       >
         {templates.map((card, index) => (
           <SwiperSlide key={index}>
             {({ isActive }) => (
               <div
                 className={`rounded-2xl shadow-lg flex flex-col items-center justify-center 
-                            transition-all duration-500 ${card.color}
-                ${
-                  isActive
-                    ? "scale-125 z-50 h-[480px]"
-                    : "scale-90 opacity-70 z-10 h-[400px]"
-                }`}
+                            transition-all duration-500 aspect-[3/4] ${card.color}
+                ${isActive 
+                  ? "scale-125 z-50 h-[480px]"   // 🔥 la del medio más grande
+                  : "scale-90 opacity-70 z-10 h-[400px]"}`
+                }
               >
                 <span className={`${isActive ? "text-7xl" : "text-5xl"} mb-4`}>
                   {card.icon}
@@ -62,8 +60,8 @@ export default function Carousel() {
         ))}
       </Swiper>
 
-      {/* Dots y margen ajustado */}
-      <div className="flex justify-center mt-4 mb-2 custom-pagination" />
+      {/* Dots fijos */}
+      <div className="flex justify-center mt-6 mb-4 custom-pagination" />
     </div>
   );
 }
