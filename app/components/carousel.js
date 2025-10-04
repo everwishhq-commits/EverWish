@@ -1,45 +1,57 @@
 "use client";
-import { useState } from "react";
-import Splash from "./components/splash";
-import Header from "./components/header";
-import Carousel from "./components/carousel";
-import Categories from "./components/categories";
-import Reviews from "./components/reviews";
-import Footer from "./components/footer";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Pagination, Autoplay } from "swiper/modules";
+import Image from "next/image";
+import "swiper/css";
+import "swiper/css/pagination";
 
-export default function Page() {
-  const [loading, setLoading] = useState(true);
+// Import dinámico de todas las imágenes en /public/top10
+const importAll = (r) => r.keys().map(r);
+const images = importAll(require.context("/public/top10", false, /\.(png|jpe?g|webp)$/));
 
+export default function Carousel() {
   return (
-    <>
-      {loading && <Splash onFinish={() => setLoading(false)} />}
-      {!loading && (
-        <>
-          <Header />
-          <main className="pt-24 md:pt-28 lg:pt-32 px-4 max-w-5xl mx-auto text-center">
-            <h1 className="text-3xl md:text-5xl font-extrabold">
-              Share every moment that matters with Everwish
-            </h1>
-            <p className="mt-3 text-lg text-gray-700">Make it special today ✨</p>
+    <div className="relative mt-8 mb-10">
+      <Swiper
+        centeredSlides={true}
+        loop={true}
+        autoplay={{
+          delay: 3000,
+          disableOnInteraction: false,
+          pauseOnMouseEnter: false,
+          stopOnLastSlide: false,
+        }}
+        pagination={{ clickable: true }}
+        modules={[Pagination, Autoplay]}
+        breakpoints={{
+          320: { slidesPerView: 1.2, spaceBetween: 10 },
+          480: { slidesPerView: 1.4, spaceBetween: 15 },
+          640: { slidesPerView: 2, spaceBetween: 20 },
+          1024: { slidesPerView: 3, spaceBetween: 30 },
+        }}
+        className="w-full max-w-5xl"
+      >
+        {images.map((src, index) => (
+          <SwiperSlide key={index}>
+            {({ isActive }) => (
+              <div
+                className={`rounded-2xl shadow-lg overflow-hidden transition-all duration-500 
+                ${isActive ? "scale-105 z-50" : "scale-90 opacity-70 z-10"}`}
+              >
+                <Image
+                  src={src}
+                  alt={`card-${index}`}
+                  width={500}
+                  height={600}
+                  className="w-full h-[450px] object-cover"
+                />
+              </div>
+            )}
+          </SwiperSlide>
+        ))}
+      </Swiper>
 
-            {/* Carrusel un poco más abajo */}
-            <div className="mt-8 md:mt-10">
-              <Carousel />
-            </div>
-
-            {/* Categories más arriba */}
-            <section className="mt-10 bg-white rounded-t-3xl shadow-lg py-12 px-4">
-              <Categories />
-            </section>
-
-            <section className="mt-16">
-              <Reviews />
-            </section>
-          </main>
-
-          <Footer />
-        </>
-      )}
-    </>
+      <div className="flex justify-center mt-6 mb-4 custom-pagination" />
+    </div>
   );
 }
