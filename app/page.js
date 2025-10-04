@@ -1,47 +1,66 @@
 "use client";
-import { useState } from "react";
-import Splash from "./components/splash";
-import Header from "./components/header";
-import Carousel from "./components/carousel";
-import Categories from "./components/categories";
-import Reviews from "./components/reviews";
-import Footer from "./components/footer";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Pagination, Autoplay } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/pagination";
 
-export default function Page() {
-  const [loading, setLoading] = useState(true);
+const templates = [
+  { title: "Birthday", icon: "🎂", color: "bg-yellow-200" },
+  { title: "Baby", icon: "👶", color: "bg-blue-200" },
+  { title: "Love", icon: "❤️", color: "bg-pink-200" },
+  { title: "Graduation", icon: "🎓", color: "bg-green-200" },
+  { title: "Condolences", icon: "🕊️", color: "bg-gray-200" },
+  { title: "Gifts", icon: "🎁", color: "bg-orange-200" },
+  { title: "Thank You", icon: "🙏", color: "bg-purple-200" },
+];
 
+export default function Carousel() {
   return (
-    <>
-      {loading && <Splash onFinish={() => setLoading(false)} />}
-      {!loading && (
-        <>
-          <Header />
-          {/* 👇 padding reducido y sin max-w aquí */}
-          <main className="pt-20 md:pt-24 lg:pt-28 px-4 mx-auto text-center">
-            <h1 className="text-3xl md:text-5xl font-extrabold">
-              Share every moment that matters with Everwish
-            </h1>
-            <p className="mt-3 text-lg text-gray-700">Make it special today ✨</p>
+    <div className="relative mt-2 py-6 min-h-[520px] overflow-visible">
+      <Swiper
+        centeredSlides={true}
+        loop={true}
+        autoplay={{
+          delay: 4000,
+          disableOnInteraction: false,
+        }}
+        pagination={{ clickable: true, el: ".custom-pagination" }}
+        modules={[Pagination, Autoplay]}
+        breakpoints={{
+          320: { slidesPerView: 1.2, spaceBetween: 15 },   // móvil
+          640: { slidesPerView: 1.6, spaceBetween: 20 },   // tablet
+          1024: { slidesPerView: 2.5, spaceBetween: 30 },  // desktop medio
+          1280: { slidesPerView: 3, spaceBetween: 40 },    // desktop grande
+        }}
+        className="w-full overflow-visible"
+      >
+        {templates.map((card, index) => (
+          <SwiperSlide key={index}>
+            {({ isActive }) => (
+              <div
+                className={`rounded-2xl shadow-lg flex flex-col items-center justify-center transition-all duration-500 ${card.color}
+                ${isActive
+                  ? "scale-110 z-50 h-[400px] md:h-[420px] lg:h-[480px]"  // central más grande
+                  : "scale-90 opacity-70 z-10 h-[320px] md:h-[360px] lg:h-[400px]"}`}
+              >
+                <span className={`${isActive ? "text-7xl" : "text-5xl"} mb-4`}>
+                  {card.icon}
+                </span>
+                <h3
+                  className={`font-semibold ${
+                    isActive ? "text-2xl" : "text-base"
+                  }`}
+                >
+                  {card.title}
+                </h3>
+              </div>
+            )}
+          </SwiperSlide>
+        ))}
+      </Swiper>
 
-            {/* Carousel más cerca del título */}
-            <div className="mt-6 md:mt-8">
-              <Carousel />
-            </div>
-
-            {/* Categories más pegadas al carrusel */}
-            <section className="mt-8 md:mt-10 bg-white rounded-t-3xl shadow-lg py-12 px-4 max-w-5xl mx-auto">
-              <Categories />
-            </section>
-
-            {/* Reviews */}
-            <section className="mt-12 md:mt-14 max-w-5xl mx-auto">
-              <Reviews />
-            </section>
-          </main>
-
-          <Footer />
-        </>
-      )}
-    </>
+      {/* Dots debajo del carrusel */}
+      <div className="flex justify-center mt-6 mb-4 custom-pagination" />
+    </div>
   );
 }
