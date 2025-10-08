@@ -1,80 +1,67 @@
 "use client";
-import { useState, useEffect } from "react";
-import { getAllCards } from "../utils/cardsmanager";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay } from "swiper/modules";
+import Link from "next/link";
+import "swiper/css";
+
+const mainCategories = [
+  { name: "Seasonal & Holidays", emoji: "🎉", color: "bg-yellow-200", slug: "seasonal-holidays" },
+  { name: "Birthdays", emoji: "🎂", color: "bg-pink-200", slug: "birthdays" },
+  { name: "Love & Romance", emoji: "💘", color: "bg-rose-200", slug: "love-romance" },
+  { name: "Family & Relationships", emoji: "👨‍👩‍👧‍👦", color: "bg-blue-200", slug: "family-relationships" },
+  { name: "Babies & Parenting", emoji: "👶", color: "bg-sky-200", slug: "babies-parenting" },
+  { name: "Weddings & Anniversaries", emoji: "💍", color: "bg-indigo-200", slug: "weddings-anniversaries" },
+  { name: "Congratulations & Milestones", emoji: "🏆", color: "bg-amber-200", slug: "congrats-milestones" },
+  { name: "School & Graduation", emoji: "🎓", color: "bg-lime-200", slug: "school-graduation" },
+  { name: "Work & Professional", emoji: "💼", color: "bg-cyan-200", slug: "work-professional" },
+  { name: "House & Moving", emoji: "🏡", color: "bg-emerald-200", slug: "house-moving" },
+  { name: "Health & Support", emoji: "🩺", color: "bg-teal-200", slug: "health-support" },
+  { name: "Sympathy & Remembrance", emoji: "🕊️", color: "bg-gray-200", slug: "sympathy-remembrance" },
+  { name: "Encouragement & Motivation", emoji: "🌟", color: "bg-yellow-100", slug: "encouragement-motivation" },
+  { name: "Thank You & Appreciation", emoji: "🙏", color: "bg-violet-200", slug: "thank-you-appreciation" },
+  { name: "Invitations & Events", emoji: "✉️", color: "bg-fuchsia-200", slug: "invitations-events" },
+  { name: "Religious & Spiritual", emoji: "🕯️", color: "bg-orange-200", slug: "religious-spiritual" },
+  { name: "Cultural & Regional", emoji: "🌍", color: "bg-stone-200", slug: "cultural-regional" },
+  { name: "Kids & Teens", emoji: "🧸", color: "bg-purple-200", slug: "kids-teens" },
+  { name: "Humor & Memes", emoji: "😄", color: "bg-rose-100", slug: "humor-memes" },
+  { name: "Pets & Animal Lovers", emoji: "🐾", color: "bg-green-100", slug: "pets" },
+  { name: "Just Because & Everyday", emoji: "💌", color: "bg-blue-100", slug: "just-because" },
+  { name: "Gifts & Surprises", emoji: "🎁", color: "bg-purple-100", slug: "gifts-surprises" },
+  { name: "Inspirations & Quotes", emoji: "📝", color: "bg-slate-200", slug: "inspirations-quotes" },
+  { name: "Custom & AI Creations", emoji: "🤖", color: "bg-teal-100", slug: "custom-ai" },
+];
 
 export default function Categories() {
-  const [cards, setCards] = useState([]);
-  const [index, setIndex] = useState(0);
-  const [autoScroll, setAutoScroll] = useState(true);
-
-  // Cargar las tarjetas de categorías
-  useEffect(() => {
-    const data = getAllCards();
-    setCards(data);
-  }, []);
-
-  // Carrusel automático
-  useEffect(() => {
-    if (autoScroll && cards.length > 0) {
-      const interval = setInterval(() => {
-        setIndex((prev) => (prev + 1) % cards.length);
-      }, 3000);
-      return () => clearInterval(interval);
-    }
-  }, [cards, autoScroll]);
-
-  // Categorías macro (visuales)
-  const mainCategories = [
-    { name: "Seasonal & Holidays", emoji: "🎉", color: "bg-yellow-200" },
-    { name: "Birthdays", emoji: "🎂", color: "bg-pink-200" },
-    { name: "Love & Romance", emoji: "💘", color: "bg-rose-200" },
-    { name: "Family & Relationships", emoji: "👨‍👩‍👧‍👦", color: "bg-blue-200" },
-    { name: "Weddings & Anniversaries", emoji: "💍", color: "bg-indigo-200" },
-    { name: "Emotions & Motivation", emoji: "💫", color: "bg-lime-200" },
-    { name: "Sympathy & Support", emoji: "🕊️", color: "bg-gray-200" },
-    { name: "Thank You & Appreciation", emoji: "🙏", color: "bg-violet-200" },
-    { name: "Kids & Teens", emoji: "🧸", color: "bg-purple-200" },
-    { name: "Gifts & Surprises", emoji: "🎁", color: "bg-purple-100" },
-  ];
-
   return (
-    <section className="mt-12 bg-white rounded-3xl shadow-lg py-12 px-4">
-      <h2 className="text-2xl font-bold mb-6 text-center">Categories</h2>
+    <div className="text-center">
+      <h2 className="text-2xl md:text-3xl font-bold mb-6">Categories</h2>
 
-      {/* Carrusel tipo Netflix */}
-      <div className="relative overflow-hidden">
-        <div
-          className="flex transition-transform duration-700 ease-in-out"
-          style={{
-            transform: `translateX(-${index * 100}%)`,
-            width: `${mainCategories.length * 100}%`,
-          }}
-          onMouseEnter={() => setAutoScroll(false)}
-          onMouseLeave={() => setAutoScroll(true)}
-        >
-          {mainCategories.map((cat, i) => (
-            <div
-              key={i}
-              className={`w-full sm:w-1/2 md:w-1/3 lg:w-1/5 flex flex-col items-center justify-center p-6 ${cat.color} rounded-2xl shadow-md cursor-pointer hover:scale-105 transition`}
-              onClick={() => window.location.href = `/categories/${cat.name.toLowerCase().replace(/ & /g, "-").replace(/\s+/g, "-")}`}
-            >
-              <span className="text-4xl mb-2">{cat.emoji}</span>
-              <p className="font-semibold text-gray-800">{cat.name}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Indicadores inferiores */}
-        <div className="flex justify-center mt-4 space-x-2">
-          {mainCategories.map((_, i) => (
-            <span
-              key={i}
-              onClick={() => setIndex(i)}
-              className={`h-2 w-2 rounded-full cursor-pointer ${i === index ? "bg-gray-800" : "bg-gray-300"}`}
-            ></span>
-          ))}
-        </div>
-      </div>
-    </section>
+      <Swiper
+        slidesPerView={2.3}
+        spaceBetween={15}
+        autoplay={{ delay: 3500, disableOnInteraction: false }}
+        breakpoints={{
+          640: { slidesPerView: 3.5, spaceBetween: 20 },
+          1024: { slidesPerView: 5, spaceBetween: 25 },
+        }}
+        modules={[Autoplay]}
+        className="overflow-visible"
+      >
+        {mainCategories.map((cat, i) => (
+          <SwiperSlide key={i}>
+            <Link href={`/categories/${cat.slug}`}>
+              <div
+                className={`${cat.color} rounded-3xl shadow-md hover:shadow-xl hover:-translate-y-1 transition transform flex flex-col items-center justify-center p-6 aspect-square`}
+              >
+                <span className="text-5xl mb-3">{cat.emoji}</span>
+                <p className="font-semibold text-sm md:text-base text-gray-800">
+                  {cat.name}
+                </p>
+              </div>
+            </Link>
+          </SwiperSlide>
+        ))}
+      </Swiper>
+    </div>
   );
                 }
