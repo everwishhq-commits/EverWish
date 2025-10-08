@@ -31,7 +31,7 @@ return (
           <Carousel />  
         </div>  
 
-        {/* Categorías */}  
+        {/* Categories */}  
         <section className="mt-12 bg-white rounded-t-3xl shadow-lg py-12 px-4">  
           <Categories />  
         </section>  
