@@ -1,3 +1,5 @@
+"use client";
+
 const mainCategories = [
   { name: "Seasonal & Holidays", emoji: "🎉", color: "bg-yellow-200", slug: "seasonal-holidays" },
   { name: "Birthdays", emoji: "🎂", color: "bg-pink-200", slug: "birthdays" },
@@ -24,3 +26,24 @@ const mainCategories = [
   { name: "Inspirations & Quotes", emoji: "📝", color: "bg-slate-200", slug: "inspirations-quotes" },
   { name: "Custom & AI Creations", emoji: "🤖", color: "bg-teal-100", slug: "custom-ai" },
 ];
+
+export default function Categories() {
+  return (
+    <section className="mt-12 bg-white rounded-3xl shadow-lg py-12 px-4">
+      <h2 className="text-2xl font-bold mb-8 text-center">Categories</h2>
+
+      <div className="flex overflow-x-auto gap-6 px-2 scrollbar-hide">
+        {mainCategories.map((cat, i) => (
+          <div
+            key={i}
+            className={`flex-none w-40 h-40 ${cat.color} rounded-2xl flex flex-col items-center justify-center shadow-md text-center transition-transform transform hover:scale-105 cursor-pointer`}
+            onClick={() => (window.location.href = `/categories/${cat.slug}`)}
+          >
+            <div className="text-4xl">{cat.emoji}</div>
+            <p className="mt-3 text-sm font-semibold text-gray-800">{cat.name}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+  }
