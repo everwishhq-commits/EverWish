@@ -1,61 +1,35 @@
-import fs from "fs";
-import path from "path";
-
 /**
- * Lee automáticamente las tarjetas dentro de /public/cards/
- * y devuelve un arreglo con su información lista para mostrar.
- * También actualiza el /public/top10/ con las más recientes.
+ * Card Manager - versión segura para navegador (Next.js / Vercel)
+ * Lee datos desde /data/cards.json y simula las funciones del servidor
  */
 
-export function getAllCards() {
-  const cardsDir = path.join(process.cwd(), "public/cards");
-  const files = fs.readdirSync(cardsDir);
+export async function getAllCards() {
+  try {
+    const res = await fetch("/data/cards.json");
+    if (!res.ok) throw new Error("Error al cargar las tarjetas");
+    const data = await res.json();
 
-  return files
-    .filter((file) => /\.(png|jpg|jpeg|webp|gif)$/i.test(file))
-    .map((file) => {
-      const filePath = path.join(cardsDir, file);
-      const stats = fs.statSync(filePath);
-      const name = file.split(".")[0].replace(/_/g, " ");
-      const category = name.split("-")[0] || "General";
-
-      return {
-        name,
-        category,
-        image: `/cards/${file}`,
-        createdAt: stats.birthtimeMs,
-      };
-    })
-    .sort((a, b) => b.createdAt - a.createdAt); // más recientes primero
+    // Ordenar más recientes primero
+    return data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  } catch (err) {
+    console.error("⚠️ Error getAllCards:", err);
+    return [];
+  }
 }
 
 /**
- * Actualiza automáticamente el /public/top10/ con las más recientes
+ * Actualiza el top 10 virtualmente (solo para mostrar en cliente)
  */
-export function updateTop10() {
-  const topDir = path.join(process.cwd(), "public/top10");
-  const cards = getAllCards().slice(0, 10);
-
-  // limpiar top10
-  fs.readdirSync(topDir).forEach((file) => {
-    fs.unlinkSync(path.join(topDir, file));
-  });
-
-  // copiar las más recientes
-  cards.forEach((card) => {
-    const srcPath = path.join(process.cwd(), "public", card.image);
-    const destPath = path.join(topDir, path.basename(srcPath));
-    fs.copyFileSync(srcPath, destPath);
-  });
-
-  return cards;
+export async function updateTop10() {
+  const all = await getAllCards();
+  return all.slice(0, 10);
 }
 
 /**
- * Busca tarjetas por texto
+ * Busca tarjetas por texto (nombre o categoría)
  */
-export function searchCards(query) {
-  const all = getAllCards();
+export async function searchCards(query) {
+  const all = await getAllCards();
   const q = query.toLowerCase();
   return all.filter(
     (c) =>
