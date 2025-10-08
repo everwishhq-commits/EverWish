@@ -1,1 +1,20 @@
-
+[
+  {
+    "name": "Love Unicorn",
+    "category": "Love & Romance",
+    "image": "/cards/unicorn-love.jpg",
+    "createdAt": "2025-10-08T10:00:00Z"
+  },
+  {
+    "name": "Birthday Balloons",
+    "category": "Birthdays",
+    "image": "/cards/birthday-balloons.jpg",
+    "createdAt": "2025-10-07T08:00:00Z"
+  },
+  {
+    "name": "Motivation Sunrise",
+    "category": "Emotions & Motivation",
+    "image": "/cards/motivation-sunrise.jpg",
+    "createdAt": "2025-10-06T14:00:00Z"
+  }
+]
