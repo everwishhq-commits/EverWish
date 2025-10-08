@@ -2,9 +2,11 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -13,6 +15,9 @@ export default function Header() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // ✅ Función para determinar si una ruta está activa
+  const isActive = (path) => pathname === path;
 
   return (
     <header
@@ -25,28 +30,57 @@ export default function Header() {
         <div
           className={`transition-all duration-500 ${
             isScrolled ? "w-12" : "w-16 md:w-24"
-          }`}
+          } cursor-pointer`}
         >
-          <Image
-            src="/logo.png"
-            alt="Everwish"
-            width={120}
-            height={60}
-            className="object-contain w-full h-auto"
-          />
+          <Link href="/">
+            <Image
+              src="/logo.png"
+              alt="Everwish"
+              width={120}
+              height={60}
+              className="object-contain w-full h-auto"
+            />
+          </Link>
         </div>
 
         {/* Menú */}
         <nav
           className={`flex flex-wrap items-center gap-3 md:gap-6 text-gray-800 font-bold text-xs md:text-base transition-all duration-500`}
         >
-          <Link href="/login">Login</Link>
-          <Link href="/cart">Cart</Link>
-          <Link href="/planes">Planes</Link>
-          <Link href="/promo">Promo</Link>
-          <Link href="/categorias">Categorías</Link>
+          <Link
+            href="/login"
+            className={`${isActive("/login") ? "text-blue-500 underline" : ""}`}
+          >
+            Login
+          </Link>
+          <Link
+            href="/cart"
+            className={`${isActive("/cart") ? "text-blue-500 underline" : ""}`}
+          >
+            Cart
+          </Link>
+          <Link
+            href="/planes"
+            className={`${isActive("/planes") ? "text-blue-500 underline" : ""}`}
+          >
+            Planes
+          </Link>
+          <Link
+            href="/promo"
+            className={`${isActive("/promo") ? "text-blue-500 underline" : ""}`}
+          >
+            Promo
+          </Link>
+
+          {/* 🔥 Cambio importante aquí */}
+          <Link
+            href="/categories"
+            className={`${isActive("/categories") ? "text-blue-500 underline" : ""}`}
+          >
+            Categorías
+          </Link>
         </nav>
       </div>
     </header>
   );
-}
+              }
