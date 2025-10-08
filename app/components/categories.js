@@ -1,58 +1,26 @@
-"use client";
-
-import { useRouter } from "next/navigation";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination, Autoplay } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/pagination";
-
-// 🔹 Categorías principales resumidas
 const mainCategories = [
-  { name: "Seasonal", emoji: "🎉", color: "bg-yellow-200", slug: "seasonal" },
-  { name: "Celebrations", emoji: "🥳", color: "bg-pink-200", slug: "celebrations" },
-  { name: "Emotions", emoji: "💖", color: "bg-red-200", slug: "emotions" },
-  { name: "Other Occasions", emoji: "🌟", color: "bg-blue-200", slug: "other-occasions" },
-  { name: "Gifts", emoji: "🎁", color: "bg-purple-200", slug: "gifts" },
-  { name: "AI Creations", emoji: "🤖", color: "bg-green-200", slug: "ai-creations" },
+  { name: "Seasonal & Holidays", emoji: "🎉", color: "bg-yellow-200", slug: "seasonal-holidays" },
+  { name: "Birthdays", emoji: "🎂", color: "bg-pink-200", slug: "birthdays" },
+  { name: "Love & Romance", emoji: "💘", color: "bg-rose-200", slug: "love-romance" },
+  { name: "Family & Relationships", emoji: "👨‍👩‍👧‍👦", color: "bg-blue-200", slug: "family-relationships" },
+  { name: "Babies & Parenting", emoji: "👶", color: "bg-sky-200", slug: "babies-parenting" },
+  { name: "Weddings & Anniversaries", emoji: "💍", color: "bg-indigo-200", slug: "weddings-anniversaries" },
+  { name: "Congratulations & Milestones", emoji: "🏆", color: "bg-amber-200", slug: "congrats-milestones" },
+  { name: "School & Graduation", emoji: "🎓", color: "bg-lime-200", slug: "school-graduation" },
+  { name: "Work & Professional", emoji: "💼", color: "bg-cyan-200", slug: "work-professional" },
+  { name: "House & Moving", emoji: "🏡", color: "bg-emerald-200", slug: "house-moving" },
+  { name: "Health & Support", emoji: "🩺", color: "bg-teal-200", slug: "health-support" },
+  { name: "Sympathy & Remembrance", emoji: "🕊️", color: "bg-gray-200", slug: "sympathy-remembrance" },
+  { name: "Encouragement & Motivation", emoji: "🌟", color: "bg-yellow-100", slug: "encouragement-motivation" },
+  { name: "Thank You & Appreciation", emoji: "🙏", color: "bg-violet-200", slug: "thank-you-appreciation" },
+  { name: "Invitations & Events", emoji: "✉️", color: "bg-fuchsia-200", slug: "invitations-events" },
+  { name: "Religious & Spiritual", emoji: "🕯️", color: "bg-orange-200", slug: "religious-spiritual" },
+  { name: "Cultural & Regional", emoji: "🌍", color: "bg-stone-200", slug: "cultural-regional" },
+  { name: "Kids & Teens", emoji: "🧸", color: "bg-purple-200", slug: "kids-teens" },
+  { name: "Humor & Memes", emoji: "😄", color: "bg-rose-100", slug: "humor-memes" },
+  { name: "Pets & Animal Lovers", emoji: "🐾", color: "bg-green-100", slug: "pets" },
+  { name: "Just Because & Everyday", emoji: "💌", color: "bg-blue-100", slug: "just-because" },
+  { name: "Gifts & Surprises", emoji: "🎁", color: "bg-purple-100", slug: "gifts-surprises" },
+  { name: "Inspirations & Quotes", emoji: "📝", color: "bg-slate-200", slug: "inspirations-quotes" },
+  { name: "Custom & AI Creations", emoji: "🤖", color: "bg-teal-100", slug: "custom-ai" },
 ];
-
-export default function CategoriesHome() {
-  const router = useRouter();
-
-  return (
-    <div className="w-full text-center mt-12">
-      {/* 🔹 Título principal */}
-      <h2 className="text-2xl font-bold mb-6">Categories</h2>
-
-      {/* 🔹 Carrusel compacto tipo Netflix */}
-      <Swiper
-        slidesPerView={2.2}
-        spaceBetween={20}
-        autoplay={{
-          delay: 3000,
-          disableOnInteraction: false,
-        }}
-        pagination={{ clickable: true }}
-        breakpoints={{
-          480: { slidesPerView: 3 },
-          768: { slidesPerView: 4 },
-          1024: { slidesPerView: 5 },
-        }}
-        modules={[Pagination, Autoplay]}
-        className="pb-6"
-      >
-        {mainCategories.map((cat, i) => (
-          <SwiperSlide key={i}>
-            <div
-              onClick={() => router.push("/categories")}
-              className={`cursor-pointer flex flex-col items-center justify-center rounded-2xl shadow-md ${cat.color} py-6 hover:scale-110 transition-transform`}
-            >
-              <span className="text-5xl mb-2">{cat.emoji}</span>
-              <p className="text-sm font-semibold">{cat.name}</p>
-            </div>
-          </SwiperSlide>
-        ))}
-      </Swiper>
-    </div>
-  );
-          }
