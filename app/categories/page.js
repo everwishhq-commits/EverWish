@@ -1,56 +1,85 @@
 "use client";
 import { useState } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay } from "swiper/modules";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Header from "../components/header";
 import Footer from "../components/footer";
+import "swiper/css";
 
-const mainCategories = [
-  { name: "Seasonal & Holidays", emoji: "🎉", color: "bg-yellow-200", slug: "seasonal-holidays" },
-  { name: "Birthdays", emoji: "🎂", color: "bg-pink-200", slug: "birthdays" },
-  { name: "Love & Romance", emoji: "💘", color: "bg-rose-200", slug: "love-romance" },
-  { name: "Family & Relationships", emoji: "👨‍👩‍👧‍👦", color: "bg-blue-200", slug: "family-relationships" },
-  { name: "Babies & Parenting", emoji: "👶", color: "bg-sky-200", slug: "babies-parenting" },
-  { name: "Weddings & Anniversaries", emoji: "💍", color: "bg-indigo-200", slug: "weddings-anniversaries" },
-  { name: "Congratulations & Milestones", emoji: "🏆", color: "bg-amber-200", slug: "congrats-milestones" },
-  { name: "School & Graduation", emoji: "🎓", color: "bg-lime-200", slug: "school-graduation" },
-  { name: "Work & Professional", emoji: "💼", color: "bg-cyan-200", slug: "work-professional" },
-  { name: "House & Moving", emoji: "🏡", color: "bg-emerald-200", slug: "house-moving" },
-  { name: "Health & Support", emoji: "🩺", color: "bg-teal-200", slug: "health-support" },
-  { name: "Sympathy & Remembrance", emoji: "🕊️", color: "bg-gray-200", slug: "sympathy-remembrance" },
-  { name: "Encouragement & Motivation", emoji: "🌟", color: "bg-yellow-100", slug: "encouragement-motivation" },
-  { name: "Thank You & Appreciation", emoji: "🙏", color: "bg-violet-200", slug: "thank-you-appreciation" },
-  { name: "Invitations & Events", emoji: "✉️", color: "bg-fuchsia-200", slug: "invitations-events" },
-  { name: "Spiritual & Mindfulness", emoji: "🕯️", color: "bg-orange-200", slug: "spiritual-mindfulness" },
-  { name: "Art & Culture", emoji: "🎨", color: "bg-stone-200", slug: "art-culture" },
-  { name: "Kids & Teens", emoji: "🧸", color: "bg-purple-200", slug: "kids-teens" },
-  { name: "Humor & Memes", emoji: "😄", color: "bg-rose-100", slug: "humor-memes" },
-  { name: "Pets & Animal Lovers", emoji: "🐾", color: "bg-green-100", slug: "pets" },
-  { name: "Just Because & Everyday", emoji: "💌", color: "bg-blue-100", slug: "just-because" },
-  { name: "Gifts & Surprises", emoji: "🎁", color: "bg-purple-100", slug: "gifts-surprises" },
-  { name: "Inspirations & Quotes", emoji: "📝", color: "bg-slate-200", slug: "inspirations-quotes" },
-  { name: "Custom & AI Creations", emoji: "🤖", color: "bg-teal-100", slug: "custom-ai" },
+// 🪄 Datos organizados en secciones tipo Netflix
+const categorySections = [
+  {
+    title: "Seasonal 🎉",
+    items: [
+      { name: "New Year", emoji: "🎆", color: "bg-blue-100", slug: "new-year" },
+      { name: "Valentine’s Day", emoji: "💘", color: "bg-pink-200", slug: "valentines" },
+      { name: "Easter", emoji: "🐣", color: "bg-purple-100", slug: "easter" },
+      { name: "Halloween", emoji: "🎃", color: "bg-orange-200", slug: "halloween" },
+      { name: "Thanksgiving", emoji: "🦃", color: "bg-amber-200", slug: "thanksgiving" },
+      { name: "Christmas", emoji: "🎄", color: "bg-green-100", slug: "christmas" },
+    ],
+  },
+  {
+    title: "Love & Emotions 💖",
+    items: [
+      { name: "Love & Romance", emoji: "💘", color: "bg-rose-200", slug: "love-romance" },
+      { name: "Apology", emoji: "😔", color: "bg-gray-100", slug: "apology" },
+      { name: "Encouragement", emoji: "🌟", color: "bg-yellow-100", slug: "encouragement" },
+      { name: "Missing You", emoji: "💭", color: "bg-blue-100", slug: "missing-you" },
+      { name: "Thank You", emoji: "🙏", color: "bg-violet-200", slug: "thank-you" },
+      { name: "Condolences", emoji: "🕊️", color: "bg-gray-200", slug: "condolences" },
+    ],
+  },
+  {
+    title: "Celebrations 🥳",
+    items: [
+      { name: "Baby Shower", emoji: "👶", color: "bg-sky-200", slug: "baby-shower" },
+      { name: "Graduation", emoji: "🎓", color: "bg-lime-200", slug: "graduation" },
+      { name: "Anniversary", emoji: "💍", color: "bg-indigo-200", slug: "anniversary" },
+      { name: "Retirement", emoji: "🧓", color: "bg-orange-100", slug: "retirement" },
+      { name: "New Home", emoji: "🏡", color: "bg-emerald-200", slug: "new-home" },
+      { name: "Job Promotion", emoji: "💼", color: "bg-cyan-200", slug: "promotion" },
+    ],
+  },
+  {
+    title: "Everyday Moments 🌞",
+    items: [
+      { name: "Good Morning", emoji: "🌅", color: "bg-yellow-100", slug: "good-morning" },
+      { name: "Good Night", emoji: "🌙", color: "bg-indigo-100", slug: "good-night" },
+      { name: "Just Because", emoji: "💌", color: "bg-pink-100", slug: "just-because" },
+      { name: "Surprise", emoji: "🎁", color: "bg-purple-100", slug: "surprise" },
+      { name: "Good Luck", emoji: "🍀", color: "bg-green-100", slug: "good-luck" },
+      { name: "Motivation", emoji: "🚀", color: "bg-orange-100", slug: "motivation" },
+    ],
+  },
 ];
 
 export default function CategoriesPage() {
   const [query, setQuery] = useState("");
   const [showAI, setShowAI] = useState(false);
 
-  const filtered = mainCategories.filter((cat) =>
-    cat.name.toLowerCase().includes(query.toLowerCase())
-  );
+  // 🔍 Filtra por nombre
+  const filteredSections = categorySections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) =>
+        item.name.toLowerCase().includes(query.toLowerCase())
+      ),
+    }))
+    .filter((section) => section.items.length > 0);
 
   return (
     <>
       <Header />
 
       <main className="min-h-screen bg-gradient-to-b from-pink-50 via-white to-white text-center pt-28 px-4 pb-20">
-        {/* Título */}
         <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-2">
           Explore our Categories
         </h1>
         <p className="text-gray-500 mb-8">
-          Find the perfect card for every moment 💖
+          Find the perfect card for every moment 💝
         </p>
 
         {/* 🔍 Buscador */}
@@ -67,37 +96,63 @@ export default function CategoriesPage() {
           />
         </div>
 
-        {/* 🎨 Cuadrícula de categorías */}
-        <div className="max-w-6xl mx-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5 justify-items-center">
-          {filtered.length > 0 ? (
-            filtered.map((cat, i) => (
-              <Link href={`/categories/${cat.slug}`} key={i}>
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ duration: 0.3 }}
-                  className={`${cat.color} rounded-3xl shadow-md hover:shadow-xl flex flex-col items-center justify-center p-6 w-36 h-36 md:w-40 md:h-40`}
+        {/* 🎞️ Carruseles tipo Netflix */}
+        {filteredSections.length > 0 ? (
+          filteredSections.map((section, index) => (
+            <div key={index} className="mb-14">
+              <div className="flex items-center justify-between mb-4 px-2">
+                <h2 className="text-2xl font-bold text-left">{section.title}</h2>
+                <Link
+                  href="#"
+                  className="text-blue-500 hover:underline text-sm font-medium"
                 >
-                  <span className="text-5xl mb-3">{cat.emoji}</span>
-                  <p className="font-semibold text-sm md:text-base text-gray-800">
-                    {cat.name}
-                  </p>
-                </motion.div>
-              </Link>
-            ))
-          ) : (
-            <div className="col-span-full text-center mt-16">
-              <p className="text-gray-600 mb-4">
-                No results found for “{query}”
-              </p>
-              <button
-                onClick={() => setShowAI(true)}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-full transition"
+                  View all →
+                </Link>
+              </div>
+
+              <Swiper
+                slidesPerView={2.3}
+                spaceBetween={15}
+                autoplay={{ delay: 3000, disableOnInteraction: false }}
+                breakpoints={{
+                  640: { slidesPerView: 3.5, spaceBetween: 20 },
+                  1024: { slidesPerView: 5, spaceBetween: 25 },
+                }}
+                modules={[Autoplay]}
+                className="overflow-visible"
               >
-                Create with AI 💫
-              </button>
+                {section.items.map((cat, i) => (
+                  <SwiperSlide key={i}>
+                    <Link href={`/categories/${cat.slug}`}>
+                      <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ duration: 0.3 }}
+                        className={`${cat.color} rounded-3xl shadow-md hover:shadow-xl flex flex-col items-center justify-center p-6 aspect-square`}
+                      >
+                        <span className="text-5xl mb-3">{cat.emoji}</span>
+                        <p className="font-semibold text-sm md:text-base text-gray-800">
+                          {cat.name}
+                        </p>
+                      </motion.div>
+                    </Link>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
             </div>
-          )}
-        </div>
+          ))
+        ) : (
+          <div className="text-center mt-20">
+            <p className="text-gray-600 mb-4">
+              No results found for “{query}”
+            </p>
+            <button
+              onClick={() => setShowAI(true)}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-full transition"
+            >
+              Create with AI 💫
+            </button>
+          </div>
+        )}
 
         {/* 💫 Modal Create with AI */}
         <AnimatePresence>
@@ -144,4 +199,4 @@ export default function CategoriesPage() {
       <Footer />
     </>
   );
-    }
+      }
