@@ -61,7 +61,7 @@ export default function CategoriesPage() {
   return (
     <>
       <Header />
-      <main className="min-h-screen bg-[#EAF6FA] text-center pt-24 pb-16 px-4">
+      <main className="min-h-screen bg-[#DECF6] text-center pt-24 pb-16 px-4">
         <h1 className="text-3xl md:text-4xl font-extrabold mb-2">
           Explore our Categories
         </h1>
