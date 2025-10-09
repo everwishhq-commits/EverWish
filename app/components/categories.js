@@ -1,8 +1,10 @@
 "use client";
+
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay } from "swiper/modules";
+import { Autoplay, Pagination } from "swiper/modules";
 import Link from "next/link";
 import "swiper/css";
+import "swiper/css/pagination";
 
 const mainCategories = [
   { name: "Seasonal & Holidays", emoji: "🎉", color: "bg-yellow-200", slug: "seasonal-holidays" },
@@ -20,8 +22,8 @@ const mainCategories = [
   { name: "Encouragement & Motivation", emoji: "🌟", color: "bg-yellow-100", slug: "encouragement-motivation" },
   { name: "Thank You & Appreciation", emoji: "🙏", color: "bg-violet-200", slug: "thank-you-appreciation" },
   { name: "Invitations & Events", emoji: "✉️", color: "bg-fuchsia-200", slug: "invitations-events" },
-  { name: "Religious & Spiritual", emoji: "🕯️", color: "bg-orange-200", slug: "religious-spiritual" },
-  { name: "Cultural & Regional", emoji: "🌍", color: "bg-stone-200", slug: "cultural-regional" },
+  { name: "Spiritual & Mindfulness", emoji: "🕯️", color: "bg-orange-200", slug: "spiritual-mindfulness" },
+  { name: "Art & Culture", emoji: "🎨", color: "bg-stone-200", slug: "art-culture" },
   { name: "Kids & Teens", emoji: "🧸", color: "bg-purple-200", slug: "kids-teens" },
   { name: "Humor & Memes", emoji: "😄", color: "bg-rose-100", slug: "humor-memes" },
   { name: "Pets & Animal Lovers", emoji: "🐾", color: "bg-green-100", slug: "pets" },
@@ -34,15 +36,18 @@ const mainCategories = [
 export default function Categories() {
   return (
     <div className="text-center">
+      <h2 className="text-2xl md:text-3xl font-bold mb-6">Categories</h2>
+
       <Swiper
         slidesPerView={2.3}
         spaceBetween={15}
         autoplay={{ delay: 3500, disableOnInteraction: false }}
+        pagination={{ clickable: true }}
         breakpoints={{
           640: { slidesPerView: 3.5, spaceBetween: 20 },
           1024: { slidesPerView: 5, spaceBetween: 25 },
         }}
-        modules={[Autoplay]}
+        modules={[Autoplay, Pagination]}
         className="overflow-visible"
       >
         {mainCategories.map((cat, i) => (
@@ -60,6 +65,9 @@ export default function Categories() {
           </SwiperSlide>
         ))}
       </Swiper>
+
+      {/* 🔵 Dots debajo del carrusel */}
+      <div className="flex justify-center mt-6 mb-4 custom-pagination" />
     </div>
   );
     }
