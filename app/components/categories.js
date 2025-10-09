@@ -35,8 +35,6 @@ const mainCategories = [
 export default function Categories() {
   return (
     <div className="text-center">
-      <h2 className="text-2xl md:text-3xl font-bold mb-6">Categories</h2>
-
       <Swiper
         slidesPerView={2.3}
         spaceBetween={15}
