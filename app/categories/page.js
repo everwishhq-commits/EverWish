@@ -1,12 +1,10 @@
 "use client";
 import { useState } from "react";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay } from "swiper/modules";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import "swiper/css";
+import Header from "../components/header";
+import Footer from "../components/footer";
 
-// 💡 Lista de categorías principales
 const mainCategories = [
   { name: "Seasonal & Holidays", emoji: "🎉", color: "bg-yellow-200", slug: "seasonal-holidays" },
   { name: "Birthdays", emoji: "🎂", color: "bg-pink-200", slug: "birthdays" },
@@ -38,54 +36,46 @@ export default function CategoriesPage() {
   const [query, setQuery] = useState("");
   const [showAI, setShowAI] = useState(false);
 
-  // 🔍 Filtrar resultados
   const filtered = mainCategories.filter((cat) =>
     cat.name.toLowerCase().includes(query.toLowerCase())
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-pink-50 via-white to-white text-center py-16 px-4">
-      <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-2">
-        Explore our Categories
-      </h1>
-      <p className="text-gray-500 mb-8">
-        Find the perfect card for every moment 💖
-      </p>
+    <>
+      <Header />
 
-      {/* 🔎 Barra de búsqueda */}
-      <div className="flex justify-center mb-10">
-        <input
-          type="text"
-          placeholder="Search categories..."
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setShowAI(false);
-          }}
-          className="w-full max-w-md border border-gray-300 rounded-full px-6 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300"
-        />
-      </div>
+      <main className="min-h-screen bg-gradient-to-b from-pink-50 via-white to-white text-center pt-28 px-4 pb-20">
+        {/* Título */}
+        <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-2">
+          Explore our Categories
+        </h1>
+        <p className="text-gray-500 mb-8">
+          Find the perfect card for every moment 💖
+        </p>
 
-      {/* 🧭 Carrusel */}
-      {filtered.length > 0 ? (
-        <Swiper
-          slidesPerView={2.3}
-          spaceBetween={15}
-          autoplay={{ delay: 3500, disableOnInteraction: false }}
-          breakpoints={{
-            640: { slidesPerView: 3.5, spaceBetween: 20 },
-            1024: { slidesPerView: 5, spaceBetween: 25 },
-          }}
-          modules={[Autoplay]}
-          className="overflow-visible custom-scroll pb-10"
-        >
-          {filtered.map((cat, i) => (
-            <SwiperSlide key={i}>
-              <Link href={`/categories/${cat.slug}`}>
+        {/* 🔍 Buscador */}
+        <div className="flex justify-center mb-10">
+          <input
+            type="text"
+            placeholder="Search categories..."
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setShowAI(false);
+            }}
+            className="w-full max-w-md border border-gray-300 rounded-full px-6 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300"
+          />
+        </div>
+
+        {/* 🎨 Cuadrícula de categorías */}
+        <div className="max-w-6xl mx-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5 justify-items-center">
+          {filtered.length > 0 ? (
+            filtered.map((cat, i) => (
+              <Link href={`/categories/${cat.slug}`} key={i}>
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   transition={{ duration: 0.3 }}
-                  className={`${cat.color} rounded-3xl shadow-md hover:shadow-xl flex flex-col items-center justify-center p-6 aspect-square`}
+                  className={`${cat.color} rounded-3xl shadow-md hover:shadow-xl flex flex-col items-center justify-center p-6 w-36 h-36 md:w-40 md:h-40`}
                 >
                   <span className="text-5xl mb-3">{cat.emoji}</span>
                   <p className="font-semibold text-sm md:text-base text-gray-800">
@@ -93,70 +83,65 @@ export default function CategoriesPage() {
                   </p>
                 </motion.div>
               </Link>
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      ) : (
-        // 💫 Popup si no hay resultados
-        <AnimatePresence>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex flex-col items-center justify-center mt-20"
-          >
-            <p className="text-gray-600 mb-4">
-              No results found for “{query}”
-            </p>
-            <button
-              onClick={() => setShowAI(true)}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-full transition"
-            >
-              Create with AI 💫
-            </button>
-          </motion.div>
-        </AnimatePresence>
-      )}
-
-      {/* 🌟 Modal AI */}
-      <AnimatePresence>
-        {showAI && (
-          <motion.div
-            key="ai-modal"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-          >
-            <motion.div
-              className="bg-white rounded-2xl shadow-2xl p-8 text-center w-80 max-w-sm"
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 30, opacity: 0 }}
-            >
-              <h2 className="text-xl font-bold text-gray-800 mb-4">
-                Create your unique card ✨
-              </h2>
-              <p className="text-gray-600 mb-6">
-                Let Everwish AI design a card for <b>{query || "you"}</b>!
+            ))
+          ) : (
+            <div className="col-span-full text-center mt-16">
+              <p className="text-gray-600 mb-4">
+                No results found for “{query}”
               </p>
               <button
-                onClick={() => alert("✨ Opening AI Creator...")}
+                onClick={() => setShowAI(true)}
                 className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-full transition"
               >
-                Start Now
+                Create with AI 💫
               </button>
-              <button
-                onClick={() => setShowAI(false)}
-                className="block mx-auto mt-4 text-gray-500 hover:text-gray-700 text-sm"
+            </div>
+          )}
+        </div>
+
+        {/* 💫 Modal Create with AI */}
+        <AnimatePresence>
+          {showAI && (
+            <motion.div
+              key="ai-modal"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            >
+              <motion.div
+                className="bg-white rounded-2xl shadow-2xl p-8 text-center w-80 max-w-sm"
+                initial={{ y: 50, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 30, opacity: 0 }}
               >
-                Cancel
-              </button>
+                <h2 className="text-xl font-bold text-gray-800 mb-4">
+                  Create your unique card ✨
+                </h2>
+                <p className="text-gray-600 mb-6">
+                  Let Everwish AI design a card for{" "}
+                  <b>{query || "you"}</b>!
+                </p>
+                <button
+                  onClick={() => alert("✨ Opening AI Creator...")}
+                  className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-full transition"
+                >
+                  Start Now
+                </button>
+                <button
+                  onClick={() => setShowAI(false)}
+                  className="block mx-auto mt-4 text-gray-500 hover:text-gray-700 text-sm"
+                >
+                  Cancel
+                </button>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+          )}
+        </AnimatePresence>
+      </main>
+
+      <Footer />
+    </>
   );
-         }
+    }
