@@ -4,9 +4,19 @@ import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 
-// Import dinámico de todos los videos en /public/videos
-const importAll = (r) => r.keys().map(r);
-const videos = importAll(require.context("/public/videos", false, /\.(mp4)$/));
+// ✅ Lista directa de tus videos dentro de /public/videos
+const videos = [
+  "/videos/screen-20251011-161325.mp4",
+  "/videos/screen-20251011-161325~2.mp4",
+  "/videos/screen-20251011-161325~3.mp4",
+  "/videos/screen-20251011-161325~4.mp4",
+  "/videos/screen-20251011-161325~5.mp4",
+  "/videos/screen-20251011-161325~6.mp4",
+  "/videos/screen-20251011-161325~7.mp4",
+  "/videos/screen-20251011-161325~8.mp4",
+  "/videos/screen-20251011-161325~9.mp4",
+  "/videos/screen-20251011-161325~10.mp4"
+];
 
 export default function Carousel() {
   return (
@@ -54,4 +64,4 @@ export default function Carousel() {
       <div className="flex justify-center mt-6 mb-4 custom-pagination" />
     </div>
   );
-                    }
+                     }
