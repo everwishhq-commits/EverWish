@@ -4,6 +4,7 @@ import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 
+// Lista de videos en la carpeta /public/videos
 const videos = [
   "/videos/screen-20251011-161325.mp4",
   "/videos/screen-20251011-161325~2.mp4",
@@ -15,6 +16,7 @@ const videos = [
   "/videos/screen-20251011-161325~8.mp4",
   "/videos/screen-20251011-161325~9.mp4",
   "/videos/screen-20251011-161325~10.mp4",
+  "/videos/screen-20251011-1613252_kn6ncT90.mp4", // último agregado
 ];
 
 export default function Carousel() {
@@ -24,10 +26,9 @@ export default function Carousel() {
         centeredSlides={true}
         loop={true}
         autoplay={{
-          delay: 3500,
+          delay: 4000,
           disableOnInteraction: false,
           pauseOnMouseEnter: false,
-          stopOnLastSlide: false,
         }}
         pagination={{ clickable: true }}
         modules={[Pagination, Autoplay]}
@@ -41,19 +42,28 @@ export default function Carousel() {
       >
         {videos.map((src, index) => (
           <SwiperSlide key={index}>
-            <div className="rounded-2xl shadow-lg overflow-hidden transition-all duration-500">
-              <video
-                src={src}
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="w-full h-[450px] object-cover"
-              />
-            </div>
+            {({ isActive }) => (
+              <div
+                className={`rounded-2xl shadow-lg overflow-hidden transition-all duration-500 ${
+                  isActive ? "scale-105 z-50" : "scale-90 opacity-70 z-10"
+                }`}
+              >
+                <video
+                  src={src}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-[450px] object-cover"
+                  onClick={() => window.open(src, "_blank")} // 👉 abrir en nueva pestaña
+                />
+              </div>
+            )}
           </SwiperSlide>
         ))}
       </Swiper>
+
+      <div className="flex justify-center mt-6 mb-4 custom-pagination" />
     </div>
   );
-                }
+                    }
