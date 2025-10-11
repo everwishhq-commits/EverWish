@@ -4,7 +4,6 @@ import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 
-// Lista manual de videos en /public/videos/
 const videos = [
   "/videos/screen-20251011-161325.mp4",
   "/videos/screen-20251011-161325~2.mp4",
@@ -42,26 +41,21 @@ export default function Carousel() {
       >
         {videos.map((src, index) => (
           <SwiperSlide key={index}>
-            {({ isActive }) => (
-              <div
-                className={`rounded-2xl shadow-lg overflow-hidden transition-all duration-500 
-                ${isActive ? "scale-105 z-50" : "scale-90 opacity-70 z-10"}`}
-              >
-                <video
-                  src={src}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full h-[450px] object-cover"
-                />
-              </div>
-            )}
+            <div
+              className="rounded-2xl shadow-lg overflow-hidden transition-all duration-500"
+            >
+              <video
+                src={src}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-[450px] object-cover"
+              />
+            </div>
           </SwiperSlide>
         ))}
       </Swiper>
-
-      <div className="flex justify-center mt-6 mb-4 custom-pagination" />
     </div>
   );
-          }
+                }
