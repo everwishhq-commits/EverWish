@@ -41,9 +41,7 @@ export default function Carousel() {
       >
         {videos.map((src, index) => (
           <SwiperSlide key={index}>
-            <div
-              className="rounded-2xl shadow-lg overflow-hidden transition-all duration-500"
-            >
+            <div className="rounded-2xl shadow-lg overflow-hidden transition-all duration-500">
               <video
                 src={src}
                 autoPlay
