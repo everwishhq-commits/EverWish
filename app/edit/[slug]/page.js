@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 
-// 🪄 Genera un mensaje predeterminado según el slug
+// 🎃 Mensaje automático según el nombre
 function defaultMessageFromSlug(slug) {
   const s = (slug || "").toLowerCase();
   const isHalloween = /halloween/.test(s);
@@ -34,7 +34,9 @@ export default function EditPage() {
   const { slug } = useParams();
   const [item, setItem] = useState(null);
   const [message, setMessage] = useState("");
-  const [showMessage, setShowMessage] = useState(false);
+  const [name, setName] = useState("");
+  const [anim, setAnim] = useState("none");
+  const [showFull, setShowFull] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -45,20 +47,20 @@ export default function EditPage() {
         setItem(found || null);
         setMessage(defaultMessageFromSlug(slug));
 
-        // 🕒 Mostrar mensaje después de 3 segundos
-        setTimeout(() => setShowMessage(true), 3000);
+        // Mostrar full screen 3 segundos y luego vista editable
+        setTimeout(() => setShowFull(false), 3000);
       } catch (e) {
         console.error("Error loading /api/videos", e);
       }
     })();
   }, [slug]);
 
-  if (!item) return <p className="text-center mt-10">Loading...</p>;
+  if (!item) return null;
 
-  return (
-    <main className="w-screen h-screen bg-[#fff8f5] flex flex-col items-center justify-center overflow-hidden relative">
-      {/* 🔹 1A: Imagen o video fullscreen */}
-      <section className="relative w-full h-full flex flex-col items-center justify-center">
+  // 💫 Pantalla completa inicial (3 seg)
+  if (showFull) {
+    return (
+      <div className="fixed inset-0 bg-black flex justify-center items-center overflow-hidden">
         {item?.src?.toLowerCase().endsWith(".mp4") ? (
           <video
             src={item.src}
@@ -66,50 +68,91 @@ export default function EditPage() {
             loop
             autoPlay
             playsInline
-            className="w-full h-full object-contain"
+            className="w-full h-full object-cover"
           />
         ) : (
           <img
             src={item?.src}
-            alt={item?.title || slug}
-            className="w-full h-full object-contain"
+            alt={slug}
+            className="w-full h-full object-cover"
           />
         )}
+      </div>
+    );
+  }
 
-        {/* 🔹 1B: Aparece después de 3 segundos */}
-        {showMessage && (
-          <motion.div
-            initial={{ opacity: 0, y: 60 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.2, ease: "easeOut" }}
-            className="absolute bottom-0 w-full bg-white/95 backdrop-blur-md shadow-2xl rounded-t-3xl p-6 text-center"
-          >
-            <motion.h1
-              key={message}
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: [1, 1.15, 1], opacity: 1 }}
-              transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
-              className="text-2xl md:text-3xl font-extrabold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-orange-400 to-yellow-300 drop-shadow-[0_2px_2px_rgba(255,150,150,0.8)]"
-              style={{
-                WebkitTextStroke: "1px white",
-                textShadow: "0 0 15px rgba(255,150,150,0.8)",
-              }}
-            >
-              {message}
-            </motion.h1>
-
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              className="mt-6 w-full rounded-full bg-pink-500 hover:bg-pink-600 text-white font-semibold py-4 text-lg transition"
-              onClick={() =>
-                alert(`Sent successfully ✨\n\nCard: ${slug}`)
-              }
-            >
-              Send 💌
-            </motion.button>
-          </motion.div>
+  // 💌 Vista editable (1B)
+  return (
+    <main className="mx-auto max-w-3xl px-4 py-8 relative bg-[#fff8f5] min-h-screen">
+      <div className="relative w-full rounded-3xl shadow-md overflow-hidden bg-white">
+        {item?.src?.toLowerCase().endsWith(".mp4") ? (
+          <video
+            src={item.src}
+            muted
+            loop
+            autoPlay
+            playsInline
+            className="w-full h-[420px] object-contain"
+          />
+        ) : (
+          <img
+            src={item?.src}
+            alt={slug}
+            className="w-full h-[420px] object-contain"
+          />
         )}
+      </div>
+
+      <section className="mt-6 bg-white rounded-3xl shadow-md p-6 relative overflow-hidden">
+        <motion.h2
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1 }}
+          className="text-xl font-semibold text-center mb-4"
+        >
+          Personaliza tu mensaje ✨
+        </motion.h2>
+
+        <motion.textarea
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1.2 }}
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          rows={3}
+          className="w-full rounded-2xl border border-gray-300 p-4 outline-none focus:ring-2 focus:ring-pink-400 text-center font-medium text-gray-700"
+        />
+
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full mt-3 rounded-2xl border border-gray-300 p-4 outline-none focus:ring-2 focus:ring-pink-400 text-center"
+          placeholder="Tu nombre (opcional)"
+        />
+
+        <select
+          value={anim}
+          onChange={(e) => setAnim(e.target.value)}
+          className="w-full mt-3 rounded-2xl border border-gray-300 p-3 outline-none focus:ring-2 focus:ring-pink-400 text-center"
+        >
+          <option value="none">Sin animación</option>
+          <option value="sparkles">Destellos ✨</option>
+          <option value="confetti">Confetti 🎉</option>
+          <option value="hearts">Corazones 💖</option>
+        </select>
+
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          className="w-full mt-4 rounded-full bg-pink-500 hover:bg-pink-600 text-white font-semibold py-4 transition"
+          onClick={() =>
+            alert(
+              `Vista previa lista ✨\n\nMensaje: ${message}\nNombre: ${name}\nAnimación: ${anim}`
+            )
+          }
+        >
+          Vista previa y envío
+        </motion.button>
       </section>
     </main>
   );
-          }
+}
