@@ -40,7 +40,7 @@ export default function EditPage() {
         setItem(found || null);
         setMessage(defaultMessageFromSlug(slug));
 
-        // 🔹 Fullscreen mode
+        // 🔹 Pantalla completa por 3 segundos
         const el = document.documentElement;
         const goFull = async () => {
           try {
@@ -52,7 +52,7 @@ export default function EditPage() {
         };
         goFull();
 
-        // 🔹 Show editor after 3 seconds
+        // 🔹 Salir del fullscreen y mostrar editor
         setTimeout(async () => {
           if (document.fullscreenElement) {
             await document.exitFullscreen();
@@ -65,7 +65,7 @@ export default function EditPage() {
     })();
   }, [slug]);
 
-  // 🎇 Render animation effects
+  // 🎇 Render animation effects (✨💖🎉)
   const renderEffect = () => {
     if (anim === "sparkles")
       return Array.from({ length: 15 }).map((_, i) => (
@@ -150,7 +150,7 @@ export default function EditPage() {
 
   if (!item) return null;
 
-  // 🟣 Step 1: Fullscreen preview
+  // 🟣 Step 1: Pantalla completa del diseño
   if (!showEdit) {
     return (
       <div className="fixed inset-0 flex justify-center items-center bg-black">
@@ -174,71 +174,81 @@ export default function EditPage() {
     );
   }
 
-  // 🟢 Step 2: Editor with animations
+  // 🟢 Step 2: Editor con efectos extendidos
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 relative bg-[#fff8f5] min-h-screen overflow-hidden">
-      <div className="relative w-full rounded-3xl shadow-md overflow-hidden bg-white">
-        {item.src?.toLowerCase().endsWith(".mp4") ? (
-          <video
-            src={item.src}
-            muted
-            loop
-            autoPlay
-            playsInline
-            className="w-full h-[420px] object-contain"
-          />
-        ) : (
-          <img
-            src={item.src}
-            alt={slug}
-            className="w-full h-[420px] object-contain"
-          />
-        )}
+      {/* ✨ Fondo animado total */}
+      <div className="absolute inset-0 pointer-events-none z-0">
         {renderEffect()}
       </div>
 
-      <section className="mt-6 bg-white rounded-3xl shadow-md p-6 relative overflow-hidden">
-        <motion.h2
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1 }}
-          className="text-xl font-semibold text-center mb-4"
-        >
-          Customize your message ✨
-        </motion.h2>
+      {/* Contenido principal */}
+      <div className="relative z-10">
+        <div className="relative w-full rounded-3xl shadow-md overflow-hidden bg-white">
+          {item.src?.toLowerCase().endsWith(".mp4") ? (
+            <video
+              src={item.src}
+              muted
+              loop
+              autoPlay
+              playsInline
+              className="w-full h-[420px] object-contain"
+            />
+          ) : (
+            <img
+              src={item.src}
+              alt={slug}
+              className="w-full h-[420px] object-contain"
+            />
+          )}
+        </div>
 
-        <textarea
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          rows={3}
-          className="w-full rounded-2xl border border-gray-300 p-4 text-center focus:ring-2 focus:ring-pink-400"
-        />
+        <section className="mt-6 bg-white rounded-3xl shadow-md p-6 relative overflow-hidden">
+          {/* 💫 Efectos dentro del cuadro */}
+          <div className="absolute inset-0 pointer-events-none">{renderEffect()}</div>
 
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full mt-3 rounded-2xl border border-gray-300 p-4 text-center focus:ring-2 focus:ring-pink-400"
-          placeholder="Your name (optional)"
-        />
+          <motion.h2
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1 }}
+            className="text-xl font-semibold text-center mb-4 relative z-10"
+          >
+            Customize your message ✨
+          </motion.h2>
 
-        <select
-          value={anim}
-          onChange={(e) => setAnim(e.target.value)}
-          className="w-full mt-3 rounded-2xl border border-gray-300 p-3 text-center focus:ring-2 focus:ring-pink-400"
-        >
-          <option value="sparkles">✨ Sparkles</option>
-          <option value="confetti">🎉 Confetti</option>
-          <option value="hearts">💖 Hearts</option>
-          <option value="none">❌ None</option>
-        </select>
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            rows={3}
+            className="w-full rounded-2xl border border-gray-300 p-4 text-center focus:ring-2 focus:ring-pink-400 relative z-10"
+          />
 
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          className="w-full mt-4 rounded-full bg-pink-500 hover:bg-pink-600 text-white font-semibold py-4 transition"
-        >
-          Send 🎁
-        </motion.button>
-      </section>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full mt-3 rounded-2xl border border-gray-300 p-4 text-center focus:ring-2 focus:ring-pink-400 relative z-10"
+            placeholder="Your name (optional)"
+          />
+
+          <select
+            value={anim}
+            onChange={(e) => setAnim(e.target.value)}
+            className="w-full mt-3 rounded-2xl border border-gray-300 p-3 text-center focus:ring-2 focus:ring-pink-400 relative z-10"
+          >
+            <option value="sparkles">✨ Sparkles</option>
+            <option value="confetti">🎉 Confetti</option>
+            <option value="hearts">💖 Hearts</option>
+            <option value="none">❌ None</option>
+          </select>
+
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            className="w-full mt-4 rounded-full bg-pink-500 hover:bg-pink-600 text-white font-semibold py-4 transition relative z-10"
+          >
+            Send 🎁
+          </motion.button>
+        </section>
+      </div>
     </main>
   );
-}
+                                            }
