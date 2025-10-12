@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
@@ -8,25 +8,47 @@ import "swiper/css/pagination";
 
 export default function Carousel() {
   const [videos, setVideos] = useState([]);
+  const router = useRouter();
 
+  // 🔹 Cargar los videos desde la API
   useEffect(() => {
-    (async () => {
+    async function fetchVideos() {
       try {
-        const res = await fetch("/api/videos", { cache: "no-store" });
+        const res = await fetch("/api/videos");
+        if (!res.ok) throw new Error("Error al cargar los videos");
         const data = await res.json();
-        setVideos(data.slice(0, 10));
-      } catch (e) {
-        console.error("Error cargando /api/videos", e);
+        setVideos(data.slice(0, 10)); // Top 10
+      } catch (error) {
+        console.error("❌ Error al obtener videos:", error);
       }
-    })();
+    }
+    fetchVideos();
   }, []);
+
+  // 🔹 Pantalla completa + redirección inmediata al editor
+  const handleClick = async (slug) => {
+    const el = document.documentElement;
+    try {
+      if (el.requestFullscreen) await el.requestFullscreen();
+      else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+    } catch (err) {
+      console.warn("⚠️ Fullscreen not supported:", err);
+    }
+    router.push(`/edit/${slug}`);
+  };
 
   return (
     <div className="relative mt-8 mb-10">
       <Swiper
         centeredSlides
-        loop
-        autoplay={{ delay: 3500, disableOnInteraction: false }}
+        loop={true} // 🔁 Bucle infinito
+        grabCursor={true} // ✋ Cursor tipo "grip" al pasar
+        speed={900} // ⚡ Velocidad de transición entre slides
+        autoplay={{
+          delay: 3000, // ⏱️ Cada 3 segundos cambia
+          disableOnInteraction: false, // sigue el autoplay incluso si el usuario toca
+          pauseOnMouseEnter: true, // pausa al pasar el mouse
+        }}
         pagination={{ clickable: true }}
         modules={[Pagination, Autoplay]}
         breakpoints={{
@@ -35,21 +57,20 @@ export default function Carousel() {
           640: { slidesPerView: 2, spaceBetween: 20 },
           1024: { slidesPerView: 3, spaceBetween: 30 },
         }}
-        className="w-full max-w-5xl"
+        className="w-full max-w-5xl select-none"
       >
-        {videos.map((item, i) => (
-          <SwiperSlide key={item.slug ?? i}>
+        {videos.map((video, index) => (
+          <SwiperSlide key={index}>
             {({ isActive }) => (
-              <Link
-                href={`/card/${encodeURIComponent(item.slug)}`}
-                className={`block rounded-2xl shadow-lg overflow-hidden transition-all duration-500 ${
+              <div
+                onClick={() => handleClick(video.slug)}
+                className={`cursor-pointer rounded-2xl shadow-lg overflow-hidden transition-all duration-500 ${
                   isActive ? "scale-105 z-50" : "scale-90 opacity-70 z-10"
                 }`}
               >
-                {/* Si es mp4 se muestra como video, si no, como imagen */}
-                {String(item.src).toLowerCase().endsWith(".mp4") ? (
+                {video.src?.toLowerCase().endsWith(".mp4") ? (
                   <video
-                    src={item.src}
+                    src={video.src}
                     autoPlay
                     loop
                     muted
@@ -57,16 +78,13 @@ export default function Carousel() {
                     className="w-full h-[450px] object-cover"
                   />
                 ) : (
-                  // fallback por si algún día metes PNG/JPG en /videos
-                  // (Next/Image no soporta rutas dinámicas sin configuración extra aquí)
                   <img
-                    src={item.src}
-                    alt={item.title || item.slug}
+                    src={video.src}
+                    alt={video.title}
                     className="w-full h-[450px] object-cover"
-                    loading="lazy"
                   />
                 )}
-              </Link>
+              </div>
             )}
           </SwiperSlide>
         ))}
@@ -75,4 +93,4 @@ export default function Carousel() {
       <div className="flex justify-center mt-6 mb-4 custom-pagination" />
     </div>
   );
-}
+                }
