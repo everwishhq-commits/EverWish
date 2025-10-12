@@ -1,51 +1,32 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
-import { useRouter } from "next/navigation";
 
 export default function Carousel() {
   const [videos, setVideos] = useState([]);
-  const [selectedVideo, setSelectedVideo] = useState(null);
-  const router = useRouter();
 
-  // 🔹 Cargar los videos desde la API
   useEffect(() => {
-    async function fetchVideos() {
+    (async () => {
       try {
-        const res = await fetch("/api/videos");
-        if (!res.ok) throw new Error("Error al cargar videos");
+        const res = await fetch("/api/videos", { cache: "no-store" });
         const data = await res.json();
-        setVideos(data.slice(0, 10)); // Solo 10
-      } catch (err) {
-        console.error("❌ Error:", err);
+        setVideos(data.slice(0, 10));
+      } catch (e) {
+        console.error("Error cargando /api/videos", e);
       }
-    }
-    fetchVideos();
+    })();
   }, []);
-
-  // 🔸 Efecto pantalla completa + redirección
-  useEffect(() => {
-    if (selectedVideo) {
-      const timer = setTimeout(() => {
-        router.push(`/edit/${selectedVideo.slug}`);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [selectedVideo, router]);
 
   return (
     <div className="relative mt-8 mb-10">
-      {/* 🌀 Carrusel principal */}
       <Swiper
         centeredSlides
         loop
-        autoplay={{
-          delay: 3500,
-          disableOnInteraction: false,
-        }}
+        autoplay={{ delay: 3500, disableOnInteraction: false }}
         pagination={{ clickable: true }}
         modules={[Pagination, Autoplay]}
         breakpoints={{
@@ -56,46 +37,42 @@ export default function Carousel() {
         }}
         className="w-full max-w-5xl"
       >
-        {videos.map((video, i) => (
-          <SwiperSlide key={i}>
+        {videos.map((item, i) => (
+          <SwiperSlide key={item.slug ?? i}>
             {({ isActive }) => (
-              <div
-                onClick={() => setSelectedVideo(video)}
-                className={`rounded-2xl shadow-lg overflow-hidden transition-all duration-500 cursor-pointer ${
+              <Link
+                href={`/card/${encodeURIComponent(item.slug)}`}
+                className={`block rounded-2xl shadow-lg overflow-hidden transition-all duration-500 ${
                   isActive ? "scale-105 z-50" : "scale-90 opacity-70 z-10"
                 }`}
               >
-                <video
-                  src={video.src}
-                  title={video.title}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full h-[450px] object-cover"
-                />
-              </div>
+                {/* Si es mp4 se muestra como video, si no, como imagen */}
+                {String(item.src).toLowerCase().endsWith(".mp4") ? (
+                  <video
+                    src={item.src}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-[450px] object-cover"
+                  />
+                ) : (
+                  // fallback por si algún día metes PNG/JPG en /videos
+                  // (Next/Image no soporta rutas dinámicas sin configuración extra aquí)
+                  <img
+                    src={item.src}
+                    alt={item.title || item.slug}
+                    className="w-full h-[450px] object-cover"
+                    loading="lazy"
+                  />
+                )}
+              </Link>
             )}
           </SwiperSlide>
         ))}
       </Swiper>
 
-      {/* 🔹 Modal de pantalla completa */}
-      {selectedVideo && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-[999]"
-          onClick={() => setSelectedVideo(null)}
-        >
-          <video
-            src={selectedVideo.src}
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-full object-contain"
-          />
-        </div>
-      )}
+      <div className="flex justify-center mt-6 mb-4 custom-pagination" />
     </div>
   );
-                }
+}
