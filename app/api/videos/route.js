@@ -6,7 +6,6 @@ export async function GET() {
     const dir = path.join(process.cwd(), "public/videos");
     const files = fs.readdirSync(dir);
 
-    // Filtramos solo archivos de video (mp4)
     const videos = files
       .filter((file) => file.endsWith(".mp4"))
       .map((file) => ({
