@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { getRelatedName } from "@/app/lib/naming";
+import { getRelatedName } from "../../lib/naming";
 
 export default function EditCardPage({ params }) {
   const { slug } = params;
@@ -12,14 +12,12 @@ export default function EditCardPage({ params }) {
 
   useEffect(() => {
     if (slug) {
-      // muestra el video original (1A)
       const base = slug.replace(/_1B$/, "_1A");
       setVideoSrc(`/videos/${base}.mp4`);
     }
   }, [slug]);
 
   const handleSend = () => {
-    // Redirige a la página final (share)
     router.push(`/share/${slug}?msg=${encodeURIComponent(message)}&name=${encodeURIComponent(name)}`);
   };
 
@@ -64,4 +62,4 @@ export default function EditCardPage({ params }) {
       </div>
     </main>
   );
-}
+            }
