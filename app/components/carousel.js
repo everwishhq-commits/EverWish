@@ -1,26 +1,31 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination, Autoplay } from "swiper/modules";
+import { Pagination, Autoplay, EffectFade } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
+import "swiper/css/effect-fade";
 
 export default function Carousel() {
   const [videos, setVideos] = useState([]);
 
   // 🔹 Cargar los videos desde la API dinámica
-  useEffect(() => {
-    async function fetchVideos() {
-      try {
-        const res = await fetch("/api/videos");
-        if (!res.ok) throw new Error("Error al cargar los videos");
-        const data = await res.json();
-        setVideos(data.slice(0, 10)); // Muestra solo los 10 primeros
-      } catch (error) {
-        console.error("❌ Error al obtener videos:", error);
-      }
+  async function fetchVideos() {
+    try {
+      const res = await fetch("/api/videos", { cache: "no-store" }); // sin caché
+      if (!res.ok) throw new Error("Error al cargar los videos");
+      const data = await res.json();
+      setVideos(data.slice(0, 10)); // solo los 10 primeros
+    } catch (error) {
+      console.error("❌ Error al obtener videos:", error);
     }
+  }
+
+  useEffect(() => {
     fetchVideos();
+    // Verifica cada 60 segundos si hay nuevos archivos
+    const interval = setInterval(fetchVideos, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -28,28 +33,22 @@ export default function Carousel() {
       <Swiper
         centeredSlides
         loop
+        effect="fade"
+        fadeEffect={{ crossFade: true }}
         autoplay={{
           delay: 3500,
           disableOnInteraction: false,
-          pauseOnMouseEnter: false,
-          stopOnLastSlide: false,
         }}
         pagination={{ clickable: true }}
-        modules={[Pagination, Autoplay]}
-        breakpoints={{
-          320: { slidesPerView: 1.2, spaceBetween: 10 },
-          480: { slidesPerView: 1.4, spaceBetween: 15 },
-          640: { slidesPerView: 2, spaceBetween: 20 },
-          1024: { slidesPerView: 3, spaceBetween: 30 },
-        }}
+        modules={[Pagination, Autoplay, EffectFade]}
         className="w-full max-w-5xl"
       >
         {videos.map((video, index) => (
           <SwiperSlide key={index}>
             {({ isActive }) => (
               <div
-                className={`rounded-2xl shadow-lg overflow-hidden transition-all duration-500 ${
-                  isActive ? "scale-105 z-50" : "scale-90 opacity-70 z-10"
+                className={`rounded-2xl shadow-xl overflow-hidden transition-all duration-700 ease-in-out ${
+                  isActive ? "scale-105 opacity-100" : "scale-95 opacity-70"
                 }`}
               >
                 <video
