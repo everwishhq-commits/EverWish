@@ -1,14 +1,13 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getRelatedName } from "@/app/lib/naming";
+import { getRelatedName } from "../../lib/naming";
 
 export default function CardPage({ params }) {
   const { slug } = params;
   const router = useRouter();
   const [videoSrc, setVideoSrc] = useState("");
 
-  // Cargar el video según el slug (1A)
   useEffect(() => {
     if (slug) {
       setVideoSrc(`/videos/${slug}.mp4`);
@@ -56,4 +55,4 @@ export default function CardPage({ params }) {
       </div>
     </main>
   );
-}
+            }
