@@ -1,40 +1,32 @@
-import { promises as fs } from "fs";
+import fs from "fs";
 import path from "path";
 
 export async function GET() {
   try {
     const dir = path.join(process.cwd(), "public/videos");
-    const files = await fs.readdir(dir);
+    const files = fs.readdirSync(dir);
 
-    // Filtra solo los archivos MP4
+    // Filtramos solo archivos de video (mp4)
     const videos = files
-      .filter((file) => file.toLowerCase().endsWith(".mp4"))
+      .filter((file) => file.endsWith(".mp4"))
       .map((file) => ({
-        title: formatTitle(file),
+        title: file
+          .replace(/_/g, " ")
+          .replace(".mp4", "")
+          .replace(/\b\w/g, (l) => l.toUpperCase()),
         src: `/videos/${file}`,
-        slug: file.replace(".mp4", "")
+        slug: file.replace(".mp4", ""),
       }));
 
-    // Devuelve solo los 10 más recientes
-    const latest10 = videos.slice(-10).reverse();
-
-    return new Response(JSON.stringify(latest10), {
+    return new Response(JSON.stringify(videos, null, 2), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
-  } catch (err) {
-    console.error("❌ Error reading videos:", err);
-    return new Response(JSON.stringify({ error: "Failed to load videos" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+  } catch (error) {
+    console.error("Error reading videos:", error);
+    return new Response(
+      JSON.stringify({ error: "Unable to read videos directory" }),
+      { status: 500 }
+    );
   }
-}
-
-// Convierte el nombre del archivo en un título legible
-function formatTitle(name) {
-  return name
-    .replace(".mp4", "")
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
