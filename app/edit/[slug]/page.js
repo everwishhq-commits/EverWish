@@ -1,123 +1,124 @@
 "use client";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { useState } from "react";
 
-export default function EditCardPage() {
+// Genera mensaje predeterminado según el nombre del archivo (slug)
+function defaultMessageFromSlug(slug) {
+  const s = (slug || "").toLowerCase();
+
+  const isHalloween = /halloween/.test(s);
+  const isLove = /love|romance/.test(s);
+  const isBirthday = /birthday|cumple/.test(s);
+  const isGhost = /ghost|fantasma/.test(s);
+  const isPumpkin = /pumpkin|calabaza/.test(s);
+  const isZombie = /zombie/.test(s);
+
+  // Puedes ajustar estas prioridades si quieres
+  if (isHalloween && isLove)
+    return "Entre sustos y suspiros, mi corazón te elige a ti. Feliz Halloween con amor. 🖤🎃";
+  if (isHalloween && isBirthday)
+    return "¡Que tu día renazca con sabor a calabaza y magia! Feliz cumpleaños. 🎃🎂";
+  if (isZombie && isBirthday)
+    return "¡Que tu día esté lleno de risas, cerebros y pastel! Feliz cumple zombie. 🧟‍♂️🎂";
+  if (isGhost && isLove)
+    return "Te mando abrazos espectrales y amor infinito desde el más allá. 👻💞";
+  if (isPumpkin && isHalloween)
+    return "Que tu noche brille con magia y dulces a montones. ¡Feliz Halloween! ✨🍬";
+
+  // Genérico elegante
+  if (isLove) return "Gracias por existir. Que hoy te abrace la magia del amor. 💖";
+  if (isBirthday) return "¡Feliz cumpleaños! Que tu día esté lleno de alegría y sorpresas. 🎉";
+  return "Celebra este momento con una sonrisa. Te deseo luz, paz y recuerdos bonitos. ✨";
+}
+
+export default function EditPage() {
   const { slug } = useParams();
-  const [message, setMessage] = useState("Have a pumpkin-tastic Halloween!");
+  const [item, setItem] = useState(null);
+  const [message, setMessage] = useState("");
   const [name, setName] = useState("");
-  const [userPhoto, setUserPhoto] = useState(null);
-  const [animation, setAnimation] = useState("none");
-  const [preview, setPreview] = useState(false);
+  const [anim, setAnim] = useState("none");
 
-  const handlePhoto = (e) => {
-    const file = e.target.files[0];
-    if (file) setUserPhoto(URL.createObjectURL(file));
-  };
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/videos", { cache: "no-store" });
+        const list = await res.json();
+        const found = list.find((v) => v.slug === slug);
+        setItem(found || null);
+        setMessage(defaultMessageFromSlug(slug));
+      } catch (e) {
+        console.error("Error cargando /api/videos", e);
+      }
+    })();
+  }, [slug]);
 
   return (
-    <div className="min-h-screen bg-[#fff8f2] flex flex-col items-center justify-center p-6">
-      {/* 💌 Tarjeta */}
-      <div className="bg-white shadow-xl rounded-3xl p-6 max-w-md w-full relative overflow-hidden">
-        {/* Animación decorativa */}
-        {animation === "confetti" && (
-          <div className="absolute inset-0 animate-pulse text-center text-3xl pointer-events-none">
-            🎉🎊🎉
-          </div>
-        )}
-        {animation === "hearts" && (
-          <div className="absolute inset-0 animate-bounce text-center text-3xl pointer-events-none">
-            ❤️💖💞
-          </div>
-        )}
-        {animation === "sparkles" && (
-          <div className="absolute inset-0 animate-pulse text-center text-3xl pointer-events-none">
-            ✨🌟✨
-          </div>
-        )}
-
-        {/* Imagen o espacio del usuario */}
-        <div className="flex flex-col items-center mb-4">
-          {userPhoto ? (
-            <img
-              src={userPhoto}
-              alt="User"
-              className="w-24 h-24 rounded-full object-cover border-4 border-pink-200 shadow-md"
+    <main className="mx-auto max-w-3xl px-4 py-8">
+      {/* 1A estática arriba (si el source es mp4 lo dejamos como poster animado silenciado o lo mostramos como video muted/loop) */}
+      <div className="w-full rounded-3xl shadow-md overflow-hidden bg-white">
+        <div className="w-full bg-white flex items-center justify-center">
+          {item?.src?.toLowerCase().endsWith(".mp4") ? (
+            <video
+              src={item.src}
+              muted
+              loop
+              autoPlay
+              playsInline
+              className="w-full h-[420px] object-contain"
             />
           ) : (
-            <label className="cursor-pointer text-sm text-pink-600 underline">
-              Add your photo
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handlePhoto}
-                className="hidden"
-              />
-            </label>
+            <img
+              src={item?.src}
+              alt={item?.title || slug}
+              className="w-full h-[420px] object-contain"
+            />
           )}
         </div>
-
-        {/* Mensaje editable */}
-        {!preview ? (
-          <>
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={3}
-              className="w-full text-center text-gray-800 font-medium border rounded-md p-3 mb-3 bg-white/80"
-            />
-            <input
-              type="text"
-              placeholder="Your name (optional)"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full text-center border rounded-md p-2 mb-3 bg-white/80"
-            />
-            <select
-              value={animation}
-              onChange={(e) => setAnimation(e.target.value)}
-              className="w-full border rounded-md p-2 mb-3 text-gray-700"
-            >
-              <option value="none">No animation</option>
-              <option value="confetti">🎉 Confetti</option>
-              <option value="hearts">❤️ Hearts</option>
-              <option value="sparkles">✨ Sparkles</option>
-            </select>
-            <button
-              onClick={() => setPreview(true)}
-              className="bg-pink-500 text-white font-semibold py-3 w-full rounded-md hover:bg-pink-600 transition"
-            >
-              Preview ✨
-            </button>
-          </>
-        ) : (
-          <div className="text-center">
-            <p className="text-lg font-semibold text-gray-800 mb-2">
-              {message}
-            </p>
-            {name && (
-              <p className="text-sm text-gray-500 mb-4">— {name}</p>
-            )}
-            <button
-              onClick={() => setPreview(false)}
-              className="bg-gray-300 text-gray-800 px-4 py-2 rounded-md mr-2"
-            >
-              Edit
-            </button>
-            <button
-              onClick={() => alert("Card ready to send 🎉")}
-              className="bg-pink-500 text-white px-4 py-2 rounded-md"
-            >
-              Send 💌
-            </button>
-          </div>
-        )}
       </div>
 
-      {/* Descripción */}
-      <p className="text-gray-500 text-sm mt-6 text-center">
-        You’re editing: <span className="font-semibold">{slug}</span>
-      </p>
-    </div>
+      {/* 1B – Editor de mensaje */}
+      <section className="mt-6 bg-white rounded-3xl shadow-md p-6">
+        <h2 className="text-xl font-semibold text-center">Customize your message ✨</h2>
+
+        <div className="mt-4 space-y-4">
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            rows={3}
+            className="w-full rounded-2xl border border-gray-300 p-4 outline-none focus:ring-2 focus:ring-pink-400"
+            placeholder="Escribe tu mensaje…"
+          />
+
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full rounded-2xl border border-gray-300 p-4 outline-none focus:ring-2 focus:ring-pink-400"
+            placeholder="Tu nombre (opcional)"
+          />
+
+          <select
+            value={anim}
+            onChange={(e) => setAnim(e.target.value)}
+            className="w-full rounded-2xl border border-gray-300 p-3 outline-none focus:ring-2 focus:ring-pink-400"
+          >
+            <option value="none">No animation</option>
+            <option value="sparkles">Sparkles ✨</option>
+            <option value="confetti">Confetti 🎉</option>
+            <option value="hearts">Hearts 💖</option>
+          </select>
+
+          <button
+            className="w-full mt-2 rounded-full bg-pink-500 hover:bg-pink-600 text-white font-semibold py-4 transition"
+            onClick={() => alert(`Preview listo:\n\nMensaje: ${message}\nNombre: ${name}\nAnim: ${anim}\nSlug: ${slug}`)}
+          >
+            Preview & Send
+          </button>
+
+          <p className="text-center text-sm text-gray-500">
+            You’re editing: <span className="font-mono">{slug}</span>
+          </p>
+        </div>
+      </section>
+    </main>
   );
-          }
+                }
