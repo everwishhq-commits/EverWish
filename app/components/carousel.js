@@ -8,13 +8,13 @@ import "swiper/css/pagination";
 export default function Carousel() {
   const [videos, setVideos] = useState([]);
 
-  // 🔹 Cargar videos desde la API dinámica, sin caché
+  // 🔹 Cargar los videos desde la API (sin caché)
   async function fetchVideos() {
     try {
       const res = await fetch("/api/videos", { cache: "no-store" });
       if (!res.ok) throw new Error("Error al cargar los videos");
       const data = await res.json();
-      setVideos(data.slice(0, 10)); // Muestra solo los 10 primeros
+      setVideos(data.slice(0, 10)); // Muestra los 10 más recientes
     } catch (error) {
       console.error("❌ Error al obtener videos:", error);
     }
@@ -22,8 +22,7 @@ export default function Carousel() {
 
   useEffect(() => {
     fetchVideos();
-    // Verifica cada minuto si hay nuevos archivos
-    const interval = setInterval(fetchVideos, 60000);
+    const interval = setInterval(fetchVideos, 60000); // Actualiza cada minuto
     return () => clearInterval(interval);
   }, []);
 
@@ -31,7 +30,7 @@ export default function Carousel() {
     <div className="relative mt-8 mb-10">
       <Swiper
         centeredSlides
-        loop
+        loop={videos.length > 1} // 🔹 evita errores si solo hay un video
         autoplay={{
           delay: 3500,
           disableOnInteraction: false,
@@ -40,9 +39,9 @@ export default function Carousel() {
         pagination={{ clickable: true }}
         modules={[Pagination, Autoplay]}
         breakpoints={{
-          320: { slidesPerView: 1.2, spaceBetween: 10 },
-          480: { slidesPerView: 1.4, spaceBetween: 15 },
-          640: { slidesPerView: 2, spaceBetween: 20 },
+          320: { slidesPerView: 1.1, spaceBetween: 15 },
+          480: { slidesPerView: 1.5, spaceBetween: 20 },
+          640: { slidesPerView: 2, spaceBetween: 25 },
           1024: { slidesPerView: 3, spaceBetween: 30 },
         }}
         className="w-full max-w-5xl"
@@ -51,7 +50,7 @@ export default function Carousel() {
           <SwiperSlide key={index}>
             {({ isActive }) => (
               <div
-                className={`rounded-2xl shadow-lg overflow-hidden transition-all duration-500 ${
+                className={`rounded-2xl shadow-lg overflow-hidden transition-all duration-500 bg-white ${
                   isActive ? "scale-105 z-50" : "scale-90 opacity-70 z-10"
                 }`}
               >
@@ -62,7 +61,7 @@ export default function Carousel() {
                   loop
                   muted
                   playsInline
-                  className="w-full h-[450px] object-cover"
+                  className="w-full aspect-[4/5] object-cover" // 🔹 relación flexible (mantiene forma de tarjeta)
                 />
               </div>
             )}
@@ -70,7 +69,11 @@ export default function Carousel() {
         ))}
       </Swiper>
 
-      <div className="flex justify-center mt-6 mb-4 custom-pagination" />
+      {videos.length === 0 && (
+        <p className="text-center text-gray-500 mt-6">
+          No hay tarjetas disponibles aún.
+        </p>
+      )}
     </div>
   );
-                 }
+              }
