@@ -1,78 +1,75 @@
 import fs from "fs";
 import path from "path";
 
-// 📦 Ruta de datos (para registrar vistas, ventas, reviews)
+// 📦 Ruta del archivo con datos de las tarjetas
 const dataFile = path.join(process.cwd(), "data", "cards.json");
 
-// Función auxiliar: cargar datos si existen
+// 🔹 Función para cargar el JSON de tarjetas
 function loadCardData() {
   try {
     const json = fs.readFileSync(dataFile, "utf8");
     return JSON.parse(json);
-  } catch {
-    return {}; // Si no existe el archivo, devolver vacío
+  } catch (err) {
+    console.error("❌ No se pudo leer cards.json:", err);
+    return [];
   }
 }
 
-// Guardar el último top generado
+// Variables para guardar el Top y evitar recalcular antes de 24 h
 let lastTop = [];
-let lastUpdate = 0; // timestamp del último refresh
+let lastUpdate = 0;
 
 export async function GET() {
   try {
     const now = Date.now();
     const oneDay = 24 * 60 * 60 * 1000;
+
+    // Leer carpeta de videos
     const dir = path.join(process.cwd(), "public/videos");
-    const files = fs.readdirSync(dir);
+    const files = fs.existsSync(dir)
+      ? fs.readdirSync(dir).filter((f) => f.endsWith(".mp4"))
+      : [];
+
+    // Cargar datos de cards.json
     const cardData = loadCardData();
 
-    // 🔁 Actualizar cada 24 horas
+    // Solo recalcular si pasaron 24 h o es la primera vez
     if (now - lastUpdate > oneDay || lastTop.length === 0) {
-      const videos = files
-        .filter((f) => f.endsWith(".mp4"))
-        .map((file) => {
-          const stats = fs.statSync(path.join(dir, file));
-          const slug = file.replace(".mp4", "");
-          const data = cardData[slug] || {
-            views: 0,
-            sales: 0,
-            reviews: [],
-            averageRating: 0,
-          };
+      const cards = cardData.map((card) => {
+        // Buscar si existe un video con el mismo slug
+        const matchingVideo = files.find((f) =>
+          f.startsWith(card.slug)
+        );
 
-          const averageRating =
-            data.reviews.length > 0
-              ? data.reviews.reduce((a, b) => a + b, 0) / data.reviews.length
-              : 0;
+        // Calcular promedio de reviews
+        const avg =
+          card.reviews?.length > 0
+            ? card.reviews.reduce((a, b) => a + b, 0) /
+              card.reviews.length
+            : 0;
 
-          return {
-            slug,
-            src: `/videos/${file}`,
-            title: file
-              .replace(/_/g, " ")
-              .replace(".mp4", "")
-              .replace(/\b\w/g, (l) => l.toUpperCase()),
-            stats: {
-              views: data.views,
-              sales: data.sales,
-              rating: averageRating,
-            },
-            created: stats.mtime.getTime(),
-          };
-        });
+        // Puntaje para ordenar el Top 10
+        const score =
+          card.sales * 3 + avg * 2 + card.views * 0.5 +
+          new Date(card.createdAt).getTime() / 1e10;
 
-      // 🧠 Clasificación: ventas > rating > vistas > fecha
-      videos.sort((a, b) => {
-        const scoreA =
-          a.stats.sales * 3 + a.stats.rating * 2 + a.stats.views * 0.5 + a.created / 1e10;
-        const scoreB =
-          b.stats.sales * 3 + b.stats.rating * 2 + b.stats.views * 0.5 + b.created / 1e10;
-        return scoreB - scoreA;
+        return {
+          ...card,
+          averageRating: avg,
+          score,
+          video: matchingVideo
+            ? `/videos/${matchingVideo}`
+            : null,
+        };
       });
 
-      // Guardar top 10
-      lastTop = videos.slice(0, 10);
+      // Ordenar por score descendente
+      cards.sort((a, b) => b.score - a.score);
+
+      // Guardar solo los 10 primeros
+      lastTop = cards.slice(0, 10);
       lastUpdate = now;
+
       console.log("✅ Top 10 actualizado automáticamente");
     }
 
@@ -80,11 +77,11 @@ export async function GET() {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
-  } catch (err) {
-    console.error("❌ Error en /api/videos:", err);
+  } catch (error) {
+    console.error("❌ Error en /api/videos:", error);
     return new Response(
-      JSON.stringify({ error: "Error al procesar los videos" }),
+      JSON.stringify({ error: "Error al generar el Top 10" }),
       { status: 500 }
     );
   }
-            }
+}
