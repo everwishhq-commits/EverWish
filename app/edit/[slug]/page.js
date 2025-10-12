@@ -3,31 +3,24 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 
-// 🪄 Automatic default message based on file name
+// 🎃 Auto message generator
 function defaultMessageFromSlug(slug) {
   const s = (slug || "").toLowerCase();
-  const isHalloween = /halloween/.test(s);
-  const isLove = /love|romance/.test(s);
-  const isBirthday = /birthday/.test(s);
-  const isGhost = /ghost/.test(s);
-  const isPumpkin = /pumpkin/.test(s);
-  const isZombie = /zombie/.test(s);
-
-  if (isHalloween && isLove)
+  if (/halloween/.test(s) && /love/.test(s))
     return "Between scares and sighs, my heart still chooses you. 🖤🎃";
-  if (isHalloween && isBirthday)
+  if (/halloween/.test(s) && /birthday/.test(s))
     return "May your day rise again with pumpkin magic and sweet joy! 🎃🎂";
-  if (isZombie && isBirthday)
+  if (/zombie/.test(s) && /birthday/.test(s))
     return "Wishing you laughs, brains, and cake on your special day! 🧟‍♂️🎂";
-  if (isGhost && isLove)
+  if (/ghost/.test(s) && /love/.test(s))
     return "Sending ghostly hugs and endless love from the beyond. 👻💞";
-  if (isPumpkin && isHalloween)
+  if (/pumpkin/.test(s) && /halloween/.test(s))
     return "May your night glow with magic and endless treats. ✨🍬";
-  if (isLove)
+  if (/love/.test(s))
     return "Thank you for existing. Let love’s magic wrap around you today. 💖";
-  if (isBirthday)
+  if (/birthday/.test(s))
     return "Happy Birthday! Wishing you a day full of joy and surprises. 🎉";
-  return "Celebrate this moment with a smile. Wishing you light, peace, and joy. ✨";
+  return "Celebrate this moment with a smile. Wishing you peace and light. ✨";
 }
 
 export default function EditPage() {
@@ -35,7 +28,7 @@ export default function EditPage() {
   const [item, setItem] = useState(null);
   const [message, setMessage] = useState("");
   const [name, setName] = useState("");
-  const [anim, setAnim] = useState("none");
+  const [anim, setAnim] = useState("sparkles");
   const [showEdit, setShowEdit] = useState(false);
 
   useEffect(() => {
@@ -47,20 +40,19 @@ export default function EditPage() {
         setItem(found || null);
         setMessage(defaultMessageFromSlug(slug));
 
-        // 🔹 Enter fullscreen right away
+        // 🔹 Fullscreen mode
         const el = document.documentElement;
         const goFull = async () => {
           try {
             if (el.requestFullscreen) await el.requestFullscreen();
             else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
-            else if (el.msRequestFullscreen) await el.msRequestFullscreen();
           } catch (err) {
             console.warn("Fullscreen not supported", err);
           }
         };
         goFull();
 
-        // 🔹 After 3 seconds, exit fullscreen and show editor
+        // 🔹 Show editor after 3 seconds
         setTimeout(async () => {
           if (document.fullscreenElement) {
             await document.exitFullscreen();
@@ -73,24 +65,107 @@ export default function EditPage() {
     })();
   }, [slug]);
 
+  // 🎇 Render animation effects
+  const renderEffect = () => {
+    if (anim === "sparkles")
+      return Array.from({ length: 15 }).map((_, i) => (
+        <motion.span
+          key={i}
+          className="absolute text-yellow-300 text-xl"
+          initial={{ opacity: 0, y: 0 }}
+          animate={{
+            opacity: [0, 1, 0],
+            y: [0, -80],
+            x: [0, Math.random() * 100 - 50],
+            scale: [0.6, 1.2, 0],
+          }}
+          transition={{
+            duration: 3 + Math.random() * 2,
+            repeat: Infinity,
+            delay: i * 0.3,
+          }}
+          style={{
+            top: `${Math.random() * 100}%`,
+            left: `${Math.random() * 100}%`,
+          }}
+        >
+          ✨
+        </motion.span>
+      ));
+
+    if (anim === "hearts")
+      return Array.from({ length: 12 }).map((_, i) => (
+        <motion.span
+          key={i}
+          className="absolute text-pink-400 text-2xl"
+          initial={{ opacity: 0, y: 0 }}
+          animate={{
+            opacity: [0, 1, 0],
+            y: [0, -100],
+            x: [0, Math.random() * 80 - 40],
+            scale: [0.8, 1.2, 0],
+          }}
+          transition={{
+            duration: 3 + Math.random() * 2,
+            repeat: Infinity,
+            delay: i * 0.4,
+          }}
+          style={{
+            top: `${Math.random() * 100}%`,
+            left: `${Math.random() * 100}%`,
+          }}
+        >
+          💖
+        </motion.span>
+      ));
+
+    if (anim === "confetti")
+      return Array.from({ length: 20 }).map((_, i) => (
+        <motion.span
+          key={i}
+          className="absolute text-lg"
+          initial={{ opacity: 0, y: -10, rotate: 0 }}
+          animate={{
+            opacity: [0, 1, 0],
+            y: [0, 120],
+            rotate: [0, 360],
+          }}
+          transition={{
+            duration: 3 + Math.random() * 2,
+            repeat: Infinity,
+            delay: i * 0.2,
+          }}
+          style={{
+            color: ["#ff80b5", "#ffd700", "#4dd4ff", "#baffc9"][
+              Math.floor(Math.random() * 4)
+            ],
+            left: `${Math.random() * 100}%`,
+          }}
+        >
+          •
+        </motion.span>
+      ));
+    return null;
+  };
+
   if (!item) return null;
 
-  // 🟢 Step 1: Fullscreen display
+  // 🟣 Step 1: Fullscreen preview
   if (!showEdit) {
     return (
-      <div className="fixed inset-0 bg-black flex justify-center items-center overflow-hidden">
-        {item?.src?.toLowerCase().endsWith(".mp4") ? (
+      <div className="fixed inset-0 flex justify-center items-center bg-black">
+        {item.src?.toLowerCase().endsWith(".mp4") ? (
           <video
             src={item.src}
+            autoPlay
             muted
             loop
-            autoPlay
             playsInline
             className="w-full h-full object-cover"
           />
         ) : (
           <img
-            src={item?.src}
+            src={item.src}
             alt={slug}
             className="w-full h-full object-cover"
           />
@@ -99,11 +174,11 @@ export default function EditPage() {
     );
   }
 
-  // 🟣 Step 2: Editor screen
+  // 🟢 Step 2: Editor with animations
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 relative bg-[#fff8f5] min-h-screen">
+    <main className="mx-auto max-w-3xl px-4 py-8 relative bg-[#fff8f5] min-h-screen overflow-hidden">
       <div className="relative w-full rounded-3xl shadow-md overflow-hidden bg-white">
-        {item?.src?.toLowerCase().endsWith(".mp4") ? (
+        {item.src?.toLowerCase().endsWith(".mp4") ? (
           <video
             src={item.src}
             muted
@@ -114,11 +189,12 @@ export default function EditPage() {
           />
         ) : (
           <img
-            src={item?.src}
+            src={item.src}
             alt={slug}
             className="w-full h-[420px] object-contain"
           />
         )}
+        {renderEffect()}
       </div>
 
       <section className="mt-6 bg-white rounded-3xl shadow-md p-6 relative overflow-hidden">
@@ -131,46 +207,38 @@ export default function EditPage() {
           Customize your message ✨
         </motion.h2>
 
-        <motion.textarea
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1.2 }}
+        <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           rows={3}
-          className="w-full rounded-2xl border border-gray-300 p-4 outline-none focus:ring-2 focus:ring-pink-400 text-center font-medium text-gray-700"
+          className="w-full rounded-2xl border border-gray-300 p-4 text-center focus:ring-2 focus:ring-pink-400"
         />
 
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full mt-3 rounded-2xl border border-gray-300 p-4 outline-none focus:ring-2 focus:ring-pink-400 text-center"
+          className="w-full mt-3 rounded-2xl border border-gray-300 p-4 text-center focus:ring-2 focus:ring-pink-400"
           placeholder="Your name (optional)"
         />
 
         <select
           value={anim}
           onChange={(e) => setAnim(e.target.value)}
-          className="w-full mt-3 rounded-2xl border border-gray-300 p-3 outline-none focus:ring-2 focus:ring-pink-400 text-center"
+          className="w-full mt-3 rounded-2xl border border-gray-300 p-3 text-center focus:ring-2 focus:ring-pink-400"
         >
-          <option value="none">No animation</option>
-          <option value="sparkles">Sparkles ✨</option>
-          <option value="confetti">Confetti 🎉</option>
-          <option value="hearts">Hearts 💖</option>
+          <option value="sparkles">✨ Sparkles</option>
+          <option value="confetti">🎉 Confetti</option>
+          <option value="hearts">💖 Hearts</option>
+          <option value="none">❌ None</option>
         </select>
 
         <motion.button
           whileTap={{ scale: 0.95 }}
           className="w-full mt-4 rounded-full bg-pink-500 hover:bg-pink-600 text-white font-semibold py-4 transition"
-          onClick={() =>
-            alert(
-              `Preview ready ✨\n\nMessage: ${message}\nName: ${name}\nAnimation: ${anim}`
-            )
-          }
         >
-          Preview & Send
+          Send 🎁
         </motion.button>
       </section>
     </main>
   );
-              }
+}
