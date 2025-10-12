@@ -3,14 +3,14 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 
-// 💌 Mensaje según nombre
+// 🎃 Auto message generator based on filename
 function defaultMessageFromSlug(slug) {
   const s = (slug || "").toLowerCase();
   const isHalloween = /halloween/.test(s);
   const isLove = /love|romance/.test(s);
-  const isBirthday = /birthday|cumple/.test(s);
-  const isGhost = /ghost|fantasma/.test(s);
-  const isPumpkin = /pumpkin|calabaza/.test(s);
+  const isBirthday = /birthday/.test(s);
+  const isGhost = /ghost/.test(s);
+  const isPumpkin = /pumpkin/.test(s);
   const isZombie = /zombie/.test(s);
 
   if (isHalloween && isLove)
@@ -47,17 +47,26 @@ export default function EditPage() {
         setItem(found || null);
         setMessage(defaultMessageFromSlug(slug));
 
-        // Activar modo pantalla completa automáticamente
+        // 1️⃣ Enter fullscreen immediately
+        const el = document.documentElement;
         const goFull = async () => {
-          const el = document.documentElement;
-          if (el.requestFullscreen) await el.requestFullscreen();
-          else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
-          else if (el.msRequestFullscreen) await el.msRequestFullscreen();
+          try {
+            if (el.requestFullscreen) await el.requestFullscreen();
+            else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+            else if (el.msRequestFullscreen) await el.msRequestFullscreen();
+          } catch (err) {
+            console.warn("Fullscreen not supported", err);
+          }
         };
         goFull();
 
-        // Después de 3s pasar a la edición
-        setTimeout(() => setShowEdit(true), 3000);
+        // 2️⃣ After 3s exit fullscreen and show editor
+        setTimeout(async () => {
+          if (document.fullscreenElement) {
+            await document.exitFullscreen();
+          }
+          setShowEdit(true);
+        }, 3000);
       } catch (e) {
         console.error("Error loading /api/videos", e);
       }
@@ -66,7 +75,7 @@ export default function EditPage() {
 
   if (!item) return null;
 
-  // 🧡 1️⃣ Vista completa inicial (sin bordes, sin agrandar)
+  // 💫 Screen 1: Fullscreen display
   if (!showEdit) {
     return (
       <div className="fixed inset-0 bg-black flex justify-center items-center overflow-hidden">
@@ -90,7 +99,7 @@ export default function EditPage() {
     );
   }
 
-  // 💌 2️⃣ Pantalla de edición
+  // 💌 Screen 2: Edit screen
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 relative bg-[#fff8f5] min-h-screen">
       <div className="relative w-full rounded-3xl shadow-md overflow-hidden bg-white">
@@ -119,7 +128,7 @@ export default function EditPage() {
           transition={{ duration: 1 }}
           className="text-xl font-semibold text-center mb-4"
         >
-          Personaliza tu mensaje ✨
+          Customize your message ✨
         </motion.h2>
 
         <motion.textarea
@@ -136,7 +145,7 @@ export default function EditPage() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="w-full mt-3 rounded-2xl border border-gray-300 p-4 outline-none focus:ring-2 focus:ring-pink-400 text-center"
-          placeholder="Tu nombre (opcional)"
+          placeholder="Your name (optional)"
         />
 
         <select
@@ -144,10 +153,10 @@ export default function EditPage() {
           onChange={(e) => setAnim(e.target.value)}
           className="w-full mt-3 rounded-2xl border border-gray-300 p-3 outline-none focus:ring-2 focus:ring-pink-400 text-center"
         >
-          <option value="none">Sin animación</option>
-          <option value="sparkles">Destellos ✨</option>
+          <option value="none">No animation</option>
+          <option value="sparkles">Sparkles ✨</option>
           <option value="confetti">Confetti 🎉</option>
-          <option value="hearts">Corazones 💖</option>
+          <option value="hearts">Hearts 💖</option>
         </select>
 
         <motion.button
@@ -155,13 +164,13 @@ export default function EditPage() {
           className="w-full mt-4 rounded-full bg-pink-500 hover:bg-pink-600 text-white font-semibold py-4 transition"
           onClick={() =>
             alert(
-              `Vista previa lista ✨\n\nMensaje: ${message}\nNombre: ${name}\nAnimación: ${anim}`
+              `Preview ready ✨\n\nMessage: ${message}\nName: ${name}\nAnimation: ${anim}`
             )
           }
         >
-          Vista previa y envío
+          Preview & Send
         </motion.button>
       </section>
     </main>
   );
-          }
+      }
