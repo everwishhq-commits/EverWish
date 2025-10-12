@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 
-// 🎃 Mensaje automático según el nombre
+// 💌 Mensaje según nombre
 function defaultMessageFromSlug(slug) {
   const s = (slug || "").toLowerCase();
   const isHalloween = /halloween/.test(s);
@@ -36,7 +36,7 @@ export default function EditPage() {
   const [message, setMessage] = useState("");
   const [name, setName] = useState("");
   const [anim, setAnim] = useState("none");
-  const [showFull, setShowFull] = useState(true);
+  const [showEdit, setShowEdit] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -47,8 +47,17 @@ export default function EditPage() {
         setItem(found || null);
         setMessage(defaultMessageFromSlug(slug));
 
-        // Mostrar full screen 3 segundos y luego vista editable
-        setTimeout(() => setShowFull(false), 3000);
+        // Activar modo pantalla completa automáticamente
+        const goFull = async () => {
+          const el = document.documentElement;
+          if (el.requestFullscreen) await el.requestFullscreen();
+          else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+          else if (el.msRequestFullscreen) await el.msRequestFullscreen();
+        };
+        goFull();
+
+        // Después de 3s pasar a la edición
+        setTimeout(() => setShowEdit(true), 3000);
       } catch (e) {
         console.error("Error loading /api/videos", e);
       }
@@ -57,8 +66,8 @@ export default function EditPage() {
 
   if (!item) return null;
 
-  // 💫 Pantalla completa inicial (3 seg)
-  if (showFull) {
+  // 🧡 1️⃣ Vista completa inicial (sin bordes, sin agrandar)
+  if (!showEdit) {
     return (
       <div className="fixed inset-0 bg-black flex justify-center items-center overflow-hidden">
         {item?.src?.toLowerCase().endsWith(".mp4") ? (
@@ -81,7 +90,7 @@ export default function EditPage() {
     );
   }
 
-  // 💌 Vista editable (1B)
+  // 💌 2️⃣ Pantalla de edición
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 relative bg-[#fff8f5] min-h-screen">
       <div className="relative w-full rounded-3xl shadow-md overflow-hidden bg-white">
@@ -155,4 +164,4 @@ export default function EditPage() {
       </section>
     </main>
   );
-}
+          }
