@@ -1,31 +1,38 @@
 "use client";
+import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 
-const videos = [
-  "/videos/screen-20251011-161325.mp4",
-  "/videos/screen-20251011-161325~2.mp4",
-  "/videos/screen-20251011-161325~3.mp4",
-  "/videos/screen-20251011-161325~4.mp4",
-  "/videos/screen-20251011-161325~5.mp4",
-  "/videos/screen-20251011-161325~6.mp4",
-  "/videos/screen-20251011-161325~7.mp4",
-  "/videos/screen-20251011-161325~8.mp4",
-  "/videos/screen-20251011-161325~9.mp4",
-  "/videos/screen-20251011-161325~10.mp4",
-];
-
 export default function Carousel() {
+  const [videos, setVideos] = useState([]);
+
+  // 🔹 Cargar los videos desde la API dinámica
+  useEffect(() => {
+    async function fetchVideos() {
+      try {
+        const res = await fetch("/api/videos");
+        if (!res.ok) throw new Error("Error al cargar los videos");
+        const data = await res.json();
+        setVideos(data.slice(0, 10)); // Muestra solo los 10 primeros
+      } catch (error) {
+        console.error("❌ Error al obtener videos:", error);
+      }
+    }
+    fetchVideos();
+  }, []);
+
   return (
     <div className="relative mt-8 mb-10">
       <Swiper
-        centeredSlides={true}
-        loop={true}
+        centeredSlides
+        loop
         autoplay={{
           delay: 3500,
           disableOnInteraction: false,
+          pauseOnMouseEnter: false,
+          stopOnLastSlide: false,
         }}
         pagination={{ clickable: true }}
         modules={[Pagination, Autoplay]}
@@ -37,21 +44,30 @@ export default function Carousel() {
         }}
         className="w-full max-w-5xl"
       >
-        {videos.map((src, index) => (
+        {videos.map((video, index) => (
           <SwiperSlide key={index}>
-            <div className="rounded-2xl shadow-lg overflow-hidden transition-all duration-500">
-              <video
-                src={src}
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="w-full h-[450px] object-cover"
-              />
-            </div>
+            {({ isActive }) => (
+              <div
+                className={`rounded-2xl shadow-lg overflow-hidden transition-all duration-500 ${
+                  isActive ? "scale-105 z-50" : "scale-90 opacity-70 z-10"
+                }`}
+              >
+                <video
+                  src={video.src}
+                  title={video.title}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-[450px] object-cover"
+                />
+              </div>
+            )}
           </SwiperSlide>
         ))}
       </Swiper>
+
+      <div className="flex justify-center mt-6 mb-4 custom-pagination" />
     </div>
   );
-            }
+                }
