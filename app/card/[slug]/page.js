@@ -1,58 +1,85 @@
 "use client";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { getRelatedName } from "../../lib/naming";
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 
-export default function CardPage({ params }) {
-  const { slug } = params;
+export default function CardPreview() {
+  const { slug } = useParams(); // viene del archivo clickeado (ej: pumpkin_halloween_general_1A)
   const router = useRouter();
-  const [videoSrc, setVideoSrc] = useState("");
+  const [item, setItem] = useState(null);
 
+  // Carga el listado y encuentra el ítem por slug
   useEffect(() => {
-    if (slug) {
-      setVideoSrc(`/videos/${slug}.mp4`);
-    }
+    let isMounted = true;
+
+    (async () => {
+      try {
+        const res = await fetch("/api/videos", { cache: "no-store" });
+        const list = await res.json();
+        const found = list.find((v) => v.slug === slug);
+        if (isMounted) setItem(found || null);
+      } catch (e) {
+        console.error("No se pudo cargar /api/videos", e);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
   }, [slug]);
 
-  const handlePersonalize = () => {
-    const nextSlug = getRelatedName(slug, "1B");
-    router.push(`/edit/${nextSlug}`);
-  };
+  // Redirige a /edit/[slug] después de 3s
+  useEffect(() => {
+    if (!item) return;
+    const t = setTimeout(() => router.push(`/edit/${encodeURIComponent(slug)}`), 3000);
+    return () => clearTimeout(t);
+  }, [item, slug, router]);
 
-  const handleSend = () => {
-    const nextSlug = getRelatedName(slug, "1B");
-    router.push(`/share/${nextSlug}`);
-  };
+  // Estilos de full-bleed
+  const wrapperCls = useMemo(
+    () =>
+      "fixed inset-0 bg-black/90 flex items-center justify-center p-0 m-0 z-50",
+    []
+  );
+
+  if (!item) {
+    return (
+      <div className={wrapperCls}>
+        <div className="text-white/80 text-lg">Cargando…</div>
+      </div>
+    );
+  }
+
+  const isVideo = String(item.src).toLowerCase().endsWith(".mp4");
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen bg-[#fffaf5] p-6">
-      <div className="w-full max-w-md rounded-3xl shadow-lg overflow-hidden">
-        {videoSrc && (
+    <div className={wrapperCls}>
+      <div className="absolute top-4 right-4">
+        <button
+          onClick={() => router.push(`/edit/${encodeURIComponent(slug)}`)}
+          className="px-4 py-2 rounded-full bg-white text-black font-medium shadow"
+        >
+          Saltar → Editar
+        </button>
+      </div>
+
+      <div className="w-full h-full flex items-center justify-center">
+        {isVideo ? (
           <video
-            src={videoSrc}
+            src={item.src}
             autoPlay
-            loop
             muted
+            loop
             playsInline
-            className="w-full h-auto object-cover"
+            className="w-full h-full object-contain"
+          />
+        ) : (
+          <img
+            src={item.src}
+            alt={item.title || item.slug}
+            className="w-full h-full object-contain"
           />
         )}
       </div>
-
-      <div className="flex gap-4 mt-6">
-        <button
-          onClick={handlePersonalize}
-          className="px-6 py-3 bg-pink-500 text-white font-semibold rounded-full shadow hover:bg-pink-600 transition"
-        >
-          Personalize
-        </button>
-        <button
-          onClick={handleSend}
-          className="px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-full shadow hover:bg-gray-200 transition"
-        >
-          Send
-        </button>
-      </div>
-    </main>
+    </div>
   );
-            }
+    }
