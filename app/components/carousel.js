@@ -15,7 +15,7 @@ export default function Carousel() {
       try {
         const res = await fetch("/api/videos");
         const data = await res.json();
-        setVideos(data.slice(0, 10));
+        setVideos(data.slice(0, 10)); // puedes cambiar 10 por el total que tengas
       } catch (err) {
         console.error("❌ Error cargando videos:", err);
       }
@@ -23,7 +23,7 @@ export default function Carousel() {
     fetchVideos();
   }, []);
 
-  // 🔹 Pantalla completa + envío al editor
+  // Pantalla completa + envío al editor
   const handleClick = async (slug) => {
     const el = document.documentElement;
     try {
@@ -38,30 +38,30 @@ export default function Carousel() {
   return (
     <div className="relative mt-8 mb-10">
       <Swiper
-        key={videos.length} // asegura actualización limpia
+        key={videos.length}
         centeredSlides={true}
-        loop={true} // 🔁 loop infinito real
+        loop={true}
+        loopedSlides={videos.length}
+        loopAdditionalSlides={3}
         grabCursor={true}
-        speed={900}
+        speed={800}
         autoplay={{
-          delay: 2600,
+          delay: 2500,
           disableOnInteraction: false,
           pauseOnMouseEnter: false,
-          stopOnLastSlide: false, // 🔹 evita que se detenga
+          stopOnLastSlide: false,
         }}
         pagination={{
           clickable: true,
           bulletActiveClass: "swiper-pagination-bullet-active bg-pink-500",
         }}
         modules={[Pagination, Autoplay]}
-        slidesPerView={1.2}
-        spaceBetween={15}
         breakpoints={{
-          480: { slidesPerView: 1.6, spaceBetween: 20 },
-          768: { slidesPerView: 2.2, spaceBetween: 25 },
-          1024: { slidesPerView: 3, spaceBetween: 30 },
+          320: { slidesPerView: 1.3, spaceBetween: 10 },
+          480: { slidesPerView: 1.6, spaceBetween: 15 },
+          768: { slidesPerView: 2.3, spaceBetween: 20 },
+          1024: { slidesPerView: 3, spaceBetween: 25 },
         }}
-        onAutoplayStop={(swiper) => swiper.autoplay.start()} // seguridad extra
         className="w-full max-w-5xl select-none"
       >
         {videos.map((video, index) => (
@@ -70,7 +70,9 @@ export default function Carousel() {
               <div
                 onClick={() => handleClick(video.slug)}
                 className={`cursor-pointer rounded-2xl shadow-lg overflow-hidden transition-all duration-500 ${
-                  isActive ? "scale-105 z-50" : "scale-90 opacity-70 z-10"
+                  isActive
+                    ? "scale-105 opacity-100 z-50"
+                    : "scale-90 opacity-60 z-10"
                 }`}
               >
                 {video.src?.toLowerCase().endsWith(".mp4") ? (
@@ -85,7 +87,7 @@ export default function Carousel() {
                 ) : (
                   <img
                     src={video.src}
-                    alt={video.title || `card-${index}`}
+                    alt={video.title}
                     className="w-full h-[450px] object-cover"
                   />
                 )}
@@ -96,4 +98,4 @@ export default function Carousel() {
       </Swiper>
     </div>
   );
-                }
+}
