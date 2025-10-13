@@ -15,18 +15,23 @@ export async function POST(req) {
     } = body || {};
 
     const secret = process.env.STRIPE_SECRET_KEY;
+
+    // 🧩 Validación clave secreta
     if (!secret) {
-      return new Response(JSON.stringify({ error: "Missing STRIPE_SECRET_KEY" }), {
+      return new Response(JSON.stringify({ error: "❌ Falta STRIPE_SECRET_KEY" }), {
         status: 400,
         headers: { "Content-Type": "application/json" },
       });
     }
 
-    const stripe = new Stripe(secret, { apiVersion: "2022-11-15" });
+    // ⚙️ Inicializa Stripe (sin apiVersion por compatibilidad)
+    const stripe = new Stripe(secret);
 
     const siteUrl =
-      process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://everwish.app";
+      process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+      "https://everwishs-projects.vercel.app";
 
+    // 🪄 Productos
     const line_items = [
       {
         price_data: {
@@ -34,7 +39,6 @@ export async function POST(req) {
           product_data: {
             name: `Everwish Card – ${slug}`,
             description: message?.slice(0, 140) || "Personalized digital card",
-            metadata: { slug, anim },
           },
           unit_amount: Math.round(cardPrice * 100),
         },
@@ -42,19 +46,19 @@ export async function POST(req) {
       },
     ];
 
+    // 🎁 Gift Card opcional
     if (gift?.brand && Number(gift?.amount) > 0) {
       line_items.push({
         price_data: {
           currency: "usd",
-          product_data: {
-            name: `Gift Card – ${gift.brand}`,
-          },
+          product_data: { name: `Gift Card – ${gift.brand}` },
           unit_amount: Math.round(Number(gift.amount) * 100),
         },
         quantity: 1,
       });
     }
 
+    // 💳 Crea sesión Checkout
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
@@ -76,10 +80,11 @@ export async function POST(req) {
       headers: { "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.error("Stripe error:", e);
-    return new Response(JSON.stringify({ error: "Stripe error" }), {
+    // ⚠️ Muestra el error real
+    console.error("Stripe error:", e.message);
+    return new Response(JSON.stringify({ error: e.message }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });
   }
-      }
+                                       }
