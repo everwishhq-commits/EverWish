@@ -15,20 +15,29 @@ export default function Carousel() {
       try {
         const res = await fetch("/api/videos");
         const data = await res.json();
-        // Si no hay templates, repite los primeros para mantener el loop
-        const filled = data.length > 0 ? data.slice(0, 10) : [
-          {
-            slug: "pumpkin-halloween",
-            title: "Have a pumpkin-tastic Halloween!",
-            src: "/cards/pumpkin.png",
-          },
-          {
-            slug: "zombie-birthday",
-            title: "Have a zombie-licious birthday!",
-            src: "/cards/zombie.png",
-          },
-        ];
-        setVideos(filled);
+
+        // Si no hay videos cargados, usa un fallback básico
+        if (!data || data.length === 0) {
+          setVideos([
+            {
+              slug: "pumpkin-halloween",
+              title: "Have a pumpkin-tastic Halloween!",
+              src: "/cards/pumpkin.png",
+            },
+            {
+              slug: "zombie-birthday",
+              title: "Have a zombie-licious birthday!",
+              src: "/cards/zombie.png",
+            },
+            {
+              slug: "ghost-halloween",
+              title: "Boo! You’re my favorite human to haunt!",
+              src: "/cards/ghost.png",
+            },
+          ]);
+        } else {
+          setVideos(data.slice(0, 10));
+        }
       } catch (err) {
         console.error("❌ Error cargando videos:", err);
       }
@@ -36,10 +45,11 @@ export default function Carousel() {
     fetchVideos();
   }, []);
 
-  // 🔹 Al hacer click → pantalla completa + redirección
+  // 🔹 Click: pantalla completa + redirección
   const handleClick = async (slug, e) => {
     e.preventDefault();
     e.stopPropagation();
+
     const el = document.documentElement;
     try {
       if (el.requestFullscreen) await el.requestFullscreen();
@@ -47,31 +57,32 @@ export default function Carousel() {
     } catch (err) {
       console.warn("⚠️ Fullscreen no soportado:", err);
     }
+
     router.push(`/edit/${slug}`);
   };
 
   return (
-    <div className="relative mt-8 mb-10 pb-6">
+    <div className="relative mt-8 mb-10 pb-8">
       <Swiper
         modules={[Pagination, Autoplay]}
+        loop={true} // 🔁 Activa loop continuo
         centeredSlides={true}
         slidesPerView={"auto"}
-        spaceBetween={25}
-        speed={850}
+        spaceBetween={20}
+        speed={900}
         grabCursor={true}
-        loop={true}
-        loopedSlides={videos.length} // 🔄 fuerza loop real
         autoplay={{
-          delay: 2500,
-          disableOnInteraction: false,
+          delay: 2500, // ⏱ cada 2.5 segundos
+          disableOnInteraction: false, // sigue corriendo tras tocar
+          pauseOnMouseEnter: false,
         }}
         pagination={{
           clickable: false,
           renderBullet: (index, className) =>
             `<span class="${className}" style="
               background-color: #ffcce0;
-              width: 7px;
-              height: 7px;
+              width: 8px;
+              height: 8px;
               margin: 0 5px;
               border-radius: 50%;
               display: inline-block;
@@ -80,7 +91,6 @@ export default function Carousel() {
             "></span>`,
         }}
         onSlideChange={(swiper) => {
-          // Sincroniza dots con la slide real
           const bullets = document.querySelectorAll(".swiper-pagination-bullet");
           bullets.forEach((b, i) => {
             if (i === swiper.realIndex % videos.length) {
@@ -135,4 +145,4 @@ export default function Carousel() {
       </Swiper>
     </div>
   );
-          }
+}
