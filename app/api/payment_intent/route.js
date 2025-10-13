@@ -1,38 +1,32 @@
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
-/**
- * Endpoint para crear un PaymentIntent.
- * Recibe el monto en centavos (USD) desde el cliente.
- */
 export async function POST(req) {
   try {
     const { amount } = await req.json();
-
-    if (!amount || amount < 50) {
-      return new Response(
-        JSON.stringify({ error: "Invalid amount." }),
-        { status: 400 }
-      );
+    const secret = process.env.STRIPE_SECRET_KEY;
+    if (!secret) {
+      return new Response(JSON.stringify({ error: "Missing STRIPE_SECRET_KEY" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
     }
+    const stripe = new Stripe(secret, { apiVersion: "2022-11-15" });
 
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount,
+    const pi = await stripe.paymentIntents.create({
+      amount: Number(amount),
       currency: "usd",
-      description: "Everwish Digital Card Payment",
       automatic_payment_methods: { enabled: true },
     });
 
-    return new Response(
-      JSON.stringify({ clientSecret: paymentIntent.client_secret }),
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error("Stripe error:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500 }
-    );
+    return new Response(JSON.stringify({ clientSecret: pi.client_secret }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    console.error("PI error:", e);
+    return new Response(JSON.stringify({ error: "Stripe PI error" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }
