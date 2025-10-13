@@ -1,25 +1,34 @@
 import Stripe from "stripe";
 
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
 export async function POST(req) {
   try {
     const { amount } = await req.json();
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+    if (!amount || amount < 1) {
+      return new Response(
+        JSON.stringify({ error: "Invalid amount provided." }),
+        { status: 400 }
+      );
+    }
+
+    // Crea el PaymentIntent
     const paymentIntent = await stripe.paymentIntents.create({
-      amount,
+      amount, // en centavos
       currency: "usd",
       automatic_payment_methods: { enabled: true },
+      description: "Everwish Card Purchase",
     });
 
     return new Response(
       JSON.stringify({ clientSecret: paymentIntent.client_secret }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
+      { status: 200 }
     );
-  } catch (error) {
-    console.error("Stripe payment error:", error);
-    return new Response(
-      JSON.stringify({ error: "Error creating payment intent" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+  } catch (err) {
+    console.error("Stripe Error:", err.message);
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+    });
   }
 }
