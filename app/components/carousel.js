@@ -1,11 +1,12 @@
 "use client";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 
-// 🔹 Archivos de /public/videos/
+// 🎥 Videos en /public/videos/
 const templates = [
   { slug: "ghost_halloween_love_1A", src: "/videos/ghost_halloween_love_1A.mp4" },
   { slug: "pumpkin_halloween_general_1A", src: "/videos/pumpkin_halloween_general_1A.mp4" },
@@ -14,6 +15,16 @@ const templates = [
 
 export default function Carousel() {
   const router = useRouter();
+  const swiperRef = useRef(null);
+
+  // 🔁 Reinicia autoplay al montar (para evitar quedarse en última slide)
+  useEffect(() => {
+    const swiper = swiperRef.current?.swiper;
+    if (swiper) {
+      swiper.slideToLoop(0, 0); // empieza en la primera
+      swiper.autoplay.start();
+    }
+  }, []);
 
   // Pantalla completa + redirección
   const handleClick = async (slug) => {
@@ -28,15 +39,28 @@ export default function Carousel() {
   return (
     <div className="relative mt-8 mb-10 pb-8">
       <Swiper
+        ref={swiperRef}
         modules={[Pagination, Autoplay]}
         loop={true}
+        loopedSlides={templates.length}
         centeredSlides={true}
         slidesPerView={"auto"}
         spaceBetween={20}
         grabCursor={true}
-        speed={850}
-        autoplay={{ delay: 2500, disableOnInteraction: false }}
+        speed={700}
+        autoplay={{
+          delay: 2500,
+          disableOnInteraction: false,
+          pauseOnMouseEnter: false,
+        }}
         pagination={{ clickable: true }}
+        onSwiper={(swiper) => {
+          swiperRef.current = swiper;
+        }}
+        onSlideChange={() => {
+          // Garantiza que siga moviéndose incluso después de tocar
+          swiperRef.current?.swiper?.autoplay?.start();
+        }}
         breakpoints={{
           320: { slidesPerView: 1.2 },
           480: { slidesPerView: 1.5 },
@@ -82,4 +106,4 @@ export default function Carousel() {
       </Swiper>
     </div>
   );
-                        }
+          }
