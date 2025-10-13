@@ -23,7 +23,7 @@ export default function Carousel() {
     fetchVideos();
   }, []);
 
-  // 👉 Pantalla completa + envío al editor
+  // 🔹 Click = pantalla completa + redirección
   const handleClick = async (slug) => {
     const el = document.documentElement;
     try {
@@ -40,26 +40,30 @@ export default function Carousel() {
       <Swiper
         key={videos.length}
         modules={[Pagination, Autoplay]}
-        loop={true}
         centeredSlides={true}
-        watchSlidesProgress={true}
+        slidesPerView={"auto"}
+        spaceBetween={25}
+        speed={850}
         grabCursor={true}
-        speed={900}
+        watchSlidesProgress={true}
+        loop={true}
+        loopAdditionalSlides={videos.length} // 🔹 corrige loop y dots
+        initialSlide={1} // 🔹 empieza en la segunda
         autoplay={{
-          delay: 2500,
+          delay: 3000,
           disableOnInteraction: false,
         }}
         pagination={{
           clickable: true,
-          bulletActiveClass: "swiper-pagination-bullet-active bg-pink-500",
+          dynamicBullets: true, // 🔹 animación fluida
         }}
-        slidesPerView={"auto"}
-        spaceBetween={25}
-        initialSlide={1} // 👈 empieza desde la segunda tarjeta
-        loopedSlides={videos.length} // 🔁 mantiene loop continuo
-        onSwiper={(swiper) => {
-          // Asegura que el autoplay arranque en la correcta
-          setTimeout(() => swiper.slideToLoop(1, 0), 150);
+        onSlideChange={(swiper) => {
+          // 🔹 sincroniza los dots reales con el slide activo
+          const realIndex = swiper.realIndex;
+          const bullets = document.querySelectorAll(".swiper-pagination-bullet");
+          bullets.forEach((b, i) => {
+            b.classList.toggle("swiper-pagination-bullet-active", i === realIndex);
+          });
         }}
         className="w-full max-w-5xl select-none"
       >
