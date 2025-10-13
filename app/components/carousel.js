@@ -15,7 +15,20 @@ export default function Carousel() {
       try {
         const res = await fetch("/api/videos");
         const data = await res.json();
-        setVideos(data.slice(0, 10));
+        // Si no hay templates, repite los primeros para mantener el loop
+        const filled = data.length > 0 ? data.slice(0, 10) : [
+          {
+            slug: "pumpkin-halloween",
+            title: "Have a pumpkin-tastic Halloween!",
+            src: "/cards/pumpkin.png",
+          },
+          {
+            slug: "zombie-birthday",
+            title: "Have a zombie-licious birthday!",
+            src: "/cards/zombie.png",
+          },
+        ];
+        setVideos(filled);
       } catch (err) {
         console.error("❌ Error cargando videos:", err);
       }
@@ -23,9 +36,9 @@ export default function Carousel() {
     fetchVideos();
   }, []);
 
-  // 🎬 Click = pantalla completa + redirección
+  // 🔹 Al hacer click → pantalla completa + redirección
   const handleClick = async (slug, e) => {
-    e.preventDefault(); // 🚫 evita que el click interfiera con Swiper (corrige dots)
+    e.preventDefault();
     e.stopPropagation();
     const el = document.documentElement;
     try {
@@ -38,46 +51,48 @@ export default function Carousel() {
   };
 
   return (
-    <div className="relative mt-8 mb-10">
+    <div className="relative mt-8 mb-10 pb-6">
       <Swiper
-        key={videos.length}
         modules={[Pagination, Autoplay]}
         centeredSlides={true}
         slidesPerView={"auto"}
         spaceBetween={25}
         speed={850}
         grabCursor={true}
-        watchSlidesProgress={true}
         loop={true}
-        loopAdditionalSlides={videos.length}
-        initialSlide={1}
+        loopedSlides={videos.length} // 🔄 fuerza loop real
         autoplay={{
-          delay: 3000,
+          delay: 2500,
           disableOnInteraction: false,
         }}
         pagination={{
-          clickable: false, // 🚫 evita desincronización
+          clickable: false,
           renderBullet: (index, className) =>
             `<span class="${className}" style="
               background-color: #ffcce0;
-              width: 8px;
-              height: 8px;
-              margin: 0 4px;
+              width: 7px;
+              height: 7px;
+              margin: 0 5px;
               border-radius: 50%;
               display: inline-block;
-              opacity: 0.6;
+              opacity: 0.5;
+              transition: all 0.3s ease;
             "></span>`,
         }}
         onSlideChange={(swiper) => {
-          // 🔄 sincroniza manualmente los dots con el slide activo
+          // Sincroniza dots con la slide real
           const bullets = document.querySelectorAll(".swiper-pagination-bullet");
           bullets.forEach((b, i) => {
-            if (i === swiper.realIndex) {
+            if (i === swiper.realIndex % videos.length) {
               b.style.opacity = "1";
-              b.style.backgroundColor = "#ff7eb9"; // 🌸 rosado activo Everwish
+              b.style.backgroundColor = "#ff7eb9";
+              b.style.boxShadow = "0 0 6px 2px rgba(255,126,185,0.4)";
+              b.style.transform = "scale(1.3)";
             } else {
               b.style.opacity = "0.5";
               b.style.backgroundColor = "#ffcce0";
+              b.style.boxShadow = "none";
+              b.style.transform = "scale(1)";
             }
           });
         }}
@@ -86,10 +101,7 @@ export default function Carousel() {
         {videos.map((video, index) => (
           <SwiperSlide
             key={index}
-            style={{
-              width: "300px",
-              maxWidth: "80vw",
-            }}
+            className="!w-[280px] sm:!w-[300px] md:!w-[340px] flex justify-center"
           >
             {({ isActive }) => (
               <div
