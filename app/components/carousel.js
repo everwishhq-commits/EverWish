@@ -1,75 +1,46 @@
 "use client";
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 
-// 🔹 Generador automático del título/mensaje según el nombre del archivo
+// 🔹 Mensaje automático según nombre
 function messageFromSlug(slug) {
   const s = slug?.toLowerCase() || "";
-  if (/pumpkin/.test(s) && /halloween/.test(s))
-    return "Have a pumpkin-tastic Halloween! 🎃";
-  if (/ghost/.test(s) && /love/.test(s))
-    return "Boo! You’re my favorite human to haunt 💕";
-  if (/zombie/.test(s) && /birthday/.test(s))
-    return "Have a zombie-licious birthday! 🧟‍♂️";
-  if (/unicorn/.test(s))
-    return "Believe in your magic! 🦄✨";
-  if (/graduation/.test(s))
-    return "Congrats on your amazing achievement! 🎓";
-  if (/love/.test(s))
-    return "Love makes every moment magical 💖";
-  if (/condolence/.test(s))
-    return "Sending comfort and light in difficult times 🕊️";
-  return "Make this day unforgettable ✨";
+  if (/pumpkin/.test(s)) return "Have a pumpkin-tastic Halloween! 🎃";
+  if (/ghost/.test(s)) return "Boo! You’re my favorite human to haunt 💕";
+  if (/zombie/.test(s)) return "Have a zombie-licious birthday! 🧟‍♂️";
+  if (/unicorn/.test(s)) return "Believe in your magic! 🦄✨";
+  if (/graduation/.test(s)) return "Congrats on your amazing achievement! 🎓";
+  if (/love/.test(s)) return "Love makes every moment magical 💖";
+  if (/condolence/.test(s)) return "Sending comfort and light 🕊️";
+  return "Celebrate every moment ✨";
 }
 
 export default function Carousel() {
-  const [templates, setTemplates] = useState([]);
   const router = useRouter();
 
-  useEffect(() => {
-    async function fetchVideos() {
-      try {
-        const res = await fetch("/api/videos");
-        const data = await res.json();
+  // 🔸 Tus 7 templates predefinidos (usa tus rutas reales)
+  const templates = [
+    { slug: "pumpkin_halloween", src: "/cards/pumpkin.png" },
+    { slug: "ghost_halloween", src: "/cards/ghost.png" },
+    { slug: "zombie_birthday", src: "/cards/zombie.png" },
+    { slug: "unicorn_magic", src: "/cards/unicorn.png" },
+    { slug: "graduation_celebration", src: "/cards/graduation.png" },
+    { slug: "love_romantic", src: "/cards/love.png" },
+    { slug: "condolence_peace", src: "/cards/condolence.png" },
+  ];
 
-        // 🔸 Si hay menos de 7, agrega plantillas base
-        const defaults = [
-          { slug: "pumpkin_halloween", src: "/cards/pumpkin.png" },
-          { slug: "ghost_halloween_love", src: "/cards/ghost.png" },
-          { slug: "zombie_birthday", src: "/cards/zombie.png" },
-          { slug: "unicorn_magic", src: "/cards/unicorn.png" },
-          { slug: "graduation_celebration", src: "/cards/graduation.png" },
-          { slug: "love_romantic", src: "/cards/love.png" },
-          { slug: "condolence_peace", src: "/cards/condolence.png" },
-        ];
-
-        // mezcla los que vienen del servidor con los defaults
-        const merged = [...data, ...defaults].slice(0, 7);
-        setTemplates(merged);
-      } catch (err) {
-        console.error("❌ Error cargando videos:", err);
-      }
-    }
-    fetchVideos();
-  }, []);
-
-  // 🔹 Click → pantalla completa + ir a editor
+  // 🔹 Pantalla completa + redirección
   const handleClick = async (slug, e) => {
     e.preventDefault();
     e.stopPropagation();
-
     const el = document.documentElement;
     try {
       if (el.requestFullscreen) await el.requestFullscreen();
       else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
-    } catch (err) {
-      console.warn("⚠️ Fullscreen no soportado:", err);
-    }
-
+    } catch {}
     router.push(`/edit/${slug}`);
   };
 
@@ -89,7 +60,7 @@ export default function Carousel() {
           disableOnInteraction: false,
         }}
         pagination={{
-          clickable: false,
+          clickable: true,
           renderBullet: (index, className) =>
             `<span class="${className}" style="
               background-color: #ffcce0;
@@ -144,9 +115,9 @@ export default function Carousel() {
                   <img
                     src={tpl.src}
                     alt={tpl.slug}
-                    className="w-full h-[420px] object-cover"
+                    className="w-full h-[420px] object-cover bg-white"
                   />
-                  <div className="absolute bottom-4 left-0 right-0 text-center text-sm font-semibold text-gray-800 bg-white/80 py-2 backdrop-blur-md">
+                  <div className="absolute bottom-4 left-0 right-0 text-center text-sm font-semibold text-gray-800 bg-white/90 py-2 backdrop-blur-md">
                     {messageFromSlug(tpl.slug)}
                   </div>
                 </div>
@@ -157,4 +128,4 @@ export default function Carousel() {
       </Swiper>
     </div>
   );
-}
+    }
