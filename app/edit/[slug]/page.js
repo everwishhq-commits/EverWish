@@ -663,5 +663,203 @@ export default function EditPage() {
     return () => clearTimeout(timer);
   }, [item, showEdit]);
 
-  // Tap de seguridad: si queda atascado en fullscreen, toca para continuar
-  useEff
+ // Tap de seguridad: si queda atascado en fullscreen, toca para continuar
+  useEffect(() => {
+    const handler = async () => {
+      if (!showEdit) {
+        try {
+          if (document.fullscreenElement && document.exitFullscreen) {
+            await document.exitFullscreen();
+          }
+          // @ts-ignore
+          if (!document.fullscreenElement && document.webkitExitFullscreen)
+            // @ts-ignore
+            await document.webkitExitFullscreen();
+        } catch {}
+        setShowEdit(true);
+      }
+    };
+    window.addEventListener("click", handler);
+    window.addEventListener("touchstart", handler);
+    return () => {
+      window.removeEventListener("click", handler);
+      window.removeEventListener("touchstart", handler);
+    };
+  }, [showEdit]);
+
+  // Render de animación (suave y por delante, sin bloquear inputs)
+  const renderEffect = () => {
+    if (!anim || /None/.test(anim)) return null;
+    const emoji = anim.split(" ")[0];
+    return Array.from({ length: 18 }).map((_, i) => (
+      <motion.span
+        key={i}
+        className="absolute text-xl z-[35] pointer-events-none"
+        initial={{ opacity: 0, y: 0 }}
+        animate={{
+          opacity: [0, 0.85, 0],
+          y: [0, -90],
+          x: [0, Math.random() * 100 - 50],
+          scale: [0.95, 1.05, 0.95],
+        }}
+        transition={{
+          duration: 4.8 + Math.random() * 2,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: i * 0.22,
+        }}
+        style={{ top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%` }}
+      >
+        {emoji}
+      </motion.span>
+    ));
+  };
+
+  if (!item) {
+    return null;
+  }
+
+  /* --- Intro (pantalla extendida con barra) --- */
+  if (!showEdit) {
+    return (
+      <div className="fixed inset-0 flex justify-center items-center bg-black">
+        {item.src?.endsWith(".mp4") ? (
+          <>
+            <video
+              src={item.src}
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover"
+            />
+            {/* Barra */}
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/30">
+              <div
+                className="h-full bg-white transition-all duration-200"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </>
+        ) : (
+          <img src={item.src} alt={slug} className="w-full h-full object-cover" />
+        )}
+      </div>
+    );
+  }
+
+  /* --- Editor principal --- */
+  return (
+    <main className="mx-auto max-w-3xl px-4 py-8 relative bg-[#fff8f5] min-h-screen overflow-hidden">
+      {/* Animaciones al frente */}
+      <div className="absolute inset-0">{renderEffect()}</div>
+
+      <div className="relative z-[30]">
+        {/* Media */}
+        <div className="relative w-full rounded-3xl shadow-md overflow-hidden bg-white">
+          {item.src?.endsWith(".mp4") ? (
+            <video
+              src={item.src}
+              muted
+              loop
+              autoPlay
+              playsInline
+              className="w-full h-[420px] object-contain"
+            />
+          ) : (
+            <img
+              src={item.src}
+              alt={slug}
+              className="w-full h-[420px] object-contain"
+            />
+          )}
+        </div>
+
+        {/* Controles */}
+        <section className="mt-6 bg-white rounded-3xl shadow-md p-6">
+          <h2 className="text-xl font-semibold text-center mb-4">
+            Customize your message ✨
+          </h2>
+
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            rows={3}
+            className="w-full rounded-2xl border border-gray-300 p-4 text-center focus:ring-2 focus:ring-pink-400"
+          />
+
+          {/* Dropdown dinámico por categoría */}
+          <select
+            value={anim}
+            onChange={(e) => setAnim(e.target.value)}
+            className="w-full mt-3 rounded-2xl border border-gray-300 p-3 text-center focus:ring-2 focus:ring-pink-400"
+          >
+            {animOptions.map((a, i) => (
+              <option key={i} value={a}>{a}</option>
+            ))}
+            <option value="❌ None">❌ None</option>
+          </select>
+
+          {/* Acciones */}
+          <div className="flex justify-between mt-4">
+            <button
+              onClick={() => setShowGiftPopup(true)}
+              className="w-[48%] rounded-full py-3 font-semibold transition text-[#3b2b1f] bg-yellow-300 hover:bg-yellow-400"
+            >
+              🎁 Choose Gift Card
+            </button>
+            <button
+              onClick={() => setShowCheckout(true)}
+              className="w-[48%] bg-pink-500 hover:bg-pink-600 text-white font-semibold py-3 rounded-full transition"
+            >
+              Checkout 💳
+            </button>
+          </div>
+
+          {/* Estado seleccionado GiftCard */}
+          {gift.brand && (
+            <div className="mt-3 flex items-center justify-center text-sm text-gray-600 gap-2">
+              <span>
+                Selected: <strong>{gift.brand}</strong> — $
+                {Number(gift.amount || 0).toFixed(2)}
+              </span>
+              <button
+                onClick={() => setGift({ brand: "", amount: 0 })}
+                className="text-pink-400 hover:text-pink-600 transition"
+                title="Remove gift card"
+              >
+                🗑️
+              </button>
+            </div>
+          )}
+        </section>
+      </div>
+
+      {/* Popups */}
+      {showGiftPopup && (
+        <GiftCardPopup
+          initial={gift}
+          onSelect={(g) => {
+            setGift(g);
+            setShowGiftPopup(false);
+          }}
+          onClose={() => setShowGiftPopup(false)}
+        />
+      )}
+
+      {showCheckout && (
+        <CheckoutPopup
+          total={CARD_PRICE + (gift.amount || 0)}
+          gift={gift}
+          onGiftChange={() => {
+            setShowCheckout(false);
+            setShowGiftPopup(true);
+          }}
+          onGiftRemove={() => setGift({ brand: "", amount: 0 })}
+          onClose={() => setShowCheckout(false)}
+        />
+      )}
+    </main>
+  );
+}
+ 
