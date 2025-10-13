@@ -3,9 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 
-/* ---------------------------------------------
-   Mensaje automático según slug
---------------------------------------------- */
+// 🎃 Mensaje por defecto según slug
 function defaultMessageFromSlug(slug) {
   const s = (slug || "").toLowerCase();
   if (/halloween/.test(s) && /love/.test(s))
@@ -25,31 +23,20 @@ function defaultMessageFromSlug(slug) {
   return "Celebrate this moment with a smile. Wishing you peace and light. ✨";
 }
 
-/* ---------------------------------------------
-   Componente principal
---------------------------------------------- */
 export default function EditPage() {
   const { slug } = useParams();
-
-  // Estado base
   const [item, setItem] = useState(null);
   const [message, setMessage] = useState("");
   const [anim, setAnim] = useState("sparkles");
   const [showEdit, setShowEdit] = useState(false);
-
-  // Gift Card
   const [showGiftPopup, setShowGiftPopup] = useState(false);
   const [giftSelection, setGiftSelection] = useState({ brand: "", amount: 0 });
-
-  // Checkout
   const [showCheckout, setShowCheckout] = useState(false);
   const [sender, setSender] = useState({ name: "", email: "", phone: "" });
   const [recipient, setRecipient] = useState({ name: "", email: "", phone: "" });
 
-  // Precio base de la tarjeta Everwish (ajústalo si quieres)
-  const CARD_PRICE = 5; // USD
+  const CARD_PRICE = 5;
 
-  /* Cargar el recurso y hacer fullscreen 3s */
   useEffect(() => {
     (async () => {
       try {
@@ -59,7 +46,6 @@ export default function EditPage() {
         setItem(found || null);
         setMessage(defaultMessageFromSlug(slug));
 
-        // Fullscreen 3s
         const el = document.documentElement;
         try {
           if (el.requestFullscreen) await el.requestFullscreen();
@@ -75,7 +61,6 @@ export default function EditPage() {
     })();
   }, [slug]);
 
-  /* Efectos decorativos */
   const renderEffect = () => {
     const symbol = anim === "sparkles" ? "✨" : anim === "hearts" ? "💖" : anim === "confetti" ? "•" : null;
     if (!symbol) return null;
@@ -109,7 +94,6 @@ export default function EditPage() {
 
   if (!item) return null;
 
-  /* Paso 1: Pantalla completa */
   if (!showEdit) {
     return (
       <div className="fixed inset-0 flex justify-center items-center bg-black">
@@ -122,21 +106,16 @@ export default function EditPage() {
     );
   }
 
-  /* ------------------------------
-     Popup Gift Cards (tabs + more)
-  ------------------------------ */
   const GiftCardPopup = () => {
     const TABS = ["Popular", "Lifestyle", "Digital"];
     const [activeTab, setActiveTab] = useState("Popular");
     const [expanded, setExpanded] = useState({ Popular: false, Lifestyle: false, Digital: false });
     const [tempBrand, setTempBrand] = useState(giftSelection.brand || "");
     const [amount, setAmount] = useState(giftSelection.amount || 0);
-
-    // Listas por tab (3 destacadas + más opciones)
     const DATA = {
       Popular: {
         featured: ["Amazon", "Walmart", "Target"],
-        more: ["Apple", "Best Buy", "Visa eGift", "Mastercard eGift", "Starbucks", "Sephora"],
+        more: ["Apple", "Best Buy", "Visa eGift", "Starbucks", "Sephora"],
       },
       Lifestyle: {
         featured: ["Nike", "H&M", "Zara"],
@@ -147,9 +126,7 @@ export default function EditPage() {
         more: ["Xbox", "PlayStation", "Steam", "Apple Music", "Disney+"],
       },
     };
-
     const quickAmounts = [10, 25, 50, 100];
-
     const renderButtons = (arr) => (
       <div className="grid grid-cols-2 gap-3">
         {arr.map((b) => (
@@ -165,12 +142,10 @@ export default function EditPage() {
         ))}
       </div>
     );
-
     const onDone = () => {
       setGiftSelection({ brand: tempBrand, amount: Number(amount) || 0 });
       setShowGiftPopup(false);
     };
-
     return (
       <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
         <motion.div
@@ -178,17 +153,11 @@ export default function EditPage() {
           animate={{ scale: 1, opacity: 1 }}
           className="bg-white rounded-3xl shadow-2xl w-11/12 max-w-md p-6 relative"
         >
-          <button
-            onClick={() => setShowGiftPopup(false)}
-            className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
-          >
+          <button onClick={() => setShowGiftPopup(false)} className="absolute right-4 top-4 text-gray-400 hover:text-gray-600">
             ✕
           </button>
-
           <h3 className="text-xl font-bold text-center mb-4 text-pink-600">Choose a Gift Card 🎁</h3>
-
-          {/* Tabs */}
-          <div className="flex items-center justify-center gap-6 mb-4">
+          <div className="flex justify-center gap-6 mb-4">
             {TABS.map((t) => (
               <button
                 key={t}
@@ -201,11 +170,7 @@ export default function EditPage() {
               </button>
             ))}
           </div>
-
-          {/* Featured */}
           <div className="mb-3">{renderButtons(DATA[activeTab].featured)}</div>
-
-          {/* More (expand inline) */}
           <div className="mb-3">
             <button
               onClick={() => setExpanded((e) => ({ ...e, [activeTab]: !e[activeTab] }))}
@@ -215,8 +180,6 @@ export default function EditPage() {
             </button>
             {expanded[activeTab] && <div className="mt-3">{renderButtons(DATA[activeTab].more)}</div>}
           </div>
-
-          {/* Amount */}
           <div className="mb-4">
             <h4 className="text-sm font-semibold mb-2 text-gray-600 text-center">Amount (USD)</h4>
             <div className="flex gap-2 justify-center mb-2">
@@ -242,7 +205,6 @@ export default function EditPage() {
               className="w-full rounded-2xl border border-gray-300 p-3 text-center focus:ring-2 focus:ring-pink-400"
             />
           </div>
-
           <motion.button
             whileTap={{ scale: 0.97 }}
             disabled={!tempBrand || !Number(amount)}
@@ -260,131 +222,10 @@ export default function EditPage() {
     );
   };
 
-  /* ------------------------------
-     Popup Checkout (emisor/receptor)
-  ------------------------------ */
-  const CheckoutPopup = () => {
-    const giftCost = giftSelection.amount || 0;
-    const subtotalCard = CARD_PRICE;
-    const total = (subtotalCard + giftCost).toFixed(2);
-
-    const confirm = () => {
-      // Aquí conectas a /api/checkout (Stripe) cuando quieras.
-      // fetch("/api/checkout", { method: "POST", body: JSON.stringify({...}) })
-      alert(
-        `Checkout summary:
-Card: $${subtotalCard}
-Gift Card: ${giftSelection.brand ? `${giftSelection.brand} $${giftCost}` : "None"}
-TOTAL: $${total}
-
-Sender: ${sender.name} | ${sender.email} | ${sender.phone}
-Recipient: ${recipient.name} | ${recipient.email} | ${recipient.phone}`
-      );
-      setShowCheckout(false);
-    };
-
-    return (
-      <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="bg-white rounded-3xl shadow-2xl w-11/12 max-w-md p-6 relative"
-        >
-          <button
-            onClick={() => setShowCheckout(false)}
-            className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
-          >
-            ✕
-          </button>
-
-          <h3 className="text-2xl font-bold text-center mb-6 text-purple-600">Checkout</h3>
-
-          <div className="grid grid-cols-1 gap-3">
-            <h4 className="font-semibold text-gray-700">Sender information</h4>
-            <input
-              placeholder="Your name"
-              className="border rounded-2xl p-3"
-              value={sender.name}
-              onChange={(e) => setSender({ ...sender, name: e.target.value })}
-            />
-            <input
-              placeholder="Your email"
-              className="border rounded-2xl p-3"
-              value={sender.email}
-              onChange={(e) => setSender({ ...sender, email: e.target.value })}
-            />
-            <input
-              placeholder="Your phone"
-              className="border rounded-2xl p-3"
-              value={sender.phone}
-              onChange={(e) => setSender({ ...sender, phone: e.target.value })}
-            />
-
-            <h4 className="font-semibold text-gray-700 mt-2">Recipient information</h4>
-            <input
-              placeholder="Recipient name"
-              className="border rounded-2xl p-3"
-              value={recipient.name}
-              onChange={(e) => setRecipient({ ...recipient, name: e.target.value })}
-            />
-            <input
-              placeholder="Recipient email"
-              className="border rounded-2xl p-3"
-              value={recipient.email}
-              onChange={(e) => setRecipient({ ...recipient, email: e.target.value })}
-            />
-            <input
-              placeholder="Recipient phone"
-              className="border rounded-2xl p-3"
-              value={recipient.phone}
-              onChange={(e) => setRecipient({ ...recipient, phone: e.target.value })}
-            />
-          </div>
-
-          <div className="mt-6 rounded-2xl bg-gray-50 p-4">
-            <div className="flex justify-between text-sm">
-              <span>Card</span>
-              <span>${subtotalCard.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between text-sm mt-1">
-              <span>Gift Card</span>
-              <span>{giftSelection.brand ? `${giftSelection.brand} $${giftCost.toFixed(2)}` : "$0.00"}</span>
-            </div>
-            <div className="border-t mt-3 pt-3 flex justify-between font-semibold">
-              <span>Total</span>
-              <span>${total}</span>
-            </div>
-          </div>
-
-          <div className="flex justify-between mt-6">
-            <button
-              className="px-5 py-3 bg-gray-300 rounded-2xl font-semibold"
-              onClick={() => setShowCheckout(false)}
-            >
-              Cancel
-            </button>
-            <button
-              onClick={confirm}
-              className="px-6 py-3 bg-[#b89cff] hover:bg-[#9c7ff9] text-white rounded-2xl font-semibold"
-            >
-              Confirm & Pay
-            </button>
-          </div>
-        </motion.div>
-      </div>
-    );
-  };
-
-  /* ------------------------------
-     Render principal (paso 2)
-  ------------------------------ */
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 relative bg-[#fff8f5] min-h-screen overflow-hidden">
-      {/* Fondo con efectos */}
       <div className="absolute inset-0 pointer-events-none z-0">{renderEffect()}</div>
-
       <div className="relative z-10">
-        {/* 1A: video/imagen */}
         <div className="relative w-full rounded-3xl shadow-md overflow-hidden bg-white">
           {item.src?.toLowerCase().endsWith(".mp4") ? (
             <video src={item.src} muted loop autoPlay playsInline className="w-full h-[420px] object-contain" />
@@ -393,7 +234,6 @@ Recipient: ${recipient.name} | ${recipient.email} | ${recipient.phone}`
           )}
         </div>
 
-        {/* 1B: mensaje + acciones */}
         <section className="mt-6 bg-white rounded-3xl shadow-md p-6 relative overflow-hidden">
           <motion.h2
             initial={{ opacity: 0, y: 10 }}
@@ -411,7 +251,6 @@ Recipient: ${recipient.name} | ${recipient.email} | ${recipient.phone}`
             className="w-full rounded-2xl border border-gray-300 p-4 text-center focus:ring-2 focus:ring-pink-400"
           />
 
-          {/* Selector de animación */}
           <select
             value={anim}
             onChange={(e) => setAnim(e.target.value)}
@@ -423,7 +262,6 @@ Recipient: ${recipient.name} | ${recipient.email} | ${recipient.phone}`
             <option value="none">❌ None</option>
           </select>
 
-          {/* Botones principales */}
           <div className="flex justify-between mt-4">
             <button
               onClick={() => setShowGiftPopup(true)}
@@ -440,18 +278,25 @@ Recipient: ${recipient.name} | ${recipient.email} | ${recipient.phone}`
             </button>
           </div>
 
-          {/* Resumen mini si ya eligió giftcard */}
+          {/* Nueva línea con opción de eliminar selección */}
           {giftSelection.brand && (
-            <p className="mt-3 text-center text-sm text-gray-600">
-              Selected: <span className="font-semibold">{giftSelection.brand}</span>{" "}
-              {giftSelection.amount ? `— $${giftSelection.amount.toFixed(2)}` : ""}
-            </p>
+            <div className="mt-3 flex items-center justify-center text-sm text-gray-600 gap-2">
+              <span>
+                Selected: <strong>{giftSelection.brand}</strong> — ${giftSelection.amount.toFixed(2)}
+              </span>
+              <button
+                onClick={() => setGiftSelection({ brand: "", amount: 0 })}
+                className="text-pink-400 hover:text-pink-600 transition"
+                title="Remove Gift Card"
+              >
+                🗑️
+              </button>
+            </div>
           )}
         </section>
       </div>
 
       {showGiftPopup && <GiftCardPopup />}
-      {showCheckout && <CheckoutPopup />}
     </main>
   );
-                                                                        }
+      }
