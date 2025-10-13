@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 
-// 💌 Mensaje automático
+// 💌 Mensaje automático por tipo
 function defaultMessageFromSlug(slug) {
   const s = (slug || "").toLowerCase();
   if (/ghost/.test(s)) return "Between scares and sighs, my heart still chooses you. 🖤🎃";
@@ -26,7 +26,7 @@ export default function EditPage() {
 
   const CARD_PRICE = 5;
 
-  // Pantalla inicial
+  // Pantalla inicial fullscreen
   useEffect(() => {
     (async () => {
       const res = await fetch("/api/videos", { cache: "no-store" });
@@ -37,6 +37,7 @@ export default function EditPage() {
 
       const el = document.documentElement;
       if (el.requestFullscreen) await el.requestFullscreen();
+
       setTimeout(async () => {
         if (document.fullscreenElement) await document.exitFullscreen();
         setShowEdit(true);
@@ -44,7 +45,7 @@ export default function EditPage() {
     })();
   }, [slug]);
 
-  // ✨ Animaciones al frente
+  // ✨ Animaciones globales (frente)
   const renderEffect = () => {
     const symbol =
       anim === "sparkles" ? "✨" : anim === "hearts" ? "💖" : anim === "confetti" ? "•" : null;
@@ -83,7 +84,6 @@ export default function EditPage() {
   const GiftCardPopup = ({ onDone }) => {
     const tabs = ["Popular", "Lifestyle", "Digital"];
     const [active, setActive] = useState("Popular");
-    const [expanded, setExpanded] = useState(false);
     const [tempBrand, setTempBrand] = useState("");
     const [amount, setAmount] = useState(0);
     const data = {
@@ -169,7 +169,7 @@ export default function EditPage() {
     );
   };
 
-  // 💳 Checkout popup mejorado
+  // 💳 Checkout popup
   const CheckoutPopup = () => {
     const [localGift, setLocalGift] = useState(giftSelection);
     const [showInnerGift, setShowInnerGift] = useState(false);
@@ -206,13 +206,13 @@ export default function EditPage() {
           <div className="mt-5 p-3 rounded-2xl bg-gray-50 text-center border border-gray-200">
             <p className="font-medium text-gray-700 mb-2">Purchase Summary</p>
             <p className="text-sm text-gray-600">
-              Everwish eCard — ${CARD_PRICE.toFixed(2)}
+              💌 Everwish eCard — ${CARD_PRICE.toFixed(2)}
             </p>
 
             {localGift.brand ? (
               <>
                 <p className="text-sm text-gray-600">
-                  Gift Card: <strong>{localGift.brand}</strong> — ${localGift.amount}
+                  🎁 Gift Card: <strong>{localGift.brand}</strong> — ${localGift.amount}
                 </p>
                 <button
                   onClick={() => setLocalGift({ brand: "", amount: 0 })}
@@ -258,12 +258,43 @@ export default function EditPage() {
   // 🌸 Vista principal
   if (!showEdit)
     return (
-      <div className="fixed inset-0 flex justify-center items-center bg-black">
+      <div className="fixed inset-0 flex flex-col justify-center items-center bg-black relative">
         {item.src?.endsWith(".mp4") ? (
-          <video src={item.src} autoPlay muted loop playsInline className="w-full h-full object-cover" />
+          <video
+            src={item.src}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="w-full h-full object-cover absolute inset-0"
+          />
         ) : (
-          <img src={item.src} alt={slug} className="w-full h-full object-cover" />
+          <img
+            src={item.src}
+            alt={slug}
+            className="w-full h-full object-cover absolute inset-0"
+          />
         )}
+
+        {/* 🌈 Barra de progreso */}
+        <div className="absolute bottom-10 w-3/4 h-2 rounded-full overflow-hidden bg-white/20 backdrop-blur-md">
+          <motion.div
+            initial={{ width: "0%" }}
+            animate={{ width: "100%" }}
+            transition={{ duration: 3, ease: "easeInOut" }}
+            className="h-full bg-gradient-to-r from-pink-400 via-rose-400 to-amber-300"
+          />
+        </div>
+
+        {/* Texto elegante */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 1, 1, 0] }}
+          transition={{ duration: 3 }}
+          className="absolute bottom-16 text-white text-sm font-light tracking-wide"
+        >
+          Previewing your card... ✨
+        </motion.p>
       </div>
     );
 
