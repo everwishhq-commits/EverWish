@@ -11,7 +11,7 @@ export default function Carousel() {
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
 
-  // 🔹 Ajustar altura según dispositivo (sin barras en móvil)
+  // ✅ Altura visible sin barras (móviles + tablets)
   useEffect(() => {
     const updateHeight = () => {
       const vh = window.visualViewport
@@ -28,7 +28,7 @@ export default function Carousel() {
     };
   }, []);
 
-  // 🔹 Cargar videos del API
+  // ✅ Carga de videos
   useEffect(() => {
     async function fetchVideos() {
       try {
@@ -41,12 +41,11 @@ export default function Carousel() {
     }
 
     fetchVideos();
-    // Refresca cada 24h
     const refresh = setInterval(fetchVideos, 24 * 60 * 60 * 1000);
     return () => clearInterval(refresh);
   }, []);
 
-  // 🔁 Autoplay con loop infinito
+  // 🔁 Autoplay + loop infinito
   useEffect(() => {
     clearInterval(autoplayRef.current);
     if (videos.length > 0) {
@@ -71,11 +70,24 @@ export default function Carousel() {
     }
   };
 
-  // 🖱️ Click → pantalla completa + envío al editor
+  // 🖱️ Click → fullscreen sin tabs en móvil y abrir /edit
   const handleClick = async (slug) => {
     try {
-      await document.documentElement.requestFullscreen?.();
-    } catch {}
+      // Detectar dispositivo móvil
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if (isMobile) {
+        // Solicitar fullscreen real sobre el cuerpo (oculta tabs en Chrome/Safari)
+        const elem = document.body;
+        if (elem.requestFullscreen) await elem.requestFullscreen();
+        else if (elem.webkitRequestFullscreen)
+          await elem.webkitRequestFullscreen();
+      } else {
+        // Desktop normal
+        await document.documentElement.requestFullscreen?.();
+      }
+    } catch (err) {
+      console.warn("⚠️ Fullscreen no soportado:", err);
+    }
     router.push(`/edit/${slug}`);
   };
 
@@ -84,7 +96,6 @@ export default function Carousel() {
       className="w-full flex flex-col items-center overflow-hidden select-none bg-[#fffaf7]"
       style={{ height: viewportHeight }}
     >
-      {/* Contenedor principal */}
       <div
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -115,29 +126,13 @@ export default function Carousel() {
                   loop
                   muted
                   playsInline
-                  className="rounded-3xl shadow-xl bg-white"
-                  style={{
-                    width: "90vw",
-                    maxWidth: "380px",
-                    height: "auto",
-                    maxHeight: "100vh",
-                    objectFit: "cover",
-                    aspectRatio: "auto",
-                  }}
+                  className="w-[90vw] max-w-[380px] h-auto rounded-3xl shadow-xl object-contain bg-white"
                 />
               ) : (
                 <img
                   src={video.src}
                   alt={video.title}
-                  className="rounded-3xl shadow-xl bg-white"
-                  style={{
-                    width: "90vw",
-                    maxWidth: "380px",
-                    height: "auto",
-                    maxHeight: "100vh",
-                    objectFit: "cover",
-                    aspectRatio: "auto",
-                  }}
+                  className="w-[90vw] max-w-[380px] h-auto rounded-3xl shadow-xl object-contain bg-white"
                 />
               )}
             </div>
@@ -159,4 +154,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-  }
+      }
