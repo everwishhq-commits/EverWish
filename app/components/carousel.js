@@ -1,37 +1,49 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination, Autoplay } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/pagination";
 
-// 🔹 PON aquí tus 3–10 items (o cámbialo a lo que devuelva /api/videos)
-const items = [
+const cards = [
   { slug: "zombie_halloween_birthday_1A", src: "/videos/zombie_halloween_birthday_1A.mp4" },
-  { slug: "ghost_halloween_love_1A",     src: "/videos/ghost_halloween_love_1A.mp4" },
-  { slug: "pumpkin_halloween_general_1A",src: "/videos/pumpkin_halloween_general_1A.mp4" },
+  { slug: "ghost_halloween_love_1A", src: "/videos/ghost_halloween_love_1A.mp4" },
+  { slug: "pumpkin_halloween_general_1A", src: "/videos/pumpkin_halloween_general_1A.mp4" },
 ];
 
 export default function Carousel() {
   const router = useRouter();
-  const swiperRef = useRef(null);
+  const [index, setIndex] = useState(0);
+  const containerRef = useRef(null);
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+  const autoplayRef = useRef(null);
 
-  // Asegura que SIEMPRE empiece en la primera y con autoplay activo
+  // 🔁 autoplay con loop infinito
   useEffect(() => {
-    const s = swiperRef.current?.swiper;
-    if (!s) return;
-    s.loopFix();            // corrige duplicados
-    s.slideToLoop(0, 0);    // arranca en la primera
-    s.autoplay.start();     // garantiza autoplay
+    clearInterval(autoplayRef.current);
+    autoplayRef.current = setInterval(() => {
+      setIndex((prev) => (prev + 1) % cards.length);
+    }, 2800);
+    return () => clearInterval(autoplayRef.current);
   }, []);
 
-  // Si el usuario toca/arrastra, reanudamos autoplay
-  const resumeAutoplay = () => {
-    const s = swiperRef.current?.swiper;
-    s?.autoplay?.start();
+  // 👆 Swipe manual con el dedo
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const handleTouchMove = (e) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+  const handleTouchEnd = () => {
+    const diff = touchStartX.current - touchEndX.current;
+    if (Math.abs(diff) > 50) {
+      setIndex((prev) =>
+        diff > 0
+          ? (prev + 1) % cards.length
+          : (prev - 1 + cards.length) % cards.length
+      );
+    }
   };
 
+  // 🖱️ Clic → fullscreen + /edit/[slug]
   const handleClick = async (slug) => {
     try {
       await document.documentElement.requestFullscreen?.();
@@ -40,67 +52,62 @@ export default function Carousel() {
   };
 
   return (
-    <div className="relative mt-8 mb-10">
-      <Swiper
-        ref={swiperRef}
-        modules={[Pagination, Autoplay]}
-        // ------- LO IMPORTANTE -------
-        loop={true}
-        initialSlide={0}
-        loopAdditionalSlides={items.length}
-        slidesPerView={1.2}            // 1 centrada + colas a los lados
-        centeredSlides={true}
-        spaceBetween={16}
-        speed={600}
-        grabCursor={true}
-        allowTouchMove={true}
-        autoplay={{
-          delay: 2400,
-          disableOnInteraction: false,
-          pauseOnMouseEnter: false,
-        }}
-        pagination={{ clickable: true }}
-        onSlideChange={resumeAutoplay}
-        onTouchEnd={resumeAutoplay}
-        onAutoplayStop={resumeAutoplay}
-        // -----------------------------
-        breakpoints={{
-          480:  { slidesPerView: 1.5, spaceBetween: 18 },
-          768:  { slidesPerView: 2,   spaceBetween: 20 },
-          1024: { slidesPerView: 3,   spaceBetween: 24 },
-        }}
-        className="w-full max-w-5xl select-none"
+    <div className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none">
+      <div
+        ref={containerRef}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        className="relative w-full max-w-5xl flex justify-center items-center h-[440px]"
       >
-        {items.map((it, i) => (
-          <SwiperSlide key={i} className="!w-[290px] sm:!w-[320px] md:!w-[340px]">
-            {({ isActive }) => (
-              <div
-                onClick={() => handleClick(it.slug)}
-                className={`rounded-2xl shadow-lg overflow-hidden cursor-pointer transition-all duration-500 ${
-                  isActive ? "scale-105 opacity-100 z-50" : "scale-90 opacity-60 z-10"
-                }`}
-              >
-                {it.src.toLowerCase().endsWith(".mp4") ? (
-                  <video
-                    src={it.src}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    className="w-full h-[420px] object-cover bg-white"
-                  />
-                ) : (
-                  <img
-                    src={it.src}
-                    alt={it.slug}
-                    className="w-full h-[420px] object-cover bg-white"
-                  />
-                )}
-              </div>
-            )}
-          </SwiperSlide>
+        {cards.map((card, i) => {
+          const offset = (i - index + cards.length) % cards.length;
+          let positionClass = "";
+
+          if (offset === 0) positionClass = "translate-x-0 scale-100 z-20 opacity-100";
+          else if (offset === 1) positionClass = "translate-x-full scale-90 z-10 opacity-50";
+          else if (offset === cards.length - 1) positionClass = "-translate-x-full scale-90 z-10 opacity-50";
+          else positionClass = "opacity-0 z-0";
+
+          return (
+            <div
+              key={i}
+              className={`absolute transition-all duration-700 ease-in-out ${positionClass}`}
+              onClick={() => handleClick(card.slug)}
+            >
+              {card.src.endsWith(".mp4") ? (
+                <video
+                  src={card.src}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] rounded-2xl shadow-lg object-cover bg-white"
+                />
+              ) : (
+                <img
+                  src={card.src}
+                  alt={card.slug}
+                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] rounded-2xl shadow-lg object-cover bg-white"
+                />
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* 🔘 Dots */}
+      <div className="flex mt-5 gap-2">
+        {cards.map((_, i) => (
+          <span
+            key={i}
+            onClick={() => setIndex(i)}
+            className={`w-3 h-3 rounded-full cursor-pointer transition-all ${
+              i === index ? "bg-pink-500 scale-125" : "bg-gray-300"
+            }`}
+          ></span>
         ))}
-      </Swiper>
+      </div>
     </div>
   );
-          }
+            }
