@@ -1,1 +1,79 @@
-
+{
+  "Popular": [
+    "Amazon",
+    "Walmart",
+    "Target",
+    "Apple",
+    "Best Buy",
+    "Visa eGift",
+    "Mastercard eGift"
+  ],
+  "Lifestyle": [
+    "Starbucks",
+    "Nike",
+    "Sephora",
+    "Bath & Body Works",
+    "Zara",
+    "Shein",
+    "Lululemon",
+    "H&M",
+    "Etsy"
+  ],
+  "Digital": [
+    "Google Play",
+    "Spotify",
+    "Netflix",
+    "YouTube Premium",
+    "Xbox",
+    "Apple Music",
+    "Audible",
+    "Disney+"
+  ],
+  "Gaming": [
+    "PlayStation",
+    "Steam",
+    "Roblox",
+    "Nintendo eShop",
+    "Epic Games",
+    "Razer Gold"
+  ],
+  "Food": [
+    "McDonald's",
+    "Domino's",
+    "Starbucks",
+    "Subway",
+    "Uber Eats",
+    "DoorDash",
+    "Dunkin' Donuts"
+  ],
+  "Beauty": [
+    "Ulta",
+    "Sally Beauty",
+    "Glossier",
+    "Fenty Beauty",
+    "MAC Cosmetics",
+    "Sephora"
+  ],
+  "Travel & Experiences": [
+    "Airbnb",
+    "Uber",
+    "Lyft",
+    "Southwest Airlines",
+    "Delta",
+    "Hotels.com"
+  ],
+  "Entertainment": [
+    "AMC Theatres",
+    "Regal Cinemas",
+    "Spotify",
+    "Hulu",
+    "Paramount+",
+    "Apple TV+"
+  ],
+  "Universal": [
+    "PayPal Digital",
+    "Cash App",
+    "Venmo",
+    "American Express Gift Card"
+  ]
+}
