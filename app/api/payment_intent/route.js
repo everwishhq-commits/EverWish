@@ -2,33 +2,37 @@ import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+/**
+ * Endpoint para crear un PaymentIntent.
+ * Recibe el monto en centavos (USD) desde el cliente.
+ */
 export async function POST(req) {
   try {
     const { amount } = await req.json();
 
-    if (!amount || amount < 1) {
+    if (!amount || amount < 50) {
       return new Response(
-        JSON.stringify({ error: "Invalid amount provided." }),
+        JSON.stringify({ error: "Invalid amount." }),
         { status: 400 }
       );
     }
 
-    // Crea el PaymentIntent
     const paymentIntent = await stripe.paymentIntents.create({
-      amount, // en centavos
+      amount,
       currency: "usd",
+      description: "Everwish Digital Card Payment",
       automatic_payment_methods: { enabled: true },
-      description: "Everwish Card Purchase",
     });
 
     return new Response(
       JSON.stringify({ clientSecret: paymentIntent.client_secret }),
       { status: 200 }
     );
-  } catch (err) {
-    console.error("Stripe Error:", err.message);
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-    });
+  } catch (error) {
+    console.error("Stripe error:", error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { status: 500 }
+    );
   }
 }
