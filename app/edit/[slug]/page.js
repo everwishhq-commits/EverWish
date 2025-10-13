@@ -50,7 +50,8 @@ function parseCategories(slug) {
 
 function getAnimationsForSlug(slug) {
   const cats = parseCategories(slug);
-  if (cats.length === 0) return ["✨ Sparkles","🎉 Confetti","💖 Hearts","🌸 Bloom","🌟 Shine","🕊️ Peace","🌈 Glow","💫 Dust","🎇 Light","❌ None"];
+  if (cats.length === 0)
+    return ["✨ Sparkles","🎉 Confetti","💖 Hearts","🌸 Bloom","🌟 Shine","🕊️ Peace","🌈 Glow","💫 Dust","🎇 Light","❌ None"];
   const bag = [];
   for (const c of cats) bag.push(...(ANIMS[c] || []));
   return Array.from(new Set(bag)).slice(0, 10);
@@ -90,60 +91,25 @@ export default function EditPage() {
     })();
   }, [slug]);
 
-  /* --- Pantalla extendida con barra --- */
-  const startFullscreenAndProgress = async () => {
-    if (startedRef.current) return;
-    startedRef.current = true;
-    try {
-      const el = document.documentElement;
-      if (el.requestFullscreen) await el.requestFullscreen();
-      // Safari
-      // @ts-ignore
-      if (!document.fullscreenElement && el.webkitRequestFullscreen)
-        await el.webkitRequestFullscreen();
-    } catch {}
-    const start = performance.now();
-    const duration = 3000;
-    const tick = () => {
-      const p = Math.min(1, (performance.now() - start) / duration);
-      setProgress(Math.round(p * 100));
-      if (p < 1) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-    setTimeout(async () => {
-      try {
-        if (document.fullscreenElement && document.exitFullscreen)
-          await document.exitFullscreen();
-        // @ts-ignore
-        else if (document.webkitExitFullscreen)
-          await document.webkitExitFullscreen();
-      } catch {}
-      setShowEdit(true);
-    }, duration);
-  };
-
-  // Tap de seguridad si FS quedó bloqueado
+  /* --- Pantalla extendida con barra y paso automático --- */
   useEffect(() => {
-    const handleTap = async () => {
-      if (!showEdit && startedRef.current) {
-        try {
-          if (document.fullscreenElement && document.exitFullscreen)
-            await document.exitFullscreen();
-          // @ts-ignore
-          else if (document.webkitExitFullscreen)
-            await document.webkitExitFullscreen();
-        } catch {}
-        setShowEdit(true);
-      }
-    };
-    window.addEventListener("click", handleTap);
-    window.addEventListener("touchstart", handleTap);
-    return () => {
-      window.removeEventListener("click", handleTap);
-      window.removeEventListener("touchstart", handleTap);
-    };
-  }, [showEdit]);
+    if (!item) return;
+    let timer;
+    if (!showEdit) {
+      timer = setTimeout(() => setShowEdit(true), 3000); // ⏱️ auto avanzar
+      const start = performance.now();
+      const duration = 3000;
+      const tick = () => {
+        const p = Math.min(1, (performance.now() - start) / duration);
+        setProgress(Math.round(p * 100));
+        if (p < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
+    return () => clearTimeout(timer);
+  }, [item, showEdit]);
 
+  // Animación flotante
   const renderEffect = () => {
     if (!anim || /None/.test(anim)) return null;
     const emoji = anim.split(" ")[0];
@@ -173,13 +139,10 @@ export default function EditPage() {
 
   if (!item) return null;
 
-  // 🔹 Pantalla extendida con barra y paso automático
+  // 🔹 Pantalla extendida con barra
   if (!showEdit) {
     return (
-      <div
-        className="fixed inset-0 flex justify-center items-center bg-black"
-        onClick={startFullscreenAndProgress}
-      >
+      <div className="fixed inset-0 flex justify-center items-center bg-black">
         {item.src?.endsWith(".mp4") ? (
           <>
             <video
@@ -190,7 +153,6 @@ export default function EditPage() {
               playsInline
               className="w-full h-full object-cover"
             />
-            {/* ✅ Barra visible */}
             <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/30">
               <div
                 className="h-full bg-white transition-all duration-200"
@@ -264,7 +226,26 @@ export default function EditPage() {
               🎁 Choose Gift Card
             </button>
             <button
-              onClick={() => setShowCheckout(true)}
+              onClick={async () => {
+                try {
+                  const res = await fetch("/api/checkout", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      slug,
+                      message,
+                      anim,
+                      cardPrice: CARD_PRICE,
+                      gift: giftSelection,
+                    }),
+                  });
+                  const data = await res.json();
+                  if (data?.url) window.location.href = data.url;
+                  else alert(data?.error || "Checkout not available.");
+                } catch {
+                  alert("Error starting checkout.");
+                }
+              }}
               className="w-[48%] bg-[#b89cff] hover:bg-[#9c7ff9] text-white font-semibold py-3 rounded-full transition"
             >
               Checkout 💜
@@ -274,4 +255,4 @@ export default function EditPage() {
       </div>
     </main>
   );
-    }
+          }
