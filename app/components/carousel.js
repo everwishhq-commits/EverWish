@@ -23,6 +23,7 @@ export default function Carousel() {
     fetchVideos();
   }, []);
 
+  // 👉 Pantalla completa + envío al editor
   const handleClick = async (slug) => {
     const el = document.documentElement;
     try {
@@ -41,7 +42,7 @@ export default function Carousel() {
         modules={[Pagination, Autoplay]}
         loop={true}
         centeredSlides={true}
-        watchSlidesProgress={true} // 🔹 mantiene el foco centrado
+        watchSlidesProgress={true}
         grabCursor={true}
         speed={900}
         autoplay={{
@@ -52,15 +53,21 @@ export default function Carousel() {
           clickable: true,
           bulletActiveClass: "swiper-pagination-bullet-active bg-pink-500",
         }}
-        slidesPerView={"auto"} // 🔹 auto width (necesario para centrar)
+        slidesPerView={"auto"}
         spaceBetween={25}
+        initialSlide={1} // 👈 empieza desde la segunda tarjeta
+        loopedSlides={videos.length} // 🔁 mantiene loop continuo
+        onSwiper={(swiper) => {
+          // Asegura que el autoplay arranque en la correcta
+          setTimeout(() => swiper.slideToLoop(1, 0), 150);
+        }}
         className="w-full max-w-5xl select-none"
       >
         {videos.map((video, index) => (
           <SwiperSlide
             key={index}
             style={{
-              width: "300px", // 🔹 fija ancho de cada tarjeta (ajustable)
+              width: "300px",
               maxWidth: "80vw",
             }}
           >
@@ -85,7 +92,7 @@ export default function Carousel() {
                 ) : (
                   <img
                     src={video.src}
-                    alt={video.title || slug}
+                    alt={video.title || `card-${index}`}
                     className="w-full h-[420px] object-cover"
                   />
                 )}
@@ -96,4 +103,4 @@ export default function Carousel() {
       </Swiper>
     </div>
   );
-              }
+          }
