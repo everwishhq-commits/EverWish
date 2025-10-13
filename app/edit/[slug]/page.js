@@ -287,6 +287,7 @@ function GiftCardPopup({ onSelect, onClose, initial }) {
         <button
           onClick={onClose}
           className="absolute right-5 top-4 text-gray-400 hover:text-gray-600"
+          aria-label="Close gift cards"
         >
           ✕
         </button>
@@ -519,7 +520,7 @@ function CheckoutPopup({
             </div>
           </div>
 
-          <div className="h-px bg-gray-200 my-2" />
+        <div className="h-px bg-gray-200 my-2" />
           <div className="flex justify-between font-semibold">
             <span>Total</span>
             <span>${total.toFixed(2)}</span>
@@ -663,5 +664,4 @@ export default function EditPage() {
   }, [item, showEdit]);
 
   // Tap de seguridad: si queda atascado en fullscreen, toca para continuar
-  useEffect(() => {
-    const handler = async 
+  useEff
