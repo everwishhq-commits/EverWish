@@ -1,9 +1,9 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 
-/* ------------------------ helpers ------------------------ */
+/* Helpers */
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function defaultMessageFromSlug(slug = "") {
@@ -25,7 +25,7 @@ function defaultMessageFromSlug(slug = "") {
   return "Celebrate this moment with a smile. Wishing you peace and light. ✨";
 }
 
-/* Catálogo compacto + “ver más” */
+/* Gift catalog */
 const GIFT_CATALOG = {
   Popular: [
     { id: "amazon", name: "Amazon" },
@@ -70,20 +70,22 @@ const AMOUNTS = [10, 25, 50, 100];
 
 export default function EditPage() {
   const { slug } = useParams();
+
+  /* State */
   const [item, setItem] = useState(null);
   const [message, setMessage] = useState("");
   const [anim, setAnim] = useState("hearts");
   const [showEdit, setShowEdit] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  // gift card state
+  // Gift
   const [giftModal, setGiftModal] = useState(false);
   const [giftTab, setGiftTab] = useState("Popular");
   const [showMore, setShowMore] = useState(false);
   const [giftBrand, setGiftBrand] = useState(null); // {id,name}
   const [giftAmount, setGiftAmount] = useState(null);
 
-  // checkout modal
+  // Checkout
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [sender, setSender] = useState({ name: "", email: "", phone: "" });
   const [recipient, setRecipient] = useState({
@@ -92,12 +94,11 @@ export default function EditPage() {
     phone: "",
   });
 
-  // precio base de la tarjeta (fijo por ahora)
   const cardPrice = 2.99;
   const giftPrice = giftAmount ? Number(giftAmount) : 0;
   const total = (cardPrice + giftPrice).toFixed(2);
 
-  /* ------------------------ data load ------------------------ */
+  /* Load item */
   useEffect(() => {
     (async () => {
       try {
@@ -112,12 +113,11 @@ export default function EditPage() {
     })();
   }, [slug]);
 
-  /* --------------------- fullscreen intro -------------------- */
+  /* Fullscreen intro (3s + barra) */
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
-        // Barra de progreso 3s
         const start = performance.now();
         const DURATION = 3000;
         const tick = () => {
@@ -127,21 +127,15 @@ export default function EditPage() {
         };
         requestAnimationFrame(tick);
 
-        // Intento de fullscreen (no bloquea si falla)
         const el = document.documentElement;
-        if (el.requestFullscreen) {
-          el.requestFullscreen().catch(() => {});
-        } else if (el.webkitRequestFullscreen) {
-          el.webkitRequestFullscreen();
-        }
+        if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+        else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
 
         await sleep(3000);
 
-        // Salida segura de fullscreen (si aplica)
         if (document.fullscreenElement && document.exitFullscreen) {
           await document.exitFullscreen().catch(() => {});
         }
-
         if (mounted) setShowEdit(true);
       } catch {
         setShowEdit(true);
@@ -152,7 +146,7 @@ export default function EditPage() {
     };
   }, []);
 
-  /* --------------------- animations layer -------------------- */
+  /* Front effects */
   const Effects = useMemo(() => {
     if (anim === "hearts") {
       return (
@@ -165,7 +159,7 @@ export default function EditPage() {
               animate={{
                 opacity: [0, 1, 0],
                 y: [0, -120],
-                x: [0, (Math.random() * 80 - 40)],
+                x: [0, Math.random() * 80 - 40],
                 scale: [0.8, 1.2, 0.6],
               }}
               transition={{
@@ -195,7 +189,7 @@ export default function EditPage() {
               animate={{
                 opacity: [0, 1, 0],
                 y: [0, -100],
-                x: [0, (Math.random() * 100 - 50)],
+                x: [0, Math.random() * 100 - 50],
                 scale: [0.6, 1.1, 0.6],
               }}
               transition={{
@@ -250,18 +244,13 @@ export default function EditPage() {
 
   if (!item) return null;
 
-  /* ------------------------ step 1 ------------------------ */
+  /* Step 1: Fullscreen preview con barra */
   if (!showEdit) {
     return (
       <div className="fixed inset-0 bg-black">
-        {/* barra progreso */}
         <div className="absolute left-0 right-0 bottom-0 h-1 bg-white/20">
-          <div
-            className="h-full bg-white"
-            style={{ width: `${progress}%` }}
-          />
+          <div className="h-full bg-white" style={{ width: `${progress}%` }} />
         </div>
-
         {item.src?.toLowerCase().endsWith(".mp4") ? (
           <video
             src={item.src}
@@ -272,13 +261,17 @@ export default function EditPage() {
             className="w-full h-full object-cover"
           />
         ) : (
-          <img src={item.src} alt={slug} className="w-full h-full object-cover" />
+          <img
+            src={item.src}
+            alt={slug}
+            className="w-full h-full object-cover"
+          />
         )}
       </div>
     );
   }
 
-  /* ------------------------ UI pieces ------------------------ */
+  /* Gift modal */
   function GiftModal() {
     const visibleOptions = showMore
       ? [...(GIFT_CATALOG[giftTab] || []), ...(EXTRA_OPTIONS[giftTab] || [])]
@@ -297,7 +290,6 @@ export default function EditPage() {
 
           <h3 className="text-xl font-semibold mb-3">Choose a Gift Card</h3>
 
-          {/* tabs + dropdown “more” juntos */}
           <div className="flex items-center justify-between mb-4 gap-2">
             <div className="flex gap-2">
               {Object.keys(GIFT_CATALOG).map((t) => (
@@ -317,19 +309,14 @@ export default function EditPage() {
                 </button>
               ))}
             </div>
-
-            {/* desplegable “More in {tab}” */}
-            <div className="relative">
-              <button
-                onClick={() => setShowMore((s) => !s)}
-                className="px-3 py-1.5 rounded-full text-sm bg-gray-100 text-gray-700"
-              >
-                {showMore ? "Hide" : `More in ${giftTab}`}
-              </button>
-            </div>
+            <button
+              onClick={() => setShowMore((s) => !s)}
+              className="px-3 py-1.5 rounded-full text-sm bg-gray-100 text-gray-700"
+            >
+              {showMore ? "Hide" : `More in ${giftTab}`}
+            </button>
           </div>
 
-          {/* grid opciones */}
           <div className="grid grid-cols-2 gap-3">
             {visibleOptions.map((opt) => {
               const active = giftBrand?.id === opt.id;
@@ -380,8 +367,8 @@ export default function EditPage() {
     );
   }
 
+  /* Checkout modal */
   function CheckoutModal() {
-    const required = "text-sm text-gray-600";
     const inputCls =
       "w-full rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:ring-2 focus:ring-pink-400";
 
@@ -391,6 +378,7 @@ export default function EditPage() {
           <button
             onClick={() => setCheckoutOpen(false)}
             className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
+            aria-label="close"
           >
             ✕
           </button>
@@ -399,85 +387,72 @@ export default function EditPage() {
 
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <p className={required}>
+              <p className="text-sm text-gray-600">
                 Sender <span className="text-pink-600">*</span>
               </p>
               <input
-                required
                 placeholder="Full name"
                 className={inputCls}
                 value={sender.name}
-                onChange={(e) =>
-                  setSender((s) => ({ ...s, name: e.target.value }))
-                }
+                onChange={(e) => setSender({ ...sender, name: e.target.value })}
               />
               <input
-                required
                 placeholder="Email"
                 type="email"
                 className={`${inputCls} mt-2`}
                 value={sender.email}
-                onChange={(e) =>
-                  setSender((s) => ({ ...s, email: e.target.value }))
-                }
+                onChange={(e) => setSender({ ...sender, email: e.target.value })}
               />
               <input
-                required
                 placeholder="Phone"
                 className={`${inputCls} mt-2`}
                 value={sender.phone}
-                onChange={(e) =>
-                  setSender((s) => ({ ...s, phone: e.target.value }))
-                }
+                onChange={(e) => setSender({ ...sender, phone: e.target.value })}
               />
             </div>
 
             <div>
-              <p className={required}>
+              <p className="text-sm text-gray-600">
                 Recipient <span className="text-pink-600">*</span>
               </p>
               <input
-                required
                 placeholder="Full name"
                 className={inputCls}
                 value={recipient.name}
                 onChange={(e) =>
-                  setRecipient((s) => ({ ...s, name: e.target.value }))
+                  setRecipient({ ...recipient, name: e.target.value })
                 }
               />
               <input
-                required
                 placeholder="Email"
                 type="email"
                 className={`${inputCls} mt-2`}
                 value={recipient.email}
                 onChange={(e) =>
-                  setRecipient((s) => ({ ...s, email: e.target.value }))
+                  setRecipient({ ...recipient, email: e.target.value })
                 }
               />
               <input
-                required
                 placeholder="Phone"
                 className={`${inputCls} mt-2`}
                 value={recipient.phone}
                 onChange={(e) =>
-                  setRecipient((s) => ({ ...s, phone: e.target.value }))
+                  setRecipient({ ...recipient, phone: e.target.value })
                 }
               />
             </div>
           </div>
 
-          {/* Order summary */}
           <div className="mt-6 rounded-2xl border border-gray-200 p-4">
             <p className="font-semibold mb-2">Order summary</p>
             <div className="flex justify-between text-sm">
               <span>Card</span>
               <span>${cardPrice.toFixed(2)}</span>
             </div>
+
             <div className="flex justify-between text-sm mt-1 items-center">
               <span>
-                Gift Card{" "}
-                {giftBrand ? `— ${giftBrand.name} $${giftAmount}` : "(none)"}
+                Gift Card {giftBrand ? `— ${giftBrand.name} $${giftAmount}` : "(none)"}
               </span>
               <div className="flex items-center gap-2">
                 {giftBrand ? (
@@ -510,6 +485,7 @@ export default function EditPage() {
                 )}
               </div>
             </div>
+
             <div className="h-px bg-gray-200 my-3" />
             <div className="flex justify-between font-semibold">
               <span>Total</span>
@@ -520,7 +496,6 @@ export default function EditPage() {
           <button
             className="mt-6 w-full rounded-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3"
             onClick={() => {
-              // Validación mínima en cliente
               if (
                 !sender.name ||
                 !sender.email ||
@@ -529,10 +504,9 @@ export default function EditPage() {
                 !recipient.email ||
                 !recipient.phone
               ) {
-                alert("Please complete the required fields (*)");
+                alert("Please complete all required fields (*)");
                 return;
               }
-              // Aquí llamarías a tu endpoint de pago / stripe intent.
               alert(
                 `Ready to pay $${total}\nGift: ${
                   giftBrand ? `${giftBrand.name} $${giftAmount}` : "none"
@@ -547,10 +521,10 @@ export default function EditPage() {
     );
   }
 
-  /* ------------------------ step 2 ------------------------ */
+  /* Step 2: Editor */
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 relative bg-[#eefdff] min-h-screen overflow-hidden">
-      {/* efectos globales encima */}
+    <main className="mx-auto max-w-3xl px-4 py-8 relative bg-[#fff8f5] min-h-screen overflow-hidden">
+      {/* efectos arriba de todo */}
       {Effects}
 
       <div className="relative w-full rounded-3xl shadow-md overflow-hidden bg-white z-[10]">
@@ -573,7 +547,7 @@ export default function EditPage() {
       </div>
 
       <section className="mt-6 bg-white rounded-3xl shadow-md p-6 relative z-[20]">
-        {/* efectos dentro del cuadro también */}
+        {/* efectos también dentro del cuadro */}
         <div className="absolute inset-0">{Effects}</div>
 
         <h2 className="text-xl font-semibold text-center mb-4 relative z-10">
@@ -587,7 +561,6 @@ export default function EditPage() {
           className="w-full rounded-2xl border border-gray-300 p-4 text-center focus:ring-2 focus:ring-pink-400 relative z-10 bg-white"
         />
 
-        {/* anim selector */}
         <select
           value={anim}
           onChange={(e) => setAnim(e.target.value)}
@@ -600,4 +573,41 @@ export default function EditPage() {
         </select>
 
         {/* botones principales */}
-        <div className="mt
+        <div className="mt-4 grid grid-cols-2 gap-3 relative z-10">
+          <button
+            onClick={() => setGiftModal(true)}
+            className="rounded-full bg-amber-400 hover:bg-amber-500 text-black font-semibold py-3"
+          >
+            🎁 Choose Gift Card
+          </button>
+          <button
+            onClick={() => setCheckoutOpen(true)}
+            className="rounded-full bg-purple-400 hover:bg-purple-500 text-white font-semibold py-3"
+          >
+            Checkout 💜
+          </button>
+        </div>
+
+        {/* seleccionado + trash */}
+        {giftBrand && (
+          <div className="mt-3 flex items-center justify-center gap-3 text-sm text-gray-700">
+            <span>
+              Selected: <b>{giftBrand.name}</b> — ${giftAmount}.00
+            </span>
+            <button
+              title="Remove gift card"
+              onClick={() => {
+                setGiftBrand(null);
+                setGiftAmount(null);
+              }}
+              className="text-gray-500 hover:text-red-500"
+            >
+              🗑️
+            </button>
+          </div>
+        )}
+      </section>
+
+      {giftModal && <GiftModal />}
+      {checkoutOpen && <CheckoutModal />}
+    </m
