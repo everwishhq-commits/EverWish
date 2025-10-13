@@ -23,7 +23,7 @@ export default function Carousel() {
     fetchVideos();
   }, []);
 
-  // Pantalla completa + envío al editor
+  // 🔹 Pantalla completa + envío al editor
   const handleClick = async (slug) => {
     const el = document.documentElement;
     try {
@@ -38,24 +38,30 @@ export default function Carousel() {
   return (
     <div className="relative mt-8 mb-10">
       <Swiper
-        key={videos.length} // fuerza reinicio si cambia lista
-        centeredSlides
-        loop={true}
-        rewind={false}
+        key={videos.length} // asegura actualización limpia
+        centeredSlides={true}
+        loop={true} // 🔁 loop infinito real
         grabCursor={true}
-        speed={850}
+        speed={900}
         autoplay={{
-          delay: 2500,
+          delay: 2600,
           disableOnInteraction: false,
+          pauseOnMouseEnter: false,
+          stopOnLastSlide: false, // 🔹 evita que se detenga
         }}
-        pagination={{ clickable: true }}
+        pagination={{
+          clickable: true,
+          bulletActiveClass: "swiper-pagination-bullet-active bg-pink-500",
+        }}
         modules={[Pagination, Autoplay]}
+        slidesPerView={1.2}
+        spaceBetween={15}
         breakpoints={{
-          320: { slidesPerView: 1.2, spaceBetween: 10 },
-          480: { slidesPerView: 1.5, spaceBetween: 15 },
-          768: { slidesPerView: 2, spaceBetween: 20 },
+          480: { slidesPerView: 1.6, spaceBetween: 20 },
+          768: { slidesPerView: 2.2, spaceBetween: 25 },
           1024: { slidesPerView: 3, spaceBetween: 30 },
         }}
+        onAutoplayStop={(swiper) => swiper.autoplay.start()} // seguridad extra
         className="w-full max-w-5xl select-none"
       >
         {videos.map((video, index) => (
@@ -79,7 +85,7 @@ export default function Carousel() {
                 ) : (
                   <img
                     src={video.src}
-                    alt={video.title}
+                    alt={video.title || `card-${index}`}
                     className="w-full h-[450px] object-cover"
                   />
                 )}
@@ -90,4 +96,4 @@ export default function Carousel() {
       </Swiper>
     </div>
   );
-          }
+                }
