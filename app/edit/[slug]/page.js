@@ -3,70 +3,47 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 
-// 💌 Mensaje automático según slug
+// 💌 Mensaje automático
 function defaultMessageFromSlug(slug) {
   const s = (slug || "").toLowerCase();
-  if (/christmas|navidad/.test(s))
-    return "May your days be merry, bright, and filled with love. 🎄✨";
   if (/halloween/.test(s) && /love/.test(s))
     return "Between scares and sighs, my heart still chooses you. 🖤🎃";
-  if (/halloween/.test(s))
-    return "Wishing you a spook-tacular night full of magic and candy! 👻🍬";
-  if (/thanksgiving/.test(s))
-    return "Grateful for every blessing and every smile. 🦃🍁";
-  if (/birthday/.test(s))
-    return "Happy Birthday! Wishing you joy, laughter, and sweet surprises. 🎉🎂";
-  if (/love|valentine/.test(s))
+  if (/zombie/.test(s) && /birthday/.test(s))
+    return "Wishing you laughs, brains, and cake on your special day! 🧟‍♂️🎂";
+  if (/ghost/.test(s) && /love/.test(s))
+    return "Sending ghostly hugs and endless love from the beyond. 👻💞";
+  if (/love/.test(s))
     return "Thank you for existing. Let love’s magic wrap around you today. 💖";
-  if (/condolence|loss|memory|funeral/.test(s))
-    return "May peace and love comfort your heart today and always. 🕊️🤍";
-  if (/independence|july|usa/.test(s))
-    return "Celebrate freedom and unity. Happy Independence Day! 🇺🇸🎆";
-  if (/easter|bunny/.test(s))
-    return "Let joy and renewal bloom within you. 🐰🌸";
-  if (/newyear|year/.test(s))
-    return "A fresh start, new dreams, and endless joy. ✨🎆";
-  return "Celebrate this moment with a smile. Wishing you peace and light. ✨";
-}
-
-// 🎇 Conjunto de animaciones según categoría
-function getAnimationsForSlug(slug) {
-  const s = slug.toLowerCase();
-  if (/christmas|navidad/.test(s))
-    return ["🎄 Snow Glow", "🎁 Santa Spark", "✨ Twinkle Lights", "❄️ Snowfall", "🕯️ Candle Light", "🎅 Gift Pop", "🌟 Star Shine", "💫 Magic Dust", "🧦 Cozy Socks", "🔔 Jingle Bells"];
-  if (/halloween/.test(s))
-    return ["🎃 Pumpkin Glow", "👻 Ghost Drift", "🕸️ Web Fall", "🧙‍♀️ Witch Dust", "🦇 Bat Flight", "🪄 Spark Potion", "💀 Skull Flicker", "🕯️ Candle Mist", "🌕 Moonlight Fade", "🍬 Candy Rain"];
-  if (/thanksgiving/.test(s))
-    return ["🦃 Turkey Glow", "🍂 Leaf Drift", "🍁 Fall Wind", "🕯️ Warm Light", "🥧 Pie Puff", "🌻 Harvest Bloom", "🍗 Feast Fade", "🌾 Grain Wave", "🍃 Gentle Breeze", "🔥 Hearth Flicker"];
   if (/birthday/.test(s))
-    return ["🎉 Confetti Burst", "🎂 Cake Spark", "🎈 Balloon Rise", "✨ Glitter Pop", "🎊 Party Stream", "💝 Ribbon Glow", "🌈 Color Rain", "🎁 Gift Slide", "🪩 Disco Spin", "🥳 Smile Twirl"];
-  if (/love|valentine/.test(s))
-    return ["💖 Floating Hearts", "💘 Cupid Spark", "💞 Pink Glow", "🌹 Rose Fall", "💋 Kiss Burst", "✨ Soft Sparkle", "🌸 Bloom Fade", "💕 Heart Trail", "💫 Romantic Dust", "🕯️ Candle Flicker"];
-  if (/condolence|loss|memory|funeral/.test(s))
-    return ["🕊️ Dove Flight", "🌿 Leaf Drift", "🌧️ Soft Rain", "💫 Gentle Light", "🌸 Petal Fall", "✨ Peace Glow", "🌙 Moon Fade", "🪶 Feather Drift", "🕯️ Candle Calm", "🌾 Serenity Wave"];
-  if (/independence|july|usa/.test(s))
-    return ["🇺🇸 Flag Wave", "🎆 Firework Burst", "✨ Star Spark", "🗽 Liberty Glow", "🎇 Light Rain", "🔥 Spark Trail", "💫 Freedom Beam", "🎉 RedWhiteBlue", "🌟 Sky Flash", "🦅 Eagle Sweep"];
-  if (/easter|bunny/.test(s))
-    return ["🐰 Hop Trail", "🌸 Flower Bloom", "🌼 Petal Pop", "🥚 Egg Jump", "🌷 Spring Glow", "✨ Gentle Sparkle", "☀️ Morning Shine", "🕊️ Dove Peace", "💐 Joy Spread", "🍃 Fresh Air"];
-  if (/newyear|year/.test(s))
-    return ["🎆 Fireworks", "✨ Glitter Burst", "🎇 Star Rain", "🌟 Spark Trail", "🎉 Pop Stream", "🍾 Champagne Rise", "💫 Midnight Glow", "🕛 Clock Flash", "🎊 Joy Burst", "🌈 New Dawn"];
-  return ["✨ Sparkles", "🎉 Confetti", "💖 Hearts", "🌸 Bloom", "🌟 Shine", "🕊️ Peace", "🌈 Glow", "💫 Dust", "🎇 Light", "❌ None"];
+    return "Happy Birthday! Wishing you a day full of joy and surprises. 🎉";
+  return "Celebrate this moment with a smile. Wishing you peace and light. ✨";
 }
 
 export default function EditPage() {
   const { slug } = useParams();
   const [item, setItem] = useState(null);
   const [message, setMessage] = useState("");
-  const [anim, setAnim] = useState("");
-  const [animOptions, setAnimOptions] = useState([]);
+  const [anim, setAnim] = useState("sparkles");
+
   const [showEdit, setShowEdit] = useState(false);
   const [progress, setProgress] = useState(0);
+
   const [showGiftPopup, setShowGiftPopup] = useState(false);
   const [giftSelection, setGiftSelection] = useState({ brand: "", amount: 0 });
+
   const [showCheckout, setShowCheckout] = useState(false);
+
   const CARD_PRICE = 5;
 
-  // 🔹 Pantalla inicial con barra de progreso
+  // 🎬 Pantalla completa solo para MP4
+  const handleFullscreen = async () => {
+    try {
+      const el = document.documentElement;
+      if (el.requestFullscreen) await el.requestFullscreen();
+      else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+    } catch {}
+  };
+
   useEffect(() => {
     (async () => {
       try {
@@ -75,35 +52,36 @@ export default function EditPage() {
         const found = list.find((v) => v.slug === slug);
         setItem(found || null);
         setMessage(defaultMessageFromSlug(slug));
-        setAnimOptions(getAnimationsForSlug(slug));
-        setAnim(getAnimationsForSlug(slug)[0]); // animación inicial
-
-        const el = document.documentElement;
-        if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
-        const start = performance.now();
-        const duration = 3000;
-
-        const tick = () => {
-          const p = Math.min(1, (performance.now() - start) / duration);
-          setProgress(Math.round(p * 100));
-          if (p < 1) requestAnimationFrame(tick);
-        };
-        requestAnimationFrame(tick);
-
-        setTimeout(async () => {
-          if (document.fullscreenElement) await document.exitFullscreen();
-          setShowEdit(true);
-        }, 3000);
-      } catch {
-        setShowEdit(true);
+      } catch (e) {
+        console.error("Error loading videos:", e);
       }
     })();
   }, [slug]);
 
-  // ✨ Render animación seleccionada
+  // 🕒 Barra de progreso
+  const startProgress = () => {
+    const start = performance.now();
+    const duration = 3000;
+    const tick = () => {
+      const p = Math.min(1, (performance.now() - start) / duration);
+      setProgress(Math.round(p * 100));
+      if (p < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  };
+
+  // ✨ Efectos visuales
   const renderEffect = () => {
-    if (!anim || anim.includes("None")) return null;
-    const emoji = anim.split(" ")[0];
+    const symbol =
+      anim === "sparkles"
+        ? "✨"
+        : anim === "hearts"
+        ? "💖"
+        : anim === "confetti"
+        ? "•"
+        : null;
+    if (!symbol) return null;
+
     return Array.from({ length: 20 }).map((_, i) => (
       <motion.span
         key={i}
@@ -121,51 +99,273 @@ export default function EditPage() {
           delay: i * 0.25,
         }}
         style={{
+          color:
+            anim === "confetti"
+              ? ["#ff80b5", "#ffd700", "#4dd4ff", "#baffc9"][
+                  Math.floor(Math.random() * 4)
+                ]
+              : anim === "hearts"
+              ? "#ff70a6"
+              : "#ffd700",
           top: `${Math.random() * 100}%`,
           left: `${Math.random() * 100}%`,
         }}
       >
-        {emoji}
+        {symbol}
       </motion.span>
     ));
   };
 
-  // 🖼️ Pantalla inicial
+  // 💝 Popup Gift Cards
+  const GiftCardPopup = () => {
+    const tabs = ["Popular", "Lifestyle", "Digital"];
+    const [activeTab, setActiveTab] = useState("Popular");
+    const [expanded, setExpanded] = useState({});
+    const [tempBrand, setTempBrand] = useState(giftSelection.brand || "");
+    const [amount, setAmount] = useState(giftSelection.amount || 0);
+
+    const cards = {
+      Popular: {
+        featured: ["Amazon", "Walmart", "Target"],
+        more: ["Apple", "Best Buy", "Starbucks"],
+      },
+      Lifestyle: {
+        featured: ["Nike", "H&M", "Zara"],
+        more: ["Shein", "Etsy", "Bath & Body Works"],
+      },
+      Digital: {
+        featured: ["Google Play", "Spotify", "Netflix"],
+        more: ["Xbox", "PlayStation", "Disney+"],
+      },
+    };
+
+    const quickAmounts = [5, 10, 25, 50, 100];
+    const onDone = () => {
+      setGiftSelection({ brand: tempBrand, amount: Number(amount) || 0 });
+      setShowGiftPopup(false);
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[70]">
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="bg-white rounded-3xl shadow-2xl w-11/12 max-w-md p-6 relative"
+        >
+          <button
+            onClick={() => setShowGiftPopup(false)}
+            className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
+          >
+            ✕
+          </button>
+
+          <h3 className="text-xl font-bold text-center mb-4 text-pink-600">
+            Choose a Gift Card 🎁
+          </h3>
+
+          <div className="flex justify-center gap-6 mb-4">
+            {tabs.map((t) => (
+              <button
+                key={t}
+                onClick={() => setActiveTab(t)}
+                className={`pb-1 ${
+                  activeTab === t
+                    ? "text-pink-500 border-b-2 border-pink-500 font-semibold"
+                    : "text-gray-400"
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            {cards[activeTab].featured.map((b) => (
+              <button
+                key={b}
+                onClick={() => setTempBrand(b)}
+                className={`border rounded-xl py-2 px-3 text-sm ${
+                  tempBrand === b
+                    ? "bg-pink-100 border-pink-400 text-pink-600"
+                    : "hover:bg-gray-100"
+                }`}
+              >
+                {b}
+              </button>
+            ))}
+          </div>
+
+          {expanded[activeTab] && (
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              {cards[activeTab].more.map((b) => (
+                <button
+                  key={b}
+                  onClick={() => setTempBrand(b)}
+                  className={`border rounded-xl py-2 px-3 text-sm ${
+                    tempBrand === b
+                      ? "bg-pink-100 border-pink-400 text-pink-600"
+                      : "hover:bg-gray-100"
+                  }`}
+                >
+                  {b}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <button
+            onClick={() =>
+              setExpanded((prev) => ({ ...prev, [activeTab]: !prev[activeTab] }))
+            }
+            className="text-sm text-gray-600 hover:text-pink-500 mb-3"
+          >
+            {expanded[activeTab] ? "Hide more ▲" : "More gift cards ▼"}
+          </button>
+
+          <h4 className="text-sm font-semibold mb-2 text-gray-600 text-center">
+            Amount (USD)
+          </h4>
+          <div className="flex gap-2 justify-center mb-4">
+            {quickAmounts.map((a) => (
+              <button
+                key={a}
+                onClick={() => setAmount(a)}
+                className={`px-3 py-1 rounded-lg border transition ${
+                  Number(amount) === a
+                    ? "bg-pink-100 border-pink-500 text-pink-600"
+                    : "hover:bg-gray-100"
+                }`}
+              >
+                ${a}
+              </button>
+            ))}
+          </div>
+
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            disabled={!tempBrand || !Number(amount)}
+            onClick={onDone}
+            className={`w-full rounded-full py-3 font-semibold transition ${
+              !tempBrand || !Number(amount)
+                ? "bg-pink-300 text-white cursor-not-allowed"
+                : "bg-pink-500 hover:bg-pink-600 text-white"
+            }`}
+          >
+            Done
+          </motion.button>
+        </motion.div>
+      </div>
+    );
+  };
+
+  // 💳 Checkout Popup
+  const CheckoutPopup = () => {
+    const total = CARD_PRICE + (giftSelection.amount || 0);
+    return (
+      <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60]">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-3xl shadow-2xl w-11/12 max-w-lg p-6 relative"
+        >
+          <button
+            onClick={() => setShowCheckout(false)}
+            className="absolute right-5 top-4 text-gray-400 hover:text-gray-600"
+          >
+            ✕
+          </button>
+          <h3 className="text-xl font-bold text-center text-pink-600 mb-4">
+            Checkout 💜
+          </h3>
+          <div className="space-y-3">
+            <input placeholder="Your name" className="w-full rounded-xl border p-3 text-center" />
+            <input placeholder="Your email" className="w-full rounded-xl border p-3 text-center" />
+            <input placeholder="Your phone" className="w-full rounded-xl border p-3 text-center" />
+            <input placeholder="Recipient name" className="w-full rounded-xl border p-3 text-center" />
+            <input placeholder="Recipient email" className="w-full rounded-xl border p-3 text-center" />
+            <input placeholder="Recipient phone" className="w-full rounded-xl border p-3 text-center" />
+          </div>
+          <div className="mt-5 text-center text-gray-700 font-medium">
+            Total: ${total}
+          </div>
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            className="w-full mt-4 rounded-full bg-[#b89cff] hover:bg-[#9c7ff9] text-white font-semibold py-3 transition"
+          >
+            Confirm & Pay 💳
+          </motion.button>
+        </motion.div>
+      </div>
+    );
+  };
+
+  if (!item) return null;
+
+  // 🎥 Pantalla inicial fullscreen y transición
   if (!showEdit)
     return (
-      <div className="fixed inset-0 flex justify-center items-center bg-black">
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/30">
-          <div className="h-full bg-white transition-all" style={{ width: `${progress}%` }} />
-        </div>
-        {item?.src ? (
-          item.src.endsWith(".mp4") ? (
-            <video src={item.src} autoPlay muted loop playsInline className="w-full h-full object-cover" />
-          ) : (
-            <img src={item.src} alt={slug} className="w-full h-full object-cover" />
-          )
-        ) : null}
+      <div
+        className="fixed inset-0 flex justify-center items-center bg-black"
+        onClick={async () => {
+          if (item.src?.endsWith(".mp4")) {
+            await handleFullscreen();
+            startProgress();
+            setTimeout(async () => {
+              if (document.fullscreenElement) await document.exitFullscreen();
+              setShowEdit(true);
+            }, 3000);
+          }
+        }}
+      >
+        {item.src?.endsWith(".mp4") ? (
+          <>
+            <video
+              src={item.src}
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/30">
+              <div
+                className="h-full bg-white transition-all"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </>
+        ) : (
+          <img
+            src={item.src}
+            alt={slug}
+            className="w-full h-full object-cover"
+          />
+        )}
       </div>
     );
 
   // 🌸 Edición
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 relative bg-[#fff8f5] min-h-screen overflow-hidden">
-      {/* Animación activa */}
       <div className="absolute inset-0 pointer-events-none">{renderEffect()}</div>
 
       <div className="relative z-20">
-        {/* Imagen o video */}
         <div className="relative w-full rounded-3xl shadow-md overflow-hidden bg-white">
-          {item?.src?.endsWith(".mp4") ? (
-            <video src={item.src} muted loop autoPlay playsInline className="w-full h-[420px] object-contain" />
-          ) : (
-            <img src={item.src} alt={slug} className="w-full h-[420px] object-contain" />
-          )}
+          <video
+            src={item.src}
+            muted
+            loop
+            autoPlay
+            playsInline
+            className="w-full h-[420px] object-contain"
+          />
         </div>
 
-        {/* Mensaje + animaciones + botones */}
         <section className="mt-6 bg-white rounded-3xl shadow-md p-6">
-          <h2 className="text-xl font-semibold text-center mb-4">Customize your message ✨</h2>
+          <h2 className="text-xl font-semibold text-center mb-4">
+            Customize your message ✨
+          </h2>
+
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
@@ -173,21 +373,17 @@ export default function EditPage() {
             className="w-full rounded-2xl border border-gray-300 p-4 text-center focus:ring-2 focus:ring-pink-400"
           />
 
-          {/* Dropdown dinámico */}
           <select
             value={anim}
             onChange={(e) => setAnim(e.target.value)}
             className="w-full mt-3 rounded-2xl border border-gray-300 p-3 text-center focus:ring-2 focus:ring-pink-400"
           >
-            {animOptions.map((a, i) => (
-              <option key={i} value={a}>
-                {a}
-              </option>
-            ))}
-            <option value="❌ None">❌ None</option>
+            <option value="sparkles">✨ Sparkles</option>
+            <option value="confetti">🎉 Confetti</option>
+            <option value="hearts">💖 Hearts</option>
+            <option value="none">❌ None</option>
           </select>
 
-          {/* Botones */}
           <div className="flex justify-between mt-4">
             <button
               onClick={() => setShowGiftPopup(true)}
@@ -203,8 +399,26 @@ export default function EditPage() {
               Checkout 💜
             </button>
           </div>
+
+          {giftSelection.brand && (
+            <div className="mt-3 flex items-center justify-center text-sm text-gray-600 gap-2">
+              <span>
+                Selected: <strong>{giftSelection.brand}</strong> — $
+                {giftSelection.amount.toFixed(2)}
+              </span>
+              <button
+                onClick={() => setGiftSelection({ brand: "", amount: 0 })}
+                className="text-pink-400 hover:text-pink-600 transition"
+              >
+                🗑️
+              </button>
+            </div>
+          )}
         </section>
       </div>
+
+      {showGiftPopup && <GiftCardPopup />}
+      {showCheckout && <CheckoutPopup />}
     </main>
   );
-            }
+        }
