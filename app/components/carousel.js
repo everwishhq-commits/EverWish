@@ -15,7 +15,7 @@ export default function Carousel() {
       try {
         const res = await fetch("/api/videos");
         const data = await res.json();
-        setVideos(data.slice(0, 10)); // puedes cambiar 10 por el total que tengas
+        setVideos(data.slice(0, 10));
       } catch (err) {
         console.error("❌ Error cargando videos:", err);
       }
@@ -23,7 +23,6 @@ export default function Carousel() {
     fetchVideos();
   }, []);
 
-  // Pantalla completa + envío al editor
   const handleClick = async (slug) => {
     const el = document.documentElement;
     try {
@@ -39,33 +38,32 @@ export default function Carousel() {
     <div className="relative mt-8 mb-10">
       <Swiper
         key={videos.length}
-        centeredSlides={true}
+        modules={[Pagination, Autoplay]}
         loop={true}
-        loopedSlides={videos.length}
-        loopAdditionalSlides={3}
+        centeredSlides={true}
+        watchSlidesProgress={true} // 🔹 mantiene el foco centrado
         grabCursor={true}
-        speed={800}
+        speed={900}
         autoplay={{
           delay: 2500,
           disableOnInteraction: false,
-          pauseOnMouseEnter: false,
-          stopOnLastSlide: false,
         }}
         pagination={{
           clickable: true,
           bulletActiveClass: "swiper-pagination-bullet-active bg-pink-500",
         }}
-        modules={[Pagination, Autoplay]}
-        breakpoints={{
-          320: { slidesPerView: 1.3, spaceBetween: 10 },
-          480: { slidesPerView: 1.6, spaceBetween: 15 },
-          768: { slidesPerView: 2.3, spaceBetween: 20 },
-          1024: { slidesPerView: 3, spaceBetween: 25 },
-        }}
+        slidesPerView={"auto"} // 🔹 auto width (necesario para centrar)
+        spaceBetween={25}
         className="w-full max-w-5xl select-none"
       >
         {videos.map((video, index) => (
-          <SwiperSlide key={index}>
+          <SwiperSlide
+            key={index}
+            style={{
+              width: "300px", // 🔹 fija ancho de cada tarjeta (ajustable)
+              maxWidth: "80vw",
+            }}
+          >
             {({ isActive }) => (
               <div
                 onClick={() => handleClick(video.slug)}
@@ -82,13 +80,13 @@ export default function Carousel() {
                     loop
                     muted
                     playsInline
-                    className="w-full h-[450px] object-cover"
+                    className="w-full h-[420px] object-cover"
                   />
                 ) : (
                   <img
                     src={video.src}
-                    alt={video.title}
-                    className="w-full h-[450px] object-cover"
+                    alt={video.title || slug}
+                    className="w-full h-[420px] object-cover"
                   />
                 )}
               </div>
@@ -98,4 +96,4 @@ export default function Carousel() {
       </Swiper>
     </div>
   );
-}
+              }
