@@ -16,28 +16,10 @@ export default function Carousel() {
         const res = await fetch("/api/videos");
         const data = await res.json();
 
-        // Si no hay videos cargados, usa un fallback básico
-        if (!data || data.length === 0) {
-          setVideos([
-            {
-              slug: "pumpkin-halloween",
-              title: "Have a pumpkin-tastic Halloween!",
-              src: "/cards/pumpkin.png",
-            },
-            {
-              slug: "zombie-birthday",
-              title: "Have a zombie-licious birthday!",
-              src: "/cards/zombie.png",
-            },
-            {
-              slug: "ghost-halloween",
-              title: "Boo! You’re my favorite human to haunt!",
-              src: "/cards/ghost.png",
-            },
-          ]);
-        } else {
-          setVideos(data.slice(0, 10));
-        }
+        // 🔸 Si hay menos de 10, repite para mantener loop fluido
+        const filled =
+          data.length < 10 ? [...data, ...data, ...data].slice(0, 10) : data;
+        setVideos(filled);
       } catch (err) {
         console.error("❌ Error cargando videos:", err);
       }
@@ -45,7 +27,7 @@ export default function Carousel() {
     fetchVideos();
   }, []);
 
-  // 🔹 Click: pantalla completa + redirección
+  // 🔹 Al hacer click → pantalla completa + redirección
   const handleClick = async (slug, e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -65,24 +47,24 @@ export default function Carousel() {
     <div className="relative mt-8 mb-10 pb-8">
       <Swiper
         modules={[Pagination, Autoplay]}
-        loop={true} // 🔁 Activa loop continuo
+        slidesPerView={1.2}
+        spaceBetween={15}
         centeredSlides={true}
-        slidesPerView={"auto"}
-        spaceBetween={20}
-        speed={900}
+        loop={true} // ✅ loop real
+        loopAdditionalSlides={10} // fuerza a duplicar slides para looping suave
+        speed={850}
         grabCursor={true}
         autoplay={{
-          delay: 2500, // ⏱ cada 2.5 segundos
-          disableOnInteraction: false, // sigue corriendo tras tocar
-          pauseOnMouseEnter: false,
+          delay: 2500,
+          disableOnInteraction: false, // 🔁 sigue moviéndose aunque lo toques
         }}
         pagination={{
           clickable: false,
           renderBullet: (index, className) =>
             `<span class="${className}" style="
               background-color: #ffcce0;
-              width: 8px;
-              height: 8px;
+              width: 7px;
+              height: 7px;
               margin: 0 5px;
               border-radius: 50%;
               display: inline-block;
@@ -105,6 +87,12 @@ export default function Carousel() {
               b.style.transform = "scale(1)";
             }
           });
+        }}
+        breakpoints={{
+          320: { slidesPerView: 1.2 },
+          480: { slidesPerView: 1.5 },
+          768: { slidesPerView: 2 },
+          1024: { slidesPerView: 3 },
         }}
         className="w-full max-w-5xl select-none"
       >
@@ -145,4 +133,4 @@ export default function Carousel() {
       </Swiper>
     </div>
   );
-}
+                }
