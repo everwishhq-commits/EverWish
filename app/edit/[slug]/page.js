@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { loadStripe } from "@stripe/stripe-js";
@@ -11,7 +11,7 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 
-/* ---------------- Stripe (publishable) ---------------- */
+/* ---------------- Stripe publishable ---------------- */
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
 );
@@ -191,7 +191,7 @@ function getAnimationsForSlug(slug) {
   return Array.from(new Set(bag)).slice(0, 10);
 }
 
-/* ---------------- Stripe inline form ---------------- */
+/* ---------------- Formulario Stripe inline ---------------- */
 function InlineStripeForm({ total, onSuccess }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -224,7 +224,7 @@ function InlineStripeForm({ total, onSuccess }) {
         alert("🎉 Payment successful!");
         onSuccess?.();
       }
-    } catch (err) {
+    } catch {
       alert("Payment failed. Try again.");
     } finally {
       setLoading(false);
@@ -386,7 +386,7 @@ function GiftCardPopup({ onSelect, onClose, initial }) {
   );
 }
 
-/* ---------------- Checkout modal (con Stripe embebido) ---------------- */
+/* ---------------- Checkout modal (Stripe embebido) ---------------- */
 function CheckoutPopup({
   total,
   gift,
@@ -526,7 +526,7 @@ function CheckoutPopup({
             </div>
           </div>
 
-          <div className="h-px bg-gray-200 my-2" />
+        <div className="h-px bg-gray-200 my-2" />
 
           <div className="flex justify-between font-semibold">
             <span>Total</span>
@@ -644,7 +644,7 @@ export default function EditPage() {
         try {
           const el = document.documentElement;
           if (el.requestFullscreen) await el.requestFullscreen();
-          // Safari/ios
+          // Safari/iOS
           // eslint-disable-next-line no-unused-expressions
           el.webkitRequestFullscreen && el.webkitRequestFullscreen();
         } catch {}
@@ -670,25 +670,6 @@ export default function EditPage() {
     const emoji = anim.split(" ")[0];
     return Array.from({ length: 18 }).map((_, i) => (
       <motion.span
-  key={i}
-  className="absolute text-xl z-[35] pointer-events-none"
-  initial={{ opacity: 0, y: 0 }}
-  animate={{
-    opacity: [0, 0.85, 0],
-    y: [0, -90],
-    x: [0, Math.random() * 100 - 50],
-    scale: [0.95, 1.05, 0.95],
-  }}
-  transition={{
-    duration: 4.8 + Math.random() * 2,
-    repeat: Infinity,
-    ease: "easeInOut",
-    delay: i * 0.22,
-  }}
-  style={{
-    top: `${Math.random() * 100}%`,
-    left: `${Math.random() * 100}%`,
-  }}
->
-  {emoji}
-</motion.span>
+        key={i}
+        className="absolute text-xl z-[35] pointer-events-none"
+        init
