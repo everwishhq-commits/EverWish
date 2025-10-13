@@ -1,28 +1,21 @@
-// ✅ /app/api/payment_intents/route.js
 import Stripe from "stripe";
 
-// Inicializa Stripe con tu clave secreta
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2024-06-20", // importante: define versión estable
+  apiVersion: "2024-06-20",
 });
 
 export async function POST(req) {
   try {
-    const body = await req.json();
-    const amount = Number(body.amount);
-
-    // Validación estricta
+    const { amount } = await req.json();
     if (!amount || isNaN(amount) || amount < 50) {
-      // Stripe exige mínimo $0.50 USD
-      return new Response(
-        JSON.stringify({ error: "Invalid or missing amount" }),
-        { status: 400 }
-      );
+      return new Response(JSON.stringify({ error: "Invalid amount" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
-    // Crear el PaymentIntent
     const paymentIntent = await stripe.paymentIntents.create({
-      amount, // en centavos
+      amount,
       currency: "usd",
       automatic_payment_methods: { enabled: true },
     });
@@ -37,9 +30,7 @@ export async function POST(req) {
   } catch (err) {
     console.error("❌ Stripe error:", err);
     return new Response(
-      JSON.stringify({
-        error: err?.message || "Stripe PaymentIntent creation failed",
-      }),
+      JSON.stringify({ error: err.message || "Payment failed" }),
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
