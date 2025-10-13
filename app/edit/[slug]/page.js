@@ -670,5 +670,25 @@ export default function EditPage() {
     const emoji = anim.split(" ")[0];
     return Array.from({ length: 18 }).map((_, i) => (
       <motion.span
-        key={i}
-        className="absolute text-xl z-[35] pointer-events-no
+  key={i}
+  className="absolute text-xl z-[35] pointer-events-none"
+  initial={{ opacity: 0, y: 0 }}
+  animate={{
+    opacity: [0, 0.85, 0],
+    y: [0, -90],
+    x: [0, Math.random() * 100 - 50],
+    scale: [0.95, 1.05, 0.95],
+  }}
+  transition={{
+    duration: 4.8 + Math.random() * 2,
+    repeat: Infinity,
+    ease: "easeInOut",
+    delay: i * 0.22,
+  }}
+  style={{
+    top: `${Math.random() * 100}%`,
+    left: `${Math.random() * 100}%`,
+  }}
+>
+  {emoji}
+</motion.span>
