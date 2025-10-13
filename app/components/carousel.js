@@ -23,8 +23,10 @@ export default function Carousel() {
     fetchVideos();
   }, []);
 
-  // 🔹 Click = pantalla completa + redirección
-  const handleClick = async (slug) => {
+  // 🎬 Click = pantalla completa + redirección
+  const handleClick = async (slug, e) => {
+    e.preventDefault(); // 🚫 evita que el click interfiera con Swiper (corrige dots)
+    e.stopPropagation();
     const el = document.documentElement;
     try {
       if (el.requestFullscreen) await el.requestFullscreen();
@@ -47,22 +49,36 @@ export default function Carousel() {
         grabCursor={true}
         watchSlidesProgress={true}
         loop={true}
-        loopAdditionalSlides={videos.length} // 🔹 corrige loop y dots
-        initialSlide={1} // 🔹 empieza en la segunda
+        loopAdditionalSlides={videos.length}
+        initialSlide={1}
         autoplay={{
           delay: 3000,
           disableOnInteraction: false,
         }}
         pagination={{
-          clickable: true,
-          dynamicBullets: true, // 🔹 animación fluida
+          clickable: false, // 🚫 evita desincronización
+          renderBullet: (index, className) =>
+            `<span class="${className}" style="
+              background-color: #ffcce0;
+              width: 8px;
+              height: 8px;
+              margin: 0 4px;
+              border-radius: 50%;
+              display: inline-block;
+              opacity: 0.6;
+            "></span>`,
         }}
         onSlideChange={(swiper) => {
-          // 🔹 sincroniza los dots reales con el slide activo
-          const realIndex = swiper.realIndex;
+          // 🔄 sincroniza manualmente los dots con el slide activo
           const bullets = document.querySelectorAll(".swiper-pagination-bullet");
           bullets.forEach((b, i) => {
-            b.classList.toggle("swiper-pagination-bullet-active", i === realIndex);
+            if (i === swiper.realIndex) {
+              b.style.opacity = "1";
+              b.style.backgroundColor = "#ff7eb9"; // 🌸 rosado activo Everwish
+            } else {
+              b.style.opacity = "0.5";
+              b.style.backgroundColor = "#ffcce0";
+            }
           });
         }}
         className="w-full max-w-5xl select-none"
@@ -77,7 +93,7 @@ export default function Carousel() {
           >
             {({ isActive }) => (
               <div
-                onClick={() => handleClick(video.slug)}
+                onClick={(e) => handleClick(video.slug, e)}
                 className={`cursor-pointer rounded-2xl shadow-lg overflow-hidden transition-all duration-500 ${
                   isActive
                     ? "scale-105 opacity-100 z-50"
