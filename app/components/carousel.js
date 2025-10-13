@@ -6,8 +6,28 @@ import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 
+// 🔹 Generador automático del título/mensaje según el nombre del archivo
+function messageFromSlug(slug) {
+  const s = slug?.toLowerCase() || "";
+  if (/pumpkin/.test(s) && /halloween/.test(s))
+    return "Have a pumpkin-tastic Halloween! 🎃";
+  if (/ghost/.test(s) && /love/.test(s))
+    return "Boo! You’re my favorite human to haunt 💕";
+  if (/zombie/.test(s) && /birthday/.test(s))
+    return "Have a zombie-licious birthday! 🧟‍♂️";
+  if (/unicorn/.test(s))
+    return "Believe in your magic! 🦄✨";
+  if (/graduation/.test(s))
+    return "Congrats on your amazing achievement! 🎓";
+  if (/love/.test(s))
+    return "Love makes every moment magical 💖";
+  if (/condolence/.test(s))
+    return "Sending comfort and light in difficult times 🕊️";
+  return "Make this day unforgettable ✨";
+}
+
 export default function Carousel() {
-  const [videos, setVideos] = useState([]);
+  const [templates, setTemplates] = useState([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -16,10 +36,20 @@ export default function Carousel() {
         const res = await fetch("/api/videos");
         const data = await res.json();
 
-        // 🔸 Si hay menos de 10, repite para mantener loop fluido
-        const filled =
-          data.length < 10 ? [...data, ...data, ...data].slice(0, 10) : data;
-        setVideos(filled);
+        // 🔸 Si hay menos de 7, agrega plantillas base
+        const defaults = [
+          { slug: "pumpkin_halloween", src: "/cards/pumpkin.png" },
+          { slug: "ghost_halloween_love", src: "/cards/ghost.png" },
+          { slug: "zombie_birthday", src: "/cards/zombie.png" },
+          { slug: "unicorn_magic", src: "/cards/unicorn.png" },
+          { slug: "graduation_celebration", src: "/cards/graduation.png" },
+          { slug: "love_romantic", src: "/cards/love.png" },
+          { slug: "condolence_peace", src: "/cards/condolence.png" },
+        ];
+
+        // mezcla los que vienen del servidor con los defaults
+        const merged = [...data, ...defaults].slice(0, 7);
+        setTemplates(merged);
       } catch (err) {
         console.error("❌ Error cargando videos:", err);
       }
@@ -27,7 +57,7 @@ export default function Carousel() {
     fetchVideos();
   }, []);
 
-  // 🔹 Al hacer click → pantalla completa + redirección
+  // 🔹 Click → pantalla completa + ir a editor
   const handleClick = async (slug, e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -47,16 +77,16 @@ export default function Carousel() {
     <div className="relative mt-8 mb-10 pb-8">
       <Swiper
         modules={[Pagination, Autoplay]}
-        slidesPerView={1.2}
-        spaceBetween={15}
+        loop={true}
+        loopAdditionalSlides={7}
         centeredSlides={true}
-        loop={true} // ✅ loop real
-        loopAdditionalSlides={10} // fuerza a duplicar slides para looping suave
+        slidesPerView={"auto"}
+        spaceBetween={20}
         speed={850}
         grabCursor={true}
         autoplay={{
           delay: 2500,
-          disableOnInteraction: false, // 🔁 sigue moviéndose aunque lo toques
+          disableOnInteraction: false,
         }}
         pagination={{
           clickable: false,
@@ -75,7 +105,7 @@ export default function Carousel() {
         onSlideChange={(swiper) => {
           const bullets = document.querySelectorAll(".swiper-pagination-bullet");
           bullets.forEach((b, i) => {
-            if (i === swiper.realIndex % videos.length) {
+            if (i === swiper.realIndex % templates.length) {
               b.style.opacity = "1";
               b.style.backgroundColor = "#ff7eb9";
               b.style.boxShadow = "0 0 6px 2px rgba(255,126,185,0.4)";
@@ -96,36 +126,30 @@ export default function Carousel() {
         }}
         className="w-full max-w-5xl select-none"
       >
-        {videos.map((video, index) => (
+        {templates.map((tpl, index) => (
           <SwiperSlide
             key={index}
             className="!w-[280px] sm:!w-[300px] md:!w-[340px] flex justify-center"
           >
             {({ isActive }) => (
               <div
-                onClick={(e) => handleClick(video.slug, e)}
+                onClick={(e) => handleClick(tpl.slug, e)}
                 className={`cursor-pointer rounded-2xl shadow-lg overflow-hidden transition-all duration-500 ${
                   isActive
                     ? "scale-105 opacity-100 z-50"
                     : "scale-90 opacity-60 z-10"
                 }`}
               >
-                {video.src?.toLowerCase().endsWith(".mp4") ? (
-                  <video
-                    src={video.src}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    className="w-full h-[420px] object-cover"
-                  />
-                ) : (
+                <div className="relative">
                   <img
-                    src={video.src}
-                    alt={video.title || `card-${index}`}
+                    src={tpl.src}
+                    alt={tpl.slug}
                     className="w-full h-[420px] object-cover"
                   />
-                )}
+                  <div className="absolute bottom-4 left-0 right-0 text-center text-sm font-semibold text-gray-800 bg-white/80 py-2 backdrop-blur-md">
+                    {messageFromSlug(tpl.slug)}
+                  </div>
+                </div>
               </div>
             )}
           </SwiperSlide>
@@ -133,4 +157,4 @@ export default function Carousel() {
       </Swiper>
     </div>
   );
-                }
+}
