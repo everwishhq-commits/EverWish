@@ -6,11 +6,29 @@ export default function Carousel() {
   const router = useRouter();
   const [videos, setVideos] = useState([]);
   const [index, setIndex] = useState(0);
+  const [viewportHeight, setViewportHeight] = useState("100vh");
   const autoplayRef = useRef(null);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
 
-  // ✅ Carga de videos desde /api/videos
+  // 🔹 Ajustar altura según dispositivo (sin barras en móvil)
+  useEffect(() => {
+    const updateHeight = () => {
+      const vh = window.visualViewport
+        ? window.visualViewport.height
+        : window.innerHeight;
+      setViewportHeight(`${vh}px`);
+    };
+    updateHeight();
+    window.addEventListener("resize", updateHeight);
+    window.visualViewport?.addEventListener("resize", updateHeight);
+    return () => {
+      window.removeEventListener("resize", updateHeight);
+      window.visualViewport?.removeEventListener("resize", updateHeight);
+    };
+  }, []);
+
+  // 🔹 Cargar videos del API
   useEffect(() => {
     async function fetchVideos() {
       try {
@@ -23,13 +41,12 @@ export default function Carousel() {
     }
 
     fetchVideos();
-
-    // 🔁 Refresca automáticamente cada 24h
+    // Refresca cada 24h
     const refresh = setInterval(fetchVideos, 24 * 60 * 60 * 1000);
     return () => clearInterval(refresh);
   }, []);
 
-  // 🔁 Autoplay cada 3s con loop infinito
+  // 🔁 Autoplay con loop infinito
   useEffect(() => {
     clearInterval(autoplayRef.current);
     if (videos.length > 0) {
@@ -54,7 +71,7 @@ export default function Carousel() {
     }
   };
 
-  // 🖱️ Click → fullscreen + /edit/[slug]
+  // 🖱️ Click → pantalla completa + envío al editor
   const handleClick = async (slug) => {
     try {
       await document.documentElement.requestFullscreen?.();
@@ -63,12 +80,16 @@ export default function Carousel() {
   };
 
   return (
-    <div className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none">
+    <div
+      className="w-full flex flex-col items-center overflow-hidden select-none bg-[#fffaf7]"
+      style={{ height: viewportHeight }}
+    >
+      {/* Contenedor principal */}
       <div
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className="relative w-full max-w-5xl flex justify-center items-center h-[440px]"
+        className="relative flex justify-center items-center w-full h-full"
       >
         {videos.map((video, i) => {
           const offset = (i - index + videos.length) % videos.length;
@@ -94,13 +115,29 @@ export default function Carousel() {
                   loop
                   muted
                   playsInline
-                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] rounded-2xl shadow-lg object-cover bg-white"
+                  className="rounded-3xl shadow-xl bg-white"
+                  style={{
+                    width: "90vw",
+                    maxWidth: "380px",
+                    height: "auto",
+                    maxHeight: "100vh",
+                    objectFit: "cover",
+                    aspectRatio: "auto",
+                  }}
                 />
               ) : (
                 <img
                   src={video.src}
                   alt={video.title}
-                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] rounded-2xl shadow-lg object-cover bg-white"
+                  className="rounded-3xl shadow-xl bg-white"
+                  style={{
+                    width: "90vw",
+                    maxWidth: "380px",
+                    height: "auto",
+                    maxHeight: "100vh",
+                    objectFit: "cover",
+                    aspectRatio: "auto",
+                  }}
                 />
               )}
             </div>
@@ -109,7 +146,7 @@ export default function Carousel() {
       </div>
 
       {/* Dots */}
-      <div className="flex mt-5 gap-2">
+      <div className="absolute bottom-6 flex gap-2">
         {videos.map((_, i) => (
           <span
             key={i}
@@ -122,4 +159,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-          }
+  }
