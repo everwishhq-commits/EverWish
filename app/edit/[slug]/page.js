@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 
-// 🎃 Auto message generator
+// 💬 Mensaje automático según el slug
 function defaultMessageFromSlug(slug) {
   const s = (slug || "").toLowerCase();
   if (/halloween/.test(s) && /love/.test(s))
@@ -29,138 +29,206 @@ export default function EditPage() {
   const [message, setMessage] = useState("");
   const [anim, setAnim] = useState("sparkles");
   const [showEdit, setShowEdit] = useState(false);
-  const [showGiftModal, setShowGiftModal] = useState(false);
-  const [giftCards, setGiftCards] = useState([]);
-  const [selectedGift, setSelectedGift] = useState(null);
-  const [amount, setAmount] = useState("");
-  const [sender, setSender] = useState("");
-  const [receiver, setReceiver] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [showGiftPopup, setShowGiftPopup] = useState(false);
+  const [giftCard, setGiftCard] = useState(null);
+  const [giftAmount, setGiftAmount] = useState(0);
+  const [checkoutInfo, setCheckoutInfo] = useState(null);
+  const [showCheckout, setShowCheckout] = useState(false);
 
-  // 🔹 Load videos & giftcards
+  // 💾 Cargar video/imágen
   useEffect(() => {
     (async () => {
-      try {
-        const res = await fetch("/api/videos", { cache: "no-store" });
-        const list = await res.json();
-        const found = list.find((v) => v.slug === slug);
-        setItem(found || null);
-        setMessage(defaultMessageFromSlug(slug));
+      const res = await fetch("/api/videos", { cache: "no-store" });
+      const list = await res.json();
+      const found = list.find((v) => v.slug === slug);
+      setItem(found || null);
+      setMessage(defaultMessageFromSlug(slug));
 
-        const gifts = await fetch("/videos/giftcards.json");
-        const giftList = await gifts.json();
-        setGiftCards(giftList);
-      } catch (e) {
-        console.error("Error loading data:", e);
-      }
-    })();
-  }, [slug]);
-
-  // 🔹 Fullscreen 3 seconds, then show editor
-  useEffect(() => {
-    const goFull = async () => {
       const el = document.documentElement;
       try {
         if (el.requestFullscreen) await el.requestFullscreen();
         else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
       } catch {}
-    };
-    goFull();
-    setTimeout(async () => {
-      if (document.fullscreenElement) await document.exitFullscreen();
-      setShowEdit(true);
-    }, 3000);
-  }, []);
+      setTimeout(async () => {
+        if (document.fullscreenElement) await document.exitFullscreen();
+        setShowEdit(true);
+      }, 3000);
+    })();
+  }, [slug]);
 
+  // ✨ Animaciones decorativas
   const renderEffect = () => {
-    if (anim === "hearts")
-      return Array.from({ length: 12 }).map((_, i) => (
-        <motion.span
-          key={i}
-          className="absolute text-pink-400 text-2xl"
-          initial={{ opacity: 0, y: 0 }}
-          animate={{
-            opacity: [0, 1, 0],
-            y: [0, -100],
-            x: [0, Math.random() * 80 - 40],
-            scale: [0.8, 1.2, 0],
-          }}
-          transition={{
-            duration: 3 + Math.random() * 2,
-            repeat: Infinity,
-            delay: i * 0.4,
-          }}
-          style={{
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
-          }}
-        >
-          💖
-        </motion.span>
-      ));
-    return null;
+    const effects = {
+      sparkles: "✨",
+      hearts: "💖",
+      confetti: "•",
+    };
+    const symbol = effects[anim] || null;
+    if (!symbol) return null;
+
+    return Array.from({ length: 20 }).map((_, i) => (
+      <motion.span
+        key={i}
+        className="absolute text-xl"
+        initial={{ opacity: 0, y: 0 }}
+        animate={{
+          opacity: [0, 1, 0],
+          y: [0, -100],
+          x: [0, Math.random() * 100 - 50],
+          scale: [0.8, 1.2, 0],
+        }}
+        transition={{
+          duration: 3 + Math.random() * 2,
+          repeat: Infinity,
+          delay: i * 0.3,
+        }}
+        style={{
+          color:
+            anim === "confetti"
+              ? ["#ff80b5", "#ffd700", "#4dd4ff", "#baffc9"][
+                  Math.floor(Math.random() * 4)
+                ]
+              : anim === "hearts"
+              ? "#ff70a6"
+              : "#ffd700",
+          top: `${Math.random() * 100}%`,
+          left: `${Math.random() * 100}%`,
+        }}
+      >
+        {symbol}
+      </motion.span>
+    ));
   };
 
   if (!item) return null;
 
+  // 🎬 Paso 1: pantalla completa
   if (!showEdit) {
     return (
       <div className="fixed inset-0 flex justify-center items-center bg-black">
         {item.src?.toLowerCase().endsWith(".mp4") ? (
-          <video
-            src={item.src}
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="w-full h-full object-cover"
-          />
+          <video src={item.src} autoPlay muted loop playsInline className="w-full h-full object-cover" />
         ) : (
-          <img
-            src={item.src}
-            alt={slug}
-            className="w-full h-full object-cover"
-          />
+          <img src={item.src} alt={slug} className="w-full h-full object-cover" />
         )}
       </div>
     );
   }
 
+  // 🎁 Popup Gift Cards
+  const GiftCardPopup = () => (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+      <div className="bg-white rounded-3xl shadow-2xl w-11/12 max-w-md p-6 relative">
+        <h3 className="text-2xl font-bold text-center mb-4 text-pink-600">Select Your Gift Card 🎁</h3>
+        <select
+          onChange={(e) => setGiftCard(e.target.value)}
+          className="w-full border rounded-2xl p-3 text-center focus:ring-2 focus:ring-pink-400"
+        >
+          <option value="">Choose category</option>
+          <optgroup label="Popular">
+            <option value="Amazon">Amazon</option>
+            <option value="Walmart">Walmart</option>
+            <option value="Target">Target</option>
+          </optgroup>
+          <optgroup label="Tech & Games">
+            <option value="Apple">Apple</option>
+            <option value="Google Play">Google Play</option>
+            <option value="Steam">Steam</option>
+          </optgroup>
+          <optgroup label="Style & Fun">
+            <option value="Sephora">Sephora</option>
+            <option value="Starbucks">Starbucks</option>
+            <option value="Uber Eats">Uber Eats</option>
+          </optgroup>
+        </select>
+
+        <input
+          type="number"
+          min="5"
+          step="5"
+          placeholder="Amount (USD)"
+          className="w-full border rounded-2xl p-3 mt-4 text-center focus:ring-2 focus:ring-pink-400"
+          onChange={(e) => setGiftAmount(Number(e.target.value))}
+        />
+
+        <div className="flex justify-between mt-6">
+          <button
+            className="px-5 py-3 bg-gray-300 rounded-2xl font-semibold"
+            onClick={() => setShowGiftPopup(false)}
+          >
+            Cancel
+          </button>
+          <button
+            className="px-6 py-3 bg-pink-500 text-white rounded-2xl font-semibold"
+            onClick={() => setShowGiftPopup(false)}
+          >
+            Add
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // 🧾 Popup Checkout (emisor/receptor)
+  const CheckoutPopup = () => (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+      <div className="bg-white rounded-3xl shadow-2xl w-11/12 max-w-md p-6 relative">
+        <h3 className="text-2xl font-bold text-center mb-6 text-purple-600">Checkout 🧾</h3>
+
+        <div className="grid grid-cols-1 gap-4">
+          <h4 className="font-semibold text-gray-600">Sender information</h4>
+          <input placeholder="Your Name" className="border rounded-2xl p-3" />
+          <input placeholder="Your Email" className="border rounded-2xl p-3" />
+          <input placeholder="Your Phone" className="border rounded-2xl p-3" />
+
+          <h4 className="font-semibold mt-4 text-gray-600">Recipient information</h4>
+          <input placeholder="Recipient Name" className="border rounded-2xl p-3" />
+          <input placeholder="Recipient Email" className="border rounded-2xl p-3" />
+          <input placeholder="Recipient Phone" className="border rounded-2xl p-3" />
+        </div>
+
+        <div className="mt-6 text-center font-semibold text-lg">
+          Total: ${(10 + (giftAmount || 0)).toFixed(2)}
+        </div>
+
+        <div className="flex justify-between mt-6">
+          <button
+            className="px-5 py-3 bg-gray-300 rounded-2xl font-semibold"
+            onClick={() => setShowCheckout(false)}
+          >
+            Cancel
+          </button>
+          <button className="px-6 py-3 bg-[#b89cff] text-white rounded-2xl font-semibold">
+            Confirm & Pay
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // 🎨 Render principal
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 relative bg-[#fff8f5] min-h-screen overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none z-0">
-        {renderEffect()}
-      </div>
+      <div className="absolute inset-0 pointer-events-none z-0">{renderEffect()}</div>
 
       <div className="relative z-10">
-        {/* Imagen o video */}
         <div className="relative w-full rounded-3xl shadow-md overflow-hidden bg-white">
           {item.src?.toLowerCase().endsWith(".mp4") ? (
-            <video
-              src={item.src}
-              muted
-              loop
-              autoPlay
-              playsInline
-              className="w-full h-[420px] object-contain"
-            />
+            <video src={item.src} muted loop autoPlay playsInline className="w-full h-[420px] object-contain" />
           ) : (
-            <img
-              src={item.src}
-              alt={slug}
-              className="w-full h-[420px] object-contain"
-            />
+            <img src={item.src} alt={slug} className="w-full h-[420px] object-contain" />
           )}
         </div>
 
-        {/* Caja principal */}
         <section className="mt-6 bg-white rounded-3xl shadow-md p-6 relative overflow-hidden">
-          <div className="absolute inset-0 pointer-events-none">{renderEffect()}</div>
-
-          <h2 className="text-xl font-semibold text-center mb-4 relative z-10">
+          <motion.h2
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1 }}
+            className="text-xl font-semibold text-center mb-4 relative z-10"
+          >
             Customize your message ✨
-          </h2>
+          </motion.h2>
 
           <textarea
             value={message}
@@ -169,107 +237,36 @@ export default function EditPage() {
             className="w-full rounded-2xl border border-gray-300 p-4 text-center focus:ring-2 focus:ring-pink-400 relative z-10"
           />
 
-          {/* Giftcard selector */}
-          <button
-            onClick={() => setShowGiftModal(true)}
-            className="w-full mt-4 rounded-full bg-amber-400 hover:bg-amber-500 text-white font-semibold py-3 transition relative z-10"
+          <select
+            value={anim}
+            onChange={(e) => setAnim(e.target.value)}
+            className="w-full mt-3 rounded-2xl border border-gray-300 p-3 text-center focus:ring-2 focus:ring-pink-400 relative z-10"
           >
-            🎁 Choose Gift Card
-          </button>
+            <option value="sparkles">✨ Sparkles</option>
+            <option value="confetti">🎉 Confetti</option>
+            <option value="hearts">💖 Hearts</option>
+            <option value="none">❌ None</option>
+          </select>
 
-          {/* Info de emisor y receptor */}
-          <div className="mt-5">
-            <input
-              value={sender}
-              onChange={(e) => setSender(e.target.value)}
-              placeholder="Your name"
-              className="w-full mb-3 rounded-2xl border border-gray-300 p-4 text-center focus:ring-2 focus:ring-pink-400"
-            />
-            <input
-              value={receiver}
-              onChange={(e) => setReceiver(e.target.value)}
-              placeholder="Recipient name"
-              className="w-full mb-3 rounded-2xl border border-gray-300 p-4 text-center focus:ring-2 focus:ring-pink-400"
-            />
-            <input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Recipient email"
-              className="w-full mb-3 rounded-2xl border border-gray-300 p-4 text-center focus:ring-2 focus:ring-pink-400"
-            />
-            <input
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="Recipient phone"
-              className="w-full mb-3 rounded-2xl border border-gray-300 p-4 text-center focus:ring-2 focus:ring-pink-400"
-            />
+          <div className="flex justify-between mt-4">
+            <button
+              onClick={() => setShowGiftPopup(true)}
+              className="w-[48%] bg-pink-500 hover:bg-pink-600 text-white font-semibold py-3 rounded-full transition relative z-10"
+            >
+              + Gift Card
+            </button>
+            <button
+              onClick={() => setShowCheckout(true)}
+              className="w-[48%] bg-[#b89cff] hover:bg-[#9c7ff9] text-white font-semibold py-3 rounded-full transition relative z-10"
+            >
+              Checkout 💜
+            </button>
           </div>
-
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            className="w-full mt-4 rounded-full bg-pink-500 hover:bg-pink-600 text-white font-semibold py-4 transition relative z-10"
-          >
-            Checkout 💌
-          </motion.button>
         </section>
       </div>
 
-      {/* 🪄 Modal Gift Cards */}
-      {showGiftModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-3xl shadow-xl w-11/12 max-w-md relative">
-            <h3 className="text-xl font-bold text-center mb-4">Select a Gift Card 🎁</h3>
-
-            <select
-              value={selectedGift?.name || ""}
-              onChange={(e) =>
-                setSelectedGift(giftCards.find((g) => g.name === e.target.value))
-              }
-              className="w-full mb-3 rounded-2xl border border-gray-300 p-3 text-center focus:ring-2 focus:ring-pink-400"
-            >
-              <option value="">Choose a brand</option>
-              {giftCards.map((g, i) => (
-                <option key={i} value={g.name}>
-                  {g.category} - {g.name}
-                </option>
-              ))}
-            </select>
-
-            <input
-              type="number"
-              placeholder="Amount ($)"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="w-full mb-4 rounded-2xl border border-gray-300 p-3 text-center focus:ring-2 focus:ring-pink-400"
-            />
-
-            {selectedGift && (
-              <div className="flex justify-center mb-4">
-                <img
-                  src={selectedGift.image}
-                  alt={selectedGift.name}
-                  className="w-24 h-16 object-contain"
-                />
-              </div>
-            )}
-
-            <div className="flex justify-between">
-              <button
-                onClick={() => setShowGiftModal(false)}
-                className="rounded-full bg-gray-300 text-gray-700 px-6 py-2 font-semibold"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => setShowGiftModal(false)}
-                className="rounded-full bg-pink-500 text-white px-6 py-2 font-semibold"
-              >
-                Add 💝
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {showGiftPopup && <GiftCardPopup />}
+      {showCheckout && <CheckoutPopup />}
     </main>
   );
-}
+    }
