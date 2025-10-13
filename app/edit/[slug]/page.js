@@ -414,11 +414,11 @@ function CheckoutPopup({
           ✕
         </button>
 
-        <h3 className="text-xl font-bold text-center text-pink-600 mb-1">
-          Checkout seguro con Stripe 💜
+        <h3 className="text-xl font-bold text-center text-purple-600 mb-1">
+          Secure Checkout with Stripe 💜
         </h3>
-        <p className="text-center text-xs text-gray-500 mb-4">
-          Tus datos se procesan de forma segura por Stripe.
+        <p className="text-center text-sm text-gray-500 mb-4">
+          Your information is encrypted and processed safely.
         </p>
 
         {/* Sender / Recipient */}
