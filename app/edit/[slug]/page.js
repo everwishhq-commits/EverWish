@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 
+// 🎃 Auto message generator
 function defaultMessageFromSlug(slug) {
   const s = (slug || "").toLowerCase();
   if (/halloween/.test(s) && /love/.test(s))
@@ -28,19 +29,16 @@ export default function EditPage() {
   const [message, setMessage] = useState("");
   const [anim, setAnim] = useState("sparkles");
   const [showEdit, setShowEdit] = useState(false);
-
-  // 💳 Gift Card + Tabs + Checkout
-  const [giftCard, setGiftCard] = useState(null);
-  const [activeTab, setActiveTab] = useState("Popular");
-  const [showGCModal, setShowGCModal] = useState(false);
-  const [showCustomerModal, setShowCustomerModal] = useState(false);
-
-  // 👤 Sender / Receiver Info
+  const [showGiftModal, setShowGiftModal] = useState(false);
+  const [giftCards, setGiftCards] = useState([]);
+  const [selectedGift, setSelectedGift] = useState(null);
+  const [amount, setAmount] = useState("");
+  const [sender, setSender] = useState("");
+  const [receiver, setReceiver] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [receiverName, setReceiverName] = useState("");
-  const [receiverEmail, setReceiverEmail] = useState("");
 
+  // 🔹 Load videos & giftcards
   useEffect(() => {
     (async () => {
       try {
@@ -50,54 +48,32 @@ export default function EditPage() {
         setItem(found || null);
         setMessage(defaultMessageFromSlug(slug));
 
-        const el = document.documentElement;
-        const goFull = async () => {
-          try {
-            if (el.requestFullscreen) await el.requestFullscreen();
-            else if (el.webkitRequestFullscreen)
-              await el.webkitRequestFullscreen();
-          } catch {}
-        };
-        goFull();
-
-        setTimeout(async () => {
-          if (document.fullscreenElement) await document.exitFullscreen();
-          setShowEdit(true);
-        }, 3000);
+        const gifts = await fetch("/videos/giftcards.json");
+        const giftList = await gifts.json();
+        setGiftCards(giftList);
       } catch (e) {
-        console.error("Error loading /api/videos", e);
+        console.error("Error loading data:", e);
       }
     })();
   }, [slug]);
 
-  // ✨ Animaciones visuales
-  const renderEffect = () => {
-    if (anim === "sparkles")
-      return Array.from({ length: 15 }).map((_, i) => (
-        <motion.span
-          key={i}
-          className="absolute text-yellow-300 text-xl"
-          initial={{ opacity: 0, y: 0 }}
-          animate={{
-            opacity: [0, 1, 0],
-            y: [0, -80],
-            x: [0, Math.random() * 100 - 50],
-            scale: [0.6, 1.2, 0],
-          }}
-          transition={{
-            duration: 3 + Math.random() * 2,
-            repeat: Infinity,
-            delay: i * 0.3,
-          }}
-          style={{
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
-          }}
-        >
-          ✨
-        </motion.span>
-      ));
+  // 🔹 Fullscreen 3 seconds, then show editor
+  useEffect(() => {
+    const goFull = async () => {
+      const el = document.documentElement;
+      try {
+        if (el.requestFullscreen) await el.requestFullscreen();
+        else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+      } catch {}
+    };
+    goFull();
+    setTimeout(async () => {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      setShowEdit(true);
+    }, 3000);
+  }, []);
 
+  const renderEffect = () => {
     if (anim === "hearts")
       return Array.from({ length: 12 }).map((_, i) => (
         <motion.span
@@ -123,43 +99,15 @@ export default function EditPage() {
           💖
         </motion.span>
       ));
-
-    if (anim === "confetti")
-      return Array.from({ length: 20 }).map((_, i) => (
-        <motion.span
-          key={i}
-          className="absolute text-lg"
-          initial={{ opacity: 0, y: -10, rotate: 0 }}
-          animate={{
-            opacity: [0, 1, 0],
-            y: [0, 120],
-            rotate: [0, 360],
-          }}
-          transition={{
-            duration: 3 + Math.random() * 2,
-            repeat: Infinity,
-            delay: i * 0.2,
-          }}
-          style={{
-            color: ["#ff80b5", "#ffd700", "#4dd4ff", "#baffc9"][
-              Math.floor(Math.random() * 4)
-            ],
-            left: `${Math.random() * 100}%`,
-          }}
-        >
-          •
-        </motion.span>
-      ));
     return null;
   };
 
   if (!item) return null;
 
-  // 🟣 Vista inicial fullscreen
   if (!showEdit) {
     return (
       <div className="fixed inset-0 flex justify-center items-center bg-black">
-        {item.src?.endsWith(".mp4") ? (
+        {item.src?.toLowerCase().endsWith(".mp4") ? (
           <video
             src={item.src}
             autoPlay
@@ -179,11 +127,6 @@ export default function EditPage() {
     );
   }
 
-  // ✅ Checkout handler
-  const handleCheckout = async () => {
-    setShowCustomerModal(true);
-  };
-
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 relative bg-[#fff8f5] min-h-screen overflow-hidden">
       <div className="absolute inset-0 pointer-events-none z-0">
@@ -191,8 +134,9 @@ export default function EditPage() {
       </div>
 
       <div className="relative z-10">
+        {/* Imagen o video */}
         <div className="relative w-full rounded-3xl shadow-md overflow-hidden bg-white">
-          {item.src?.endsWith(".mp4") ? (
+          {item.src?.toLowerCase().endsWith(".mp4") ? (
             <video
               src={item.src}
               muted
@@ -210,10 +154,9 @@ export default function EditPage() {
           )}
         </div>
 
+        {/* Caja principal */}
         <section className="mt-6 bg-white rounded-3xl shadow-md p-6 relative overflow-hidden">
-          <div className="absolute inset-0 pointer-events-none">
-            {renderEffect()}
-          </div>
+          <div className="absolute inset-0 pointer-events-none">{renderEffect()}</div>
 
           <h2 className="text-xl font-semibold text-center mb-4 relative z-10">
             Customize your message ✨
@@ -226,194 +169,102 @@ export default function EditPage() {
             className="w-full rounded-2xl border border-gray-300 p-4 text-center focus:ring-2 focus:ring-pink-400 relative z-10"
           />
 
-          {/* ✨ Animation */}
-          <select
-            value={anim}
-            onChange={(e) => setAnim(e.target.value)}
-            className="w-full mt-3 rounded-2xl border border-gray-300 p-3 text-center focus:ring-2 focus:ring-pink-400 relative z-10"
-          >
-            <option value="sparkles">✨ Sparkles</option>
-            <option value="confetti">🎉 Confetti</option>
-            <option value="hearts">💖 Hearts</option>
-            <option value="none">❌ None</option>
-          </select>
-
-          {/* 💳 Gift Card */}
+          {/* Giftcard selector */}
           <button
-            onClick={() => setShowGCModal(true)}
-            className="w-full mt-4 rounded-2xl border border-gray-300 py-3 text-gray-700 hover:bg-pink-50 relative z-10"
+            onClick={() => setShowGiftModal(true)}
+            className="w-full mt-4 rounded-full bg-amber-400 hover:bg-amber-500 text-white font-semibold py-3 transition relative z-10"
           >
-            {giftCard
-              ? `${giftCard.brand} $${giftCard.amount}`
-              : "Add Gift Card"}
+            🎁 Choose Gift Card
           </button>
 
+          {/* Info de emisor y receptor */}
+          <div className="mt-5">
+            <input
+              value={sender}
+              onChange={(e) => setSender(e.target.value)}
+              placeholder="Your name"
+              className="w-full mb-3 rounded-2xl border border-gray-300 p-4 text-center focus:ring-2 focus:ring-pink-400"
+            />
+            <input
+              value={receiver}
+              onChange={(e) => setReceiver(e.target.value)}
+              placeholder="Recipient name"
+              className="w-full mb-3 rounded-2xl border border-gray-300 p-4 text-center focus:ring-2 focus:ring-pink-400"
+            />
+            <input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Recipient email"
+              className="w-full mb-3 rounded-2xl border border-gray-300 p-4 text-center focus:ring-2 focus:ring-pink-400"
+            />
+            <input
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="Recipient phone"
+              className="w-full mb-3 rounded-2xl border border-gray-300 p-4 text-center focus:ring-2 focus:ring-pink-400"
+            />
+          </div>
+
           <motion.button
-            whileTap={{ scale: 0.96 }}
-            onClick={handleCheckout}
-            className="w-full mt-5 rounded-full bg-pink-500 hover:bg-pink-600 text-white font-semibold py-4 transition relative z-10"
+            whileTap={{ scale: 0.95 }}
+            className="w-full mt-4 rounded-full bg-pink-500 hover:bg-pink-600 text-white font-semibold py-4 transition relative z-10"
           >
-            Checkout 💳
+            Checkout 💌
           </motion.button>
         </section>
       </div>
 
-      {/* 💳 Gift Card Modal */}
-      {showGCModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-lg w-full max-w-lg p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold">Choose a Gift Card</h3>
-              <button
-                onClick={() => setShowGCModal(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
-            </div>
+      {/* 🪄 Modal Gift Cards */}
+      {showGiftModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-3xl shadow-xl w-11/12 max-w-md relative">
+            <h3 className="text-xl font-bold text-center mb-4">Select a Gift Card 🎁</h3>
 
-            {/* Tabs */}
-            <div className="flex justify-around mb-4 border-b">
-              {["Popular", "Lifestyle", "Digital"].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`pb-2 font-semibold ${
-                    activeTab === tab
-                      ? "text-pink-600 border-b-2 border-pink-500"
-                      : "text-gray-500"
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-
-            {/* Brand options */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              {(activeTab === "Popular"
-                ? ["Amazon", "Walmart", "Target"]
-                : activeTab === "Lifestyle"
-                ? ["Starbucks", "Nike", "Sephora", "Apple"]
-                : ["Google Play", "Spotify", "Netflix", "Xbox"]
-              ).map((brand) => (
-                <button
-                  key={brand}
-                  onClick={() =>
-                    setGiftCard((prev) => ({ ...(prev || {}), brand }))
-                  }
-                  className={`border rounded-xl py-3 text-sm ${
-                    giftCard?.brand === brand
-                      ? "border-pink-500 bg-pink-50"
-                      : "border-gray-300"
-                  }`}
-                >
-                  {brand}
-                </button>
-              ))}
-            </div>
-
-            {/* Amount */}
-            <p className="text-sm font-semibold text-gray-700 mb-2">
-              Amount (USD)
-            </p>
-            <div className="flex flex-wrap gap-2 mb-3">
-              {[10, 25, 50, 100].map((amt) => (
-                <button
-                  key={amt}
-                  onClick={() =>
-                    setGiftCard((prev) => ({ ...(prev || {}), amount: amt }))
-                  }
-                  className={`px-3 py-2 rounded-lg border text-sm ${
-                    giftCard?.amount === amt
-                      ? "border-pink-500 bg-pink-50"
-                      : "border-gray-300"
-                  }`}
-                >
-                  ${amt}
-                </button>
-              ))}
-            </div>
-
-            <button
-              onClick={() => setShowGCModal(false)}
-              className="w-full bg-pink-500 text-white py-3 rounded-xl font-semibold hover:bg-pink-600"
+            <select
+              value={selectedGift?.name || ""}
+              onChange={(e) =>
+                setSelectedGift(giftCards.find((g) => g.name === e.target.value))
+              }
+              className="w-full mb-3 rounded-2xl border border-gray-300 p-3 text-center focus:ring-2 focus:ring-pink-400"
             >
-              Done
-            </button>
-          </div>
-        </div>
-      )}
+              <option value="">Choose a brand</option>
+              {giftCards.map((g, i) => (
+                <option key={i} value={g.name}>
+                  {g.category} - {g.name}
+                </option>
+              ))}
+            </select>
 
-      {/* 👤 Checkout Modal */}
-      {showCustomerModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-lg w-full max-w-lg p-6 overflow-y-auto max-h-[90vh]">
-            <h3 className="text-lg font-bold mb-4">Checkout Details 💳</h3>
-
-            <h4 className="text-md font-semibold text-gray-700 mb-2">
-              Sender Information
-            </h4>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Your email"
-              className="w-full border border-gray-300 rounded-xl p-3 mb-3 focus:ring-2 focus:ring-pink-400"
-            />
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="Your phone number"
-              className="w-full border border-gray-300 rounded-xl p-3 mb-3 focus:ring-2 focus:ring-pink-400"
+              type="number"
+              placeholder="Amount ($)"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="w-full mb-4 rounded-2xl border border-gray-300 p-3 text-center focus:ring-2 focus:ring-pink-400"
             />
 
-            <h4 className="text-md font-semibold text-gray-700 mb-2">
-              Recipient Information
-            </h4>
-            <input
-              type="text"
-              value={receiverName}
-              onChange={(e) => setReceiverName(e.target.value)}
-              placeholder="Recipient name"
-              className="w-full border border-gray-300 rounded-xl p-3 mb-3 focus:ring-2 focus:ring-pink-400"
-            />
-            <input
-              type="email"
-              value={receiverEmail}
-              onChange={(e) => setReceiverEmail(e.target.value)}
-              placeholder="Recipient email"
-              className="w-full border border-gray-300 rounded-xl p-3 mb-3 focus:ring-2 focus:ring-pink-400"
-            />
+            {selectedGift && (
+              <div className="flex justify-center mb-4">
+                <img
+                  src={selectedGift.image}
+                  alt={selectedGift.name}
+                  className="w-24 h-16 object-contain"
+                />
+              </div>
+            )}
 
-            <div className="bg-pink-50 border border-pink-200 rounded-xl p-4 mt-4">
-              <p>
-                <strong>Gift Card:</strong> {giftCard?.brand || "None selected"}
-              </p>
-              <p>
-                <strong>Amount:</strong> ${giftCard?.amount || 0}
-              </p>
-              <p>
-                <strong>Animation:</strong> {anim}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 mt-5">
+            <div className="flex justify-between">
               <button
-                onClick={() => setShowCustomerModal(false)}
-                className="border border-gray-300 rounded-xl py-3 hover:bg-gray-50"
+                onClick={() => setShowGiftModal(false)}
+                className="rounded-full bg-gray-300 text-gray-700 px-6 py-2 font-semibold"
               >
                 Cancel
               </button>
               <button
-                onClick={() => {
-                  setShowCustomerModal(false);
-                  alert("🎉 Checkout ready — Payment integration next!");
-                }}
-                className="bg-pink-500 text-white rounded-xl py-3 font-semibold hover:bg-pink-600"
+                onClick={() => setShowGiftModal(false)}
+                className="rounded-full bg-pink-500 text-white px-6 py-2 font-semibold"
               >
-                Confirm & Pay
+                Add 💝
               </button>
             </div>
           </div>
@@ -421,4 +272,4 @@ export default function EditPage() {
       )}
     </main>
   );
-            }
+}
