@@ -33,7 +33,7 @@ export default function Header() {
       } bg-white`}
     >
       <div className="w-full max-w-7xl mx-auto flex items-center justify-between px-3 md:px-6 h-full">
-        {/* 🔹 Logo centrado con animación y tamaño reducido real */}
+        {/* 🔹 Logo centrado */}
         <motion.div
           initial={{ scale: 1 }}
           animate={{ scale: isScrolled ? 0.8 : 1 }}
@@ -45,7 +45,7 @@ export default function Header() {
             <Image
               src="/logo.png"
               alt="Everwish"
-              width={isScrolled ? 60 : 90} // 👈 ahora sí más pequeño
+              width={isScrolled ? 60 : 90}
               height={45}
               priority
               className="object-contain w-auto h-auto select-none"
@@ -53,7 +53,7 @@ export default function Header() {
           </Link>
         </motion.div>
 
-        {/* 🔹 Menú reducido */}
+        {/* 🔹 Menú */}
         <nav className="flex items-center gap-3 md:gap-6 text-gray-800 font-bold text-xs md:text-base">
           <Link
             href="/categories"
@@ -64,7 +64,7 @@ export default function Header() {
             Categories
           </Link>
 
-          {/* 🔸 Botón My Everwish Space */}
+          {/* 🔸 Botón principal */}
           <button
             onClick={() => setShowPopup(true)}
             className="bg-pink-500 hover:bg-pink-600 text-white text-xs md:text-sm font-semibold px-3 py-2 md:px-4 md:py-2 rounded-full shadow transition whitespace-nowrap"
@@ -74,10 +74,9 @@ export default function Header() {
         </nav>
       </div>
 
-      {/* Margen inferior para respiración visual */}
       <div className="h-2 md:h-3" />
 
-      {/* 🔸 Popup principal */}
+      {/* 🔸 POPUP */}
       {showPopup && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[999] p-4">
           <motion.div
@@ -134,7 +133,7 @@ export default function Header() {
                     }}
                     className="text-gray-500 hover:text-red-500 mt-2"
                   >
-                    Sign out
+                    Leave my space 🌙
                   </button>
                 </div>
               </>
@@ -199,6 +198,14 @@ export default function Header() {
                     Access My Space 💌
                   </button>
                 </form>
+
+                {/* 🔸 Ver tarjetas sin tener cuenta */}
+                <button
+                  onClick={() => setShowPopup(false)}
+                  className="text-pink-500 font-semibold mt-4 text-sm hover:underline"
+                >
+                  Just view cards ✨
+                </button>
               </>
             )}
           </motion.div>
