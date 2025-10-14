@@ -10,6 +10,7 @@ export default function Carousel() {
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
   const pauseRef = useRef(false);
+  const swipeDetected = useRef(false);
 
   // ✅ Carga de videos desde /api/videos
   useEffect(() => {
@@ -30,46 +31,60 @@ export default function Carousel() {
     return () => clearInterval(refresh);
   }, []);
 
-  // 🔁 Autoplay controlado (pausa si el usuario interactúa)
+  // 🔁 Autoplay (ahora cada 5 segundos)
   useEffect(() => {
     clearInterval(autoplayRef.current);
     if (videos.length > 0 && !pauseRef.current) {
       autoplayRef.current = setInterval(() => {
         setIndex((prev) => (prev + 1) % videos.length);
-      }, 3000);
+      }, 5000); // ⏰ ← antes 3000, ahora 5000 ms
     }
     return () => clearInterval(autoplayRef.current);
   }, [videos, pauseRef.current]);
 
-  // 👆 Swipe manual rápido y fluido
+  // 🖐️ Interacción táctil: distinguir swipe vs tap
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX;
-    pauseRef.current = true;
+    swipeDetected.current = false;
+    pauseRef.current = true; // pausa el autoplay durante interacción
     clearInterval(autoplayRef.current);
   };
 
-  const handleTouchMove = (e) => (touchEndX.current = e.touches[0].clientX);
+  const handleTouchMove = (e) => {
+    touchEndX.current = e.touches[0].clientX;
+    if (Math.abs(touchStartX.current - touchEndX.current) > 10) {
+      swipeDetected.current = true;
+    }
+  };
 
   const handleTouchEnd = () => {
     const diff = touchStartX.current - touchEndX.current;
-    if (Math.abs(diff) > 50) {
+
+    if (swipeDetected.current && Math.abs(diff) > 50) {
+      // 👉 Swipe detectado → mover carrusel
       setIndex((prev) =>
         diff > 0
           ? (prev + 1) % videos.length
           : (prev - 1 + videos.length) % videos.length
       );
+    } else {
+      // 👆 Tap corto → abrir imagen
+      const tapped = videos[index];
+      if (tapped?.slug) handleClick(tapped.slug);
     }
-    // 🔁 Reanudar autoplay después de 4 segundos sin interacción
+
+    // 🔁 Reanudar autoplay después de 4 s sin interacción
     setTimeout(() => {
       pauseRef.current = false;
     }, 4000);
   };
 
-  // 🖱️ Click → fullscreen + /edit/[slug] (fix pantalla blanca)
+  // 🖱️ Click → fullscreen + /edit/[slug]
   const handleClick = async (slug) => {
     try {
       await document.documentElement.requestFullscreen?.();
-      setTimeout(() => router.push(`/edit/${slug}`), 300);
+      await new Promise((r) => setTimeout(r, 300));
+      router.push(`/edit/${slug}`);
     } catch {
       router.push(`/edit/${slug}`);
     }
@@ -98,7 +113,6 @@ export default function Carousel() {
             <div
               key={i}
               className={`absolute transition-all duration-500 ease-in-out ${positionClass}`}
-              onClick={() => handleClick(video.slug)}
             >
               {video.src?.endsWith(".mp4") ? (
                 <video
@@ -107,13 +121,13 @@ export default function Carousel() {
                   loop
                   muted
                   playsInline
-                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] rounded-2xl shadow-lg object-fill object-center bg-white overflow-hidden"
+                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] rounded-2xl shadow-lg object-cover sm:object-fill object-center bg-white overflow-hidden"
                 />
               ) : (
                 <img
                   src={video.src}
                   alt={video.title}
-                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] rounded-2xl shadow-lg object-fill object-center bg-white overflow-hidden"
+                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] rounded-2xl shadow-lg object-cover sm:object-fill object-center bg-white overflow-hidden"
                 />
               )}
             </div>
@@ -135,4 +149,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-                }
+  }
