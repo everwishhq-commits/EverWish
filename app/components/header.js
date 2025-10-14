@@ -36,7 +36,7 @@ export default function Header() {
         {/* 🔹 Logo centrado con espacio superior ajustado */}
         <motion.div
           initial={{ scale: 1 }}
-          animate={{ scale: isScrolled ? 0.85 : 1 }}
+          animate={{ scale: isScrolled ? 0.85 : .90 }}
           transition={{ duration: 0.3 }}
           className="cursor-pointer flex items-center justify-center py-[0.45rem] sm:py-[0.6rem] md:py-[0.75rem]"
           style={{ alignSelf: "center" }}
