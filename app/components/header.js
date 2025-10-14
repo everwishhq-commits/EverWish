@@ -30,7 +30,7 @@ export default function Header() {
     <header
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
         isScrolled ? "h-14 shadow-md" : "h-20"
-      } bg-white pt-[0.45rem] sm:pt-[0.8rem] md:pt-[0.75rem]`}
+      } bg-white pt-[0.65rem] sm:pt-[0.8rem] md:pt-[0.75rem]`}
     >
       <div className="w-full max-w-7xl mx-auto flex items-center justify-between px-3 md:px-6 h-full">
         {/* 🔹 Logo centrado con espacio superior ajustado */}
