@@ -22,12 +22,12 @@ export default function Header() {
   return (
     <header
       className={`fixed top-0 left-0 w-full z-50 bg-white transition-all duration-500 ${
-        isScrolled ? "h-14 shadow-md" : "h-20 sm:h-24"
+        isScrolled ? "h-14 shadow-md" : "h-18 sm:h-20"
       } flex items-center justify-center`}
     >
       <div className="w-full max-w-7xl mx-auto flex items-center justify-between px-4 md:px-8 h-full">
 
-        {/* 🔹 Logo centrado y más grande al inicio */}
+        {/* 🔹 Logo centrado con tamaño balanceado */}
         <motion.div
           initial={{ scale: 1, y: 0 }}
           animate={{
@@ -41,16 +41,16 @@ export default function Header() {
             <Image
               src="/logo.png"
               alt="Everwish"
-              width={isScrolled ? 70 : 90}
-              height={isScrolled ? 45 : 65}
+              width={isScrolled ? 65 : 80}
+              height={isScrolled ? 40 : 55}
               priority
-              className="object-contain w-auto h-auto select-none sm:w-[95px] sm:h-[70px] md:w-[105px] md:h-[75px]"
+              className="object-contain w-auto h-auto select-none sm:w-[90px] sm:h-[60px] md:w-[100px] md:h-[70px]"
             />
           </Link>
         </motion.div>
 
-        {/* 🔸 Menú y botón con más espacio en móvil */}
-        <nav className="flex items-center gap-4 sm:gap-8 text-gray-800 font-semibold text-sm sm:text-base h-full">
+        {/* 🔸 Menú y botón ajustados para no chocar */}
+        <nav className="flex items-center gap-3 sm:gap-6 md:gap-8 text-gray-800 font-semibold text-sm sm:text-base h-full">
           <Link
             href="/categories"
             className={`${isActive("/categories") ? "text-pink-500 underline" : ""}`}
@@ -60,7 +60,7 @@ export default function Header() {
 
           <button
             onClick={() => setShowPopup(true)}
-            className="bg-pink-500 hover:bg-pink-600 text-white font-semibold px-3 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm transition-all shadow-sm whitespace-nowrap"
+            className="bg-pink-500 hover:bg-pink-600 text-white font-semibold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm transition-all shadow-sm whitespace-nowrap"
           >
             💌 My Everwish Space
           </button>
@@ -83,7 +83,6 @@ export default function Header() {
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ duration: 0.3 }}
             >
-              {/* 🔸 Cerrar popup */}
               <button
                 onClick={() => setShowPopup(false)}
                 className="absolute top-3 right-4 text-gray-400 hover:text-gray-600 text-xl"
@@ -96,12 +95,12 @@ export default function Header() {
               </h2>
 
               <p className="text-gray-700 text-sm leading-relaxed mb-4">
-                This is your personal space to create, send, and receive digital cards — 
+                This is your personal space to create, send, and receive digital cards —
                 just pure moments of joy. ✨
               </p>
 
               <p className="text-gray-700 text-sm leading-relaxed mb-4">
-                🪶 In your personal panel, every card you make is saved here automatically 
+                🪶 In your personal panel, every card you make is saved here automatically
                 to manage. After a secure purchase you’ll receive an <strong>Everwish ID</strong>.
               </p>
 
@@ -110,7 +109,6 @@ export default function Header() {
                 Start by choosing a card below 💌
               </p>
 
-              {/* Campos */}
               <input
                 type="text"
                 placeholder="Everwish ID or Email"
