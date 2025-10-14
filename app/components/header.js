@@ -11,14 +11,12 @@ export default function Header() {
   const [user, setUser] = useState(null);
   const pathname = usePathname();
 
-  // 🔹 Scroll effect para animar logo
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // 🔹 Cargar usuario guardado localmente
   useEffect(() => {
     try {
       const stored = localStorage.getItem("everwishUser");
@@ -35,12 +33,13 @@ export default function Header() {
       } bg-white`}
     >
       <div className="w-full max-w-7xl mx-auto flex items-center justify-between px-3 md:px-6 h-full">
-        {/* 🔸 Logo con animación */}
+        {/* 🔹 Logo centrado con animación */}
         <motion.div
           initial={{ scale: 1 }}
           animate={{ scale: isScrolled ? 0.8 : 1 }}
           transition={{ duration: 0.3 }}
-          className={`cursor-pointer flex items-center`}
+          className="cursor-pointer flex items-center justify-center py-1 md:py-2"
+          style={{ alignSelf: "center" }}
         >
           <Link href="/">
             <Image
@@ -54,20 +53,8 @@ export default function Header() {
           </Link>
         </motion.div>
 
-        {/* 🔸 Menú general */}
+        {/* 🔹 Menú reducido */}
         <nav className="flex items-center gap-3 md:gap-6 text-gray-800 font-bold text-xs md:text-base">
-          <Link
-            href="/planes"
-            className={`${isActive("/planes") ? "text-pink-500 underline" : ""}`}
-          >
-            Planes
-          </Link>
-          <Link
-            href="/promo"
-            className={`${isActive("/promo") ? "text-pink-500 underline" : ""}`}
-          >
-            Promo
-          </Link>
           <Link
             href="/categories"
             className={`${
@@ -77,20 +64,20 @@ export default function Header() {
             Categorías
           </Link>
 
-          {/* 🔹 Botón My Everwish Space */}
+          {/* 🔸 Botón My Everwish Space */}
           <button
             onClick={() => setShowPopup(true)}
-            className="bg-pink-500 hover:bg-pink-600 text-white text-xs md:text-sm font-semibold px-3 py-2 rounded-full shadow transition whitespace-nowrap"
+            className="bg-pink-500 hover:bg-pink-600 text-white text-xs md:text-sm font-semibold px-3 py-2 md:px-4 md:py-2 rounded-full shadow transition whitespace-nowrap"
           >
-            {user ? `Hi, ${user.name?.split(" ")[0] || "User"} 💖` : "My Everwish Space"}
+            {user ? `Hi, ${user.name?.split(' ')[0] || 'User'} 💖` : "My Everwish Space"}
           </button>
         </nav>
       </div>
 
-      {/* 🔹 Margen inferior para evitar que se pegue al contenido */}
+      {/* Margen inferior para respirar */}
       <div className="h-2 md:h-3" />
 
-      {/* 🔹 Popup */}
+      {/* 🔸 Popup principal */}
       {showPopup && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[999] p-4">
           <motion.div
@@ -107,18 +94,37 @@ export default function Header() {
 
             {user ? (
               <>
-                <h2 className="text-xl font-bold text-pink-600 mb-2">
+                <h2 className="text-xl font-bold text-pink-600 mb-3">
                   💖 Welcome back, {user.name?.split(" ")[0] || "friend"}!
                 </h2>
-                <p className="text-gray-600 text-sm mb-4">
-                  Your Everwish ID: <strong>{user.id}</strong>
+                <p className="text-gray-600 text-sm mb-5">
+                  Everwish ID: <strong>{user.id}</strong>
                 </p>
-                <div className="flex flex-col gap-3">
+
+                <div className="flex flex-col gap-3 text-sm font-semibold">
                   <Link
                     href="/my-cards"
                     className="bg-purple-500 hover:bg-purple-600 text-white py-2 rounded-full"
                   >
-                    View My Cards
+                    My Cards 💌
+                  </Link>
+                  <Link
+                    href="/received"
+                    className="bg-indigo-500 hover:bg-indigo-600 text-white py-2 rounded-full"
+                  >
+                    Received Cards 🎁
+                  </Link>
+                  <Link
+                    href="/plans"
+                    className="bg-pink-400 hover:bg-pink-500 text-white py-2 rounded-full"
+                  >
+                    Plans & Promos ⭐
+                  </Link>
+                  <Link
+                    href="/settings"
+                    className="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 rounded-full"
+                  >
+                    Settings ⚙️
                   </Link>
                   <button
                     onClick={() => {
@@ -126,7 +132,7 @@ export default function Header() {
                       setUser(null);
                       setShowPopup(false);
                     }}
-                    className="text-gray-500 hover:text-red-500 text-sm mt-2"
+                    className="text-gray-500 hover:text-red-500 mt-2"
                   >
                     Sign out
                   </button>
@@ -196,4 +202,4 @@ export default function Header() {
       )}
     </header>
   );
-}
+                }
