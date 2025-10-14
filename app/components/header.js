@@ -45,7 +45,7 @@ export default function Header() {
             <Image
               src="/logo.png"
               alt="Everwish"
-              width={isScrolled ? 55 : 70}
+              width={isScrolled ? 50 : 65}
               height={45}
               priority
               className="object-contain w-auto h-auto select-none"
