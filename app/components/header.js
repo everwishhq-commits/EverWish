@@ -20,14 +20,15 @@ export default function Header() {
   const isActive = (path) => pathname === path;
 
   return (
+    // 🔹 Header principal con padding y animación
     <header
       className={`fixed top-0 left-0 w-full z-50 bg-white transition-all duration-500 ${
         isScrolled ? "h-14 shadow-md" : "h-18 sm:h-20"
-      } flex items-center pt-[0.35rem] sm:pt-[0.5rem]`}  {/* <- aquí agregamos espacio superior en móvil/tablet */}
+      } flex items-center pt-[0.4rem] sm:pt-[0.6rem] md:pt-[0.8rem]`}
     >
       <div className="w-full max-w-7xl mx-auto flex items-center justify-between px-4 md:px-6 h-full">
 
-        {/* 🔹 Logo centrado y proporcionado */}
+        {/* 🔹 Logo centrado y proporcional */}
         <motion.div
           initial={{ scale: 1, y: 0 }}
           animate={{
@@ -41,10 +42,10 @@ export default function Header() {
             <Image
               src="/logo.png"
               alt="Everwish"
-              width={isScrolled ? 50 : 70}
-              height={isScrolled ? 35 : 50}
+              width={isScrolled ? 45 : 65}
+              height={isScrolled ? 30 : 45}
               priority
-              className="object-contain w-auto h-auto select-none sm:w-[80px] sm:h-[55px]"
+              className="object-contain w-auto h-auto select-none sm:w-[75px] sm:h-[50px] md:w-[85px] md:h-[60px]"
             />
           </Link>
         </motion.div>
@@ -67,7 +68,7 @@ export default function Header() {
         </nav>
       </div>
 
-      {/* 🔮 Popup igual que antes */}
+      {/* 🔮 Popup */}
       <AnimatePresence>
         {showPopup && (
           <motion.div
@@ -83,6 +84,7 @@ export default function Header() {
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ duration: 0.3 }}
             >
+              {/* 🔸 Cerrar popup */}
               <button
                 onClick={() => setShowPopup(false)}
                 className="absolute top-3 right-4 text-gray-400 hover:text-gray-600 text-xl"
@@ -90,10 +92,12 @@ export default function Header() {
                 ×
               </button>
 
+              {/* 🔸 Título */}
               <h2 className="text-pink-500 text-lg md:text-xl font-bold mb-3">
                 💖 Welcome to Everwish
               </h2>
 
+              {/* 🔸 Texto descriptivo */}
               <p className="text-gray-700 text-sm leading-relaxed mb-4">
                 This is your personal space to create, send, and receive digital cards —
                 just pure moments of joy. ✨
@@ -109,6 +113,7 @@ export default function Header() {
                 Start by choosing a card below 💌
               </p>
 
+              {/* 🔸 Campos de ingreso */}
               <input
                 type="text"
                 placeholder="Everwish ID or Email"
@@ -120,6 +125,7 @@ export default function Header() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-pink-400"
               />
 
+              {/* 🔸 Botones */}
               <button className="w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 rounded-full transition-all mb-3">
                 Access My Space 💌
               </button>
@@ -136,4 +142,4 @@ export default function Header() {
       </AnimatePresence>
     </header>
   );
-              }
+                }
