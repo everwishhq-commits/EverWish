@@ -9,7 +9,7 @@ export default function Carousel() {
   const autoplayRef = useRef(null);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
-  const pauseTimeout = useRef(null); // 🔹 Nuevo: para pausar temporalmente
+  const pauseTimeout = useRef(null);
 
   // ✅ Carga de videos desde /api/videos
   useEffect(() => {
@@ -25,12 +25,11 @@ export default function Carousel() {
 
     fetchVideos();
 
-    // 🔁 Refresca automáticamente cada 24h
     const refresh = setInterval(fetchVideos, 24 * 60 * 60 * 1000);
     return () => clearInterval(refresh);
   }, []);
 
-  // 🔁 Autoplay cada 3s con loop infinito
+  // 🔁 Autoplay más fluido
   const startAutoplay = () => {
     clearInterval(autoplayRef.current);
     autoplayRef.current = setInterval(() => {
@@ -43,29 +42,32 @@ export default function Carousel() {
     return () => clearInterval(autoplayRef.current);
   }, [videos]);
 
-  // 👆 Swipe manual con pausa temporal
+  // 👆 Swipe manual más rápido y reactivo
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX;
-    clearInterval(autoplayRef.current); // pausa inmediata
+    clearInterval(autoplayRef.current);
     clearTimeout(pauseTimeout.current);
   };
 
-  const handleTouchMove = (e) => (touchEndX.current = e.touches[0].clientX);
+  const handleTouchMove = (e) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
 
   const handleTouchEnd = () => {
     const diff = touchStartX.current - touchEndX.current;
-    if (Math.abs(diff) > 50) {
+    if (Math.abs(diff) > 40) {
+      // 🔹 Reduce el umbral para hacerlo más sensible (de 50 a 40px)
       setIndex((prev) =>
         diff > 0
           ? (prev + 1) % videos.length
           : (prev - 1 + videos.length) % videos.length
       );
     }
-    // 🔹 Espera 4 segundos y reanuda autoplay
-    pauseTimeout.current = setTimeout(startAutoplay, 4000);
+    // 🔹 Espera solo 3s antes de reanudar
+    pauseTimeout.current = setTimeout(startAutoplay, 3000);
   };
 
-  // 🖱️ Click → fullscreen + /edit/[slug]
+  // 🖱️ Click → fullscreen + edición
   const handleClick = async (slug) => {
     try {
       await document.documentElement.requestFullscreen?.();
@@ -95,29 +97,31 @@ export default function Carousel() {
           return (
             <div
               key={i}
-              className={`absolute transition-all duration-700 ease-in-out ${positionClass}`}
+              className={`absolute transition-all duration-500 ease-in-out ${positionClass}`} // 🔹 transición más rápida
               onClick={() => handleClick(video.slug)}
             >
-              {video.src?.endsWith(".mp4") ? (
-                <video
-                  src={video.src}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  draggable={false}
-                  onContextMenu={(e) => e.preventDefault()} // ❌ evita menú descarga
-                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] rounded-2xl shadow-lg object-contain p-3 bg-white select-none"
-                />
-              ) : (
-                <img
-                  src={video.src}
-                  alt={video.title}
-                  draggable={false}
-                  onContextMenu={(e) => e.preventDefault()} // ❌ evita descarga
-                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] rounded-2xl shadow-lg object-contain p-3 bg-white select-none"
-                />
-              )}
+              <div className="relative aspect-[3/4] w-[300px] sm:w-[320px] md:w-[340px] rounded-2xl shadow-lg bg-white overflow-hidden">
+                {video.src?.endsWith(".mp4") ? (
+                  <video
+                    src={video.src}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    draggable={false}
+                    onContextMenu={(e) => e.preventDefault()}
+                    className="absolute inset-0 w-full h-full object-scale-down bg-white p-1 md:p-2 select-none"
+                  />
+                ) : (
+                  <img
+                    src={video.src}
+                    alt={video.title}
+                    draggable={false}
+                    onContextMenu={(e) => e.preventDefault()}
+                    className="absolute inset-0 w-full h-full object-scale-down bg-white p-1 md:p-2 select-none"
+                  />
+                )}
+              </div>
             </div>
           );
         })}
@@ -132,7 +136,7 @@ export default function Carousel() {
               setIndex(i);
               clearInterval(autoplayRef.current);
               clearTimeout(pauseTimeout.current);
-              pauseTimeout.current = setTimeout(startAutoplay, 4000);
+              pauseTimeout.current = setTimeout(startAutoplay, 3000);
             }}
             className={`w-3 h-3 rounded-full cursor-pointer transition-all ${
               i === index ? "bg-pink-500 scale-125" : "bg-gray-300"
