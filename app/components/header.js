@@ -33,19 +33,20 @@ export default function Header() {
       } bg-white`}
     >
       <div className="w-full max-w-7xl mx-auto flex items-center justify-between px-3 md:px-6 h-full">
-        {/* 🔹 Logo centrado */}
+        
+        {/* 🔹 Logo centrado y proporcional desde el inicio */}
         <motion.div
-          initial={{ scale: 1 }}
-          animate={{ scale: isScrolled ? 0.8 : 1 }}
+          initial={{ scale: 0.9 }}
+          animate={{ scale: isScrolled ? 0.8 : 0.9 }}
           transition={{ duration: 0.3 }}
-          className="cursor-pointer flex items-center justify-center py-2 md:py-3"
+          className="cursor-pointer flex items-center justify-center py-3"
           style={{ alignSelf: "center" }}
         >
           <Link href="/">
             <Image
               src="/logo.png"
               alt="Everwish"
-              width={isScrolled ? 60 : 90}
+              width={isScrolled ? 55 : 75}
               height={45}
               priority
               className="object-contain w-auto h-auto select-none"
@@ -213,4 +214,4 @@ export default function Header() {
       )}
     </header>
   );
-                }
+          }
