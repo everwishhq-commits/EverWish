@@ -33,20 +33,20 @@ export default function Header() {
       } bg-white`}
     >
       <div className="w-full max-w-7xl mx-auto flex items-center justify-between px-3 md:px-6 h-full">
-        {/* 🔹 Logo centrado con animación (ajustado más pequeño) */}
+        {/* 🔹 Logo centrado con animación y tamaño reducido real */}
         <motion.div
           initial={{ scale: 1 }}
           animate={{ scale: isScrolled ? 0.8 : 1 }}
           transition={{ duration: 0.3 }}
-          className="cursor-pointer flex items-center justify-center py-1 md:py-2"
+          className="cursor-pointer flex items-center justify-center py-2 md:py-3"
           style={{ alignSelf: "center" }}
         >
           <Link href="/">
             <Image
               src="/logo.png"
               alt="Everwish"
-              width={isScrolled ? 70 : 100}  // 👈 tamaño reducido aquí
-              height={50}
+              width={isScrolled ? 60 : 90} // 👈 ahora sí más pequeño
+              height={45}
               priority
               className="object-contain w-auto h-auto select-none"
             />
@@ -61,7 +61,7 @@ export default function Header() {
               isActive("/categories") ? "text-pink-500 underline" : ""
             }`}
           >
-            Categorías
+            Categories
           </Link>
 
           {/* 🔸 Botón My Everwish Space */}
@@ -74,7 +74,7 @@ export default function Header() {
         </nav>
       </div>
 
-      {/* Margen inferior para respirar */}
+      {/* Margen inferior para respiración visual */}
       <div className="h-2 md:h-3" />
 
       {/* 🔸 Popup principal */}
@@ -143,14 +143,18 @@ export default function Header() {
                 <h2 className="text-xl font-bold text-pink-600 mb-2">
                   💖 Welcome to Everwish
                 </h2>
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-gray-600 mb-3">
                   This is your personal space to create, send, and receive
                   digital cards — just pure moments of joy. ✨
                 </p>
-
-                <p className="text-sm text-gray-500 mb-3">
-                  Enter your <b>Everwish ID or email</b> and your{" "}
-                  <b>phone number</b> to access your space.
+                <p className="text-sm text-gray-600 mb-4">
+                  🪶 In your personal panel, every card you make is saved here
+                  automatically to manage. After a secure purchase you’ll
+                  receive an <b>Everwish ID</b>.
+                </p>
+                <p className="text-sm text-gray-600 mb-6">
+                  🎁 You’ll also find cards that others have sent you.  
+                  Start by choosing a card below 💌
                 </p>
 
                 <form
@@ -202,4 +206,4 @@ export default function Header() {
       )}
     </header>
   );
-              }
+                }
