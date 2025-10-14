@@ -23,17 +23,25 @@ export default function Header() {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
-          isScrolled ? "h-16 shadow-md" : "h-24"
-        } bg-white flex items-center`}
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 bg-white ${
+          isScrolled ? "shadow-md" : ""
+        }`}
+        style={{
+          height: isScrolled ? "64px" : "78px", // 📏 menor altura que antes
+          display: "flex",
+          alignItems: "center",
+        }}
       >
         <div className="w-full max-w-7xl mx-auto flex flex-wrap items-center justify-between px-4 md:px-8">
           {/* ---------- LOGO ---------- */}
           <div
-            className={`transition-all duration-500 ${
-              isScrolled ? "w-16" : "w-24 md:w-28"
-            } cursor-pointer flex justify-center items-center`}
-            style={{ transform: "translateY(4px)" }} // 🔽 baja el logo un poco
+            className={`flex items-center justify-center transition-all duration-500 ${
+              isScrolled ? "w-16" : "w-20 md:w-24"
+            } cursor-pointer`}
+            style={{
+              transform: "translateY(-2px)", // ☑️ sube un poco el logo
+              marginRight: "6px", // 🪶 deja aire con el botón
+            }}
           >
             <Link href="/">
               <Image
@@ -48,9 +56,10 @@ export default function Header() {
 
           {/* ---------- MENÚ ---------- */}
           <nav className="flex flex-wrap items-center justify-center gap-3 md:gap-6 text-gray-800 font-semibold text-xs md:text-base tracking-wide transition-all duration-500">
+            {/* 💌 My Everwish Space */}
             <button
               onClick={() => setShowPopup(true)}
-              className="bg-pink-500 text-white px-3 py-2 rounded-full hover:bg-pink-600 transition text-xs md:text-sm whitespace-nowrap"
+              className="bg-pink-500 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-full hover:bg-pink-600 transition text-xs md:text-sm whitespace-nowrap"
             >
               💌 My Everwish Space
             </button>
@@ -98,8 +107,8 @@ export default function Header() {
         )}
       </header>
 
-      {/* 📱 mejora móvil: agrega espacio debajo del header */}
-      <div className="h-24 md:h-28"></div>
+      {/* 📱 margen inferior ajustado */}
+      <div className="h-[84px] md:h-[100px]"></div>
     </>
   );
-        }
+                  }
