@@ -9,7 +9,7 @@ export default function Carousel() {
   const autoplayRef = useRef(null);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
-  const pauseTimeout = useRef(null);
+  const pauseRef = useRef(false);
 
   // ✅ Carga de videos desde /api/videos
   useEffect(() => {
@@ -25,54 +25,54 @@ export default function Carousel() {
 
     fetchVideos();
 
+    // 🔁 Refresca automáticamente cada 24h
     const refresh = setInterval(fetchVideos, 24 * 60 * 60 * 1000);
     return () => clearInterval(refresh);
   }, []);
 
-  // 🔁 Autoplay más fluido
-  const startAutoplay = () => {
-    clearInterval(autoplayRef.current);
-    autoplayRef.current = setInterval(() => {
-      setIndex((prev) => (prev + 1) % videos.length);
-    }, 3000);
-  };
-
+  // 🔁 Autoplay controlado (pausa si el usuario interactúa)
   useEffect(() => {
-    if (videos.length > 0) startAutoplay();
+    clearInterval(autoplayRef.current);
+    if (videos.length > 0 && !pauseRef.current) {
+      autoplayRef.current = setInterval(() => {
+        setIndex((prev) => (prev + 1) % videos.length);
+      }, 3000);
+    }
     return () => clearInterval(autoplayRef.current);
-  }, [videos]);
+  }, [videos, pauseRef.current]);
 
-  // 👆 Swipe manual más rápido y reactivo
+  // 👆 Swipe manual rápido y fluido
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX;
+    pauseRef.current = true;
     clearInterval(autoplayRef.current);
-    clearTimeout(pauseTimeout.current);
   };
 
-  const handleTouchMove = (e) => {
-    touchEndX.current = e.touches[0].clientX;
-  };
+  const handleTouchMove = (e) => (touchEndX.current = e.touches[0].clientX);
 
   const handleTouchEnd = () => {
     const diff = touchStartX.current - touchEndX.current;
-    if (Math.abs(diff) > 40) {
-      // 🔹 Reduce el umbral para hacerlo más sensible (de 50 a 40px)
+    if (Math.abs(diff) > 50) {
       setIndex((prev) =>
         diff > 0
           ? (prev + 1) % videos.length
           : (prev - 1 + videos.length) % videos.length
       );
     }
-    // 🔹 Espera solo 3s antes de reanudar
-    pauseTimeout.current = setTimeout(startAutoplay, 3000);
+    // 🔁 Reanudar autoplay después de 4 segundos sin interacción
+    setTimeout(() => {
+      pauseRef.current = false;
+    }, 4000);
   };
 
-  // 🖱️ Click → fullscreen + edición
+  // 🖱️ Click → fullscreen + /edit/[slug] (fix pantalla blanca)
   const handleClick = async (slug) => {
     try {
       await document.documentElement.requestFullscreen?.();
-    } catch {}
-    router.push(`/edit/${slug}`);
+      setTimeout(() => router.push(`/edit/${slug}`), 300);
+    } catch {
+      router.push(`/edit/${slug}`);
+    }
   };
 
   return (
@@ -97,31 +97,25 @@ export default function Carousel() {
           return (
             <div
               key={i}
-              className={`absolute transition-all duration-500 ease-in-out ${positionClass}`} // 🔹 transición más rápida
+              className={`absolute transition-all duration-500 ease-in-out ${positionClass}`}
               onClick={() => handleClick(video.slug)}
             >
-              <div className="relative aspect-[3/4] w-[300px] sm:w-[320px] md:w-[340px] rounded-2xl shadow-lg bg-white overflow-hidden">
-                {video.src?.endsWith(".mp4") ? (
-                  <video
-                    src={video.src}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    draggable={false}
-                    onContextMenu={(e) => e.preventDefault()}
-                    className="absolute inset-0 w-full h-full object-scale-down bg-white p-1 md:p-2 select-none"
-                  />
-                ) : (
-                  <img
-                    src={video.src}
-                    alt={video.title}
-                    draggable={false}
-                    onContextMenu={(e) => e.preventDefault()}
-                    className="absolute inset-0 w-full h-full object-scale-down bg-white p-1 md:p-2 select-none"
-                  />
-                )}
-              </div>
+              {video.src?.endsWith(".mp4") ? (
+                <video
+                  src={video.src}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] rounded-2xl shadow-lg object-fill object-center bg-white overflow-hidden"
+                />
+              ) : (
+                <img
+                  src={video.src}
+                  alt={video.title}
+                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] rounded-2xl shadow-lg object-fill object-center bg-white overflow-hidden"
+                />
+              )}
             </div>
           );
         })}
@@ -132,12 +126,7 @@ export default function Carousel() {
         {videos.map((_, i) => (
           <span
             key={i}
-            onClick={() => {
-              setIndex(i);
-              clearInterval(autoplayRef.current);
-              clearTimeout(pauseTimeout.current);
-              pauseTimeout.current = setTimeout(startAutoplay, 3000);
-            }}
+            onClick={() => setIndex(i)}
             className={`w-3 h-3 rounded-full cursor-pointer transition-all ${
               i === index ? "bg-pink-500 scale-125" : "bg-gray-300"
             }`}
@@ -146,4 +135,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-          }
+                }
