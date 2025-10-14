@@ -3,19 +3,22 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { usePathname } from "next/navigation";
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [user, setUser] = useState(null);
+  const pathname = usePathname();
 
+  // 🔹 Scroll effect para animar logo
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // 🔹 Cargar usuario local
+  // 🔹 Cargar usuario guardado localmente
   useEffect(() => {
     try {
       const stored = localStorage.getItem("everwishUser");
@@ -23,34 +26,71 @@ export default function Header() {
     } catch {}
   }, []);
 
+  const isActive = (path) => pathname === path;
+
   return (
     <header
-      className={`fixed top-0 left-0 w-full z-50 bg-white transition-all duration-500 ${
-        isScrolled ? "shadow-md" : ""
-      }`}
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
+        isScrolled ? "h-14 shadow-md" : "h-20"
+      } bg-white`}
     >
-      <div className="max-w-7xl mx-auto flex items-center justify-between px-4 md:px-6 h-16 md:h-20">
-        {/* Logo */}
-        <Link href="/" className="flex items-center">
-          <Image
-            src="/logo.png"
-            alt="Everwish"
-            width={120}
-            height={60}
-            className="object-contain"
-          />
-        </Link>
-
-        {/* 🔹 My Everwish Space button */}
-        <button
-          onClick={() => setShowPopup(true)}
-          className="bg-pink-500 hover:bg-pink-600 text-white text-sm md:text-base font-semibold px-4 py-2 rounded-full shadow transition"
+      <div className="w-full max-w-7xl mx-auto flex items-center justify-between px-3 md:px-6 h-full">
+        {/* 🔸 Logo con animación */}
+        <motion.div
+          initial={{ scale: 1 }}
+          animate={{ scale: isScrolled ? 0.8 : 1 }}
+          transition={{ duration: 0.3 }}
+          className={`cursor-pointer flex items-center`}
         >
-          {user ? `Hi, ${user.name.split(" ")[0]} 💖` : "My Everwish Space"}
-        </button>
+          <Link href="/">
+            <Image
+              src="/logo.png"
+              alt="Everwish"
+              width={isScrolled ? 80 : 120}
+              height={60}
+              priority
+              className="object-contain w-auto h-auto select-none"
+            />
+          </Link>
+        </motion.div>
+
+        {/* 🔸 Menú general */}
+        <nav className="flex items-center gap-3 md:gap-6 text-gray-800 font-bold text-xs md:text-base">
+          <Link
+            href="/planes"
+            className={`${isActive("/planes") ? "text-pink-500 underline" : ""}`}
+          >
+            Planes
+          </Link>
+          <Link
+            href="/promo"
+            className={`${isActive("/promo") ? "text-pink-500 underline" : ""}`}
+          >
+            Promo
+          </Link>
+          <Link
+            href="/categories"
+            className={`${
+              isActive("/categories") ? "text-pink-500 underline" : ""
+            }`}
+          >
+            Categorías
+          </Link>
+
+          {/* 🔹 Botón My Everwish Space */}
+          <button
+            onClick={() => setShowPopup(true)}
+            className="bg-pink-500 hover:bg-pink-600 text-white text-xs md:text-sm font-semibold px-3 py-2 rounded-full shadow transition whitespace-nowrap"
+          >
+            {user ? `Hi, ${user.name?.split(" ")[0] || "User"} 💖` : "My Everwish Space"}
+          </button>
+        </nav>
       </div>
 
-      {/* Popup */}
+      {/* 🔹 Margen inferior para evitar que se pegue al contenido */}
+      <div className="h-2 md:h-3" />
+
+      {/* 🔹 Popup */}
       {showPopup && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[999] p-4">
           <motion.div
@@ -68,7 +108,7 @@ export default function Header() {
             {user ? (
               <>
                 <h2 className="text-xl font-bold text-pink-600 mb-2">
-                  💖 Welcome back, {user.name.split(" ")[0]}!
+                  💖 Welcome back, {user.name?.split(" ")[0] || "friend"}!
                 </h2>
                 <p className="text-gray-600 text-sm mb-4">
                   Your Everwish ID: <strong>{user.id}</strong>
@@ -156,4 +196,4 @@ export default function Header() {
       )}
     </header>
   );
-              }
+}
