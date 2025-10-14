@@ -33,7 +33,7 @@ export default function Header() {
       } bg-white`}
     >
       <div className="w-full max-w-7xl mx-auto flex items-center justify-between px-3 md:px-6 h-full">
-        {/* 🔹 Logo centrado con animación */}
+        {/* 🔹 Logo centrado con animación (ajustado más pequeño) */}
         <motion.div
           initial={{ scale: 1 }}
           animate={{ scale: isScrolled ? 0.8 : 1 }}
@@ -45,8 +45,8 @@ export default function Header() {
             <Image
               src="/logo.png"
               alt="Everwish"
-              width={isScrolled ? 80 : 120}
-              height={60}
+              width={isScrolled ? 70 : 100}  // 👈 tamaño reducido aquí
+              height={50}
               priority
               className="object-contain w-auto h-auto select-none"
             />
@@ -202,4 +202,4 @@ export default function Header() {
       )}
     </header>
   );
-                }
+              }
