@@ -33,12 +33,12 @@ export default function Header() {
       } bg-white`}
     >
       <div className="w-full max-w-7xl mx-auto flex items-center justify-between px-3 md:px-6 h-full">
-        {/* 🔹 Logo centrado */}
+        {/* 🔹 Logo centrado y mejor proporcionado */}
         <motion.div
           initial={{ scale: 1 }}
-          animate={{ scale: isScrolled ? 0.8 : 1 }}
+          animate={{ scale: isScrolled ? 0.85 : 1 }}
           transition={{ duration: 0.3 }}
-          className="cursor-pointer flex items-center justify-center py-2 md:py-3"
+          className="cursor-pointer flex items-center justify-center py-[0.45rem] sm:py-[0.6rem] md:py-[0.75rem]"
           style={{ alignSelf: "center" }}
         >
           <Link href="/">
@@ -69,7 +69,7 @@ export default function Header() {
             onClick={() => setShowPopup(true)}
             className="bg-pink-500 hover:bg-pink-600 text-white text-xs md:text-sm font-semibold px-3 py-2 md:px-4 md:py-2 rounded-full shadow transition whitespace-nowrap"
           >
-            {user ? `Hi, ${user.name?.split(' ')[0] || 'User'} 💖` : "My Everwish Space"}
+            {user ? `Hi, ${user.name?.split(" ")[0] || "User"} 💖` : "My Everwish Space"}
           </button>
         </nav>
       </div>
@@ -199,7 +199,6 @@ export default function Header() {
                   </button>
                 </form>
 
-                {/* 🔸 Ver tarjetas sin tener cuenta */}
                 <button
                   onClick={() => setShowPopup(false)}
                   className="text-pink-500 font-semibold mt-4 text-sm hover:underline"
@@ -213,4 +212,4 @@ export default function Header() {
       )}
     </header>
   );
-              }
+                   }
