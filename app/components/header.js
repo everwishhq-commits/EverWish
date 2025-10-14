@@ -21,17 +21,17 @@ export default function Header() {
 
   return (
     <header
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 bg-white ${
-        isScrolled ? "h-16 shadow-md" : "h-20"
-      } flex items-center`}
+      className={`fixed top-0 left-0 w-full z-50 bg-white transition-all duration-500 ${
+        isScrolled ? "h-14 shadow-md" : "h-18 sm:h-20"
+      } flex items-center pt-[0.35rem] sm:pt-[0.5rem]`}  {/* <- aquí agregamos espacio superior en móvil/tablet */}
     >
       <div className="w-full max-w-7xl mx-auto flex items-center justify-between px-4 md:px-6 h-full">
 
-        {/* 🔹 Logo perfectamente centrado en el header */}
+        {/* 🔹 Logo centrado y proporcionado */}
         <motion.div
           initial={{ scale: 1, y: 0 }}
           animate={{
-            scale: isScrolled ? 0.85 : 1,
+            scale: isScrolled ? 0.8 : 1,
             y: 0,
           }}
           transition={{ duration: 0.3 }}
@@ -41,16 +41,16 @@ export default function Header() {
             <Image
               src="/logo.png"
               alt="Everwish"
-              width={isScrolled ? 60 : 75}
-              height={isScrolled ? 40 : 50}
+              width={isScrolled ? 50 : 70}
+              height={isScrolled ? 35 : 50}
               priority
-              className="object-contain w-auto h-auto select-none"
+              className="object-contain w-auto h-auto select-none sm:w-[80px] sm:h-[55px]"
             />
           </Link>
         </motion.div>
 
         {/* 🔸 Menú y botón dentro del header */}
-        <nav className="flex items-center gap-4 md:gap-6 text-gray-800 font-semibold text-sm md:text-base h-full">
+        <nav className="flex items-center gap-3 sm:gap-6 text-gray-800 font-semibold text-sm sm:text-base h-full">
           <Link
             href="/categories"
             className={`${isActive("/categories") ? "text-pink-500 underline" : ""}`}
@@ -67,7 +67,7 @@ export default function Header() {
         </nav>
       </div>
 
-      {/* 🔮 POPUP */}
+      {/* 🔮 Popup igual que antes */}
       <AnimatePresence>
         {showPopup && (
           <motion.div
@@ -136,4 +136,4 @@ export default function Header() {
       </AnimatePresence>
     </header>
   );
-                }
+              }
