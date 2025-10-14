@@ -26,22 +26,25 @@ export default function Splash({ onFinish }) {
   }, [onFinish]);
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-white">
-      {/* Logo parpadeando */}
-      <div
-        className={`transition-opacity duration-500 ${
-          fade ? "opacity-100" : "opacity-40"
-        }`}
-      >
-        <Image src="/logo.png" alt="Everwish Logo" width={180} height={180} />
-      </div>
-
-      {/* Barra más arriba */}
-      <div className="w-48 h-2 bg-gray-200 rounded-full overflow-hidden mt-4">
+    <div className="flex flex-col items-center justify-center h-screen bg-white relative">
+      {/* 🔹 Subimos todo el bloque visual ligeramente */}
+      <div className="absolute top-[45%] -translate-y-1/2 flex flex-col items-center">
+        {/* Logo parpadeando */}
         <div
-          className="h-full bg-pink-500 transition-all duration-500"
-          style={{ width: `${progress}%` }}
-        />
+          className={`transition-opacity duration-500 ${
+            fade ? "opacity-100" : "opacity-40"
+          }`}
+        >
+          <Image src="/logo.png" alt="Everwish Logo" width={180} height={180} />
+        </div>
+
+        {/* Barra de carga */}
+        <div className="w-48 h-2 bg-gray-200 rounded-full overflow-hidden mt-4">
+          <div
+            className="h-full bg-pink-500 transition-all duration-500"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
       </div>
     </div>
   );
