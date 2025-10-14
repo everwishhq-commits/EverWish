@@ -27,7 +27,7 @@ export default function Header() {
     >
       <div className="w-full max-w-7xl mx-auto flex items-center justify-between px-3 md:px-6">
         
-        {/* 🔹 Logo perfectamente centrado en móvil, tablet y desktop */}
+        {/* 🔹 Logo perfectamente centrado, animado y proporcionado */}
         <motion.div
           initial={{ scale: 0.9, y: 0 }}
           animate={{
@@ -36,20 +36,20 @@ export default function Header() {
               ? 0
               : typeof window !== "undefined"
               ? window.innerWidth < 640
-                ? 8 // 📱 móviles
+                ? 4 // 📱 móviles: leve espacio
                 : window.innerWidth < 1024
-                ? 4 // 💻 tablets
-                : 2 // 🖥️ desktops
-              : 0,
+                ? 2 // 💻 tablets
+                : 1 // 🖥️ desktops
+              : 0
           }}
           transition={{ duration: 0.3 }}
-          className="cursor-pointer flex items-center justify-center py-3 md:py-2"
+          className="cursor-pointer flex items-center justify-center py-2"
         >
           <Link href="/">
             <Image
               src="/logo.png"
               alt="Everwish"
-              width={isScrolled ? 55 : 75}
+              width={isScrolled ? 55 : 70}
               height={45}
               priority
               className="object-contain w-auto h-auto select-none"
@@ -86,7 +86,7 @@ export default function Header() {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-sm w-full text-center"
+              className="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-sm w-full text-center relative"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
@@ -102,15 +102,17 @@ export default function Header() {
               <h2 className="text-pink-500 text-lg md:text-xl font-bold mb-3">
                 💖 Welcome to Everwish
               </h2>
+
               <p className="text-gray-700 text-sm leading-relaxed mb-4">
-                This is your personal space to create, send, and receive digital cards —
+                This is your personal space to create, send, and receive digital cards — 
                 just pure moments of joy. ✨
               </p>
+
               <p className="text-gray-700 text-sm leading-relaxed mb-4">
-                🪶 In your personal panel, every card you make is saved here automatically
-                to manage. After a secure purchase you’ll receive an{" "}
-                <strong>Everwish ID</strong>.
+                🪶 In your personal panel, every card you make is saved here automatically 
+                to manage. After a secure purchase you’ll receive an <strong>Everwish ID</strong>.
               </p>
+
               <p className="text-gray-700 text-sm leading-relaxed mb-4">
                 🎁 You’ll also find cards that others have sent you.  
                 Start by choosing a card below 💌
@@ -131,7 +133,7 @@ export default function Header() {
                 Access My Space 💌
               </button>
 
-              {/* 👇 Opción alternativa sin login */}
+              {/* 👀 Opción sin login */}
               <button
                 onClick={() => setShowPopup(false)}
                 className="text-gray-500 text-sm hover:underline"
@@ -144,4 +146,4 @@ export default function Header() {
       </AnimatePresence>
     </header>
   );
-                }
+}
