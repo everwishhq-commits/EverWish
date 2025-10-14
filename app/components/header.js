@@ -30,10 +30,10 @@ export default function Header() {
     <header
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
         isScrolled ? "h-14 shadow-md" : "h-20"
-      } bg-white`}
+      } bg-white pt-[0.45rem] sm:pt-[0.6rem] md:pt-[0.75rem]`}
     >
       <div className="w-full max-w-7xl mx-auto flex items-center justify-between px-3 md:px-6 h-full">
-        {/* 🔹 Logo centrado y mejor proporcionado */}
+        {/* 🔹 Logo centrado con espacio superior ajustado */}
         <motion.div
           initial={{ scale: 1 }}
           animate={{ scale: isScrolled ? 0.85 : 1 }}
@@ -199,6 +199,7 @@ export default function Header() {
                   </button>
                 </form>
 
+                {/* 🔸 Ver tarjetas sin tener cuenta */}
                 <button
                   onClick={() => setShowPopup(false)}
                   className="text-pink-500 font-semibold mt-4 text-sm hover:underline"
@@ -212,4 +213,4 @@ export default function Header() {
       )}
     </header>
   );
-                   }
+          }
