@@ -9,6 +9,7 @@ export default function Carousel() {
   const autoplayRef = useRef(null);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
+  const pauseTimeout = useRef(null); // 🔹 Nuevo: para pausar temporalmente
 
   // ✅ Carga de videos desde /api/videos
   useEffect(() => {
@@ -30,19 +31,27 @@ export default function Carousel() {
   }, []);
 
   // 🔁 Autoplay cada 3s con loop infinito
-  useEffect(() => {
+  const startAutoplay = () => {
     clearInterval(autoplayRef.current);
-    if (videos.length > 0) {
-      autoplayRef.current = setInterval(() => {
-        setIndex((prev) => (prev + 1) % videos.length);
-      }, 3000);
-    }
+    autoplayRef.current = setInterval(() => {
+      setIndex((prev) => (prev + 1) % videos.length);
+    }, 3000);
+  };
+
+  useEffect(() => {
+    if (videos.length > 0) startAutoplay();
     return () => clearInterval(autoplayRef.current);
   }, [videos]);
 
-  // 👆 Swipe manual
-  const handleTouchStart = (e) => (touchStartX.current = e.touches[0].clientX);
+  // 👆 Swipe manual con pausa temporal
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+    clearInterval(autoplayRef.current); // pausa inmediata
+    clearTimeout(pauseTimeout.current);
+  };
+
   const handleTouchMove = (e) => (touchEndX.current = e.touches[0].clientX);
+
   const handleTouchEnd = () => {
     const diff = touchStartX.current - touchEndX.current;
     if (Math.abs(diff) > 50) {
@@ -52,6 +61,8 @@ export default function Carousel() {
           : (prev - 1 + videos.length) % videos.length
       );
     }
+    // 🔹 Espera 4 segundos y reanuda autoplay
+    pauseTimeout.current = setTimeout(startAutoplay, 4000);
   };
 
   // 🖱️ Click → fullscreen + /edit/[slug]
@@ -94,13 +105,17 @@ export default function Carousel() {
                   loop
                   muted
                   playsInline
-                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] rounded-2xl shadow-lg object-cover bg-white"
+                  draggable={false}
+                  onContextMenu={(e) => e.preventDefault()} // ❌ evita menú descarga
+                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] rounded-2xl shadow-lg object-contain p-3 bg-white select-none"
                 />
               ) : (
                 <img
                   src={video.src}
                   alt={video.title}
-                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] rounded-2xl shadow-lg object-cover bg-white"
+                  draggable={false}
+                  onContextMenu={(e) => e.preventDefault()} // ❌ evita descarga
+                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] rounded-2xl shadow-lg object-contain p-3 bg-white select-none"
                 />
               )}
             </div>
@@ -113,7 +128,12 @@ export default function Carousel() {
         {videos.map((_, i) => (
           <span
             key={i}
-            onClick={() => setIndex(i)}
+            onClick={() => {
+              setIndex(i);
+              clearInterval(autoplayRef.current);
+              clearTimeout(pauseTimeout.current);
+              pauseTimeout.current = setTimeout(startAutoplay, 4000);
+            }}
             className={`w-3 h-3 rounded-full cursor-pointer transition-all ${
               i === index ? "bg-pink-500 scale-125" : "bg-gray-300"
             }`}
@@ -122,4 +142,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-                }
+          }
