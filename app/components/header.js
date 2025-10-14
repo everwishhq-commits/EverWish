@@ -21,44 +21,36 @@ export default function Header() {
 
   return (
     <header
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
-        isScrolled ? "h-14 shadow-md" : "h-20"
-      } bg-white`}
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 bg-white ${
+        isScrolled ? "h-16 shadow-md" : "h-20"
+      } flex items-center`}
     >
-      <div className="w-full max-w-7xl mx-auto flex items-center justify-between px-3 md:px-6">
-        
-        {/* 🔹 Logo perfectamente centrado, animado y proporcionado */}
+      <div className="w-full max-w-7xl mx-auto flex items-center justify-between px-4 md:px-6 h-full">
+
+        {/* 🔹 Logo perfectamente centrado en el header */}
         <motion.div
-          initial={{ scale: 0.9, y: 0 }}
+          initial={{ scale: 1, y: 0 }}
           animate={{
-            scale: isScrolled ? 0.8 : 0.9,
-            y: isScrolled
-              ? 0
-              : typeof window !== "undefined"
-              ? window.innerWidth < 640
-                ? 4 // 📱 móviles: leve espacio
-                : window.innerWidth < 1024
-                ? 2 // 💻 tablets
-                : 1 // 🖥️ desktops
-              : 0
+            scale: isScrolled ? 0.85 : 1,
+            y: 0,
           }}
           transition={{ duration: 0.3 }}
-          className="cursor-pointer flex items-center justify-center py-2"
+          className="cursor-pointer flex items-center justify-center h-full"
         >
           <Link href="/">
             <Image
               src="/logo.png"
               alt="Everwish"
-              width={isScrolled ? 55 : 70}
-              height={45}
+              width={isScrolled ? 60 : 75}
+              height={isScrolled ? 40 : 50}
               priority
               className="object-contain w-auto h-auto select-none"
             />
           </Link>
         </motion.div>
 
-        {/* 🔸 Menú principal */}
-        <nav className="flex items-center gap-3 md:gap-6 text-gray-800 font-semibold text-xs md:text-base">
+        {/* 🔸 Menú y botón dentro del header */}
+        <nav className="flex items-center gap-4 md:gap-6 text-gray-800 font-semibold text-sm md:text-base h-full">
           <Link
             href="/categories"
             className={`${isActive("/categories") ? "text-pink-500 underline" : ""}`}
@@ -66,17 +58,16 @@ export default function Header() {
             Categories
           </Link>
 
-          {/* 🔹 Botón principal My Everwish Space */}
           <button
             onClick={() => setShowPopup(true)}
-            className="bg-pink-500 hover:bg-pink-600 text-white font-semibold px-3 py-1.5 md:px-5 md:py-2 rounded-full text-xs md:text-sm transition-all shadow-sm"
+            className="bg-pink-500 hover:bg-pink-600 text-white font-semibold px-4 py-2 rounded-full text-sm transition-all shadow-sm"
           >
             💌 My Everwish Space
           </button>
         </nav>
       </div>
 
-      {/* 🔮 POPUP My Everwish Space */}
+      {/* 🔮 POPUP */}
       <AnimatePresence>
         {showPopup && (
           <motion.div
@@ -104,7 +95,7 @@ export default function Header() {
               </h2>
 
               <p className="text-gray-700 text-sm leading-relaxed mb-4">
-                This is your personal space to create, send, and receive digital cards — 
+                This is your personal space to create, send, and receive digital cards —
                 just pure moments of joy. ✨
               </p>
 
@@ -133,7 +124,6 @@ export default function Header() {
                 Access My Space 💌
               </button>
 
-              {/* 👀 Opción sin login */}
               <button
                 onClick={() => setShowPopup(false)}
                 className="text-gray-500 text-sm hover:underline"
@@ -146,4 +136,4 @@ export default function Header() {
       </AnimatePresence>
     </header>
   );
-}
+                }
