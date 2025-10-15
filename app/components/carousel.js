@@ -12,7 +12,17 @@ export default function Carousel() {
   const pauseRef = useRef(false);
   const swipeDetected = useRef(false);
 
-  // ✅ Carga los videos
+  // ✅ Función de autoplay (reinicia correctamente)
+  const startAutoplay = () => {
+    clearInterval(autoplayRef.current);
+    if (videos.length > 0 && !pauseRef.current) {
+      autoplayRef.current = setInterval(() => {
+        setIndex((prev) => (prev + 1) % videos.length);
+      }, 5000);
+    }
+  };
+
+  // ✅ Carga de videos
   useEffect(() => {
     async function fetchVideos() {
       try {
@@ -29,18 +39,13 @@ export default function Carousel() {
     return () => clearInterval(refresh);
   }, []);
 
-  // 🔁 Autoplay con pausa condicional
+  // 🔁 Autoplay inicial
   useEffect(() => {
-    clearInterval(autoplayRef.current);
-    if (videos.length > 0 && !pauseRef.current) {
-      autoplayRef.current = setInterval(() => {
-        setIndex((prev) => (prev + 1) % videos.length);
-      }, 5000);
-    }
+    startAutoplay();
     return () => clearInterval(autoplayRef.current);
-  }, [videos, index]);
+  }, [videos]);
 
-  // 👆 Swipe y toque detectados con lógica refinada
+  // 👆 Swipe + toque
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX;
     touchEndX.current = e.touches[0].clientX;
@@ -59,29 +64,32 @@ export default function Carousel() {
     const diff = touchStartX.current - touchEndX.current;
 
     if (swipeDetected.current && Math.abs(diff) > 50) {
-      // 👉 Swipe inmediato sin delay
+      // 👉 Swipe inmediato
       setIndex((prev) =>
         diff > 0
           ? (prev + 1) % videos.length
           : (prev - 1 + videos.length) % videos.length
       );
     } else {
-      // 👆 Tap único → fullscreen
+      // 👆 Tap → fullscreen
       const tapped = videos[index];
       if (tapped?.slug) handleClick(tapped.slug);
     }
 
-    // 🕒 Reanuda autoplay después de 4 s
+    // 🕒 Reanuda autoplay tras 4 s
     setTimeout(() => {
       pauseRef.current = false;
+      startAutoplay();
     }, 4000);
   };
 
-  // 🔸 Click → pantalla completa + navegación
+  // 🔸 Click → fullscreen + navegación
   const handleClick = async (slug) => {
     try {
-      await document.documentElement.requestFullscreen?.();
-      await new Promise((r) => setTimeout(r, 300));
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) await elem.requestFullscreen();
+      else if (elem.webkitRequestFullscreen) await elem.webkitRequestFullscreen();
+      await new Promise((r) => setTimeout(r, 200));
       router.push(`/edit/${slug}`);
     } catch {
       router.push(`/edit/${slug}`);
@@ -98,7 +106,7 @@ export default function Carousel() {
       >
         {videos.map((video, i) => {
           const offset = (i - index + videos.length) % videos.length;
-          let positionClass =
+          const positionClass =
             offset === 0
               ? "translate-x-0 scale-100 z-20 opacity-100"
               : offset === 1
@@ -119,13 +127,15 @@ export default function Carousel() {
                   loop
                   muted
                   playsInline
-                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] rounded-2xl shadow-lg object-contain bg-white overflow-hidden"
+                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover object-center bg-white overflow-hidden"
+                  style={{ maxHeight: "100%", maxWidth: "100%" }}
                 />
               ) : (
                 <img
                   src={video.src}
                   alt={video.title}
-                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] rounded-2xl shadow-lg object-contain bg-white overflow-hidden"
+                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover object-center bg-white overflow-hidden"
+                  style={{ maxHeight: "100%", maxWidth: "100%" }}
                 />
               )}
             </div>
@@ -142,7 +152,10 @@ export default function Carousel() {
               setIndex(i);
               pauseRef.current = true;
               clearInterval(autoplayRef.current);
-              setTimeout(() => (pauseRef.current = false), 4000);
+              setTimeout(() => {
+                pauseRef.current = false;
+                startAutoplay();
+              }, 4000);
             }}
             className={`w-3 h-3 rounded-full cursor-pointer transition-all ${
               i === index ? "bg-pink-500 scale-125" : "bg-gray-300"
@@ -152,4 +165,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-            }
+        }
