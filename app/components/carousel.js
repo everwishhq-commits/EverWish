@@ -12,6 +12,7 @@ export default function Carousel() {
   const pauseRef = useRef(false);
   const swipeDetected = useRef(false);
 
+  // ✅ Función de autoplay (reinicia correctamente)
   const startAutoplay = () => {
     clearInterval(autoplayRef.current);
     if (videos.length > 0 && !pauseRef.current) {
@@ -21,6 +22,7 @@ export default function Carousel() {
     }
   };
 
+  // ✅ Carga de videos
   useEffect(() => {
     async function fetchVideos() {
       try {
@@ -37,11 +39,13 @@ export default function Carousel() {
     return () => clearInterval(refresh);
   }, []);
 
+  // 🔁 Autoplay inicial
   useEffect(() => {
     startAutoplay();
     return () => clearInterval(autoplayRef.current);
   }, [videos]);
 
+  // 👆 Swipe + toque
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX;
     touchEndX.current = e.touches[0].clientX;
@@ -60,22 +64,26 @@ export default function Carousel() {
     const diff = touchStartX.current - touchEndX.current;
 
     if (swipeDetected.current && Math.abs(diff) > 50) {
+      // 👉 Swipe inmediato
       setIndex((prev) =>
         diff > 0
           ? (prev + 1) % videos.length
           : (prev - 1 + videos.length) % videos.length
       );
     } else {
+      // 👆 Tap → fullscreen
       const tapped = videos[index];
       if (tapped?.slug) handleClick(tapped.slug);
     }
 
+    // 🕒 Reanuda autoplay tras 4 s
     setTimeout(() => {
       pauseRef.current = false;
       startAutoplay();
     }, 4000);
   };
 
+  // 🔸 Click → fullscreen + navegación
   const handleClick = async (slug) => {
     try {
       const elem = document.documentElement;
@@ -119,13 +127,15 @@ export default function Carousel() {
                   loop
                   muted
                   playsInline
-                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-contain sm:object-cover object-center bg-white overflow-hidden"
+                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover object-center bg-white overflow-hidden"
+                  style={{ maxHeight: "100%", maxWidth: "100%" }}
                 />
               ) : (
                 <img
                   src={video.src}
                   alt={video.title}
-                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-contain sm:object-cover object-center bg-white overflow-hidden"
+                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover object-center bg-white overflow-hidden"
+                  style={{ maxHeight: "100%", maxWidth: "100%" }}
                 />
               )}
             </div>
@@ -133,6 +143,7 @@ export default function Carousel() {
         })}
       </div>
 
+      {/* 🔘 Dots */}
       <div className="flex mt-5 gap-2">
         {videos.map((_, i) => (
           <span
@@ -154,4 +165,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-}
+        }
