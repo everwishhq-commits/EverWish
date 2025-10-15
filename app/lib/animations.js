@@ -1,9 +1,8 @@
 /* =========================================================
-   ✨ ANIMATIONS LIBRARY — 10 per category
+   🩵 BLOQUE 3 — ANIMACIONES (10 por categoría)
    ========================================================= */
-import { parseCategoryFromSlug } from "./messages";
 
-const ANIMS = {
+export const ANIMS = {
   birthday: [
     "🎉 Confetti Burst",
     "🎂 Cake Spark",
@@ -186,7 +185,12 @@ const ANIMS = {
   ],
 };
 
+/* =========================================================
+   🎬 FUNCTION — Return animations by slug/category
+   ========================================================= */
 export function getAnimationsForSlug(slug = "") {
-  const cat = parseCategoryFromSlug(slug);
-  return ANIMS[cat] || ANIMS.general;
-}
+  const s = slug.toLowerCase();
+  const keys = Object.keys(ANIMS);
+  const match = keys.find((k) => s.includes(k));
+  return ANIMS[match] || ANIMS.general;
+     }
