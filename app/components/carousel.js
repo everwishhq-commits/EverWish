@@ -12,7 +12,7 @@ export default function Carousel() {
   const pauseRef = useRef(false);
   const swipeDetected = useRef(false);
 
-  // ✅ Carga de videos desde /api/videos
+  // ✅ Carga los videos
   useEffect(() => {
     async function fetchVideos() {
       try {
@@ -25,61 +25,59 @@ export default function Carousel() {
     }
 
     fetchVideos();
-
-    // 🔁 Refresca automáticamente cada 24h
     const refresh = setInterval(fetchVideos, 24 * 60 * 60 * 1000);
     return () => clearInterval(refresh);
   }, []);
 
-  // 🔁 Autoplay (ahora cada 5 segundos)
+  // 🔁 Autoplay con pausa condicional
   useEffect(() => {
     clearInterval(autoplayRef.current);
     if (videos.length > 0 && !pauseRef.current) {
       autoplayRef.current = setInterval(() => {
         setIndex((prev) => (prev + 1) % videos.length);
-      }, 5000); // ⏰ ← antes 3000, ahora 5000 ms
+      }, 5000);
     }
     return () => clearInterval(autoplayRef.current);
-  }, [videos, pauseRef.current]);
+  }, [videos, index]);
 
-  // 🖐️ Interacción táctil: distinguir swipe vs tap
+  // 👆 Swipe y toque detectados con lógica refinada
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX;
+    touchEndX.current = e.touches[0].clientX;
     swipeDetected.current = false;
-    pauseRef.current = true; // pausa el autoplay durante interacción
+    pauseRef.current = true;
     clearInterval(autoplayRef.current);
   };
 
   const handleTouchMove = (e) => {
     touchEndX.current = e.touches[0].clientX;
-    if (Math.abs(touchStartX.current - touchEndX.current) > 10) {
-      swipeDetected.current = true;
-    }
+    const diff = touchStartX.current - touchEndX.current;
+    if (Math.abs(diff) > 20) swipeDetected.current = true;
   };
 
   const handleTouchEnd = () => {
     const diff = touchStartX.current - touchEndX.current;
 
     if (swipeDetected.current && Math.abs(diff) > 50) {
-      // 👉 Swipe detectado → mover carrusel
+      // 👉 Swipe inmediato sin delay
       setIndex((prev) =>
         diff > 0
           ? (prev + 1) % videos.length
           : (prev - 1 + videos.length) % videos.length
       );
     } else {
-      // 👆 Tap corto → abrir imagen
+      // 👆 Tap único → fullscreen
       const tapped = videos[index];
       if (tapped?.slug) handleClick(tapped.slug);
     }
 
-    // 🔁 Reanudar autoplay después de 4 s sin interacción
+    // 🕒 Reanuda autoplay después de 4 s
     setTimeout(() => {
       pauseRef.current = false;
     }, 4000);
   };
 
-  // 🖱️ Click → fullscreen + /edit/[slug]
+  // 🔸 Click → pantalla completa + navegación
   const handleClick = async (slug) => {
     try {
       await document.documentElement.requestFullscreen?.();
@@ -121,13 +119,13 @@ export default function Carousel() {
                   loop
                   muted
                   playsInline
-                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] rounded-2xl shadow-lg object-cover sm:object-fill object-center bg-white overflow-hidden"
+                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] rounded-2xl shadow-lg object-contain bg-white overflow-hidden"
                 />
               ) : (
                 <img
                   src={video.src}
                   alt={video.title}
-                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] rounded-2xl shadow-lg object-cover sm:object-fill object-center bg-white overflow-hidden"
+                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] rounded-2xl shadow-lg object-contain bg-white overflow-hidden"
                 />
               )}
             </div>
@@ -135,12 +133,17 @@ export default function Carousel() {
         })}
       </div>
 
-      {/* Dots */}
+      {/* 🔘 Dots */}
       <div className="flex mt-5 gap-2">
         {videos.map((_, i) => (
           <span
             key={i}
-            onClick={() => setIndex(i)}
+            onClick={() => {
+              setIndex(i);
+              pauseRef.current = true;
+              clearInterval(autoplayRef.current);
+              setTimeout(() => (pauseRef.current = false), 4000);
+            }}
             className={`w-3 h-3 rounded-full cursor-pointer transition-all ${
               i === index ? "bg-pink-500 scale-125" : "bg-gray-300"
             }`}
@@ -149,4 +152,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-  }
+            }
