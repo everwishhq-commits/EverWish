@@ -1,85 +1,67 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { loadStripe } from "@stripe/stripe-js";
-import { Elements } from "@stripe/react-stripe-js";
 
+/* ===== lib (en la raíz, fuera de /app) ===== */
 import { defaultMessageFromSlug } from "../../lib/messages";
 import { getAnimationsForSlug } from "../../lib/animations";
 import CropperModal from "../../lib/croppermodal";
 import GiftCardPopup from "../../lib/giftcard";
-import CheckoutModal from "../../lib/checkout";
+import CheckoutPopup from "../../lib/checkout";
 
-/* ========= Stripe ========= */
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
-);
-
-/* ========= Mobile helper ========= */
+/* ===== helpers ===== */
 const useIsMobile = () => {
   const [m, setM] = useState(false);
   useEffect(() => {
-    const check = () => setM(window.innerWidth < 640);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
+    const f = () => setM(window.innerWidth < 640);
+    f();
+    window.addEventListener("resize", f);
+    return () => window.removeEventListener("resize", f);
   }, []);
   return m;
 };
 
-/* ========= Página principal ========= */
+/* ===== página ===== */
 export default function EditPage() {
   const { slug } = useParams();
   const isMobile = useIsMobile();
 
-  // Estados principales
+  // Intro extendida (3s)
   const [item, setItem] = useState(null);
+  const [showEdit, setShowEdit] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  // Editor
   const [message, setMessage] = useState("");
   const [animOptions, setAnimOptions] = useState([]);
   const [anim, setAnim] = useState("");
-  const [progress, setProgress] = useState(0);
-  const [showEdit, setShowEdit] = useState(false);
 
-  // Modales
+  // Imagen del usuario
+  const fileRef = useRef(null);
   const [showCrop, setShowCrop] = useState(false);
-  const [showGiftPopup, setShowGiftPopup] = useState(false);
+  const [rawImage, setRawImage] = useState(null);      // archivo original para el cropper
+  const [userImage, setUserImage] = useState(null);    // base64 final
+
+  // GiftCard & Checkout
+  const [gift, setGift] = useState({ brand: "", amount: 0 });
+  const [showGift, setShowGift] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
 
-  // Datos de usuario y compra
-  const [userImage, setUserImage] = useState(null);
-  const [gift, setGift] = useState({ brand: "", amount: 0 });
-  const [plan, setPlan] = useState("Signature"); // Default Signature
-  const PRICES = { Heartfelt: 3.99, Signature: 7.99 };
+  // Plan y precios
+  const HEARTFELT_PRICE = 3.99;
+  const SIGNATURE_PRICE = 7.99;
+  const [plan, setPlan] = useState("signature"); // "heartfelt" | "signature"
 
   // Persistencia por slug
-  const keyMsg = `ew_msg_${slug}`;
+  const keyMsg  = `ew_msg_${slug}`;
   const keyAnim = `ew_anim_${slug}`;
+  const keyPlan = `ew_plan_${slug}`;
   const keyGift = `ew_gift_${slug}`;
+  const keyPImg = `ew_userimg_${slug}`;
 
-  /* --- Cargar persistencia --- */
-  useEffect(() => {
-    try {
-      const m = sessionStorage.getItem(keyMsg);
-      if (m) setMessage(m);
-      const a = sessionStorage.getItem(keyAnim);
-      if (a) setAnim(a);
-      const g = sessionStorage.getItem(keyGift);
-      if (g) setGift(JSON.parse(g));
-    } catch {}
-  }, [slug]);
-
-  /* --- Guardar persistencia --- */
-  useEffect(() => {
-    try {
-      sessionStorage.setItem(keyMsg, message);
-      sessionStorage.setItem(keyAnim, anim);
-      sessionStorage.setItem(keyGift, JSON.stringify(gift));
-    } catch {}
-  }, [message, anim, gift, keyMsg, keyAnim, keyGift]);
-
-  /* --- Cargar video + animaciones --- */
+  /* === cargar datos === */
   useEffect(() => {
     (async () => {
       try {
@@ -88,143 +70,216 @@ export default function EditPage() {
         const found = list.find((v) => v.slug === slug);
         setItem(found || null);
 
-        if (!sessionStorage.getItem(keyMsg))
-          setMessage(defaultMessageFromSlug(slug));
+        // mensaje automático si no existe
+        const m = sessionStorage.getItem(keyMsg);
+        setMessage(m || defaultMessageFromSlug(slug));
+
+        // animaciones por categoría
         const opts = getAnimationsForSlug(slug);
         setAnimOptions(opts);
-        if (!sessionStorage.getItem(keyAnim))
-          setAnim(opts[0] || "❌ None");
+        const a = sessionStorage.getItem(keyAnim);
+        setAnim(a || (opts[0] || "❌ None"));
+
+        // plan
+        const p = sessionStorage.getItem(keyPlan);
+        setPlan(p || "signature");
+
+        // gift
+        const g = sessionStorage.getItem(keyGift);
+        if (g) setGift(JSON.parse(g));
+
+        // imagen usuario (base64)
+        const u = sessionStorage.getItem(keyPImg);
+        if (u) setUserImage(u);
       } catch (e) {
-        console.error("Error loading /api/videos", e);
+        console.error("load /api/videos failed", e);
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
-  /* --- Pantalla extendida inicial (3s) --- */
+  /* === guardar cambios === */
+  useEffect(() => { try { sessionStorage.setItem(keyMsg, message); } catch {} }, [message, keyMsg]);
+  useEffect(() => { try { sessionStorage.setItem(keyAnim, anim); } catch {} }, [anim, keyAnim]);
+  useEffect(() => { try { sessionStorage.setItem(keyPlan, plan); } catch {} }, [plan, keyPlan]);
+  useEffect(() => { try { sessionStorage.setItem(keyGift, JSON.stringify(gift)); } catch {} }, [gift, keyGift]);
+  useEffect(() => { try { userImage ? sessionStorage.setItem(keyPImg, userImage) : sessionStorage.removeItem(keyPImg); } catch {} }, [userImage, keyPImg]);
+
+  /* === intro fullscreen 3s con barra === */
   useEffect(() => {
     if (!item) return;
     let timer;
     if (!showEdit) {
+      // progress animado
       const start = performance.now();
-      const duration = 3000;
+      const dur = 3000;
       const tick = () => {
-        const p = Math.min(1, (performance.now() - start) / duration);
+        const p = Math.min(1, (performance.now() - start) / dur);
         setProgress(Math.round(p * 100));
         if (p < 1) requestAnimationFrame(tick);
       };
       requestAnimationFrame(tick);
 
-      timer = setTimeout(() => setShowEdit(true), duration);
+      // intentar entrar a fullscreen
+      (async () => {
+        try {
+          const el = document.documentElement;
+          if (el.requestFullscreen) await el.requestFullscreen();
+          // @ts-ignore
+          if (!document.fullscreenElement && el.webkitRequestFullscreen)
+            // @ts-ignore
+            await el.webkitRequestFullscreen();
+        } catch {}
+      })();
+
+      timer = setTimeout(async () => {
+        try {
+          if (document.fullscreenElement && document.exitFullscreen) await document.exitFullscreen();
+          // @ts-ignore
+          if (!document.fullscreenElement && document.webkitExitFullscreen)
+            // @ts-ignore
+            await document.webkitExitFullscreen();
+        } catch {}
+        setShowEdit(true);
+      }, 3000);
     }
     return () => clearTimeout(timer);
   }, [item, showEdit]);
 
-  /* --- Render de animaciones --- */
+  // Tap de seguridad
+  useEffect(() => {
+    const go = async () => {
+      if (!showEdit) {
+        try {
+          if (document.fullscreenElement && document.exitFullscreen) await document.exitFullscreen();
+          // @ts-ignore
+          if (!document.fullscreenElement && document.webkitExitFullscreen)
+            // @ts-ignore
+            await document.webkitExitFullscreen();
+        } catch {}
+        setShowEdit(true);
+      }
+    };
+    window.addEventListener("click", go);
+    window.addEventListener("touchstart", go);
+    return () => {
+      window.removeEventListener("click", go);
+      window.removeEventListener("touchstart", go);
+    };
+  }, [showEdit]);
+
+  /* === efectos flotantes (frente, no bloquea inputs) === */
   const renderEffect = () => {
     if (!anim || /None/.test(anim)) return null;
     const emoji = anim.split(" ")[0];
-    return Array.from({ length: 14 }).map((_, i) => (
+    return Array.from({ length: 18 }).map((_, i) => (
       <motion.span
         key={i}
         className="absolute text-xl z-[35] pointer-events-none"
         initial={{ opacity: 0, y: 0 }}
         animate={{
           opacity: [0, 0.85, 0],
-          y: [0, -100],
+          y: [0, -90],
           x: [0, Math.random() * 100 - 50],
-          scale: [0.9, 1.1, 0.9],
+          scale: [0.95, 1.05, 0.95],
         }}
         transition={{
-          duration: 5 + Math.random() * 1.5,
+          duration: 4.8 + Math.random() * 2,
           repeat: Infinity,
           ease: "easeInOut",
-          delay: i * 0.3,
+          delay: i * 0.22,
         }}
-        style={{
-          top: `${Math.random() * 100}%`,
-          left: `${Math.random() * 100}%`,
-        }}
+        style={{ top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%` }}
       >
         {emoji}
       </motion.span>
     ));
   };
 
-  /* --- Si no hay item --- */
   if (!item) return null;
 
-  /* --- Si aún está en pantalla inicial --- */
+  /* === totales === */
+  const basePrice = plan === "signature" ? SIGNATURE_PRICE : HEARTFELT_PRICE;
+  const total = basePrice + (Number(gift?.amount) || 0);
+
+  /* === ui === */
+  const mediaHeight = isMobile ? 360 : 420;
+
+  const onPickImage = (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setRawImage(reader.result); // base64 para el cropper
+      setShowCrop(true);
+    };
+    reader.readAsDataURL(f);
+    // reset input para permitir misma imagen de nuevo
+    e.target.value = "";
+  };
+
+  /* ============ RENDER ============ */
+
+  // Intro extendida
   if (!showEdit) {
     return (
       <div className="fixed inset-0 flex justify-center items-center bg-black">
         {item.src?.endsWith(".mp4") ? (
           <>
-            <video
-              src={item.src}
-              autoPlay
-              muted
-              loop
-              playsInline
-              className="w-full h-full object-cover"
-            />
+            <video src={item.src} autoPlay muted loop playsInline className="w-full h-full object-cover" />
             <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/30">
-              <div
-                className="h-full bg-white transition-all duration-200"
-                style={{ width: `${progress}%` }}
-              />
+              <div className="h-full bg-white transition-all duration-200" style={{ width: `${progress}%` }} />
             </div>
           </>
         ) : (
-          <img
-            src={item.src}
-            alt={slug}
-            className="w-full h-full object-cover"
-          />
+          <img src={item.src} alt={slug} className="w-full h-full object-cover" />
         )}
       </div>
     );
   }
 
-  /* --- Altura del media principal --- */
-  const mediaHeight = isMobile ? 360 : 440;
-
-  /* --- Cálculo total --- */
-  const total = PRICES[plan] + (Number(gift.amount) || 0);
-
-  /* --- Render principal --- */
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 relative bg-[#fff8f5] min-h-screen overflow-hidden">
-      {/* Animaciones flotantes */}
+      {/* efectos flotantes */}
       <div className="absolute inset-0">{renderEffect()}</div>
 
       <div className="relative z-[30]">
-        {/* Imagen principal */}
-        <div className="relative w-full rounded-3xl shadow-md overflow-hidden bg-white">
-          {item.src?.endsWith(".mp4") ? (
-            <video
-              src={item.src}
-              muted
-              loop
-              autoPlay
-              playsInline
-              style={{ height: mediaHeight }}
-              className="w-full object-contain"
-            />
-          ) : (
-            <img
-              src={item.src}
-              alt={slug}
-              style={{ height: mediaHeight }}
-              className="w-full object-contain"
-            />
-          )}
+        {/* MEDIA - sin bordes laterales y sin deformar */}
+        <div className="mx-auto w-full max-w-[560px]">
+          <div className="relative w-full rounded-3xl shadow-md overflow-hidden bg-white">
+            {item.src?.endsWith(".mp4") ? (
+              <video
+                src={item.src}
+                muted
+                loop
+                autoPlay
+                playsInline
+                className="w-full"
+                style={{ height: mediaHeight, objectFit: "contain", background: "rgba(0,0,0,.04)" }}
+              />
+            ) : (
+              <img
+                src={item.src}
+                alt={slug}
+                className="w-full"
+                style={{ height: mediaHeight, objectFit: "contain", background: "rgba(0,0,0,.04)" }}
+              />
+            )}
+          </div>
         </div>
 
-        {/* Controles */}
+        {/* user photo preview (si existe) */}
+        {userImage && (
+          <div className="mx-auto w-full max-w-[560px]">
+            <div className="mt-3 rounded-2xl overflow-hidden border bg-white">
+              <img src={userImage} alt="user" className="w-full h-[200px] object-cover" />
+            </div>
+          </div>
+        )}
+
+        {/* PANEL */}
         <section className="mt-4 bg-white rounded-3xl shadow-md p-6">
-          <h2 className="text-xl font-semibold text-center mb-3">
-            ✨ Customize your message ✨
-          </h2>
+          <h2 className="text-xl font-semibold text-center mb-3">✨ Customize your message ✨</h2>
 
           <textarea
             value={message}
@@ -240,68 +295,105 @@ export default function EditPage() {
             className="w-full mt-3 rounded-2xl border border-gray-300 p-3 text-center focus:ring-2 focus:ring-pink-400"
           >
             {animOptions.map((a, i) => (
-              <option key={i} value={a}>
-                {a}
-              </option>
+              <option key={i} value={a}>{a}</option>
             ))}
             <option value="❌ None">❌ None</option>
           </select>
 
-          {/* Botones */}
+          {/* Plan selector compacto */}
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <button
+              onClick={() => setPlan("signature")}
+              className={`rounded-2xl py-2 border ${
+                plan === "signature" ? "border-purple-500 bg-purple-50 text-purple-700" : "border-gray-300"
+              }`}
+            >
+              💎 Signature — ${SIGNATURE_PRICE.toFixed(2)}
+            </button>
+            <button
+              onClick={() => setPlan("heartfelt")}
+              className={`rounded-2xl py-2 border ${
+                plan === "heartfelt" ? "border-pink-500 bg-pink-50 text-pink-700" : "border-gray-300"
+              }`}
+            >
+              💌 Heartfelt — ${HEARTFELT_PRICE.toFixed(2)}
+            </button>
+          </div>
+
+          {/* Acciones */}
           <div className="flex gap-4 mt-4">
             <button
-              onClick={() => setShowCrop(true)}
+              onClick={() => fileRef.current?.click()}
               className="flex-1 rounded-full py-3 font-semibold transition bg-yellow-300 hover:bg-yellow-400 text-[#3b2b1f]"
             >
               📸 Add Image
             </button>
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileRef}
+              className="hidden"
+              onChange={onPickImage}
+            />
             <button
-              onClick={() => setShowGiftPopup(true)}
+              onClick={() => setShowGift(true)}
               className="flex-1 rounded-full py-3 font-semibold transition bg-pink-100 hover:bg-pink-200 text-pink-700"
             >
               🎁 Gift Card
             </button>
           </div>
 
-          {/* Checkout */}
           <button
             onClick={() => setShowCheckout(true)}
-            className="mt-4 w-full rounded-full py-3 font-semibold text-white transition bg-purple-500 hover:bg-purple-600"
+            className="mt-4 w-full rounded-full py-3 font-semibold text-white bg-purple-500 hover:bg-purple-600"
           >
-            💳 Checkout
+            Proceed to Checkout 💳
           </button>
+
+          <p className="mt-3 text-center text-sm text-gray-500">
+            Total (actual): <strong>${total.toFixed(2)}</strong>
+          </p>
         </section>
       </div>
 
-      {/* Modales */}
-      {showCrop && (
-        <CropperModal
-          onClose={() => setShowCrop(false)}
-          onSave={setUserImage}
-          blur="rgba(0,0,0,0.5)"
-        />
-      )}
+      {/* ===== MODALES (siempre por encima del media) ===== */}
 
-      {showGiftPopup && (
-        <GiftCardPopup
-          onClose={() => setShowGiftPopup(false)}
-          onSelect={(g) => setGift(g)}
-          blur="rgba(0,0,0,0.5)"
-        />
-      )}
-
-      {showCheckout && (
-        <Elements stripe={stripePromise}>
-          <CheckoutModal
-            onClose={() => setShowCheckout(false)}
-            total={total}
-            gift={gift}
-            plan={plan}
-            setPlan={setPlan}
-            blur="rgba(0,0,0,0.5)"
+      {/* Cropper */}
+      {showCrop && rawImage && (
+        <div className="fixed inset-0 z-[80]">
+          <CropperModal
+            open={showCrop}
+            image={rawImage}
+            onClose={() => { setShowCrop(false); setRawImage(null); }}
+            onApply={(b64) => { setUserImage(b64); setShowCrop(false); setRawImage(null); }}
           />
-        </Elements>
+        </div>
+      )}
+
+      {/* GiftCard */}
+      {showGift && (
+        <div className="fixed inset-0 z-[80]">
+          <GiftCardPopup
+            initial={gift?.brand ? gift : null}
+            onSelect={(g) => setGift(g)}
+            onClose={() => setShowGift(false)}
+          />
+        </div>
+      )}
+
+      {/* Checkout */}
+      {showCheckout && (
+        <div className="fixed inset-0 z-[80]">
+          <CheckoutPopup
+            total={total}
+            plan={plan}                 // por si tu lib lo muestra
+            gift={gift}
+            onGiftChange={() => { setShowGift(true); }}
+            onGiftRemove={() => setGift({ brand: "", amount: 0 })}
+            onClose={() => setShowCheckout(false)}
+          />
+        </div>
       )}
     </main>
   );
-}
+              }
