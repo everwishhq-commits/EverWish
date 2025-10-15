@@ -21,7 +21,6 @@ const useIsMobile = () => {
     const check = () => setIsMobile(window.innerWidth < 640);
     check();
     window.addEventListener("resize", check);
-    check();
     return () => window.removeEventListener("resize", check);
   }, []);
   return isMobile;
@@ -169,7 +168,6 @@ export default function EditPage() {
     );
   }
 
-  const mediaHeight = isMobile ? 360 : 440;
   const total =
     plan === "signature"
       ? CARD_PRICE_SIGNATURE + (gift?.amount || 0)
@@ -181,7 +179,7 @@ export default function EditPage() {
       {/* Animaciones flotantes */}
       <div className="absolute inset-0">{renderEffect()}</div>
 
-      <div className="relative z-[30]">
+      <div className="relative z-[10]">
         {/* Tarjeta principal */}
         <div className="relative w-full rounded-3xl shadow-md overflow-hidden bg-white">
           {item.src?.endsWith(".mp4") ? (
@@ -191,15 +189,23 @@ export default function EditPage() {
               loop
               autoPlay
               playsInline
-              style={{ height: mediaHeight }}
-              className="w-full object-contain"
+              style={{
+                height: isMobile ? 360 : 440,
+                width: "100%",
+                objectFit: "cover",
+              }}
+              className="rounded-3xl"
             />
           ) : (
             <img
               src={item.src}
               alt={slug}
-              style={{ height: mediaHeight }}
-              className="w-full object-contain"
+              style={{
+                height: isMobile ? 360 : 440,
+                width: "100%",
+                objectFit: "cover",
+              }}
+              className="rounded-3xl"
             />
           )}
         </div>
@@ -268,33 +274,39 @@ export default function EditPage() {
         </section>
       </div>
 
-      {/* Popups */}
+      {/* Popups con z-index corregidos */}
       {showCrop && (
-        <CropperModal
-          onClose={() => setShowCrop(false)}
-          onSave={(img) => {
-            setUserImage(img);
-            setShowCrop(false);
-          }}
-        />
+        <div className="fixed inset-0 z-[999] flex items-center justify-center">
+          <CropperModal
+            onClose={() => setShowCrop(false)}
+            onSave={(img) => {
+              setUserImage(img);
+              setShowCrop(false);
+            }}
+          />
+        </div>
       )}
       {showGiftPopup && (
-        <GiftCardPopup
-          onSelect={(g) => {
-            setGift(g);
-            setShowGiftPopup(false);
-          }}
-          onClose={() => setShowGiftPopup(false)}
-        />
+        <div className="fixed inset-0 z-[999] flex items-center justify-center">
+          <GiftCardPopup
+            onSelect={(g) => {
+              setGift(g);
+              setShowGiftPopup(false);
+            }}
+            onClose={() => setShowGiftPopup(false)}
+          />
+        </div>
       )}
       {showCheckout && (
-        <CheckoutPopup
-          total={total}
-          plan={plan}
-          setPlan={setPlan}
-          onClose={() => setShowCheckout(false)}
-        />
+        <div className="fixed inset-0 z-[999] flex items-center justify-center">
+          <CheckoutPopup
+            total={total}
+            plan={plan}
+            setPlan={setPlan}
+            onClose={() => setShowCheckout(false)}
+          />
+        </div>
       )}
     </main>
   );
-            }
+      }
