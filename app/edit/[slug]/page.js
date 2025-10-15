@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { loadStripe } from "@stripe/stripe-js";
@@ -14,12 +14,11 @@ import { defaultMessageFromSlug } from "@/lib/messages";
 import { getAnimationsForSlug } from "@/lib/animations";
 import CropperModal from "@/lib/croppermodal";
 
-/* ========= Stripe (publishable) ========= */
+/* ========= Stripe ========= */
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
 );
 
-/* ========= Stripe inline form ========= */
 function InlineStripeForm({ total, onSuccess }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -48,7 +47,7 @@ function InlineStripeForm({ total, onSuccess }) {
         alert("🎉 Payment successful!");
         onSuccess?.();
       }
-    } catch (err) {
+    } catch {
       alert("Payment failed. Try again.");
     } finally {
       setLoading(false);
@@ -73,53 +72,150 @@ function InlineStripeForm({ total, onSuccess }) {
   );
 }
 
+function GiftCardPopup({ onSelect, onClose, initial }) {
+  const tabs = ["Popular", "Lifestyle", "Digital"];
+  const [activeTab, setActiveTab] = useState("Popular");
+  const [expanded, setExpanded] = useState({});
+  const [brand, setBrand] = useState(initial?.brand || "");
+  const [amount, setAmount] = useState(initial?.amount || 0);
+  const quick = [5, 10, 25, 50, 100];
+  const cards = {
+    Popular: {
+      featured: ["Amazon", "Walmart", "Target"],
+      more: ["Apple", "Best Buy", "Starbucks"],
+    },
+    Lifestyle: {
+      featured: ["Nike", "H&M", "Zara"],
+      more: ["Shein", "Etsy", "Bath & Body Works"],
+    },
+    Digital: {
+      featured: ["Google Play", "Spotify", "Netflix"],
+      more: ["Xbox", "PlayStation", "Disney+"],
+    },
+  };
+
+  const done = () => {
+    if (!brand || !Number(amount)) return alert("Please select a brand and amount.");
+    onSelect({ brand, amount: Number(amount) });
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[70]">
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="bg-white rounded-3xl shadow-2xl w-11/12 max-w-md p-6 relative"
+      >
+        <button
+          onClick={onClose}
+          className="absolute right-5 top-4 text-gray-400 hover:text-gray-600"
+        >
+          ✕
+        </button>
+        <h3 className="text-xl font-bold text-center text-pink-600 mb-4">
+          Choose a Gift Card 🎁
+        </h3>
+        <div className="flex justify-center gap-6 mb-4">
+          {tabs.map((t) => (
+            <button
+              key={t}
+              onClick={() => setActiveTab(t)}
+              className={`pb-1 ${
+                activeTab === t
+                  ? "text-pink-500 border-b-2 border-pink-500 font-semibold"
+                  : "text-gray-400"
+              }`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          {cards[activeTab].featured.map((b) => (
+            <button
+              key={b}
+              onClick={() => setBrand(b)}
+              className={`border rounded-xl py-2 px-3 text-sm ${
+                brand === b
+                  ? "bg-pink-100 border-pink-400 text-pink-600"
+                  : "hover:bg-gray-100"
+              }`}
+            >
+              {b}
+            </button>
+          ))}
+        </div>
+        {expanded[activeTab] && (
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            {cards[activeTab].more.map((b) => (
+              <button
+                key={b}
+                onClick={() => setBrand(b)}
+                className={`border rounded-xl py-2 px-3 text-sm ${
+                  brand === b
+                    ? "bg-pink-100 border-pink-400 text-pink-600"
+                    : "hover:bg-gray-100"
+                }`}
+              >
+                {b}
+              </button>
+            ))}
+          </div>
+        )}
+        <button
+          onClick={() =>
+            setExpanded((p) => ({ ...p, [activeTab]: !p[activeTab] }))
+          }
+          className="text-sm text-gray-600 hover:text-pink-500 mb-3"
+        >
+          {expanded[activeTab] ? "Hide more ▲" : "More gift cards ▼"}
+        </button>
+        <h4 className="text-sm font-semibold mb-2 text-center text-gray-600">
+          Amount (USD)
+        </h4>
+        <div className="flex gap-2 justify-center mb-4">
+          {quick.map((a) => (
+            <button
+              key={a}
+              onClick={() => setAmount(a)}
+              className={`px-3 py-1 rounded-lg border transition ${
+                Number(amount) === a
+                  ? "bg-pink-100 border-pink-500 text-pink-600"
+                  : "hover:bg-gray-100"
+              }`}
+            >
+              ${a}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={done}
+          className="w-full rounded-full py-3 font-semibold text-white bg-pink-500 hover:bg-pink-600 transition"
+        >
+          Done
+        </button>
+      </motion.div>
+    </div>
+  );
+}
+
 /* ========= Página principal ========= */
 export default function EditPage() {
   const { slug } = useParams();
-
-  // Estado principal
   const [item, setItem] = useState(null);
   const [showEdit, setShowEdit] = useState(false);
   const [progress, setProgress] = useState(0);
-
-  // Editor
   const [message, setMessage] = useState("");
   const [animOptions, setAnimOptions] = useState([]);
   const [anim, setAnim] = useState("");
-  const [userImage, setUserImage] = useState(null);
-  const [showCropper, setShowCropper] = useState(false);
-
-  // Checkout
+  const [gift, setGift] = useState({ brand: "", amount: 0 });
+  const [showGiftPopup, setShowGiftPopup] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
+  const [showCropper, setShowCropper] = useState(false);
+  const [userImage, setUserImage] = useState(null);
   const CARD_PRICE = 5;
 
-  // Persistencia
-  const keyMsg = `ew_msg_${slug}`;
-  const keyAnim = `ew_anim_${slug}`;
-  const keyImg = `ew_img_${slug}`;
-
-  // Cargar datos guardados
-  useEffect(() => {
-    try {
-      const m = sessionStorage.getItem(keyMsg);
-      if (m) setMessage(m);
-      const a = sessionStorage.getItem(keyAnim);
-      if (a) setAnim(a);
-      const i = sessionStorage.getItem(keyImg);
-      if (i) setUserImage(i);
-    } catch {}
-  }, [slug]);
-
-  // Guardar cambios
-  useEffect(() => {
-    try {
-      sessionStorage.setItem(keyMsg, message);
-      sessionStorage.setItem(keyAnim, anim);
-      sessionStorage.setItem(keyImg, userImage);
-    } catch {}
-  }, [message, anim, userImage, keyMsg, keyAnim, keyImg]);
-
-  // Cargar video + animaciones
+  // 🔹 Cargar datos de la tarjeta
   useEffect(() => {
     (async () => {
       try {
@@ -127,169 +223,167 @@ export default function EditPage() {
         const list = await res.json();
         const found = list.find((v) => v.slug === slug);
         setItem(found || null);
-        if (!sessionStorage.getItem(keyMsg)) {
-          setMessage(defaultMessageFromSlug(slug));
-        }
+        setMessage(defaultMessageFromSlug(slug));
         const opts = getAnimationsForSlug(slug);
         setAnimOptions(opts);
-        if (!sessionStorage.getItem(keyAnim)) {
-          setAnim(opts[0] || "✨ Sparkles");
-        }
+        setAnim(opts[0] || "❌ None");
       } catch (e) {
         console.error("Error loading /api/videos", e);
       }
     })();
   }, [slug]);
 
-  // Intro con barra de progreso
-  useEffect(() => {
-    if (!item) return;
-    let timer;
-    if (!showEdit) {
-      const start = performance.now();
-      const duration = 3000;
-      const tick = () => {
-        const p = Math.min(1, (performance.now() - start) / duration);
-        setProgress(Math.round(p * 100));
-        if (p < 1) requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
-
-      timer = setTimeout(() => setShowEdit(true), 3000);
-    }
-    return () => clearTimeout(timer);
-  }, [item, showEdit]);
-
-  // Imagen subida por el usuario (crop)
-  const handleCropped = (dataUrl) => {
-    setUserImage(dataUrl);
-    setShowCropper(false);
+  // 🔹 Animaciones flotantes (efecto visual)
+  const renderEffect = () => {
+    if (!anim || /None/.test(anim)) return null;
+    const emoji = anim.split(" ")[0];
+    return Array.from({ length: 16 }).map((_, i) => (
+      <motion.span
+        key={i}
+        className="absolute text-xl z-[35] pointer-events-none"
+        initial={{ opacity: 0, y: 0 }}
+        animate={{
+          opacity: [0, 0.85, 0],
+          y: [0, -90],
+          x: [0, Math.random() * 100 - 50],
+          scale: [0.95, 1.05, 0.95],
+        }}
+        transition={{
+          duration: 5 + Math.random() * 1.5,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: i * 0.2,
+        }}
+        style={{
+          top: `${Math.random() * 100}%`,
+          left: `${Math.random() * 100}%`,
+        }}
+      >
+        {emoji}
+      </motion.span>
+    ));
   };
 
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-pink-50 to-purple-50 p-4">
-      {!showEdit ? (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center text-gray-700"
-        >
-          <p className="mb-4 text-lg font-medium">Loading your Everwish...</p>
-          <div className="w-64 h-2 bg-gray-200 rounded-full mx-auto">
-            <div
-              className="h-2 bg-pink-500 rounded-full transition-all"
-              style={{ width: `${progress}%` }}
-            ></div>
-          </div>
-        </motion.div>
-      ) : (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-md bg-white shadow-lg rounded-3xl p-6 relative"
-        >
-          <h1 className="text-center text-2xl font-bold text-pink-600 mb-2">
-            Your Everwish ✨
-          </h1>
-          {item && (
-            <div className="relative overflow-hidden rounded-2xl mb-3">
-              <video
-                src={item.url}
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="w-full rounded-2xl"
-              />
-            </div>
-          )}
+  if (!item) return null;
 
-          <select
-            value={anim}
-            onChange={(e) => setAnim(e.target.value)}
-            className="w-full mb-3 p-3 rounded-xl border"
-          >
-            {animOptions.map((a) => (
-              <option key={a}>{a}</option>
-            ))}
-          </select>
+  return (
+    <main className="mx-auto max-w-3xl px-4 py-8 relative bg-[#fff8f5] min-h-screen overflow-hidden">
+      {/* Animaciones */}
+      <div className="absolute inset-0">{renderEffect()}</div>
+
+      <div className="relative z-[30]">
+        {/* Imagen/video */}
+        <div className="relative w-full rounded-3xl shadow-md overflow-hidden bg-white">
+          {item.src?.endsWith(".mp4") ? (
+            <video
+              src={item.src}
+              muted
+              loop
+              autoPlay
+              playsInline
+              className="w-full h-[420px] object-contain"
+            />
+          ) : (
+            <img
+              src={item.src}
+              alt={slug}
+              className="w-full h-[420px] object-contain"
+            />
+          )}
+        </div>
+
+        {/* Imagen del usuario (abajo del mensaje) */}
+        {userImage && (
+          <div className="mt-3 flex justify-center">
+            <img
+              src={userImage}
+              alt="User upload"
+              className="max-w-[260px] rounded-xl shadow-md object-cover"
+            />
+          </div>
+        )}
+
+        {/* Controles */}
+        <section className="mt-6 bg-white rounded-3xl shadow-md p-6">
+          <h2 className="text-xl font-semibold text-center mb-4">
+            Customize your message ✨
+          </h2>
 
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            className="w-full border rounded-xl p-3 h-28 text-gray-700"
-            placeholder="Write your personal message..."
+            rows={3}
+            className="w-full rounded-2xl border border-gray-300 p-4 text-center focus:ring-2 focus:ring-pink-400"
           />
 
-          {/* Imagen del usuario */}
-          {userImage ? (
-            <div className="mt-3">
-              <img
-                src={userImage}
-                alt="Uploaded"
-                className="rounded-xl w-full object-cover max-h-64"
-              />
-              <button
-                onClick={() => setShowCropper(true)}
-                className="mt-2 text-pink-600 text-sm hover:underline"
-              >
-                Change Image
-              </button>
-            </div>
-          ) : (
+          {/* Dropdown de animaciones */}
+          <select
+            value={anim}
+            onChange={(e) => setAnim(e.target.value)}
+            className="w-full mt-3 rounded-2xl border border-gray-300 p-3 text-center focus:ring-2 focus:ring-pink-400"
+          >
+            {animOptions.map((a, i) => (
+              <option key={i} value={a}>
+                {a}
+              </option>
+            ))}
+            <option value="❌ None">❌ None</option>
+          </select>
+
+          {/* Botones */}
+          <div className="flex justify-between mt-4">
             <button
               onClick={() => setShowCropper(true)}
-              className="w-full mt-3 py-3 rounded-xl bg-pink-500 text-white font-semibold hover:bg-pink-600 transition"
+              className="w-[48%] rounded-full py-3 font-semibold transition text-[#3b2b1f] bg-yellow-300 hover:bg-yellow-400"
             >
-              Add a personal image 📷
+              📸 Add Image
             </button>
-          )}
+            <button
+              onClick={() => setShowGiftPopup(true)}
+              className="w-[48%] rounded-full py-3 font-semibold transition bg-pink-500 hover:bg-pink-600 text-white"
+            >
+              🎁 Gift Card
+            </button>
+          </div>
 
           <button
             onClick={() => setShowCheckout(true)}
-            className="w-full mt-5 py-3 rounded-xl bg-purple-500 text-white font-semibold hover:bg-purple-600 transition"
+            className="mt-4 w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 rounded-full transition"
           >
-            Send Everwish 💌
+            Checkout 💳
           </button>
+        </section>
+      </div>
 
-          {showCropper && (
-            <CropperModal
-              onCancel={() => setShowCropper(false)}
-              onCropped={handleCropped}
-            />
-          )}
-
-          {showCheckout && (
-            <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[70]">
-              <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="bg-white rounded-3xl shadow-2xl w-11/12 max-w-md p-6 relative"
-              >
-                <button
-                  onClick={() => setShowCheckout(false)}
-                  className="absolute right-5 top-4 text-gray-400 hover:text-gray-600"
-                  aria-label="Close"
-                >
-                  ✕
-                </button>
-                <h3 className="text-xl font-bold text-center text-purple-600 mb-1">
-                  Secure Checkout 💜
-                </h3>
-                <p className="text-center text-sm text-gray-500 mb-4">
-                  Your information is encrypted and processed safely.
-                </p>
-                <Elements stripe={stripePromise}>
-                  <InlineStripeForm
-                    total={CARD_PRICE}
-                    onSuccess={() => setShowCheckout(false)}
-                  />
-                </Elements>
-              </motion.div>
-            </div>
-          )}
-        </motion.div>
+      {showGiftPopup && (
+        <GiftCardPopup
+          initial={gift}
+          onSelect={(g) => {
+            setGift(g);
+            setShowGiftPopup(false);
+          }}
+          onClose={() => setShowGiftPopup(false)}
+        />
       )}
-    </div>
+
+      {showCheckout && (
+        <Elements stripe={stripePromise}>
+          <InlineStripeForm
+            total={CARD_PRICE + (gift.amount || 0)}
+            onSuccess={() => setShowCheckout(false)}
+          />
+        </Elements>
+      )}
+
+      {showCropper && (
+        <CropperModal
+          onClose={() => setShowCropper(false)}
+          onSave={(img) => {
+            setUserImage(img);
+            setShowCropper(false);
+          }}
+        />
+      )}
+    </main>
   );
-    }
+}
