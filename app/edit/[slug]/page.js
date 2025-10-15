@@ -1,4 +1,3 @@
-// app/edit/[slug]/page.js
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,14 +6,15 @@ import { motion } from "framer-motion";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 
-// 🔗 Importaciones desde lib
+// 🔗 Importaciones desde /lib
 import { defaultMessageFromSlug } from "@/lib/messages";
 import { getAnimationsForSlug } from "@/lib/animations";
-import CropperModal from "@/lib/croppermodal"; // botón para subir/editar imagen
+import CropperModal from "@/lib/croppermodal";
 
+// 💳 Stripe setup
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "");
 
-// 💳 Stripe inline form
+// ====== FORMULARIO DE STRIPE INLINE ======
 function InlineStripeForm({ total, onSuccess }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -67,9 +67,7 @@ function InlineStripeForm({ total, onSuccess }) {
   );
 }
 
-/* =========================================================
-   🩵 Página principal
-   ========================================================= */
+// ====== PÁGINA PRINCIPAL ======
 export default function EditPage() {
   const { slug } = useParams();
   const [item, setItem] = useState(null);
@@ -84,7 +82,7 @@ export default function EditPage() {
   const [userImage, setUserImage] = useState(null);
   const CARD_PRICE = 5;
 
-  // Cargar datos
+  // ==== Cargar datos y animaciones ====
   useEffect(() => {
     (async () => {
       try {
@@ -103,7 +101,7 @@ export default function EditPage() {
     })();
   }, [slug]);
 
-  // Render animación (emoji flotando)
+  // ==== Render de animación flotante ====
   const renderEffect = () => {
     if (!anim || /None/.test(anim)) return null;
     const emoji = anim.split(" ")[0];
@@ -130,7 +128,64 @@ export default function EditPage() {
     ));
   };
 
-  // Pantalla de carga
+  // ==== Pantalla extendida con transición automática (3s) ====
+  useEffect(() => {
+    if (!item) return;
+    let timer;
+    if (!showEdit) {
+      const start = performance.now();
+      const duration = 3000;
+      const tick = () => {
+        const p = Math.min(1, (performance.now() - start) / duration);
+        setProgress(Math.round(p * 100));
+        if (p < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+
+      (async () => {
+        try {
+          const el = document.documentElement;
+          if (el.requestFullscreen) await el.requestFullscreen();
+          if (!document.fullscreenElement && el.webkitRequestFullscreen)
+            el.webkitRequestFullscreen();
+        } catch {}
+      })();
+
+      timer = setTimeout(async () => {
+        try {
+          if (document.fullscreenElement && document.exitFullscreen)
+            await document.exitFullscreen();
+          if (!document.fullscreenElement && document.webkitExitFullscreen)
+            document.webkitExitFullscreen();
+        } catch {}
+        setShowEdit(true);
+      }, 3000);
+    }
+    return () => clearTimeout(timer);
+  }, [item, showEdit]);
+
+  // ==== Tap de seguridad (por si se queda en fullscreen) ====
+  useEffect(() => {
+    const handler = async () => {
+      if (!showEdit) {
+        try {
+          if (document.fullscreenElement && document.exitFullscreen)
+            await document.exitFullscreen();
+          if (!document.fullscreenElement && document.webkitExitFullscreen)
+            document.webkitExitFullscreen();
+        } catch {}
+        setShowEdit(true);
+      }
+    };
+    window.addEventListener("click", handler);
+    window.addEventListener("touchstart", handler);
+    return () => {
+      window.removeEventListener("click", handler);
+      window.removeEventListener("touchstart", handler);
+    };
+  }, [showEdit]);
+
+  // ==== Loading ====
   if (!item)
     return (
       <div className="flex items-center justify-center h-screen text-gray-400">
@@ -138,7 +193,7 @@ export default function EditPage() {
       </div>
     );
 
-  // Pantalla extendida (intro)
+  // ==== Pantalla extendida ====
   if (!showEdit)
     return (
       <div className="fixed inset-0 flex justify-center items-center bg-black">
@@ -158,7 +213,7 @@ export default function EditPage() {
       </div>
     );
 
-  // Editor principal
+  // ==== Editor principal ====
   return (
     <main className="relative min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
       <div className="relative w-full max-w-md bg-white rounded-3xl shadow-xl overflow-hidden">
@@ -177,7 +232,7 @@ export default function EditPage() {
         {renderEffect()}
       </div>
 
-      {/* Campo de mensaje */}
+      {/* Mensaje */}
       <textarea
         className="w-full max-w-md mt-4 p-3 rounded-xl border focus:ring-2 focus:ring-pink-400"
         rows={3}
@@ -243,7 +298,10 @@ export default function EditPage() {
               Checkout 💜
             </h3>
             <Elements stripe={stripePromise}>
-              <InlineStripeForm total={CARD_PRICE + (gift.amount || 0)} onSuccess={() => setShowCheckout(false)} />
+              <InlineStripeForm
+                total={CARD_PRICE + (gift.amount || 0)}
+                onSuccess={() => setShowCheckout(false)}
+              />
             </Elements>
             <button
               className="mt-4 w-full rounded-full py-3 text-gray-600 border hover:bg-gray-100"
@@ -256,4 +314,4 @@ export default function EditPage() {
       )}
     </main>
   );
-    }
+        }
