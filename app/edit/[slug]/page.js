@@ -1,25 +1,21 @@
+// app/edit/[slug]/page.js
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { loadStripe } from "@stripe/stripe-js";
-import {
-  Elements,
-  CardElement,
-  useStripe,
-  useElements,
-} from "@stripe/react-stripe-js";
+import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 
-import { defaultMessageFromSlug } from "../../lib/messages";
-import { getAnimationsForSlug } from "../../lib/animations";
+import { defaultMessageFromSlug } from "@/lib/messages";
+import { getAnimationsForSlug } from "@/lib/animations";
+import CropperModal from "@/lib/croppermodal";
 
-/* ========= Stripe Setup ========= */
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
-);
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "");
 
-/* ========= Inline Stripe Form ========= */
+/* =========================================================
+   💳 Stripe Inline Payment Form
+   ========================================================= */
 function InlineStripeForm({ total, onSuccess }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -42,9 +38,8 @@ function InlineStripeForm({ total, onSuccess }) {
         payment_method: { card: elements.getElement(CardElement) },
       });
 
-      if (result.error) {
-        alert(result.error.message || "Payment failed");
-      } else if (result.paymentIntent?.status === "succeeded") {
+      if (result.error) alert(result.error.message || "Payment failed");
+      else if (result.paymentIntent?.status === "succeeded") {
         alert("🎉 Payment successful!");
         onSuccess?.();
       }
@@ -73,176 +68,37 @@ function InlineStripeForm({ total, onSuccess }) {
   );
 }
 
-/* ========= Checkout Popup ========= */
-function CheckoutPopup({ total, gift, onGiftChange, onGiftRemove, onClose }) {
-  const [sender, setSender] = useState({ name: "", email: "", phone: "" });
-  const [recipient, setRecipient] = useState({ name: "", email: "", phone: "" });
-
-  return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[65]">
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="bg-white rounded-3xl shadow-2xl w-11/12 max-w-lg p-6 relative"
-      >
-        <button
-          onClick={onClose}
-          className="absolute right-5 top-4 text-gray-400 hover:text-gray-600"
-        >
-          ✕
-        </button>
-
-        <h3 className="text-xl font-bold text-center text-purple-600 mb-1">
-          Secure Checkout with Stripe 💜
-        </h3>
-        <p className="text-center text-sm text-gray-500 mb-4">
-          Your information is encrypted and processed safely.
-        </p>
-
-        <div className="grid md:grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm font-medium text-gray-600">
-              Sender <span className="text-pink-500">*</span>
-            </p>
-            <input
-              placeholder="Full name"
-              className="w-full rounded-xl border p-3 mb-2"
-              value={sender.name}
-              onChange={(e) => setSender({ ...sender, name: e.target.value })}
-            />
-            <input
-              placeholder="Email"
-              className="w-full rounded-xl border p-3 mb-2"
-              value={sender.email}
-              onChange={(e) => setSender({ ...sender, email: e.target.value })}
-            />
-            <input
-              placeholder="Phone"
-              className="w-full rounded-xl border p-3"
-              value={sender.phone}
-              onChange={(e) => setSender({ ...sender, phone: e.target.value })}
-            />
-          </div>
-
-          <div>
-            <p className="text-sm font-medium text-gray-600">
-              Recipient <span className="text-pink-500">*</span>
-            </p>
-            <input
-              placeholder="Full name"
-              className="w-full rounded-xl border p-3 mb-2"
-              value={recipient.name}
-              onChange={(e) => setRecipient({ ...recipient, name: e.target.value })}
-            />
-            <input
-              placeholder="Email"
-              className="w-full rounded-xl border p-3 mb-2"
-              value={recipient.email}
-              onChange={(e) => setRecipient({ ...recipient, email: e.target.value })}
-            />
-            <input
-              placeholder="Phone"
-              className="w-full rounded-xl border p-3"
-              value={recipient.phone}
-              onChange={(e) => setRecipient({ ...recipient, phone: e.target.value })}
-            />
-          </div>
-        </div>
-
-        <div className="mt-5 border-t pt-4 text-gray-700 text-sm">
-          <p className="font-semibold mb-1">Order summary</p>
-
-          <div className="flex justify-between">
-            <span>Everwish Card</span>
-            <span>$5.00</span>
-          </div>
-
-          <div className="flex justify-between items-center mt-2">
-            <span>
-              Gift Card{" "}
-              {gift?.brand
-                ? `(${gift.brand} $${Number(gift.amount || 0)})`
-                : "(none)"}
-            </span>
-            <div className="flex items-center gap-3">
-              {gift?.brand ? (
-                <>
-                  <button
-                    onClick={onGiftChange}
-                    className="text-pink-600 hover:underline"
-                  >
-                    Change
-                  </button>
-                  <button
-                    onClick={onGiftRemove}
-                    className="text-gray-500 hover:text-red-500"
-                    title="Remove gift card"
-                  >
-                    🗑️
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={onGiftChange}
-                  className="text-pink-600 hover:underline"
-                >
-                  Add
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div className="h-px bg-gray-200 my-2" />
-          <div className="flex justify-between font-semibold">
-            <span>Total</span>
-            <span>${total.toFixed(2)}</span>
-          </div>
-        </div>
-
-        <Elements stripe={stripePromise}>
-          <InlineStripeForm total={total} onSuccess={onClose} />
-        </Elements>
-      </motion.div>
-    </div>
-  );
-}
-
-/* ========= Main Page ========= */
+/* =========================================================
+   🌸 Página principal — EditPage
+   ========================================================= */
 export default function EditPage() {
   const { slug } = useParams();
   const [item, setItem] = useState(null);
   const [showEdit, setShowEdit] = useState(false);
   const [progress, setProgress] = useState(0);
+
   const [message, setMessage] = useState("");
   const [animOptions, setAnimOptions] = useState([]);
   const [anim, setAnim] = useState("");
-  const CARD_PRICE = 5;
-  const [gift, setGift] = useState({ brand: "", amount: 0 });
-  const [showCheckout, setShowCheckout] = useState(false);
   const [userImage, setUserImage] = useState(null);
+  const [showCropper, setShowCropper] = useState(false);
 
-  const fileInput = useRef();
+  const CARD_PRICE = 5;
 
-  /* --- Cargar info --- */
+  // 🔹 Cargar video + animaciones
   useEffect(() => {
     (async () => {
-      try {
-        const res = await fetch("/api/videos", { cache: "no-store" });
-        const list = await res.json();
-        const found = list.find((v) => v.slug === slug);
-        setItem(found || null);
-
-        setMessage(defaultMessageFromSlug(slug));
-        const opts = getAnimationsForSlug(slug);
-        setAnimOptions(opts);
-        setAnim(opts[0] || "❌ None");
-      } catch (e) {
-        console.error("Error loading /api/videos", e);
-      }
+      const res = await fetch("/api/videos", { cache: "no-store" });
+      const list = await res.json();
+      const found = list.find((v) => v.slug === slug);
+      setItem(found || null);
+      setMessage(defaultMessageFromSlug(slug));
+      setAnimOptions(getAnimationsForSlug(slug));
+      setAnim(getAnimationsForSlug(slug)[0]);
     })();
   }, [slug]);
 
-  /* --- Barra de carga --- */
+  // 🔹 Pantalla inicial animada (3 s fullscreen)
   useEffect(() => {
     if (!item) return;
     let timer;
@@ -255,24 +111,60 @@ export default function EditPage() {
         if (p < 1) requestAnimationFrame(tick);
       };
       requestAnimationFrame(tick);
-      timer = setTimeout(() => setShowEdit(true), duration);
+
+      (async () => {
+        try {
+          const el = document.documentElement;
+          if (el.requestFullscreen) await el.requestFullscreen();
+        } catch {}
+      })();
+
+      timer = setTimeout(async () => {
+        try {
+          if (document.fullscreenElement && document.exitFullscreen)
+            await document.exitFullscreen();
+        } catch {}
+        setShowEdit(true);
+      }, 3000);
     }
     return () => clearTimeout(timer);
   }, [item, showEdit]);
 
-  /* --- Imagen subida por el usuario --- */
-  const handleImageUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (ev) => setUserImage(ev.target.result);
-      reader.readAsDataURL(file);
-    }
+  // 🔹 Animación decorativa flotante
+  const renderEffect = () => {
+    if (!anim || /None/.test(anim)) return null;
+    const emoji = anim.split(" ")[0];
+    return Array.from({ length: 15 }).map((_, i) => (
+      <motion.span
+        key={i}
+        className="absolute text-2xl z-[35] pointer-events-none"
+        initial={{ opacity: 0, y: 0 }}
+        animate={{
+          opacity: [0, 0.8, 0],
+          y: [0, -90],
+          x: [0, Math.random() * 80 - 40],
+          scale: [0.95, 1.05, 0.95],
+        }}
+        transition={{
+          duration: 5 + Math.random() * 2,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: i * 0.25,
+        }}
+        style={{
+          top: `${Math.random() * 100}%`,
+          left: `${Math.random() * 100}%`,
+        }}
+      >
+        {emoji}
+      </motion.span>
+    ));
   };
 
   if (!item) return null;
 
-  if (!showEdit) {
+  // 🔹 Intro animada
+  if (!showEdit)
     return (
       <div className="fixed inset-0 flex justify-center items-center bg-black">
         {item.src?.endsWith(".mp4") ? (
@@ -297,11 +189,15 @@ export default function EditPage() {
         )}
       </div>
     );
-  }
 
+  // 🔹 Editor principal
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 relative bg-[#fff8f5] min-h-screen overflow-hidden">
+      {/* Animaciones al frente */}
+      <div className="absolute inset-0">{renderEffect()}</div>
+
       <div className="relative z-[30]">
+        {/* Media */}
         <div className="relative w-full rounded-3xl shadow-md overflow-hidden bg-white">
           {item.src?.endsWith(".mp4") ? (
             <video
@@ -321,7 +217,7 @@ export default function EditPage() {
           )}
         </div>
 
-        {/* ==== Mensaje y subida de imagen ==== */}
+        {/* Controles */}
         <section className="mt-6 bg-white rounded-3xl shadow-md p-6">
           <h2 className="text-xl font-semibold text-center mb-4">
             Customize your message ✨
@@ -334,39 +230,25 @@ export default function EditPage() {
             className="w-full rounded-2xl border border-gray-300 p-4 text-center focus:ring-2 focus:ring-pink-400"
           />
 
-          {/* Subida y vista previa de imagen */}
-          <div className="mt-4 text-center">
-            {userImage ? (
-              <div className="relative w-full h-48 overflow-hidden rounded-2xl border border-gray-300">
-                <img
-                  src={userImage}
-                  alt="Uploaded"
-                  className="object-cover w-full h-full"
-                />
-                <button
-                  onClick={() => setUserImage(null)}
-                  className="absolute top-2 right-2 bg-white/80 text-red-500 rounded-full px-2"
-                >
-                  ✕
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => fileInput.current?.click()}
-                className="mt-2 text-sm text-pink-500 hover:underline"
-              >
-                ➕ Add an image (optional)
-              </button>
-            )}
-            <input
-              type="file"
-              accept="image/*"
-              ref={fileInput}
-              onChange={handleImageUpload}
-              className="hidden"
+          {/* Imagen del usuario */}
+          {userImage && (
+            <img
+              src={userImage}
+              alt="User upload"
+              className="mt-4 rounded-xl w-full max-h-[220px] object-cover shadow-sm"
             />
+          )}
+
+          <div className="flex justify-center mt-3">
+            <button
+              onClick={() => setShowCropper(true)}
+              className="bg-yellow-300 hover:bg-yellow-400 text-[#3b2b1f] font-semibold rounded-full py-2 px-4 transition"
+            >
+              📸 {userImage ? "Edit Image" : "Add Image"}
+            </button>
           </div>
 
+          {/* Dropdown animaciones */}
           <select
             value={anim}
             onChange={(e) => setAnim(e.target.value)}
@@ -379,27 +261,19 @@ export default function EditPage() {
             ))}
             <option value="❌ None">❌ None</option>
           </select>
-
-          <div className="flex justify-between mt-4">
-            <button
-              onClick={() => setShowCheckout(true)}
-              className="w-full bg-pink-500 hover:bg-pink-600 text-white font-semibold py-3 rounded-full transition"
-            >
-              Checkout 💳
-            </button>
-          </div>
         </section>
       </div>
 
-      {showCheckout && (
-        <CheckoutPopup
-          total={CARD_PRICE + (gift.amount || 0)}
-          gift={gift}
-          onGiftChange={() => {}}
-          onGiftRemove={() => setGift({ brand: "", amount: 0 })}
-          onClose={() => setShowCheckout(false)}
+      {/* Modal de recorte */}
+      {showCropper && (
+        <CropperModal
+          onClose={() => setShowCropper(false)}
+          onSave={(img) => {
+            setUserImage(img);
+            setShowCropper(false);
+          }}
         />
       )}
     </main>
   );
-            }
+        }
