@@ -1,6 +1,7 @@
 /* =========================================================
-   💌 MESSAGES LIBRARY — 3 per category
+   💌 BLOQUE 2 — AUTOMATIC MESSAGES (3 per category)
    ========================================================= */
+
 export function parseCategoryFromSlug(slug = "") {
   const s = slug.toLowerCase();
   if (s.includes("birthday")) return "birthday";
@@ -21,6 +22,9 @@ export function parseCategoryFromSlug(slug = "") {
   return "general";
 }
 
+/* =========================================================
+   🌸 MESSAGES LIBRARY (3 per category)
+   ========================================================= */
 const MESSAGES = {
   birthday: [
     "Wishing you a birthday full of laughter, love, and sweet surprises! 🎉",
@@ -99,8 +103,11 @@ const MESSAGES = {
   ],
 };
 
+/* =========================================================
+   🎯 FUNCTION — Return a random message based on slug
+   ========================================================= */
 export function defaultMessageFromSlug(slug = "") {
   const cat = parseCategoryFromSlug(slug);
   const arr = MESSAGES[cat] || MESSAGES.general;
   return arr[Math.floor(Math.random() * arr.length)];
-    }
+}
