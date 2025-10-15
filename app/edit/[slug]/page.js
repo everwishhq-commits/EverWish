@@ -1,6 +1,7 @@
+// app/edit/[slug]/page.js
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { loadStripe } from "@stripe/stripe-js";
@@ -11,17 +12,17 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 
-// ⬇️ imports relativos al lib en la raíz
+// === IMPORTS DESDE lib (en la raíz del repo) ===
 import { defaultMessageFromSlug } from "../../lib/messages";
 import { getAnimationsForSlug } from "../../lib/animations";
 import CropperModal from "../../lib/croppermodal";
 
-/* ========= Stripe (publishable) ========= */
+// ========= Stripe (publishable) =========
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
 );
 
-/* ========= UI helpers ========= */
+// ========= UI helpers =========
 const useIsMobile = () => {
   const [m, setM] = useState(false);
   useEffect(() => {
@@ -78,7 +79,7 @@ function InlineStripeForm({ total, onSuccess }) {
         type="submit"
         disabled={!stripe || loading}
         className={`mt-4 w-full rounded-full py-3 font-semibold text-white transition ${
-          loading ? "bg-purple-300" : "bg-purple-500 hover:bg-purple-600"
+          loading ? "bg-purple-300" : "bg-purple-600 hover:bg-purple-700"
         }`}
       >
         {loading ? "Processing..." : `Confirm & Pay $${total.toFixed(2)} 💜`}
@@ -446,7 +447,7 @@ export default function EditPage() {
     return () => clearTimeout(timer);
   }, [item, showEdit]);
 
-  // Tap de seguridad: si queda atascado en fullscreen, toca para continuar
+  // Tap de seguridad
   useEffect(() => {
     const handler = async () => {
       if (!showEdit) {
@@ -468,7 +469,7 @@ export default function EditPage() {
     };
   }, [showEdit]);
 
-  // Render de animación (suave y por delante, sin bloquear inputs)
+  // Render de animación (overlay)
   const renderEffect = () => {
     if (!anim || /None/.test(anim)) return null;
     const emoji = anim.split(" ")[0];
@@ -496,9 +497,10 @@ export default function EditPage() {
     ));
   };
 
-  if (!item) {
-    return null;
-  }
+  if (!item) return null;
+
+  // Alturas pensadas para que TODO quepa en una sola pantalla
+  const mediaHeight = isMobile ? 360 : 440;
 
   /* --- Intro (pantalla extendida con barra) --- */
   if (!showEdit) {
@@ -517,9 +519,6 @@ export default function EditPage() {
       </div>
     );
   }
-
-  // Alturas pensadas para que TODO quepa en una sola pantalla
-  const mediaHeight = isMobile ? 360 : 440; // ↓ subimos la tarjeta y evitamos scroll excesivo
 
   /* --- Editor principal --- */
   return (
@@ -552,9 +551,7 @@ export default function EditPage() {
 
         {/* Controles */}
         <section className="mt-4 bg-white rounded-3xl shadow-md p-6">
-          <h2 className="text-xl font-semibold text-center mb-3">
-            ✨ Customize your message ✨
-          </h2>
+          <h2 className="text-xl font-semibold text-center mb-3">✨ Customize your message ✨</h2>
 
           <textarea
             value={message}
@@ -570,12 +567,21 @@ export default function EditPage() {
             className="w-full mt-3 rounded-2xl border border-gray-300 p-3 text-center focus:ring-2 focus:ring-pink-400"
           >
             {animOptions.map((a, i) => (
-              <option key={i} value={a}>
-                {a}
-              </option>
+              <option key={i} value={a}>{a}</option>
             ))}
             <option value="❌ None">❌ None</option>
           </select>
+
+          {/* Imagen del usuario (preview) */}
+          {userImage && (
+            <div className="mt-3">
+              <img
+                src={userImage}
+                alt="User"
+                className="mx-auto rounded-2xl border shadow-sm max-h-56 object-contain"
+              />
+            </div>
+          )}
 
           {/* Acciones */}
           <div className="flex gap-4 mt-4">
@@ -587,62 +593,4 @@ export default function EditPage() {
             </button>
             <button
               onClick={() => setShowGiftPopup(true)}
-              className="flex-1 rounded-full py-3 font-semibold transition bg-pink-100 hover:bg-pink-200 text-pink-700"
-            >
-              🎁 Gift Card
-            </button>
-          </div>
-          {/* Vista previa de la foto del usuario */}
-          {userImage && (
-            <div className="mt-3 text-center">
-              <p className="text-sm text-gray-600 mb-2">Your added photo</p>
-              <img
-                src={userImage}
-                alt="user"
-                className="mx-auto max-h-56 rounded-xl shadow"
-                style={{ objectFit: "cover" }}
-              />
-            </div>
-          )}
-        </section>
-      </div>
-
-      {/* Popups */}
-      {showCrop && (
-        <CropperModal
-          aspect={16 / 9}
-          onClose={() => setShowCrop(false)}
-          onConfirm={(blobUrl) => {
-            setUserImage(blobUrl);
-            setShowCrop(false);
-          }}
-        />
-      )}
-
-      {showGiftPopup && (
-        <GiftCardPopup
-          initial={gift}
-          onSelect={(g) => {
-            setGift(g);
-            setShowGiftPopup(false);
-          }}
-          onClose={() => setShowGiftPopup(false)}
-        />
-      )}
-
-      {showCheckout && (
-        <CheckoutPopup
-          total={CARD_PRICE + (gift.amount || 0)}
-          gift={gift}
-          onGiftChange={() => {
-            setShowCheckout(false);
-            setShowGiftPopup(true);
-          }}
-          onGiftRemove={() => setGift({ brand: "", amount: 0 })}
-          onClose={() => setShowCheckout(false)}
-        />
-      )}
-    </main>
-  );
-                }
-        
+              className="flex-1 rounded-full py-3 font-semibold tr
