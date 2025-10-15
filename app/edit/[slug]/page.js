@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { loadStripe } from "@stripe/stripe-js";
@@ -10,11 +10,203 @@ import {
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
-import Cropper from "react-easy-crop";
-import { defaultMessageFromSlug, getAnimationsForSlug } from "@/lib/everwishUtils";
 
-/* ========= Stripe Config ========= */
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "");
+// 🧩 Importar los mensajes y animaciones
+import { defaultMessageFromSlug } from "@/lib/messages";
+import { getAnimationsForSlug } from "@/lib/animations";
+
+/* ========= Stripe Setup ========= */
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
+);
+
+/* ========= Stripe Inline Form ========= */
+function InlineStripeForm({ total, onSuccess }) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [loading, setLoading] = useState(false);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+    setLoading(true);
+    try {
+      const res = await fetch("/api/payment_intents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: Math.round(total * 100) }),
+      });
+      const { clientSecret, error } = await res.json();
+      if (error || !clientSecret) throw new Error(error || "Missing client secret");
+
+      const result = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: { card: elements.getElement(CardElement) },
+      });
+
+      if (result.error) {
+        alert(result.error.message || "Payment failed");
+      } else if (result.paymentIntent?.status === "succeeded") {
+        alert("🎉 Payment successful!");
+        onSuccess?.();
+      }
+    } catch (err) {
+      alert("Payment failed. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={submit} className="mt-4">
+      <div className="border rounded-2xl p-4 bg-gray-50">
+        <CardElement options={{ style: { base: { fontSize: "16px" } } }} />
+      </div>
+      <button
+        type="submit"
+        disabled={!stripe || loading}
+        className={`mt-4 w-full rounded-full py-3 font-semibold text-white transition ${
+          loading ? "bg-purple-300" : "bg-purple-500 hover:bg-purple-600"
+        }`}
+      >
+        {loading ? "Processing..." : `Confirm & Pay $${total.toFixed(2)} 💜`}
+      </button>
+    </form>
+  );
+}
+
+/* ========= Checkout Popup ========= */
+function CheckoutPopup({ total, gift, onGiftChange, onGiftRemove, onClose }) {
+  const [sender, setSender] = useState({ name: "", email: "", phone: "" });
+  const [recipient, setRecipient] = useState({ name: "", email: "", phone: "" });
+
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[65]">
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="bg-white rounded-3xl shadow-2xl w-11/12 max-w-lg p-6 relative"
+      >
+        <button
+          onClick={onClose}
+          className="absolute right-5 top-4 text-gray-400 hover:text-gray-600"
+        >
+          ✕
+        </button>
+
+        <h3 className="text-xl font-bold text-center text-purple-600 mb-1">
+          Secure Checkout with Stripe 💜
+        </h3>
+        <p className="text-center text-sm text-gray-500 mb-4">
+          Your information is encrypted and processed safely.
+        </p>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <div>
+            <p className="text-sm font-medium text-gray-600">
+              Sender <span className="text-pink-500">*</span>
+            </p>
+            <input
+              placeholder="Full name"
+              className="w-full rounded-xl border p-3 mb-2"
+              value={sender.name}
+              onChange={(e) => setSender({ ...sender, name: e.target.value })}
+            />
+            <input
+              placeholder="Email"
+              className="w-full rounded-xl border p-3 mb-2"
+              value={sender.email}
+              onChange={(e) => setSender({ ...sender, email: e.target.value })}
+            />
+            <input
+              placeholder="Phone"
+              className="w-full rounded-xl border p-3"
+              value={sender.phone}
+              onChange={(e) => setSender({ ...sender, phone: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <p className="text-sm font-medium text-gray-600">
+              Recipient <span className="text-pink-500">*</span>
+            </p>
+            <input
+              placeholder="Full name"
+              className="w-full rounded-xl border p-3 mb-2"
+              value={recipient.name}
+              onChange={(e) => setRecipient({ ...recipient, name: e.target.value })}
+            />
+            <input
+              placeholder="Email"
+              className="w-full rounded-xl border p-3 mb-2"
+              value={recipient.email}
+              onChange={(e) => setRecipient({ ...recipient, email: e.target.value })}
+            />
+            <input
+              placeholder="Phone"
+              className="w-full rounded-xl border p-3"
+              value={recipient.phone}
+              onChange={(e) => setRecipient({ ...recipient, phone: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div className="mt-5 border-t pt-4 text-gray-700 text-sm">
+          <p className="font-semibold mb-1">Order summary</p>
+
+          <div className="flex justify-between">
+            <span>Everwish Card</span>
+            <span>$5.00</span>
+          </div>
+
+          <div className="flex justify-between items-center mt-2">
+            <span>
+              Gift Card{" "}
+              {gift?.brand
+                ? `(${gift.brand} $${Number(gift.amount || 0)})`
+                : "(none)"}
+            </span>
+            <div className="flex items-center gap-3">
+              {gift?.brand ? (
+                <>
+                  <button
+                    onClick={onGiftChange}
+                    className="text-pink-600 hover:underline"
+                  >
+                    Change
+                  </button>
+                  <button
+                    onClick={onGiftRemove}
+                    className="text-gray-500 hover:text-red-500"
+                    title="Remove gift card"
+                  >
+                    🗑️
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={onGiftChange}
+                  className="text-pink-600 hover:underline"
+                >
+                  Add
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="h-px bg-gray-200 my-2" />
+          <div className="flex justify-between font-semibold">
+            <span>Total</span>
+            <span>${total.toFixed(2)}</span>
+          </div>
+        </div>
+
+        <Elements stripe={stripePromise}>
+          <InlineStripeForm total={total} onSuccess={onClose} />
+        </Elements>
+      </motion.div>
+    </div>
+  );
+}
 
 /* ========= Main Page ========= */
 export default function EditPage() {
@@ -22,42 +214,32 @@ export default function EditPage() {
   const [item, setItem] = useState(null);
   const [showEdit, setShowEdit] = useState(false);
   const [progress, setProgress] = useState(0);
-
-  // Message + Animation
   const [message, setMessage] = useState("");
   const [animOptions, setAnimOptions] = useState([]);
   const [anim, setAnim] = useState("");
-
-  // Image Upload
-  const [imageSrc, setImageSrc] = useState(null);
-  const [croppedArea, setCroppedArea] = useState(null);
-  const [showCropper, setShowCropper] = useState(false);
-  const [finalImage, setFinalImage] = useState(null);
-
-  // GiftCard & Checkout
+  const CARD_PRICE = 5;
   const [gift, setGift] = useState({ brand: "", amount: 0 });
-  const [showGiftPopup, setShowGiftPopup] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
 
-  const CARD_PRICE = 5;
-
-  /* ========= Load Video / Image ========= */
   useEffect(() => {
     (async () => {
-      const res = await fetch("/api/videos", { cache: "no-store" });
-      const list = await res.json();
-      const found = list.find((v) => v.slug === slug);
-      setItem(found || null);
+      try {
+        const res = await fetch("/api/videos", { cache: "no-store" });
+        const list = await res.json();
+        const found = list.find((v) => v.slug === slug);
+        setItem(found || null);
 
-      const msg = defaultMessageFromSlug(slug);
-      setMessage(msg);
-      const opts = getAnimationsForSlug(slug);
-      setAnimOptions(opts);
-      setAnim(opts[0] || "❌ None");
+        setMessage(defaultMessageFromSlug(slug));
+        const opts = getAnimationsForSlug(slug);
+        setAnimOptions(opts);
+        setAnim(opts[0] || "❌ None");
+      } catch (e) {
+        console.error("Error loading /api/videos", e);
+      }
     })();
   }, [slug]);
 
-  /* ========= Fullscreen Intro ========= */
+  // Barra de carga y auto avance
   useEffect(() => {
     if (!item) return;
     let timer;
@@ -70,168 +252,107 @@ export default function EditPage() {
         if (p < 1) requestAnimationFrame(tick);
       };
       requestAnimationFrame(tick);
-      timer = setTimeout(() => setShowEdit(true), 3000);
+      timer = setTimeout(() => setShowEdit(true), duration);
     }
     return () => clearTimeout(timer);
   }, [item, showEdit]);
 
-  /* ========= Image Cropper Functions ========= */
-  const onCropComplete = (croppedArea, croppedAreaPixels) => setCroppedArea(croppedAreaPixels);
+  if (!item) return null;
 
-  const getCroppedImage = async () => {
-    const image = await createCroppedImage(imageSrc, croppedArea);
-    setFinalImage(image);
-    setShowCropper(false);
-  };
-
-  const createCroppedImage = (imageSrc, crop) => {
-    return new Promise((resolve) => {
-      const image = new Image();
-      image.src = imageSrc;
-      image.onload = () => {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        canvas.width = crop.width;
-        canvas.height = crop.height;
-        ctx.drawImage(
-          image,
-          crop.x,
-          crop.y,
-          crop.width,
-          crop.height,
-          0,
-          0,
-          crop.width,
-          crop.height
-        );
-        resolve(canvas.toDataURL("image/jpeg"));
-      };
-    });
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setImageSrc(reader.result);
-        setShowCropper(true);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  /* ========= Render Fullscreen Intro ========= */
   if (!showEdit) {
     return (
       <div className="fixed inset-0 flex justify-center items-center bg-black">
-        {item?.src?.endsWith(".mp4") ? (
+        {item.src?.endsWith(".mp4") ? (
           <>
-            <video src={item.src} autoPlay muted loop playsInline className="w-full h-full object-cover" />
+            <video
+              src={item.src}
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover"
+            />
             <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/30">
-              <div className="h-full bg-white" style={{ width: `${progress}%` }} />
+              <div
+                className="h-full bg-white transition-all duration-200"
+                style={{ width: `${progress}%` }}
+              />
             </div>
           </>
         ) : (
-          <img src={item?.src} alt={slug} className="w-full h-full object-cover" />
+          <img src={item.src} alt={slug} className="w-full h-full object-cover" />
         )}
       </div>
     );
   }
 
-  /* ========= Render Crop Editor ========= */
-  if (showCropper) {
-    return (
-      <div className="fixed inset-0 bg-black/80 flex flex-col items-center justify-center z-50">
-        <div className="relative w-80 h-80 bg-gray-900 rounded-lg overflow-hidden">
-          <Cropper
-            image={imageSrc}
-            cropShape="rect"
-            aspect={1}
-            onCropComplete={onCropComplete}
-          />
-        </div>
-        <div className="mt-4 flex gap-4">
-          <button onClick={getCroppedImage} className="px-4 py-2 bg-green-500 text-white rounded-full">Save</button>
-          <button onClick={() => setShowCropper(false)} className="px-4 py-2 bg-gray-400 text-white rounded-full">Cancel</button>
-        </div>
-      </div>
-    );
-  }
-
-  /* ========= Main Editor ========= */
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 bg-[#fff8f5] min-h-screen relative">
-      {/* Media Section */}
-      <div className="rounded-3xl overflow-hidden bg-white shadow-md relative">
-        {item?.src?.endsWith(".mp4") ? (
-          <video src={item.src} muted loop autoPlay playsInline className="w-full h-[420px] object-contain" />
-        ) : (
-          <img src={item.src} alt={slug} className="w-full h-[420px] object-contain" />
-        )}
+    <main className="mx-auto max-w-3xl px-4 py-8 relative bg-[#fff8f5] min-h-screen overflow-hidden">
+      <div className="relative z-[30]">
+        <div className="relative w-full rounded-3xl shadow-md overflow-hidden bg-white">
+          {item.src?.endsWith(".mp4") ? (
+            <video
+              src={item.src}
+              muted
+              loop
+              autoPlay
+              playsInline
+              className="w-full h-[420px] object-contain"
+            />
+          ) : (
+            <img
+              src={item.src}
+              alt={slug}
+              className="w-full h-[420px] object-contain"
+            />
+          )}
+        </div>
+
+        <section className="mt-6 bg-white rounded-3xl shadow-md p-6">
+          <h2 className="text-xl font-semibold text-center mb-4">
+            Customize your message ✨
+          </h2>
+
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            rows={3}
+            className="w-full rounded-2xl border border-gray-300 p-4 text-center focus:ring-2 focus:ring-pink-400"
+          />
+
+          <select
+            value={anim}
+            onChange={(e) => setAnim(e.target.value)}
+            className="w-full mt-3 rounded-2xl border border-gray-300 p-3 text-center focus:ring-2 focus:ring-pink-400"
+          >
+            {animOptions.map((a, i) => (
+              <option key={i} value={a}>
+                {a}
+              </option>
+            ))}
+            <option value="❌ None">❌ None</option>
+          </select>
+
+          <div className="flex justify-between mt-4">
+            <button
+              onClick={() => setShowCheckout(true)}
+              className="w-full bg-pink-500 hover:bg-pink-600 text-white font-semibold py-3 rounded-full transition"
+            >
+              Checkout 💳
+            </button>
+          </div>
+        </section>
       </div>
 
-      {/* Editor Section */}
-      <section className="mt-6 bg-white rounded-3xl shadow-md p-6">
-        <h2 className="text-xl font-semibold text-center mb-4">Customize your message ✨</h2>
-
-        <textarea
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          rows={3}
-          className="w-full rounded-2xl border p-4 text-center"
+      {showCheckout && (
+        <CheckoutPopup
+          total={CARD_PRICE + (gift.amount || 0)}
+          gift={gift}
+          onGiftChange={() => {}}
+          onGiftRemove={() => setGift({ brand: "", amount: 0 })}
+          onClose={() => setShowCheckout(false)}
         />
-
-        {/* Upload Image */}
-        <div className="mt-4 flex flex-col items-center">
-          <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" id="upload-img" />
-          <label htmlFor="upload-img" className="cursor-pointer bg-yellow-300 px-5 py-2 rounded-full text-sm font-semibold hover:bg-yellow-400 transition">
-            📸 Upload Image
-          </label>
-        </div>
-
-        {finalImage && (
-          <div className="mt-4 flex justify-center">
-            <img src={finalImage} alt="Uploaded" className="max-h-48 rounded-lg shadow" />
-          </div>
-        )}
-
-        {/* Animation Selector */}
-        <select
-          value={anim}
-          onChange={(e) => setAnim(e.target.value)}
-          className="w-full mt-4 rounded-2xl border p-3 text-center"
-        >
-          {animOptions.map((a, i) => (
-            <option key={i}>{a}</option>
-          ))}
-          <option value="❌ None">❌ None</option>
-        </select>
-
-        {/* Buttons */}
-        <div className="flex justify-between mt-6">
-          <button
-            onClick={() => setShowGiftPopup(true)}
-            className="w-[48%] rounded-full py-3 font-semibold text-[#3b2b1f] bg-yellow-300 hover:bg-yellow-400"
-          >
-            🎁 Choose Gift Card
-          </button>
-          <button
-            onClick={() => setShowCheckout(true)}
-            className="w-[48%] bg-pink-500 hover:bg-pink-600 text-white font-semibold py-3 rounded-full"
-          >
-            Checkout 💳
-          </button>
-        </div>
-
-        {gift.brand && (
-          <div className="mt-3 text-center text-sm text-gray-600">
-            Selected: <strong>{gift.brand}</strong> — ${gift.amount.toFixed(2)}
-          </div>
-        )}
-      </section>
-
-      {/* TODO: Aquí puedes agregar el modal de GiftCard y Stripe (idénticos a los que ya tienes en tu versión actual). */}
+      )}
     </main>
   );
-          }
+}
