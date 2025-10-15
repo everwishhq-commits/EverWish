@@ -592,5 +592,57 @@ export default function EditPage() {
               🎁 Gift Card
             </button>
           </div>
+          {/* Vista previa de la foto del usuario */}
+          {userImage && (
+            <div className="mt-3 text-center">
+              <p className="text-sm text-gray-600 mb-2">Your added photo</p>
+              <img
+                src={userImage}
+                alt="user"
+                className="mx-auto max-h-56 rounded-xl shadow"
+                style={{ objectFit: "cover" }}
+              />
+            </div>
+          )}
+        </section>
+      </div>
 
+      {/* Popups */}
+      {showCrop && (
+        <CropperModal
+          aspect={16 / 9}
+          onClose={() => setShowCrop(false)}
+          onConfirm={(blobUrl) => {
+            setUserImage(blobUrl);
+            setShowCrop(false);
+          }}
+        />
+      )}
+
+      {showGiftPopup && (
+        <GiftCardPopup
+          initial={gift}
+          onSelect={(g) => {
+            setGift(g);
+            setShowGiftPopup(false);
+          }}
+          onClose={() => setShowGiftPopup(false)}
+        />
+      )}
+
+      {showCheckout && (
+        <CheckoutPopup
+          total={CARD_PRICE + (gift.amount || 0)}
+          gift={gift}
+          onGiftChange={() => {
+            setShowCheckout(false);
+            setShowGiftPopup(true);
+          }}
+          onGiftRemove={() => setGift({ brand: "", amount: 0 })}
+          onClose={() => setShowCheckout(false)}
+        />
+      )}
+    </main>
+  );
+                }
         
