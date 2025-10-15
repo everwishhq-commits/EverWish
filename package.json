@@ -19,6 +19,6 @@
     "stripe": "^14.0.0",
     "@stripe/stripe-js": "^2.1.1",
     "@stripe/react-stripe-js": "^2.2.0",
-    "react-easy-crop": "^5.0.7"
+    "react-easy-crop": "^5.1.5"
   }
 }
