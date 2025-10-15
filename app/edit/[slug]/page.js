@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { loadStripe } from "@stripe/stripe-js";
@@ -11,16 +11,15 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 
-// 🧩 Importar los mensajes y animaciones
-import { defaultMessageFromSlug } from "@/lib/messages";
-import { getAnimationsForSlug } from "@/lib/animations";
+import { defaultMessageFromSlug } from "../../lib/messages";
+import { getAnimationsForSlug } from "../../lib/animations";
 
 /* ========= Stripe Setup ========= */
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
 );
 
-/* ========= Stripe Inline Form ========= */
+/* ========= Inline Stripe Form ========= */
 function InlineStripeForm({ total, onSuccess }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -49,7 +48,7 @@ function InlineStripeForm({ total, onSuccess }) {
         alert("🎉 Payment successful!");
         onSuccess?.();
       }
-    } catch (err) {
+    } catch {
       alert("Payment failed. Try again.");
     } finally {
       setLoading(false);
@@ -220,7 +219,11 @@ export default function EditPage() {
   const CARD_PRICE = 5;
   const [gift, setGift] = useState({ brand: "", amount: 0 });
   const [showCheckout, setShowCheckout] = useState(false);
+  const [userImage, setUserImage] = useState(null);
 
+  const fileInput = useRef();
+
+  /* --- Cargar info --- */
   useEffect(() => {
     (async () => {
       try {
@@ -239,7 +242,7 @@ export default function EditPage() {
     })();
   }, [slug]);
 
-  // Barra de carga y auto avance
+  /* --- Barra de carga --- */
   useEffect(() => {
     if (!item) return;
     let timer;
@@ -256,6 +259,16 @@ export default function EditPage() {
     }
     return () => clearTimeout(timer);
   }, [item, showEdit]);
+
+  /* --- Imagen subida por el usuario --- */
+  const handleImageUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => setUserImage(ev.target.result);
+      reader.readAsDataURL(file);
+    }
+  };
 
   if (!item) return null;
 
@@ -308,6 +321,7 @@ export default function EditPage() {
           )}
         </div>
 
+        {/* ==== Mensaje y subida de imagen ==== */}
         <section className="mt-6 bg-white rounded-3xl shadow-md p-6">
           <h2 className="text-xl font-semibold text-center mb-4">
             Customize your message ✨
@@ -319,6 +333,39 @@ export default function EditPage() {
             rows={3}
             className="w-full rounded-2xl border border-gray-300 p-4 text-center focus:ring-2 focus:ring-pink-400"
           />
+
+          {/* Subida y vista previa de imagen */}
+          <div className="mt-4 text-center">
+            {userImage ? (
+              <div className="relative w-full h-48 overflow-hidden rounded-2xl border border-gray-300">
+                <img
+                  src={userImage}
+                  alt="Uploaded"
+                  className="object-cover w-full h-full"
+                />
+                <button
+                  onClick={() => setUserImage(null)}
+                  className="absolute top-2 right-2 bg-white/80 text-red-500 rounded-full px-2"
+                >
+                  ✕
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => fileInput.current?.click()}
+                className="mt-2 text-sm text-pink-500 hover:underline"
+              >
+                ➕ Add an image (optional)
+              </button>
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInput}
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+          </div>
 
           <select
             value={anim}
@@ -355,4 +402,4 @@ export default function EditPage() {
       )}
     </main>
   );
-}
+            }
