@@ -4,14 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 
-/* ===== lib (en la raíz, fuera de /app) ===== */
+/* === Librerías globales desde /lib === */
 import { defaultMessageFromSlug } from "../../lib/messages";
 import { getAnimationsForSlug } from "../../lib/animations";
 import CropperModal from "../../lib/croppermodal";
 import GiftCardPopup from "../../lib/giftcard";
 import CheckoutPopup from "../../lib/checkout";
 
-/* ===== helpers ===== */
+/* === Hook para detectar móvil === */
 const useIsMobile = () => {
   const [m, setM] = useState(false);
   useEffect(() => {
@@ -23,45 +23,44 @@ const useIsMobile = () => {
   return m;
 };
 
-/* ===== página ===== */
 export default function EditPage() {
   const { slug } = useParams();
   const isMobile = useIsMobile();
 
-  // Intro extendida (3s)
+  /* ===== Estados principales ===== */
   const [item, setItem] = useState(null);
   const [showEdit, setShowEdit] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  // Editor
+  // Texto, animación, plan
   const [message, setMessage] = useState("");
   const [animOptions, setAnimOptions] = useState([]);
   const [anim, setAnim] = useState("");
+  const [plan, setPlan] = useState("signature");
 
-  // Imagen del usuario
+  // Imagen
   const fileRef = useRef(null);
   const [showCrop, setShowCrop] = useState(false);
-  const [rawImage, setRawImage] = useState(null);      // archivo original para el cropper
-  const [userImage, setUserImage] = useState(null);    // base64 final
+  const [rawImage, setRawImage] = useState(null);
+  const [userImage, setUserImage] = useState(null);
 
   // GiftCard & Checkout
   const [gift, setGift] = useState({ brand: "", amount: 0 });
   const [showGift, setShowGift] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
 
-  // Plan y precios
+  // Precios
   const HEARTFELT_PRICE = 3.99;
   const SIGNATURE_PRICE = 7.99;
-  const [plan, setPlan] = useState("signature"); // "heartfelt" | "signature"
 
-  // Persistencia por slug
-  const keyMsg  = `ew_msg_${slug}`;
+  /* ===== Keys de sessionStorage ===== */
+  const keyMsg = `ew_msg_${slug}`;
   const keyAnim = `ew_anim_${slug}`;
   const keyPlan = `ew_plan_${slug}`;
   const keyGift = `ew_gift_${slug}`;
   const keyPImg = `ew_userimg_${slug}`;
 
-  /* === cargar datos === */
+  /* ===== Carga inicial ===== */
   useEffect(() => {
     (async () => {
       try {
@@ -70,47 +69,38 @@ export default function EditPage() {
         const found = list.find((v) => v.slug === slug);
         setItem(found || null);
 
-        // mensaje automático si no existe
-        const m = sessionStorage.getItem(keyMsg);
-        setMessage(m || defaultMessageFromSlug(slug));
-
-        // animaciones por categoría
+        setMessage(sessionStorage.getItem(keyMsg) || defaultMessageFromSlug(slug));
         const opts = getAnimationsForSlug(slug);
         setAnimOptions(opts);
-        const a = sessionStorage.getItem(keyAnim);
-        setAnim(a || (opts[0] || "❌ None"));
+        setAnim(sessionStorage.getItem(keyAnim) || opts[0] || "❌ None");
+        setPlan(sessionStorage.getItem(keyPlan) || "signature");
 
-        // plan
-        const p = sessionStorage.getItem(keyPlan);
-        setPlan(p || "signature");
-
-        // gift
         const g = sessionStorage.getItem(keyGift);
         if (g) setGift(JSON.parse(g));
 
-        // imagen usuario (base64)
         const u = sessionStorage.getItem(keyPImg);
         if (u) setUserImage(u);
       } catch (e) {
-        console.error("load /api/videos failed", e);
+        console.error("Error loading data:", e);
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
-  /* === guardar cambios === */
-  useEffect(() => { try { sessionStorage.setItem(keyMsg, message); } catch {} }, [message, keyMsg]);
-  useEffect(() => { try { sessionStorage.setItem(keyAnim, anim); } catch {} }, [anim, keyAnim]);
-  useEffect(() => { try { sessionStorage.setItem(keyPlan, plan); } catch {} }, [plan, keyPlan]);
-  useEffect(() => { try { sessionStorage.setItem(keyGift, JSON.stringify(gift)); } catch {} }, [gift, keyGift]);
-  useEffect(() => { try { userImage ? sessionStorage.setItem(keyPImg, userImage) : sessionStorage.removeItem(keyPImg); } catch {} }, [userImage, keyPImg]);
+  /* ===== Guardado ===== */
+  useEffect(() => { sessionStorage.setItem(keyMsg, message); }, [message]);
+  useEffect(() => { sessionStorage.setItem(keyAnim, anim); }, [anim]);
+  useEffect(() => { sessionStorage.setItem(keyPlan, plan); }, [plan]);
+  useEffect(() => { sessionStorage.setItem(keyGift, JSON.stringify(gift)); }, [gift]);
+  useEffect(() => {
+    if (userImage) sessionStorage.setItem(keyPImg, userImage);
+    else sessionStorage.removeItem(keyPImg);
+  }, [userImage]);
 
-  /* === intro fullscreen 3s con barra === */
+  /* ===== Intro fullscreen con barra ===== */
   useEffect(() => {
     if (!item) return;
     let timer;
     if (!showEdit) {
-      // progress animado
       const start = performance.now();
       const dur = 3000;
       const tick = () => {
@@ -120,25 +110,17 @@ export default function EditPage() {
       };
       requestAnimationFrame(tick);
 
-      // intentar entrar a fullscreen
+      // fullscreen
       (async () => {
         try {
           const el = document.documentElement;
           if (el.requestFullscreen) await el.requestFullscreen();
-          // @ts-ignore
-          if (!document.fullscreenElement && el.webkitRequestFullscreen)
-            // @ts-ignore
-            await el.webkitRequestFullscreen();
         } catch {}
       })();
 
       timer = setTimeout(async () => {
         try {
-          if (document.fullscreenElement && document.exitFullscreen) await document.exitFullscreen();
-          // @ts-ignore
-          if (!document.fullscreenElement && document.webkitExitFullscreen)
-            // @ts-ignore
-            await document.webkitExitFullscreen();
+          if (document.fullscreenElement) await document.exitFullscreen();
         } catch {}
         setShowEdit(true);
       }, 3000);
@@ -146,29 +128,7 @@ export default function EditPage() {
     return () => clearTimeout(timer);
   }, [item, showEdit]);
 
-  // Tap de seguridad
-  useEffect(() => {
-    const go = async () => {
-      if (!showEdit) {
-        try {
-          if (document.fullscreenElement && document.exitFullscreen) await document.exitFullscreen();
-          // @ts-ignore
-          if (!document.fullscreenElement && document.webkitExitFullscreen)
-            // @ts-ignore
-            await document.webkitExitFullscreen();
-        } catch {}
-        setShowEdit(true);
-      }
-    };
-    window.addEventListener("click", go);
-    window.addEventListener("touchstart", go);
-    return () => {
-      window.removeEventListener("click", go);
-      window.removeEventListener("touchstart", go);
-    };
-  }, [showEdit]);
-
-  /* === efectos flotantes (frente, no bloquea inputs) === */
+  /* ===== Efecto flotante ===== */
   const renderEffect = () => {
     if (!anim || /None/.test(anim)) return null;
     const emoji = anim.split(" ")[0];
@@ -178,16 +138,16 @@ export default function EditPage() {
         className="absolute text-xl z-[35] pointer-events-none"
         initial={{ opacity: 0, y: 0 }}
         animate={{
-          opacity: [0, 0.85, 0],
+          opacity: [0, 1, 0],
           y: [0, -90],
           x: [0, Math.random() * 100 - 50],
-          scale: [0.95, 1.05, 0.95],
+          scale: [1, 1.05, 1],
         }}
         transition={{
           duration: 4.8 + Math.random() * 2,
           repeat: Infinity,
           ease: "easeInOut",
-          delay: i * 0.22,
+          delay: i * 0.2,
         }}
         style={{ top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%` }}
       >
@@ -196,31 +156,29 @@ export default function EditPage() {
     ));
   };
 
-  if (!item) return null;
-
-  /* === totales === */
+  /* ===== Cálculo de precios ===== */
   const basePrice = plan === "signature" ? SIGNATURE_PRICE : HEARTFELT_PRICE;
   const total = basePrice + (Number(gift?.amount) || 0);
 
-  /* === ui === */
-  const mediaHeight = isMobile ? 360 : 420;
-
+  /* ===== Imagen (cropper) ===== */
   const onPickImage = (e) => {
     const f = e.target.files?.[0];
     if (!f) return;
     const reader = new FileReader();
     reader.onload = () => {
-      setRawImage(reader.result); // base64 para el cropper
+      setRawImage(reader.result);
       setShowCrop(true);
     };
     reader.readAsDataURL(f);
-    // reset input para permitir misma imagen de nuevo
     e.target.value = "";
   };
 
-  /* ============ RENDER ============ */
+  if (!item) return null;
 
-  // Intro extendida
+  /* ===== Render principal ===== */
+  const mediaHeight = isMobile ? 360 : 420;
+
+  // Intro
   if (!showEdit) {
     return (
       <div className="fixed inset-0 flex justify-center items-center bg-black">
@@ -244,7 +202,7 @@ export default function EditPage() {
       <div className="absolute inset-0">{renderEffect()}</div>
 
       <div className="relative z-[30]">
-        {/* MEDIA - sin bordes laterales y sin deformar */}
+        {/* Imagen principal */}
         <div className="mx-auto w-full max-w-[560px]">
           <div className="relative w-full rounded-3xl shadow-md overflow-hidden bg-white">
             {item.src?.endsWith(".mp4") ? (
@@ -268,7 +226,7 @@ export default function EditPage() {
           </div>
         </div>
 
-        {/* user photo preview (si existe) */}
+        {/* Imagen del usuario */}
         {userImage && (
           <div className="mx-auto w-full max-w-[560px]">
             <div className="mt-3 rounded-2xl overflow-hidden border bg-white">
@@ -277,7 +235,7 @@ export default function EditPage() {
           </div>
         )}
 
-        {/* PANEL */}
+        {/* Panel de edición */}
         <section className="mt-4 bg-white rounded-3xl shadow-md p-6">
           <h2 className="text-xl font-semibold text-center mb-3">✨ Customize your message ✨</h2>
 
@@ -300,7 +258,7 @@ export default function EditPage() {
             <option value="❌ None">❌ None</option>
           </select>
 
-          {/* Plan selector compacto */}
+          {/* Plan selector */}
           <div className="mt-3 grid grid-cols-2 gap-2">
             <button
               onClick={() => setPlan("signature")}
@@ -320,7 +278,7 @@ export default function EditPage() {
             </button>
           </div>
 
-          {/* Acciones */}
+          {/* Botones */}
           <div className="flex gap-4 mt-4">
             <button
               onClick={() => fileRef.current?.click()}
@@ -328,13 +286,7 @@ export default function EditPage() {
             >
               📸 Add Image
             </button>
-            <input
-              type="file"
-              accept="image/*"
-              ref={fileRef}
-              className="hidden"
-              onChange={onPickImage}
-            />
+            <input type="file" accept="image/*" ref={fileRef} className="hidden" onChange={onPickImage} />
             <button
               onClick={() => setShowGift(true)}
               className="flex-1 rounded-full py-3 font-semibold transition bg-pink-100 hover:bg-pink-200 text-pink-700"
@@ -356,9 +308,7 @@ export default function EditPage() {
         </section>
       </div>
 
-      {/* ===== MODALES (siempre por encima del media) ===== */}
-
-      {/* Cropper */}
+      {/* ===== MODALES ===== */}
       {showCrop && rawImage && (
         <div className="fixed inset-0 z-[80]">
           <CropperModal
@@ -370,7 +320,6 @@ export default function EditPage() {
         </div>
       )}
 
-      {/* GiftCard */}
       {showGift && (
         <div className="fixed inset-0 z-[80]">
           <GiftCardPopup
@@ -381,14 +330,13 @@ export default function EditPage() {
         </div>
       )}
 
-      {/* Checkout */}
       {showCheckout && (
         <div className="fixed inset-0 z-[80]">
           <CheckoutPopup
             total={total}
-            plan={plan}                 // por si tu lib lo muestra
+            plan={plan}
             gift={gift}
-            onGiftChange={() => { setShowGift(true); }}
+            onGiftChange={() => setShowGift(true)}
             onGiftRemove={() => setGift({ brand: "", amount: 0 })}
             onClose={() => setShowCheckout(false)}
           />
@@ -396,4 +344,4 @@ export default function EditPage() {
       )}
     </main>
   );
-              }
+    }
