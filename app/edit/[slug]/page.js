@@ -26,6 +26,7 @@ export default function EditPage({ params }) {
   const [videoSrc, setVideoSrc] = useState("");
   const [showDownload, setShowDownload] = useState(false);
   const [total, setTotal] = useState(5);
+  const [animKey, setAnimKey] = useState(0); // 🔹 fuerza el cambio inmediato
 
   /* 🔹 Configuración inicial */
   useEffect(() => {
@@ -78,12 +79,18 @@ export default function EditPage({ params }) {
     link.remove();
   };
 
+  /* 🔹 Cambio inmediato al seleccionar nueva animación */
+  const handleAnimationChange = (e) => {
+    setAnimation(e.target.value);
+    setAnimKey((prev) => prev + 1); // 🔹 fuerza remount instantáneo
+  };
+
   return (
     <div className="flex flex-col items-center justify-center bg-[#fff7f5] overflow-hidden min-h-[100dvh] relative">
 
-      {/* 🔸 Animaciones flotantes (suaves, lentas y por encima de todo) */}
+      {/* 🔸 Animaciones flotantes (suaves, lentas, inmediatas al cambio) */}
       {animation && (
-        <div className="absolute inset-0 pointer-events-none z-[150] overflow-hidden">
+        <div key={animKey} className="absolute inset-0 pointer-events-none z-[150] overflow-hidden">
           {[...Array(10)].map((_, i) => {
             const src = `/animations/${animation}/${i + 1}.png`;
             return (
@@ -100,18 +107,18 @@ export default function EditPage({ params }) {
                   rotate: Math.random() * 360,
                 }}
                 animate={{
-                  y: [-200, window.innerHeight + 300],
+                  y: [-300, window.innerHeight + 400],
                   x: [
-                    Math.random() * window.innerWidth * 0.8,
-                    Math.random() * window.innerWidth * 1.2,
+                    Math.random() * window.innerWidth * 0.9,
+                    Math.random() * window.innerWidth * 1.1,
                   ],
                   rotate: 360,
                 }}
                 transition={{
-                  duration: 45 + Math.random() * 25, // 🔹 lento y armónico
+                  duration: 65 + Math.random() * 25, // 🔹 más lento (65–90s)
                   repeat: Infinity,
                   ease: "linear",
-                  delay: Math.random() * 10, // 🔹 no todas a la vez
+                  delay: Math.random() * 10, // 🔹 variado
                 }}
               />
             );
@@ -186,7 +193,7 @@ export default function EditPage({ params }) {
               <select
                 className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
                 value={animation}
-                onChange={(e) => setAnimation(e.target.value)}
+                onChange={handleAnimationChange}
               >
                 {animationOptions.map((a) => (
                   <option key={a}>{a}</option>
@@ -229,7 +236,7 @@ export default function EditPage({ params }) {
             )}
           </motion.div>
 
-          {/* ✨ Animación flotante controlada */}
+          {/* ✨ Overlay controlado */}
           {animation && <AnimationOverlay slug={slug} animation={animation} />}
         </>
       )}
@@ -260,4 +267,4 @@ export default function EditPage({ params }) {
       )}
     </div>
   );
-                  }
+                    }
