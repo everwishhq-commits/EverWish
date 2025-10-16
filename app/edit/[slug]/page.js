@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import Image from "next/image";
-import CropperModal from "@/lib/croppermodal";
+import { defaultMessageFromSlug } from "@/lib/messages";
+import { getAnimationsForSlug } from "@/lib/animations";
 import GiftCardPopup from "@/lib/giftcard";
 import CheckoutModal from "@/lib/checkout";
+import CropperModal from "@/lib/croppermodal";
 import { 
   defaultMessageFromSlug, 
   getAnimationsForSlug 
