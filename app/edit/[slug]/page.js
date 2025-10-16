@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { defaultMessageFromSlug } from "@/lib/messages";
-import { getAnimationsForSlug, AnimationOverlay } from "@/lib/animations";
+import { getAnimationsForSlug } from "@/lib/animations";
+import { AnimationOverlay } from "@/lib/animationoverlay";
 import GiftCardPopup from "@/lib/giftcard";
 import CheckoutModal from "@/lib/checkout";
 import CropperModal from "@/lib/croppermodal";
