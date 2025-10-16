@@ -37,7 +37,7 @@ export default function EditPage({ params }) {
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
-  /* 🔹 Pantalla extendida inicial (3s con barra) */
+  /* 🔹 Pantalla extendida (3s con barra) */
   useEffect(() => {
     let value = 0;
     const interval = setInterval(() => {
@@ -81,36 +81,41 @@ export default function EditPage({ params }) {
   return (
     <div className="flex flex-col items-center justify-center bg-[#fff7f5] overflow-hidden min-h-[100dvh] relative">
 
-      {/* 🔸 Animaciones flotantes (por encima de todo) */}
+      {/* 🔸 Animaciones flotantes (suaves, lentas y por encima de todo) */}
       {animation && (
         <div className="absolute inset-0 pointer-events-none z-[150] overflow-hidden">
-          {[...Array(10)].map((_, i) => (
-            <motion.img
-              key={i}
-              src={`/animations/${animation}/${i + 1}.png`}
-              className="absolute w-10 h-10 opacity-40"
-              initial={{
-                x: Math.random() * window.innerWidth,
-                y: window.innerHeight + Math.random() * 200,
-                scale: 0.8 + Math.random() * 0.5,
-                rotate: Math.random() * 360,
-              }}
-              animate={{
-                y: [-150, window.innerHeight + 200],
-                x: [
-                  Math.random() * window.innerWidth * 0.8,
-                  Math.random() * window.innerWidth * 1.2,
-                ],
-                rotate: 360,
-              }}
-              transition={{
-                duration: 25 + Math.random() * 20,
-                repeat: Infinity,
-                ease: "linear",
-                delay: Math.random() * 8,
-              }}
-            />
-          ))}
+          {[...Array(10)].map((_, i) => {
+            const src = `/animations/${animation}/${i + 1}.png`;
+            return (
+              <motion.img
+                key={i}
+                src={src}
+                alt=""
+                className="absolute w-10 h-10 opacity-40"
+                onError={(e) => (e.currentTarget.style.display = "none")}
+                initial={{
+                  x: Math.random() * window.innerWidth,
+                  y: window.innerHeight + Math.random() * 300,
+                  scale: 0.8 + Math.random() * 0.5,
+                  rotate: Math.random() * 360,
+                }}
+                animate={{
+                  y: [-200, window.innerHeight + 300],
+                  x: [
+                    Math.random() * window.innerWidth * 0.8,
+                    Math.random() * window.innerWidth * 1.2,
+                  ],
+                  rotate: 360,
+                }}
+                transition={{
+                  duration: 45 + Math.random() * 25, // 🔹 lento y armónico
+                  repeat: Infinity,
+                  ease: "linear",
+                  delay: Math.random() * 10, // 🔹 no todas a la vez
+                }}
+              />
+            );
+          })}
         </div>
       )}
 
@@ -255,4 +260,4 @@ export default function EditPage({ params }) {
       )}
     </div>
   );
-    }
+                  }
