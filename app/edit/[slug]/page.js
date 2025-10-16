@@ -1,73 +1,12 @@
-// app/edit/[slug]/page.js
 "use client";
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { defaultMessageFromSlug } from "@/lib/messages";
-import { getAnimationsForSlug } from "@/lib/animations";
+import { AnimationOverlay, getAnimationsForSlug } from "@/lib/animations";
 import GiftCardPopup from "@/lib/giftcard";
 import CheckoutModal from "@/lib/checkout";
 import CropperModal from "@/lib/croppermodal";
-
-/** Devuelve el emoji principal según el slug (animación automática) */
-function emojiForSlug(slug) {
-  const map = {
-    "ghost-halloween": "👻",
-    "pumpkin-halloween": "🎃",
-    "bunny-easter": "🐰",
-    "usa-4th-july": "🇺🇸",
-    "pets-day": "🐾",
-    "valentines-love": "❤️",
-    "birthday-celebration": "🎉",
-    "graduation-day": "🎓",
-    "newyear-celebration": "✨",
-    "christmas-day": "🎄",
-  };
-  return map[slug] || "✨";
-}
-
-/** Capa de animación con emojis flotando */
-function AnimationOverlay({ emoji }) {
-  const items = 14;
-  return (
-    <div className="pointer-events-none absolute inset-0 z-[35] overflow-hidden">
-      {Array.from({ length: items }).map((_, i) => {
-        const delay = i * 0.3;
-        const duration = 5 + (i % 3);
-        const startX = Math.random() * 100;
-        const driftX = (Math.random() - 0.5) * 40;
-        const size = 18 + Math.random() * 10;
-
-        return (
-          <motion.span
-            key={i}
-            className="absolute"
-            style={{
-              left: `${startX}%`,
-              bottom: "-10%",
-              fontSize: `${size}px`,
-            }}
-            initial={{ opacity: 0, y: 0 }}
-            animate={{
-              opacity: [0, 0.8, 0.8, 0],
-              y: ["0%", "-120%"],
-              x: [`0%`, `${driftX}%`],
-              rotate: [0, (Math.random() - 0.5) * 40],
-            }}
-            transition={{
-              duration,
-              delay,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          >
-            {emoji}
-          </motion.span>
-        );
-      })}
-    </div>
-  );
-}
 
 export default function EditPage({ params }) {
   const slug = params.slug;
@@ -82,17 +21,17 @@ export default function EditPage({ params }) {
   const [showCrop, setShowCrop] = useState(false);
   const [videoSrc, setVideoSrc] = useState("");
   const [total, setTotal] = useState(5);
-  const emoji = emojiForSlug(slug);
 
+  // Mensaje, animaciones y video
   useEffect(() => {
     setMessage(defaultMessageFromSlug(slug));
-    const anims = getAnimationsForSlug(slug) || [];
+    const anims = getAnimationsForSlug(slug);
     setAnimations(anims);
     setAnimation(anims[0] || "none");
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
-  // Progreso de 3 segundos y cambio de etapa
+  // Pantalla extendida 3s con barra
   useEffect(() => {
     let value = 0;
     const interval = setInterval(() => {
@@ -102,7 +41,7 @@ export default function EditPage({ params }) {
         clearInterval(interval);
         setStage("editor");
       }
-    }, 30); // 30 ms * 100 = 3 segundos
+    }, 30);
     return () => clearInterval(interval);
   }, []);
 
@@ -119,28 +58,23 @@ export default function EditPage({ params }) {
 
   return (
     <div className="flex flex-col items-center justify-center bg-[#fff7f5] overflow-hidden min-h-[100dvh]">
-      {/* Pantalla extendida con barra de carga */}
+      {/* Pantalla extendida */}
       {stage === "expanded" && (
         <motion.div
-          key="expanded"
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#fff7f5]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.8 }}
-          className="fixed inset-0 z-[100] bg-[#fff7f5] flex flex-col items-center justify-center"
+          transition={{ duration: 0.6 }}
         >
-          <div className="relative w-full h-full">
-            <video
-              src={videoSrc}
-              className="absolute inset-0 w-full h-full object-cover"
-              autoPlay
-              loop
-              muted
-              playsInline
-            />
-            <AnimationOverlay emoji={emoji} />
-          </div>
-
-          {/* Barra de progreso */}
+          <video
+            src={videoSrc}
+            className="absolute inset-0 w-full h-full object-cover"
+            autoPlay
+            loop
+            muted
+            playsInline
+          />
+          <AnimationOverlay slug={slug} fullScreen />
           <div className="absolute bottom-8 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
             <motion.div
               className="h-full bg-pink-500"
@@ -161,7 +95,6 @@ export default function EditPage({ params }) {
           transition={{ duration: 0.8 }}
           className="z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-10 mb-10"
         >
-          {/* Video principal + animación */}
           <div className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50">
             <video
               src={videoSrc}
@@ -171,10 +104,11 @@ export default function EditPage({ params }) {
               muted
               playsInline
             />
-            {animation !== "none" && <AnimationOverlay emoji={emoji} />}
+            {animation !== "none" && (
+              <AnimationOverlay slug={slug} animation={animation} />
+            )}
           </div>
 
-          {/* Texto */}
           <h3 className="mb-2 text-center text-lg font-semibold text-gray-700">
             ✨ Customize your message ✨
           </h3>
@@ -185,7 +119,6 @@ export default function EditPage({ params }) {
             onChange={(e) => setMessage(e.target.value)}
           />
 
-          {/* Selector de animación */}
           <div className="my-3">
             <select
               className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
@@ -194,14 +127,11 @@ export default function EditPage({ params }) {
             >
               <option value="none">🌙 No animation</option>
               {animations.map((a) => (
-                <option key={a} value={a}>
-                  {a}
-                </option>
+                <option key={a}>{a}</option>
               ))}
             </select>
           </div>
 
-          {/* Botones */}
           <div className="mt-4 flex flex-wrap justify-center gap-3">
             <button
               onClick={() => setShowCrop(true)}
@@ -225,7 +155,6 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
-      {/* Popups */}
       {showGift && (
         <GiftCardPopup
           initial={gift}
@@ -251,4 +180,4 @@ export default function EditPage({ params }) {
       )}
     </div>
   );
-}
+        }
