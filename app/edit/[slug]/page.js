@@ -1,11 +1,10 @@
-// /app/edit/[slug]/page.js
 "use client";
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 
-// libs en RAÍZ (fuera de /app)
+/* === Librerías en la RAÍZ (fuera de /app) === */
 import { defaultMessageFromSlug } from "../../../lib/messages";
 import { getAnimationsForSlug } from "../../../lib/animations";
 import CropperModal from "../../../lib/croppermodal";
@@ -16,19 +15,20 @@ import CheckoutPopup from "../../../lib/checkout";
 const useIsMobile = () => {
   const [m, setM] = useState(false);
   useEffect(() => {
-    const f = () => setM(window.innerWidth < 640);
-    f();
-    window.addEventListener("resize", f);
-    return () => window.removeEventListener("resize", f);
+    const check = () => setM(window.innerWidth < 640);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
   }, []);
   return m;
 };
 
+/* ========= Página principal ========= */
 export default function EditPage() {
   const { slug } = useParams();
   const isMobile = useIsMobile();
 
-  // Intro (fullscreen 3s)
+  // Intro (pantalla extendida 3s)
   const [item, setItem] = useState(null);
   const [showEdit, setShowEdit] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -37,11 +37,6 @@ export default function EditPage() {
   const [message, setMessage] = useState("");
   const [animOptions, setAnimOptions] = useState([]);
   const [anim, setAnim] = useState("");
-  const [planId, setPlanId] = useState("signature"); // default premium
-  const CARD_SIGNATURE = PLANS.find(p=>p.id==="signature")?.price || 7.99;
-
-  // User Image
-  const [showCrop, setShowCrop] = useState(false);
   const [userImage, setUserImage] = useState(null);
 
   // GiftCard & Checkout
@@ -49,12 +44,14 @@ export default function EditPage() {
   const [showGiftPopup, setShowGiftPopup] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
 
+  // Crop
+  const [showCrop, setShowCrop] = useState(false);
+
   // Persistencia por slug
   const keyMsg = `ew_msg_${slug}`;
   const keyAnim = `ew_anim_${slug}`;
   const keyGift = `ew_gift_${slug}`;
-  const keyPlan = `ew_plan_${slug}`;
-  const keyUserImage = `ew_img_${slug}`;
+  const keyImg = `ew_img_${slug}`;
 
   // Cargar persistencia
   useEffect(() => {
@@ -65,22 +62,33 @@ export default function EditPage() {
       if (a) setAnim(a);
       const g = sessionStorage.getItem(keyGift);
       if (g) setGift(JSON.parse(g));
-      const p = sessionStorage.getItem(keyPlan);
-      if (p) setPlanId(p);
-      const ui = sessionStorage.getItem(keyUserImage);
-      if (ui) setUserImage(ui);
+      const img = sessionStorage.getItem(keyImg);
+      if (img) setUserImage(img);
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
   // Guardar persistencia
-  useEffect(() => { try { sessionStorage.setItem(keyMsg, message); } catch {} }, [message, keyMsg]);
-  useEffect(() => { try { sessionStorage.setItem(keyAnim, anim); } catch {} }, [anim, keyAnim]);
-  useEffect(() => { try { sessionStorage.setItem(keyGift, JSON.stringify(gift)); } catch {} }, [gift, keyGift]);
-  useEffect(() => { try { sessionStorage.setItem(keyPlan, planId); } catch {} }, [planId, keyPlan]);
-  useEffect(() => { try { userImage ? sessionStorage.setItem(keyUserImage, userImage) : sessionStorage.removeItem(keyUserImage); } catch {} }, [userImage, keyUserImage]);
+  useEffect(() => {
+    try { sessionStorage.setItem(keyMsg, message); } catch {}
+  }, [message, keyMsg]);
 
-  // Cargar video + animaciones
+  useEffect(() => {
+    try { sessionStorage.setItem(keyAnim, anim); } catch {}
+  }, [anim, keyAnim]);
+
+  useEffect(() => {
+    try { sessionStorage.setItem(keyGift, JSON.stringify(gift)); } catch {}
+  }, [gift, keyGift]);
+
+  useEffect(() => {
+    try {
+      if (userImage) sessionStorage.setItem(keyImg, userImage);
+      else sessionStorage.removeItem(keyImg);
+    } catch {}
+  }, [userImage, keyImg]);
+
+  // Cargar media + animaciones
   useEffect(() => {
     (async () => {
       try {
@@ -89,10 +97,14 @@ export default function EditPage() {
         const found = list.find((v) => v.slug === slug);
         setItem(found || null);
 
-        if (!sessionStorage.getItem(keyMsg)) setMessage(defaultMessageFromSlug(slug));
+        if (!sessionStorage.getItem(keyMsg)) {
+          setMessage(defaultMessageFromSlug(slug));
+        }
         const opts = getAnimationsForSlug(slug);
         setAnimOptions(opts);
-        if (!sessionStorage.getItem(keyAnim)) setAnim(opts[0] || "❌ None");
+        if (!sessionStorage.getItem(keyAnim)) {
+          setAnim(opts[0] || "❌ None");
+        }
       } catch (e) {
         console.error("Error loading /api/videos", e);
       }
@@ -105,7 +117,7 @@ export default function EditPage() {
     if (!item) return;
     let timer;
     if (!showEdit) {
-      // Barra
+      // Barra de progreso
       const start = performance.now();
       const duration = 3000;
       const tick = () => {
@@ -130,7 +142,9 @@ export default function EditPage() {
       // Salir y pasar al editor
       timer = setTimeout(async () => {
         try {
-          if (document.fullscreenElement && document.exitFullscreen) await document.exitFullscreen();
+          if (document.fullscreenElement && document.exitFullscreen) {
+            await document.exitFullscreen();
+          }
           // @ts-ignore
           if (!document.fullscreenElement && document.webkitExitFullscreen)
             // @ts-ignore
@@ -164,15 +178,14 @@ export default function EditPage() {
     };
   }, [showEdit]);
 
-  // Animación flotante (deshabilitada si plan = heartfelt)
+  // Render de animación (suave y por delante, sin bloquear inputs)
   const renderEffect = () => {
-    if (planId === "heartfelt") return null;
     if (!anim || /None/.test(anim)) return null;
     const emoji = anim.split(" ")[0];
     return Array.from({ length: 18 }).map((_, i) => (
       <motion.span
         key={i}
-        className="absolute text-xl z-[35] pointer-events-none"
+        className="absolute text-xl z-[40] pointer-events-none"
         initial={{ opacity: 0, y: 0 }}
         animate={{
           opacity: [0, 0.85, 0],
@@ -195,15 +208,26 @@ export default function EditPage() {
 
   if (!item) return null;
 
-  /* --- Intro (pantalla extendida con barra) --- */
+  /* --- Intro (pantalla extendida) --- */
   if (!showEdit) {
     return (
       <div className="fixed inset-0 flex justify-center items-center bg-black">
         {item.src?.endsWith(".mp4") ? (
           <>
-            <video src={item.src} autoPlay muted loop playsInline className="w-full h-full object-cover" />
+            <video
+              src={item.src}
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover"
+            />
+            {/* Barra de progreso */}
             <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/30">
-              <div className="h-full bg-white transition-all duration-200" style={{ width: `${progress}%` }} />
+              <div
+                className="h-full bg-white transition-all duration-200"
+                style={{ width: `${progress}%` }}
+              />
             </div>
           </>
         ) : (
@@ -213,19 +237,25 @@ export default function EditPage() {
     );
   }
 
-  // Medidas de la tarjeta (sin bordes laterales: object-cover)
+  // Alturas + contenedor para evitar “bordes blancos”
+  // - Usamos aspect-[9/16] en móviles, y contenedor "media-fit" con object-contain
+  // - El fondo NO es blanco, así no se ven laterales; y el wrapper no tiene padding
   const mediaHeight = isMobile ? 360 : 440;
-
-  const signaturePrice = PLANS.find(p=>p.id==="signature")?.price ?? 7.99;
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-6 relative bg-[#fff8f5] min-h-screen overflow-hidden">
       {/* Animaciones al frente */}
       <div className="absolute inset-0">{renderEffect()}</div>
 
-      <div className="relative z-[30]">
-        {/* Media principal (SIN bordes laterales) */}
-        <div className="relative w-full rounded-3xl shadow-md overflow-hidden bg-white">
+      <div className="relative z-[10]">
+        {/* Media (evitar bordes blancos ajustando el wrapper al contenido) */}
+        <div
+          className="relative w-full overflow-hidden rounded-3xl shadow-md"
+          style={{
+            height: mediaHeight,
+            backgroundColor: "transparent",
+          }}
+        >
           {item.src?.endsWith(".mp4") ? (
             <video
               src={item.src}
@@ -233,22 +263,22 @@ export default function EditPage() {
               loop
               autoPlay
               playsInline
-              style={{ height: mediaHeight }}
-              className="w-full object-cover"
+              className="w-full h-full object-contain"
             />
           ) : (
             <img
               src={item.src}
               alt={slug}
-              style={{ height: mediaHeight }}
-              className="w-full object-cover"
+              className="w-full h-full object-contain"
             />
           )}
         </div>
 
-        {/* Texto + Animación selector */}
+        {/* Controles */}
         <section className="mt-4 bg-white rounded-3xl shadow-md p-6">
-          <h2 className="text-xl font-semibold text-center mb-3">✨ Customize your message ✨</h2>
+          <h2 className="text-xl font-semibold text-center mb-3">
+            ✨ Customize your message ✨
+          </h2>
 
           <textarea
             value={message}
@@ -261,11 +291,12 @@ export default function EditPage() {
           <select
             value={anim}
             onChange={(e) => setAnim(e.target.value)}
-            disabled={planId === "heartfelt"} // sin animaciones en Heartfelt
-            className={`w-full mt-3 rounded-2xl border border-gray-300 p-3 text-center focus:ring-2 focus:ring-pink-400 ${planId==="heartfelt"?"bg-gray-100 text-gray-400":""}`}
+            className="w-full mt-3 rounded-2xl border border-gray-300 p-3 text-center focus:ring-2 focus:ring-pink-400"
           >
             {animOptions.map((a, i) => (
-              <option key={i} value={a}>{a}</option>
+              <option key={i} value={a}>
+                {a}
+              </option>
             ))}
             <option value="❌ None">❌ None</option>
           </select>
@@ -274,10 +305,7 @@ export default function EditPage() {
           <div className="flex gap-4 mt-4">
             <button
               onClick={() => setShowCrop(true)}
-              disabled={planId === "heartfelt"} // foto opcional sólo en Signature
-              className={`flex-1 rounded-full py-3 font-semibold transition ${planId==="heartfelt"
-                ? "bg-gray-200 text-gray-500"
-                : "bg-yellow-300 hover:bg-yellow-400 text-[#3b2b1f]"}`}
+              className="flex-1 rounded-full py-3 font-semibold transition bg-yellow-300 hover:bg-yellow-400 text-[#3b2b1f]"
             >
               📸 Add Image
             </button>
@@ -289,7 +317,7 @@ export default function EditPage() {
             </button>
             <button
               onClick={() => setShowCheckout(true)}
-              className="flex-1 bg-pink-500 hover:bg-pink-600 text-white font-semibold py-3 rounded-full transition"
+              className="flex-1 rounded-full py-3 font-semibold transition text-white bg-pink-500 hover:bg-pink-600"
             >
               Checkout 💳
             </button>
@@ -298,52 +326,71 @@ export default function EditPage() {
           {/* Estado seleccionado GiftCard */}
           {gift.brand && (
             <div className="mt-3 flex items-center justify-center text-sm text-gray-600 gap-2">
-              <span>Selected: <strong>{gift.brand}</strong> — ${Number(gift.amount || 0).toFixed(2)}</span>
-              <button onClick={() => setGift({ brand: "", amount: 0 })} className="text-pink-400 hover:text-pink-600 transition" title="Remove gift card">🗑️</button>
+              <span>
+                Selected: <strong>{gift.brand}</strong> — ${Number(gift.amount || 0).toFixed(2)}
+              </span>
+              <button
+                onClick={() => setGift({ brand: "", amount: 0 })}
+                className="text-pink-400 hover:text-pink-600 transition"
+                title="Remove gift card"
+              >
+                🗑️
+              </button>
             </div>
           )}
 
-          {/* Preview imagen del usuario (si existe) */}
+          {/* Preview de imagen del usuario (si existe) */}
           {userImage && (
             <div className="mt-4">
               <p className="text-sm text-gray-600 mb-2 text-center">Your photo preview</p>
-              <div className="w-full rounded-2xl overflow-hidden shadow">
-                <img src={userImage} alt="Your uploaded" className="w-full h-[220px] object-cover bg-white" />
+              <div className="w-full rounded-2xl border overflow-hidden bg-gray-50">
+                <img
+                  src={userImage}
+                  alt="User photo"
+                  className="w-full h-[220px] object-contain"
+                />
               </div>
             </div>
           )}
-
-          {/* Nota de plan */}
-          <div className="mt-4 text-center text-xs text-gray-500">
-            Current plan: <b>{planId === "heartfelt" ? "Heartfelt" : "Signature"}</b> — Default price ${planId==="heartfelt" ? (PLANS.find(p=>p.id==="heartfelt")?.price ?? 3.99).toFixed(2) : signaturePrice.toFixed(2)}
-          </div>
         </section>
       </div>
 
-      {/* POPUPS (z altos para quedar SIEMPRE encima) */}
-      <CropperModal
-        open={showCrop}
-        onClose={() => setShowCrop(false)}
-        onSave={(base64) => { setUserImage(base64); setShowCrop(false); }}
-        initialImage={userImage}
-      />
+      {/* MODALES (z-index MUY ALTO) */}
+      {showCrop && (
+        <CropperModal
+          onClose={() => setShowCrop(false)}
+          onSave={(dataUrl) => {
+            setUserImage(dataUrl);
+            setShowCrop(false);
+          }}
+          zIndexClass="z-[9998]"
+        />
+      )}
 
-      <GiftCardPopup
-        open={showGiftPopup}
-        initial={gift}
-        onSelect={(g) => { setGift(g); setShowGiftPopup(false); }}
-        onClose={() => setShowGiftPopup(false)}
-      />
+      {showGiftPopup && (
+        <GiftCardPopup
+          initial={gift}
+          onSelect={(g) => {
+            setGift(g);
+            setShowGiftPopup(false);
+          }}
+          onClose={() => setShowGiftPopup(false)}
+          zIndexClass="z-[9998]"
+        />
+      )}
 
-      <CheckoutPopup
-        open={showCheckout}
-        planId={planId}
-        setPlanId={setPlanId}
-        gift={gift}
-        onGiftChange={() => { setShowCheckout(false); setShowGiftPopup(true); }}
-        onGiftRemove={() => setGift({ brand: "", amount: 0 })}
-        onClose={() => setShowCheckout(false)}
-      />
+      {showCheckout && (
+        <CheckoutPopup
+          totalBase={7.99} // Signature base; el usuario puede cambiar a Heartfelt en el modal
+          gift={gift}
+          onGiftChange={() => {
+            setShowCheckout(false);
+            setShowGiftPopup(true);
+          }}
+          onGiftRemove={() => setGift({ brand: "", amount: 0 })}
+          onClose={() => setShowCheckout(false)}
+        />
+      )}
     </main>
   );
-          }
+}
