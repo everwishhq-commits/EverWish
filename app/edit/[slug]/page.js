@@ -26,7 +26,6 @@ export default function EditPage({ params }) {
   const [videoSrc, setVideoSrc] = useState("");
   const [showDownload, setShowDownload] = useState(false);
   const [total, setTotal] = useState(5);
-  const [animKey, setAnimKey] = useState(0); // 🔹 fuerza el cambio inmediato
 
   /* 🔹 Configuración inicial */
   useEffect(() => {
@@ -38,7 +37,7 @@ export default function EditPage({ params }) {
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
-  /* 🔹 Pantalla extendida (3s con barra) */
+  /* 🔹 Pantalla extendida 3 segundos con barra */
   useEffect(() => {
     let value = 0;
     const interval = setInterval(() => {
@@ -79,18 +78,22 @@ export default function EditPage({ params }) {
     link.remove();
   };
 
-  /* 🔹 Cambio inmediato al seleccionar nueva animación */
+  /* ⚡ Cambio inmediato de animación */
   const handleAnimationChange = (e) => {
-    setAnimation(e.target.value);
-    setAnimKey((prev) => prev + 1); // 🔹 fuerza remount instantáneo
+    const newAnim = e.target.value;
+    setAnimation(newAnim);
+    // fuerza el remount inmediato
+    setTimeout(() => {
+      setAnimation(newAnim);
+    }, 10);
   };
 
   return (
     <div className="flex flex-col items-center justify-center bg-[#fff7f5] overflow-hidden min-h-[100dvh] relative">
 
-      {/* 🔸 Animaciones flotantes (suaves, lentas, inmediatas al cambio) */}
+      {/* ✨ Animaciones flotantes suaves y lentas */}
       {animation && (
-        <div key={animKey} className="absolute inset-0 pointer-events-none z-[150] overflow-hidden">
+        <div key={animation} className="absolute inset-0 pointer-events-none z-[150] overflow-hidden">
           {[...Array(10)].map((_, i) => {
             const src = `/animations/${animation}/${i + 1}.png`;
             return (
@@ -107,7 +110,7 @@ export default function EditPage({ params }) {
                   rotate: Math.random() * 360,
                 }}
                 animate={{
-                  y: [-300, window.innerHeight + 400],
+                  y: [-150, window.innerHeight + 500],
                   x: [
                     Math.random() * window.innerWidth * 0.9,
                     Math.random() * window.innerWidth * 1.1,
@@ -115,10 +118,10 @@ export default function EditPage({ params }) {
                   rotate: 360,
                 }}
                 transition={{
-                  duration: 65 + Math.random() * 25, // 🔹 más lento (65–90s)
+                  duration: 90 + Math.random() * 40, // 🐢 más lento (90–130s)
                   repeat: Infinity,
                   ease: "linear",
-                  delay: Math.random() * 10, // 🔹 variado
+                  delay: Math.random() * 5, // menos delay de aparición
                 }}
               />
             );
@@ -267,4 +270,4 @@ export default function EditPage({ params }) {
       )}
     </div>
   );
-                    }
+                  }
