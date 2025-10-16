@@ -22,7 +22,7 @@ export default function EditPage({ params }) {
   const [videoSrc, setVideoSrc] = useState("");
   const [total, setTotal] = useState(5);
 
-  // Mensaje, animaciones y video
+  // 🔹 Carga inicial: mensaje, animaciones y video
   useEffect(() => {
     setMessage(defaultMessageFromSlug(slug));
     const anims = getAnimationsForSlug(slug);
@@ -31,34 +31,34 @@ export default function EditPage({ params }) {
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
-  // Pantalla extendida 3s con barra
+  // 🔹 Pantalla extendida con barra (3 seg aprox)
   useEffect(() => {
     let value = 0;
     const interval = setInterval(() => {
-      value += 1;
+      value += 2;
       setProgress(value);
       if (value >= 100) {
         clearInterval(interval);
         setStage("editor");
       }
-    }, 30);
+    }, 60); // ≈3 s total
     return () => clearInterval(interval);
   }, []);
 
+  // 🔹 Control de gift card
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
     setTotal(5 + (data?.amount || 0));
   };
-
   const removeGift = () => {
     setGift(null);
     setTotal(5);
   };
 
   return (
-    <div className="flex flex-col items-center justify-center bg-[#fff7f5] overflow-hidden min-h-[100dvh]">
-      {/* Pantalla extendida */}
+    <div className="relative flex flex-col items-center justify-center bg-[#fff7f5] overflow-hidden min-h-[100dvh]">
+      {/* ===== Pantalla Extendida ===== */}
       {stage === "expanded" && (
         <motion.div
           className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#fff7f5]"
@@ -74,7 +74,9 @@ export default function EditPage({ params }) {
             muted
             playsInline
           />
-          <AnimationOverlay slug={slug} fullScreen />
+          {/* 🔸 Animación global (pantalla completa) */}
+          <AnimationOverlay slug={slug} animation={animation} fullScreen />
+          {/* 🔸 Barra de progreso */}
           <div className="absolute bottom-8 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
             <motion.div
               className="h-full bg-pink-500"
@@ -86,75 +88,82 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
-      {/* Editor */}
+      {/* ===== Editor ===== */}
       {stage === "editor" && (
-        <motion.div
-          key="editor"
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-10 mb-10"
-        >
-          <div className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50">
-            <video
-              src={videoSrc}
-              className="w-full object-cover"
-              autoPlay
-              loop
-              muted
-              playsInline
+        <>
+          {/* 🔹 Animación global por fuera del card */}
+          {animation !== "none" && (
+            <AnimationOverlay slug={slug} animation={animation} fullScreen />
+          )}
+
+          <motion.div
+            key="editor"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-10 mb-10"
+          >
+            <div className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50">
+              <video
+                src={videoSrc}
+                className="w-full object-cover"
+                autoPlay
+                loop
+                muted
+                playsInline
+              />
+            </div>
+
+            <h3 className="mb-2 text-center text-lg font-semibold text-gray-700">
+              ✨ Customize your message ✨
+            </h3>
+            <textarea
+              className="w-full rounded-2xl border p-3 text-center text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
+              rows={2}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
             />
-            {animation !== "none" && (
-              <AnimationOverlay slug={slug} animation={animation} />
-            )}
-          </div>
 
-          <h3 className="mb-2 text-center text-lg font-semibold text-gray-700">
-            ✨ Customize your message ✨
-          </h3>
-          <textarea
-            className="w-full rounded-2xl border p-3 text-center text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
-            rows={2}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-          />
+            {/* 🔹 Selector de animación */}
+            <div className="my-3">
+              <select
+                className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
+                value={animation}
+                onChange={(e) => setAnimation(e.target.value)}
+              >
+                <option value="none">🌙 No animation</option>
+                {animations.map((a) => (
+                  <option key={a}>{a}</option>
+                ))}
+              </select>
+            </div>
 
-          <div className="my-3">
-            <select
-              className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
-              value={animation}
-              onChange={(e) => setAnimation(e.target.value)}
-            >
-              <option value="none">🌙 No animation</option>
-              {animations.map((a) => (
-                <option key={a}>{a}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="mt-4 flex flex-wrap justify-center gap-3">
-            <button
-              onClick={() => setShowCrop(true)}
-              className="flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-3 font-semibold text-[#3b2b1f] shadow-sm hover:bg-yellow-300"
-            >
-              📸 Add Image
-            </button>
-            <button
-              onClick={() => setShowGift(true)}
-              className="flex items-center gap-2 rounded-full bg-pink-200 px-5 py-3 font-semibold text-pink-700 shadow-sm hover:bg-pink-300"
-            >
-              🎁 Gift Card
-            </button>
-            <button
-              onClick={() => setShowCheckout(true)}
-              className="flex items-center gap-2 rounded-full bg-purple-500 px-6 py-3 font-semibold text-white shadow-sm hover:bg-purple-600"
-            >
-              💳 Checkout
-            </button>
-          </div>
-        </motion.div>
+            {/* 🔹 Botones */}
+            <div className="mt-4 flex flex-wrap justify-center gap-3">
+              <button
+                onClick={() => setShowCrop(true)}
+                className="flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-3 font-semibold text-[#3b2b1f] shadow-sm hover:bg-yellow-300"
+              >
+                📸 Add Image
+              </button>
+              <button
+                onClick={() => setShowGift(true)}
+                className="flex items-center gap-2 rounded-full bg-pink-200 px-5 py-3 font-semibold text-pink-700 shadow-sm hover:bg-pink-300"
+              >
+                🎁 Gift Card
+              </button>
+              <button
+                onClick={() => setShowCheckout(true)}
+                className="flex items-center gap-2 rounded-full bg-purple-500 px-6 py-3 font-semibold text-white shadow-sm hover:bg-purple-600"
+              >
+                💳 Checkout
+              </button>
+            </div>
+          </motion.div>
+        </>
       )}
 
+      {/* ===== Modales ===== */}
       {showGift && (
         <GiftCardPopup
           initial={gift}
@@ -180,4 +189,4 @@ export default function EditPage({ params }) {
       )}
     </div>
   );
-        }
+              }
