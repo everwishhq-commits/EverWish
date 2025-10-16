@@ -1,3 +1,4 @@
+// app/edit/[slug]/page.js
 "use client";
 
 import { useState, useEffect } from "react";
@@ -8,12 +9,78 @@ import GiftCardPopup from "@/lib/giftcard";
 import CheckoutModal from "@/lib/checkout";
 import CropperModal from "@/lib/croppermodal";
 
+/** Util: extrae el primer emoji/ícono de una etiqueta como "🎃 Pumpkin Glow" */
+function pickEmoji(label) {
+  if (!label || label.toLowerCase() === "none") return null;
+  // toma el primer símbolo gráfico (emoji + ZWJ si existiera)
+  const m = [...label.trim()][0];
+  return m || null;
+}
+
+/** Capa de animación con emoji flotando (no muy rápido, no muy lento) */
+function AnimationOverlay({ label }) {
+  const emoji = pickEmoji(label);
+  if (!emoji) return null;
+
+  const ITEMS = 16; // cantidad de sprites flotando
+
+  return (
+    <div
+      className="pointer-events-none absolute inset-0 z-[35] overflow-hidden"
+      aria-hidden="true"
+    >
+      {Array.from({ length: ITEMS }).map((_, i) => {
+        const delay = i * 0.25;
+        const duration = 6 + (i % 5) * 0.3;
+        const startX = Math.random() * 100;
+        const driftX = (Math.random() - 0.5) * 40; // -20% a 20%
+        const startY = 110; // arranca fuera por abajo
+        const endY = -15; // termina fuera por arriba
+        const size = 18 + Math.floor(Math.random() * 10); // 18px–28px
+
+        return (
+          <motion.span
+            key={i}
+            className="absolute"
+            style={{
+              left: `${startX}%`,
+              top: `${startY}%`,
+              fontSize: `${size}px`,
+              filter: "drop-shadow(0 2px 2px rgba(0,0,0,.15))",
+            }}
+            initial={{ opacity: 0 }}
+            animate={{
+              opacity: [0, 0.9, 0.9, 0],
+              x: [`0%`, `${driftX}%`],
+              y: [`0%`, `${endY - startY}%`],
+              scale: [0.95, 1.05, 1],
+              rotate: [0, (Math.random() - 0.5) * 20],
+            }}
+            transition={{
+              duration,
+              delay,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          >
+            {emoji}
+          </motion.span>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function EditPage({ params }) {
   const slug = params.slug;
+
+  // Etapas: pantalla extendida inicial → editor
   const [stage, setStage] = useState("expanded");
+
+  // Estado principal
   const [message, setMessage] = useState("");
-  const [animation, setAnimation] = useState("none"); // ← agregado
-  const [animations, setAnimations] = useState([]); // ← agregado
+  const [animations, setAnimations] = useState([]); // lista (10) desde lib/animations
+  const [animation, setAnimation] = useState("none"); // etiqueta activa (o "none")
   const [gift, setGift] = useState(null);
   const [showGift, setShowGift] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
@@ -21,27 +88,27 @@ export default function EditPage({ params }) {
   const [videoSrc, setVideoSrc] = useState("");
   const [total, setTotal] = useState(5);
 
-  // Carga mensaje, video y lista de animaciones
+  // Carga inicial: mensaje, animaciones, video
   useEffect(() => {
     setMessage(defaultMessageFromSlug(slug));
     const anims = getAnimationsForSlug(slug) || [];
     setAnimations(anims);
-    setAnimation(anims[0] || "none"); // selecciona la primera animación por defecto
-    setVideoSrc(`/videos/${slug}.mp4`);
+    setAnimation(anims[0] || "none"); // activa 1ra animación por defecto
+    setVideoSrc(`/videos/${slug}.mp4`); // tu archivo está en public/videos
   }, [slug]);
 
-  // Transición a modo edición
+  // Transición de expandida → editor (3s)
   useEffect(() => {
     const timer = setTimeout(() => setStage("editor"), 3000);
     return () => clearTimeout(timer);
   }, []);
 
+  // GiftCard
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
     setTotal(5 + (data?.amount || 0));
   };
-
   const removeGift = () => {
     setGift(null);
     setTotal(5);
@@ -49,39 +116,37 @@ export default function EditPage({ params }) {
 
   return (
     <div className="flex flex-col items-center justify-center bg-[#fff7f5] overflow-hidden min-h-[100dvh]">
-      {/* 🟢 Pantalla extendida inicial */}
+      {/* Pantalla extendida: ocupa todo, sin barras visibles */}
       {stage === "expanded" && (
         <motion.div
           key="expanded"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.8 }}
-          className="fixed inset-0 z-[100] bg-[#fff7f5] overflow-hidden"
+          transition={{ duration: 0.6 }}
+          className="fixed inset-0 z-[100] bg-black"
         >
-          <div className="relative w-full h-full">
-            <video
-              src={videoSrc}
-              className="absolute inset-0 w-full h-full object-cover"
-              autoPlay
-              loop
-              muted
-              playsInline
-            />
-          </div>
+          <video
+            src={videoSrc}
+            className="absolute inset-0 h-full w-full object-cover"
+            autoPlay
+            loop
+            muted
+            playsInline
+          />
         </motion.div>
       )}
 
-      {/* 🟣 Pantalla de edición */}
+      {/* Editor */}
       {stage === "editor" && (
         <motion.div
           key="editor"
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 32 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.5 }}
           className="z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-10 mb-10"
         >
-          {/* 🎞️ Contenedor del video + animación */}
+          {/* Media + Animación encima */}
           <div className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50">
             <video
               src={videoSrc}
@@ -91,20 +156,13 @@ export default function EditPage({ params }) {
               muted
               playsInline
             />
-            {animation !== "none" && (
-              <video
-                src={animation}
-                className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-                autoPlay
-                loop
-                muted
-                playsInline
-                style={{ opacity: 0.7 }}
-              />
+            {/* Capa de animación (encima del video, no tapa clicks) */}
+            {animation && animation.toLowerCase() !== "none" && (
+              <AnimationOverlay label={animation} />
             )}
           </div>
 
-          {/* 📝 Texto editable */}
+          {/* Mensaje */}
           <h3 className="mb-2 text-center text-lg font-semibold text-gray-700">
             ✨ Customize your message ✨
           </h3>
@@ -115,7 +173,7 @@ export default function EditPage({ params }) {
             onChange={(e) => setMessage(e.target.value)}
           />
 
-          {/* 🎬 Selector de animación */}
+          {/* Selector de animación (manual) */}
           <div className="my-3">
             <select
               className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
@@ -125,13 +183,13 @@ export default function EditPage({ params }) {
               <option value="none">🌙 No animation</option>
               {animations.map((a) => (
                 <option key={a} value={a}>
-                  {a.split("/").pop()}
+                  {a}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* 🎁 Botones principales */}
+          {/* Botones principales */}
           <div className="mt-4 flex flex-wrap justify-center gap-3">
             <button
               onClick={() => setShowCrop(true)}
@@ -155,7 +213,7 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
-      {/* 🔲 Popups */}
+      {/* Popups */}
       {showGift && (
         <GiftCardPopup
           initial={gift}
@@ -178,9 +236,7 @@ export default function EditPage({ params }) {
         <CropperModal
           open={showCrop}
           onClose={() => setShowCrop(false)}
-          onDone={(url) => {
-            setShowCrop(false);
-          }}
+          onDone={() => setShowCrop(false)}
         />
       )}
     </div>
