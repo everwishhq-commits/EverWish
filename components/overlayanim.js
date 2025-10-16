@@ -2,8 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { getAnimationSet } from "@/lib/animations";
-
+import { getAnimationsForSlug } from "@/lib/animations";
 export default function Overlayanim({ slug = "", animation = "✨ Sparkles" }) {
   const [particles, setParticles] = useState([]);
 
