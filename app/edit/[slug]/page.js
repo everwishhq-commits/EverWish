@@ -4,17 +4,16 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 
-/* === Librerías en la RAÍZ (fuera de /app) === */
 import { defaultMessageFromSlug } from "../../../lib/messages";
 import { getAnimationsForSlug } from "../../../lib/animations";
 import CropperModal from "../../../lib/croppermodal";
 import GiftCardPopup from "../../../lib/giftcard";
 import CheckoutPopup from "../../../lib/checkout";
 
-/* ========= Helpers ========= */
 const useIsMobile = () => {
   const [m, setM] = useState(false);
   useEffect(() => {
+    if (typeof window === "undefined") return;
     const check = () => setM(window.innerWidth < 640);
     check();
     window.addEventListener("resize", check);
@@ -23,38 +22,30 @@ const useIsMobile = () => {
   return m;
 };
 
-/* ========= Página principal ========= */
 export default function EditPage() {
   const { slug } = useParams();
   const isMobile = useIsMobile();
 
-  // Intro (pantalla extendida 3s)
   const [item, setItem] = useState(null);
   const [showEdit, setShowEdit] = useState(false);
   const [progress, setProgress] = useState(0);
-
-  // Editor
   const [message, setMessage] = useState("");
   const [animOptions, setAnimOptions] = useState([]);
   const [anim, setAnim] = useState("");
   const [userImage, setUserImage] = useState(null);
-
-  // GiftCard & Checkout
   const [gift, setGift] = useState({ brand: "", amount: 0 });
   const [showGiftPopup, setShowGiftPopup] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
-
-  // Crop
   const [showCrop, setShowCrop] = useState(false);
 
-  // Persistencia por slug
   const keyMsg = `ew_msg_${slug}`;
   const keyAnim = `ew_anim_${slug}`;
   const keyGift = `ew_gift_${slug}`;
   const keyImg = `ew_img_${slug}`;
 
-  // Cargar persistencia
+  // 🔹 Cargar persistencia
   useEffect(() => {
+    if (typeof window === "undefined") return;
     try {
       const m = sessionStorage.getItem(keyMsg);
       if (m) setMessage(m);
@@ -65,30 +56,33 @@ export default function EditPage() {
       const img = sessionStorage.getItem(keyImg);
       if (img) setUserImage(img);
     } catch {}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
-  // Guardar persistencia
+  // 🔹 Guardar persistencia
   useEffect(() => {
+    if (typeof window === "undefined") return;
     try { sessionStorage.setItem(keyMsg, message); } catch {}
   }, [message, keyMsg]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     try { sessionStorage.setItem(keyAnim, anim); } catch {}
   }, [anim, keyAnim]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     try { sessionStorage.setItem(keyGift, JSON.stringify(gift)); } catch {}
   }, [gift, keyGift]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     try {
       if (userImage) sessionStorage.setItem(keyImg, userImage);
       else sessionStorage.removeItem(keyImg);
     } catch {}
   }, [userImage, keyImg]);
 
-  // Cargar media + animaciones
+  // 🔹 Cargar tarjeta + animaciones
   useEffect(() => {
     (async () => {
       try {
@@ -97,27 +91,26 @@ export default function EditPage() {
         const found = list.find((v) => v.slug === slug);
         setItem(found || null);
 
-        if (!sessionStorage.getItem(keyMsg)) {
+        if (typeof window !== "undefined" && !sessionStorage.getItem(keyMsg)) {
           setMessage(defaultMessageFromSlug(slug));
         }
+
         const opts = getAnimationsForSlug(slug);
         setAnimOptions(opts);
-        if (!sessionStorage.getItem(keyAnim)) {
+        if (typeof window !== "undefined" && !sessionStorage.getItem(keyAnim)) {
           setAnim(opts[0] || "❌ None");
         }
       } catch (e) {
         console.error("Error loading /api/videos", e);
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
-  /* --- Pantalla extendida con barra + autoavance a edición (3s) --- */
+  // 🔹 Pantalla extendida (3s)
   useEffect(() => {
-    if (!item) return;
+    if (!item || typeof window === "undefined") return;
     let timer;
     if (!showEdit) {
-      // Barra de progreso
       const start = performance.now();
       const duration = 3000;
       const tick = () => {
@@ -127,28 +120,21 @@ export default function EditPage() {
       };
       requestAnimationFrame(tick);
 
-      // Fullscreen best-effort
+      // Fullscreen seguro
       (async () => {
         try {
           const el = document.documentElement;
-          if (el.requestFullscreen) await el.requestFullscreen();
-          // @ts-ignore
-          if (!document.fullscreenElement && el.webkitRequestFullscreen)
-            // @ts-ignore
-            await el.webkitRequestFullscreen();
+          if (el?.requestFullscreen) await el.requestFullscreen();
+          else if (el?.webkitRequestFullscreen) el.webkitRequestFullscreen();
         } catch {}
       })();
 
-      // Salir y pasar al editor
       timer = setTimeout(async () => {
         try {
-          if (document.fullscreenElement && document.exitFullscreen) {
+          if (document.fullscreenElement && document.exitFullscreen)
             await document.exitFullscreen();
-          }
-          // @ts-ignore
-          if (!document.fullscreenElement && document.webkitExitFullscreen)
-            // @ts-ignore
-            await document.webkitExitFullscreen();
+          else if (document.webkitExitFullscreen)
+            document.webkitExitFullscreen();
         } catch {}
         setShowEdit(true);
       }, 3000);
@@ -156,19 +142,17 @@ export default function EditPage() {
     return () => clearTimeout(timer);
   }, [item, showEdit]);
 
-  // Tap de seguridad: si queda atascado en fullscreen, toca para continuar
+  // 🔹 Tap de seguridad
   useEffect(() => {
+    if (typeof window === "undefined") return;
     const handler = async () => {
-      if (!showEdit) {
-        try {
-          if (document.fullscreenElement && document.exitFullscreen) await document.exitFullscreen();
-          // @ts-ignore
-          if (!document.fullscreenElement && document.webkitExitFullscreen)
-            // @ts-ignore
-            await document.webkitExitFullscreen();
-        } catch {}
-        setShowEdit(true);
-      }
+      try {
+        if (document.fullscreenElement && document.exitFullscreen)
+          await document.exitFullscreen();
+        else if (document.webkitExitFullscreen)
+          document.webkitExitFullscreen();
+      } catch {}
+      setShowEdit(true);
     };
     window.addEventListener("click", handler);
     window.addEventListener("touchstart", handler);
@@ -178,7 +162,7 @@ export default function EditPage() {
     };
   }, [showEdit]);
 
-  // Render de animación (suave y por delante, sin bloquear inputs)
+  // 🔹 Animaciones flotantes
   const renderEffect = () => {
     if (!anim || /None/.test(anim)) return null;
     const emoji = anim.split(" ")[0];
@@ -194,7 +178,7 @@ export default function EditPage() {
           scale: [0.95, 1.05, 0.95],
         }}
         transition={{
-          duration: 4.8 + Math.random() * 2,
+          duration: 5 + Math.random() * 2,
           repeat: Infinity,
           ease: "easeInOut",
           delay: i * 0.22,
@@ -208,7 +192,7 @@ export default function EditPage() {
 
   if (!item) return null;
 
-  /* --- Intro (pantalla extendida) --- */
+  // 🔹 Pantalla extendida
   if (!showEdit) {
     return (
       <div className="fixed inset-0 flex justify-center items-center bg-black">
@@ -222,7 +206,6 @@ export default function EditPage() {
               playsInline
               className="w-full h-full object-cover"
             />
-            {/* Barra de progreso */}
             <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/30">
               <div
                 className="h-full bg-white transition-all duration-200"
@@ -237,25 +220,13 @@ export default function EditPage() {
     );
   }
 
-  // Alturas + contenedor para evitar “bordes blancos”
-  // - Usamos aspect-[9/16] en móviles, y contenedor "media-fit" con object-contain
-  // - El fondo NO es blanco, así no se ven laterales; y el wrapper no tiene padding
-  const mediaHeight = isMobile ? 360 : 440;
-
+  // 🔹 Vista principal
   return (
     <main className="mx-auto max-w-3xl px-4 py-6 relative bg-[#fff8f5] min-h-screen overflow-hidden">
-      {/* Animaciones al frente */}
       <div className="absolute inset-0">{renderEffect()}</div>
 
       <div className="relative z-[10]">
-        {/* Media (evitar bordes blancos ajustando el wrapper al contenido) */}
-        <div
-          className="relative w-full overflow-hidden rounded-3xl shadow-md"
-          style={{
-            height: mediaHeight,
-            backgroundColor: "transparent",
-          }}
-        >
+        <div className="relative w-full overflow-hidden rounded-3xl shadow-md">
           {item.src?.endsWith(".mp4") ? (
             <video
               src={item.src}
@@ -274,7 +245,6 @@ export default function EditPage() {
           )}
         </div>
 
-        {/* Controles */}
         <section className="mt-4 bg-white rounded-3xl shadow-md p-6">
           <h2 className="text-xl font-semibold text-center mb-3">
             ✨ Customize your message ✨
@@ -287,7 +257,6 @@ export default function EditPage() {
             className="w-full rounded-2xl border border-gray-300 p-4 text-center focus:ring-2 focus:ring-pink-400"
           />
 
-          {/* Dropdown dinámico por categoría */}
           <select
             value={anim}
             onChange={(e) => setAnim(e.target.value)}
@@ -301,7 +270,6 @@ export default function EditPage() {
             <option value="❌ None">❌ None</option>
           </select>
 
-          {/* Acciones */}
           <div className="flex gap-4 mt-4">
             <button
               onClick={() => setShowCrop(true)}
@@ -323,11 +291,11 @@ export default function EditPage() {
             </button>
           </div>
 
-          {/* Estado seleccionado GiftCard */}
           {gift.brand && (
             <div className="mt-3 flex items-center justify-center text-sm text-gray-600 gap-2">
               <span>
-                Selected: <strong>{gift.brand}</strong> — ${Number(gift.amount || 0).toFixed(2)}
+                Selected: <strong>{gift.brand}</strong> — $
+                {Number(gift.amount || 0).toFixed(2)}
               </span>
               <button
                 onClick={() => setGift({ brand: "", amount: 0 })}
@@ -339,7 +307,6 @@ export default function EditPage() {
             </div>
           )}
 
-          {/* Preview de imagen del usuario (si existe) */}
           {userImage && (
             <div className="mt-4">
               <p className="text-sm text-gray-600 mb-2 text-center">Your photo preview</p>
@@ -355,7 +322,6 @@ export default function EditPage() {
         </section>
       </div>
 
-      {/* MODALES (z-index MUY ALTO) */}
       {showCrop && (
         <CropperModal
           onClose={() => setShowCrop(false)}
@@ -381,7 +347,7 @@ export default function EditPage() {
 
       {showCheckout && (
         <CheckoutPopup
-          totalBase={7.99} // Signature base; el usuario puede cambiar a Heartfelt en el modal
+          totalBase={7.99}
           gift={gift}
           onGiftChange={() => {
             setShowCheckout(false);
@@ -393,4 +359,4 @@ export default function EditPage() {
       )}
     </main>
   );
-}
+      }
