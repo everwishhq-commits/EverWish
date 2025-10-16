@@ -2,12 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import {
-  getAnimationsForSlug,
-  getAnimationOptionsForSlug,
-  AnimationOverlay,
-} from "@/lib/animations";
 import { defaultMessageFromSlug } from "@/lib/messages";
+import { getAnimationsForSlug, AnimationOverlay } from "@/lib/animations";
 import GiftCardPopup from "@/lib/giftcard";
 import CheckoutModal from "@/lib/checkout";
 import CropperModal from "@/lib/croppermodal";
@@ -17,8 +13,8 @@ export default function EditPage({ params }) {
   const [stage, setStage] = useState("expanded");
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("");
-  const [animation, setAnimation] = useState("");
-  const [animationOptions, setAnimationOptions] = useState([]);
+  const [animation, setAnimation] = useState("none");
+  const [animations, setAnimations] = useState([]);
   const [gift, setGift] = useState(null);
   const [showGift, setShowGift] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
@@ -27,17 +23,16 @@ export default function EditPage({ params }) {
   const [showDownload, setShowDownload] = useState(false);
   const [total, setTotal] = useState(5);
 
-  /* 🔹 Configuración inicial */
+  /* 🔹 Inicialización */
   useEffect(() => {
     setMessage(defaultMessageFromSlug(slug));
-    const category = getAnimationsForSlug(slug);
-    const options = getAnimationOptionsForSlug(slug);
-    setAnimationOptions(options);
-    setAnimation(options[0] || category); // animación inicial (primera del set)
+    const anims = getAnimationsForSlug(slug);
+    setAnimations(anims);
+    setAnimation(anims[0] || "none");
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
-  /* 🔹 Pantalla extendida 3 segundos con barra */
+  /* 🔹 Pantalla extendida 3s con barra */
   useEffect(() => {
     let value = 0;
     const interval = setInterval(() => {
@@ -51,7 +46,7 @@ export default function EditPage({ params }) {
     return () => clearInterval(interval);
   }, []);
 
-  /* 🔹 Control de regalo y total */
+  /* 🔹 Regalos */
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
@@ -62,13 +57,11 @@ export default function EditPage({ params }) {
     setTotal(5);
   };
 
-  /* 🔹 Mostrar botón de descarga */
+  /* 🔹 Descargar */
   const handleCardClick = () => {
     setShowDownload(true);
     setTimeout(() => setShowDownload(false), 3500);
   };
-
-  /* 🔹 Descargar video */
   const handleDownload = () => {
     const link = document.createElement("a");
     link.href = videoSrc;
@@ -107,7 +100,7 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
-      {/* 🟢 Editor principal */}
+      {/* 🟢 Editor */}
       {stage === "editor" && (
         <>
           <motion.div
@@ -142,14 +135,14 @@ export default function EditPage({ params }) {
               onChange={(e) => setMessage(e.target.value)}
             />
 
-            {/* 🔽 Dropdown dinámico */}
             <div className="my-3">
               <select
                 className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
                 value={animation}
                 onChange={(e) => setAnimation(e.target.value)}
               >
-                {animationOptions.map((a) => (
+                <option value="none">🌙 no animation</option>
+                {animations.map((a) => (
                   <option key={a}>{a}</option>
                 ))}
               </select>
@@ -190,8 +183,10 @@ export default function EditPage({ params }) {
             )}
           </motion.div>
 
-          {/* ✨ Animación flotante */}
-          {animation && <AnimationOverlay slug={slug} animation={animation} />}
+          {/* ✨ Animación general visible */}
+          {animation !== "none" && (
+            <AnimationOverlay slug={slug} animation={animation} />
+          )}
         </>
       )}
 
@@ -221,4 +216,4 @@ export default function EditPage({ params }) {
       )}
     </div>
   );
-              }
+}
