@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
@@ -37,7 +36,6 @@ export default function EditPage() {
   const [showGiftPopup, setShowGiftPopup] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
 
-  // --- Cargar datos de la tarjeta ---
   useEffect(() => {
     (async () => {
       try {
@@ -57,7 +55,6 @@ export default function EditPage() {
     })();
   }, [slug]);
 
-  // --- Animación inicial ---
   useEffect(() => {
     if (!item || showEdit) return;
     const duration = 3000;
@@ -72,7 +69,6 @@ export default function EditPage() {
     return () => clearTimeout(timer);
   }, [item, showEdit]);
 
-  // --- Efectos flotantes ---
   const renderEffect = () => {
     if (!anim || /None/.test(anim)) return null;
     const emoji = anim.split(" ")[0];
@@ -144,7 +140,7 @@ export default function EditPage() {
 
       <div className="relative z-[20]">
         {/* Imagen o video */}
-        <div className="relative w-full rounded-none overflow-hidden bg-white">
+        <div className="relative w-full overflow-hidden bg-white">
           {item?.src?.endsWith(".mp4") ? (
             <video
               src={item.src}
@@ -153,14 +149,14 @@ export default function EditPage() {
               autoPlay
               playsInline
               style={{ height: mediaHeight }}
-              className="w-full object-cover"
+              className="w-full object-contain bg-[#fff8f5]"
             />
           ) : (
             <img
               src={item?.src || ""}
               alt={slug}
               style={{ height: mediaHeight }}
-              className="w-full object-cover"
+              className="w-full object-contain bg-[#fff8f5]"
             />
           )}
         </div>
@@ -214,7 +210,7 @@ export default function EditPage() {
         </section>
       </div>
 
-      {/* === MODALES (AL FRENTE DE TODO) === */}
+      {/* === MODALES === */}
       {showCrop && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <CropperModal
@@ -247,4 +243,4 @@ export default function EditPage() {
       )}
     </main>
   );
-}
+          }
