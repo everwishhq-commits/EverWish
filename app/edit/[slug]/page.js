@@ -10,7 +10,7 @@ import CropperModal from "@/lib/croppermodal";
 
 export default function EditPage({ params }) {
   const slug = params.slug;
-  const [stage, setStage] = useState("expanded"); // expanded -> pantalla completa / editor -> edición
+  const [stage, setStage] = useState("expanded");
   const [message, setMessage] = useState("");
   const [animation, setAnimation] = useState("");
   const [gift, setGift] = useState(null);
@@ -20,7 +20,6 @@ export default function EditPage({ params }) {
   const [videoSrc, setVideoSrc] = useState("");
   const [total, setTotal] = useState(5);
 
-  // 🔹 Configura el video y datos del slug
   useEffect(() => {
     setMessage(defaultMessageFromSlug(slug));
     const anims = getAnimationsForSlug(slug);
@@ -28,7 +27,6 @@ export default function EditPage({ params }) {
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
-  // 🔹 Transición automática (pantalla completa → edición)
   useEffect(() => {
     const timer = setTimeout(() => setStage("editor"), 3000);
     return () => clearTimeout(timer);
@@ -46,8 +44,7 @@ export default function EditPage({ params }) {
   };
 
   return (
-    <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-[#fff7f5] overflow-hidden">
-      {/* 🖥️ Pantalla extendida */}
+    <div className="flex flex-col items-center justify-center bg-[#fff7f5] overflow-hidden min-h-[100dvh]">
       {stage === "expanded" && (
         <motion.div
           key="expanded"
@@ -55,33 +52,31 @@ export default function EditPage({ params }) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.8 }}
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-[#fff7f5]"
-          style={{ overscrollBehavior: "none" }}
+          className="fixed inset-0 z-[100] bg-[#fff7f5] overflow-hidden"
         >
-          <video
-            src={videoSrc}
-            className="w-full h-full object-contain"
-            autoPlay
-            loop
-            muted
-            playsInline
-          />
+          <div className="relative w-full h-full">
+            <video
+              src={videoSrc}
+              className="absolute inset-0 w-full h-full object-cover"
+              autoPlay
+              loop
+              muted
+              playsInline
+            />
+          </div>
         </motion.div>
       )}
 
-      {/* ✏️ Pantalla de edición */}
       {stage === "editor" && (
         <motion.div
           key="editor"
-          initial={{ opacity: 0, y: 50 }}
+          initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           className="z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-10 mb-10"
         >
-          {/* Video principal */}
           <div className="mb-4 overflow-hidden rounded-2xl border bg-gray-50">
             <video
-              key={slug}
               src={videoSrc}
               className="w-full object-cover"
               autoPlay
@@ -91,7 +86,6 @@ export default function EditPage({ params }) {
             />
           </div>
 
-          {/* Texto */}
           <h3 className="mb-2 text-center text-lg font-semibold text-gray-700">
             ✨ Customize your message ✨
           </h3>
@@ -102,7 +96,6 @@ export default function EditPage({ params }) {
             onChange={(e) => setMessage(e.target.value)}
           />
 
-          {/* Animaciones */}
           <div className="my-3">
             <select
               className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
@@ -115,7 +108,6 @@ export default function EditPage({ params }) {
             </select>
           </div>
 
-          {/* Botones inferiores */}
           <div className="mt-4 flex flex-wrap justify-center gap-3">
             <button
               onClick={() => setShowCrop(true)}
@@ -131,42 +123,41 @@ export default function EditPage({ params }) {
             </button>
             <button
               onClick={() => setShowCheckout(true)}
-              className="flex items-center gap-2 rounded-full bg-green-400 px-5 py-3 font-semibold text-[#103b1f] shadow-sm hover:bg-green-300"
+              className="flex items-center gap-2 rounded-full bg-purple-500 px-6 py-3 font-semibold text-white shadow-sm hover:bg-purple-600"
             >
               💳 Checkout
             </button>
           </div>
-
-          {/* Totales */}
-          <div className="mt-5 text-center text-sm text-gray-600">
-            Total: ${total.toFixed(2)}
-          </div>
         </motion.div>
       )}
 
-      {/* 🔹 Modales */}
       {showGift && (
         <GiftCardPopup
-          onClose={() => setShowGift(false)}
+          initial={gift}
           onSelect={updateGift}
-          current={gift}
-          onRemove={removeGift}
+          onClose={() => setShowGift(false)}
         />
       )}
+
       {showCheckout && (
         <CheckoutModal
-          onClose={() => setShowCheckout(false)}
           total={total}
           gift={gift}
-          message={message}
+          onGiftChange={() => setShowGift(true)}
+          onGiftRemove={removeGift}
+          onClose={() => setShowCheckout(false)}
         />
       )}
+
       {showCrop && (
         <CropperModal
+          open={showCrop}
           onClose={() => setShowCrop(false)}
-          onSave={(img) => console.log("Saved image:", img)}
+          onDone={(url) => {
+            setShowCrop(false);
+          }}
         />
       )}
     </div>
   );
-                }
+}
