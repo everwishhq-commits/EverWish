@@ -23,7 +23,7 @@ export default function EditPage({ params }) {
   useEffect(() => {
     setMessage(defaultMessageFromSlug(slug));
     const anims = getAnimationsForSlug(slug);
-    setAnimation(anims[0]);
+    setAnimation(anims[0] || "none"); // 👈 animación predeterminada según la tarjeta
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
@@ -75,7 +75,8 @@ export default function EditPage({ params }) {
           transition={{ duration: 0.8 }}
           className="z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-10 mb-10"
         >
-          <div className="mb-4 overflow-hidden rounded-2xl border bg-gray-50">
+          {/* 🟣 Video principal con animación superpuesta */}
+          <div className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50">
             <video
               src={videoSrc}
               className="w-full object-cover"
@@ -84,8 +85,21 @@ export default function EditPage({ params }) {
               muted
               playsInline
             />
+            {/* si hay animación activa, se superpone aquí */}
+            {animation !== "none" && (
+              <video
+                src={animation}
+                className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+                autoPlay
+                loop
+                muted
+                playsInline
+                style={{ opacity: 0.7 }}
+              />
+            )}
           </div>
 
+          {/* texto personalizado */}
           <h3 className="mb-2 text-center text-lg font-semibold text-gray-700">
             ✨ Customize your message ✨
           </h3>
@@ -96,18 +110,23 @@ export default function EditPage({ params }) {
             onChange={(e) => setMessage(e.target.value)}
           />
 
+          {/* selector de animación */}
           <div className="my-3">
             <select
               className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
               value={animation}
               onChange={(e) => setAnimation(e.target.value)}
             >
+              <option value="none">🌙 No animation</option>
               {getAnimationsForSlug(slug).map((a) => (
-                <option key={a}>{a}</option>
+                <option key={a} value={a}>
+                  {a.split("/").pop()}
+                </option>
               ))}
             </select>
           </div>
 
+          {/* botones */}
           <div className="mt-4 flex flex-wrap justify-center gap-3">
             <button
               onClick={() => setShowCrop(true)}
@@ -131,6 +150,7 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
+      {/* popups */}
       {showGift && (
         <GiftCardPopup
           initial={gift}
@@ -160,4 +180,4 @@ export default function EditPage({ params }) {
       )}
     </div>
   );
-}
+    }
