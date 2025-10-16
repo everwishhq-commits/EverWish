@@ -9,7 +9,7 @@ import CheckoutModal from "@/lib/checkout";
 import CropperModal from "@/lib/croppermodal";
 
 export default function EditPage({ params }) {
-  const slug = params.slug;
+  const slug = params.slug || "";
   const [stage, setStage] = useState("expanded");
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("");
@@ -23,16 +23,20 @@ export default function EditPage({ params }) {
   const [showDownload, setShowDownload] = useState(false);
   const [total, setTotal] = useState(5);
 
-  /* 🔹 Configuración inicial */
+  /* 🔹 Configuración inicial: mensaje, video y animaciones según slug */
   useEffect(() => {
     setMessage(defaultMessageFromSlug(slug));
+
+    // 🔸 Obtener animaciones específicas del slug
     const anims = getAnimationsForSlug(slug);
-    setAnimations(anims);
-    setAnimation(anims[0] || "none");
+    setAnimations(["🌙 No animation", ...anims]);
+    setAnimation("🌙 No animation");
+
+    // 🔸 Cargar video
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
-  /* 🔹 Pantalla extendida 3 segundos con barra */
+  /* 🔹 Pantalla extendida (3 s con barra) */
   useEffect(() => {
     let value = 0;
     const interval = setInterval(() => {
@@ -46,7 +50,7 @@ export default function EditPage({ params }) {
     return () => clearInterval(interval);
   }, []);
 
-  /* 🔹 Control de regalo y total */
+  /* 🔹 GiftCard y total */
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
@@ -105,6 +109,11 @@ export default function EditPage({ params }) {
       {/* 🟢 Editor principal */}
       {stage === "editor" && (
         <>
+          {/* ✨ Capa global de animación */}
+          {animation !== "🌙 No animation" && (
+            <AnimationOverlay slug={slug} animation={animation} />
+          )}
+
           <motion.div
             key="editor"
             initial={{ opacity: 0, y: 40 }}
@@ -112,6 +121,7 @@ export default function EditPage({ params }) {
             transition={{ duration: 0.8 }}
             className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-10 mb-10"
           >
+            {/* 🎬 Video de la tarjeta */}
             <div
               className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50"
               onClick={handleCardClick}
@@ -126,6 +136,7 @@ export default function EditPage({ params }) {
               />
             </div>
 
+            {/* 📝 Campo de mensaje */}
             <h3 className="mb-2 text-center text-lg font-semibold text-gray-700">
               ✨ Customize your message ✨
             </h3>
@@ -136,19 +147,22 @@ export default function EditPage({ params }) {
               onChange={(e) => setMessage(e.target.value)}
             />
 
+            {/* 🎨 Selector de animaciones temáticas */}
             <div className="my-3">
               <select
                 className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
                 value={animation}
                 onChange={(e) => setAnimation(e.target.value)}
               >
-                <option value="none">🌙 No animation</option>
                 {animations.map((a) => (
-                  <option key={a}>{a}</option>
+                  <option key={a} value={a}>
+                    {a}
+                  </option>
                 ))}
               </select>
             </div>
 
+            {/* 🟠 Botones */}
             <div className="mt-4 flex flex-wrap justify-center gap-3">
               <button
                 onClick={() => setShowCrop(true)}
@@ -170,6 +184,7 @@ export default function EditPage({ params }) {
               </button>
             </div>
 
+            {/* ⬇️ Botón de descarga */}
             {showDownload && (
               <motion.button
                 initial={{ opacity: 0, y: 30 }}
@@ -183,11 +198,6 @@ export default function EditPage({ params }) {
               </motion.button>
             )}
           </motion.div>
-
-          {/* ✨ Animación global visible sobre todo */}
-          {animation !== "none" && (
-            <AnimationOverlay slug={slug} animation={animation} />
-          )}
         </>
       )}
 
@@ -217,4 +227,4 @@ export default function EditPage({ params }) {
       )}
     </div>
   );
-    }
+}
