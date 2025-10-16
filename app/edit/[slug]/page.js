@@ -13,9 +13,9 @@ import {
 } from "@stripe/react-stripe-js";
 
 /* ====== libs externas (ya creadas en /lib) ====== */
-import { defaultMessageFromSlug } from "@/lib/messages";
-import { getAnimationsForSlug } from "@/lib/animations";
-import CropperModal from "@/lib/croppermodal";
+import { defaultMessageFromSlug } from """@/lib/messages";
+import { getAnimationsForSlug } from """@/lib/animations";
+import CropperModal from """@/lib/croppermodal";
 
 /* ========= Stripe ========= */
 const stripePromise = loadStripe(
