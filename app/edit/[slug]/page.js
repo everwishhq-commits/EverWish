@@ -24,7 +24,7 @@ export default function EditPage({ params }) {
   const [showDownload, setShowDownload] = useState(false);
   const [total, setTotal] = useState(5);
 
-  /* 🔹 Inicialización */
+  // 🔹 Configuración inicial
   useEffect(() => {
     setMessage(defaultMessageFromSlug(slug));
     const anims = getAnimationsForSlug(slug);
@@ -33,7 +33,7 @@ export default function EditPage({ params }) {
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
-  /* 🔹 Pantalla extendida 3s con barra */
+  // 🔹 Pantalla extendida inicial
   useEffect(() => {
     let value = 0;
     const interval = setInterval(() => {
@@ -47,7 +47,7 @@ export default function EditPage({ params }) {
     return () => clearInterval(interval);
   }, []);
 
-  /* 🔹 Regalos */
+  // 🔹 Control de regalo y total
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
@@ -58,11 +58,13 @@ export default function EditPage({ params }) {
     setTotal(5);
   };
 
-  /* 🔹 Descargar */
+  // 🔹 Mostrar botón de descarga
   const handleCardClick = () => {
     setShowDownload(true);
     setTimeout(() => setShowDownload(false), 3500);
   };
+
+  // 🔹 Descargar video
   const handleDownload = () => {
     const link = document.createElement("a");
     link.href = videoSrc;
@@ -101,7 +103,7 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
-      {/* 🟢 Editor */}
+      {/* 🟢 Editor principal */}
       {stage === "editor" && (
         <>
           <motion.div
@@ -128,7 +130,6 @@ export default function EditPage({ params }) {
             <h3 className="mb-2 text-center text-lg font-semibold text-gray-700">
               ✨ Customize your message ✨
             </h3>
-
             <textarea
               className="w-full rounded-2xl border p-3 text-center text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
               rows={2}
@@ -136,15 +137,18 @@ export default function EditPage({ params }) {
               onChange={(e) => setMessage(e.target.value)}
             />
 
+            {/* Dropdown de animaciones */}
             <div className="my-3">
               <select
                 className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
                 value={animation}
                 onChange={(e) => setAnimation(e.target.value)}
               >
-                <option value="none">🌙 no animation</option>
+                <option value="none">🌙 No animation</option>
                 {animations.map((a) => (
-                  <option key={a}>{a}</option>
+                  <option key={a} value={a}>
+                    {a}
+                  </option>
                 ))}
               </select>
             </div>
@@ -184,7 +188,7 @@ export default function EditPage({ params }) {
             )}
           </motion.div>
 
-          {/* ✨ Animación general visible */}
+          {/* ✨ Animación global visible sobre todo */}
           {animation !== "none" && (
             <AnimationOverlay slug={slug} animation={animation} />
           )}
