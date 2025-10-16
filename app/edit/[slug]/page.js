@@ -1,230 +1,188 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { motion } from "framer-motion";
-import { defaultMessageFromSlug } from "@/lib/messages";
-import { getAnimationsForSlug, AnimationOverlay } from "@/lib/animations";
-import GiftCardPopup from "@/lib/giftcard";
-import CheckoutModal from "@/lib/checkout";
-import CropperModal from "@/lib/croppermodal";
 
-export default function EditPage({ params }) {
-  const slug = params.slug || "";
-  const [stage, setStage] = useState("expanded");
-  const [progress, setProgress] = useState(0);
-  const [message, setMessage] = useState("");
-  const [animation, setAnimation] = useState("none");
-  const [animations, setAnimations] = useState([]);
-  const [gift, setGift] = useState(null);
-  const [showGift, setShowGift] = useState(false);
-  const [showCheckout, setShowCheckout] = useState(false);
-  const [showCrop, setShowCrop] = useState(false);
-  const [videoSrc, setVideoSrc] = useState("");
-  const [showDownload, setShowDownload] = useState(false);
-  const [total, setTotal] = useState(5);
+/* 🔹 Definimos las animaciones por categoría */
+const animationSets = {
+  easter: [
+    "🐰 bunnies",
+    "🥚 eggs",
+    "🌸 flowers",
+    "🌼 petals",
+    "🐥 chicks",
+    "💐 tulips",
+    "🌷 blossoms",
+    "🎀 ribbons",
+    "🌈 glow",
+    "✨ sparkles",
+  ],
+  july4: [
+    "🎆 fireworks",
+    "🇺🇸 flags",
+    "🦅 eagles",
+    "🎇 bursts",
+    "💥 stars",
+    "🎉 confetti",
+    "🎈 balloons",
+    "🔥 sparkles",
+    "🧨 rockets",
+    "✨ twinkle",
+  ],
+  halloween: [
+    "🎃 pumpkins",
+    "👻 ghosts",
+    "🕸️ webs",
+    "🕷️ spiders",
+    "🦇 bats",
+    "💀 skulls",
+    "🩸 drops",
+    "🍬 candies",
+    "🪄 sparkles",
+    "🌙 moons",
+  ],
+  pets: [
+    "🐾 paw prints",
+    "🐕 dogs",
+    "🐈 cats",
+    "🦴 bones",
+    "🐾 tracks",
+    "🐶 faces",
+    "🐾 hearts",
+    "🦴 treats",
+    "🐾 ribbons",
+    "✨ sparkles",
+  ],
+  christmas: [
+    "🎄 trees",
+    "🎁 gifts",
+    "⭐ stars",
+    "❄️ snowflakes",
+    "🕯️ candles",
+    "🎅 santa",
+    "🦌 reindeers",
+    "🪄 sparkles",
+    "⛄ snowmen",
+    "💫 twinkle",
+  ],
+  valentine: [
+    "💖 hearts",
+    "💘 arrows",
+    "💋 kisses",
+    "🌹 roses",
+    "🕊️ doves",
+    "💞 sparkles",
+    "💌 letters",
+    "🌸 petals",
+    "🫶 hands",
+    "✨ shimmer",
+  ],
+  default: [
+    "✨ sparkles",
+    "🌸 petals",
+    "🎉 confetti",
+    "⭐ stars",
+    "💖 hearts",
+    "🌈 glow",
+    "🎀 ribbons",
+    "💫 shimmer",
+    "🌟 twinkle",
+    "🌺 lights",
+  ],
+};
 
-  /* 🔹 Configuración inicial: mensaje, video y animaciones según slug */
+/* 🔸 Detectar set según slug */
+export function getAnimationsForSlug(slug = "") {
+  const lower = slug.toLowerCase();
+  if (lower.includes("easter") || lower.includes("bunny")) return animationSets.easter;
+  if (lower.includes("4th") || lower.includes("usa")) return animationSets.july4;
+  if (lower.includes("halloween") || lower.includes("ghost") || lower.includes("pumpkin"))
+    return animationSets.halloween;
+  if (lower.includes("pet") || lower.includes("dog") || lower.includes("cat"))
+    return animationSets.pets;
+  if (lower.includes("christmas")) return animationSets.christmas;
+  if (lower.includes("valentine") || lower.includes("love")) return animationSets.valentine;
+  return animationSets.default;
+}
+
+/* 🔹 Overlay animado general */
+export function AnimationOverlay({ slug, animation }) {
   useEffect(() => {
-    setMessage(defaultMessageFromSlug(slug));
+    const container = document.createElement("div");
+    container.className =
+      "fixed inset-0 pointer-events-none overflow-hidden z-[150]";
+    document.body.appendChild(container);
 
-    // 🔸 Obtener animaciones específicas del slug
-    const anims = getAnimationsForSlug(slug);
-    setAnimations(["🌙 No animation", ...anims]);
-    setAnimation("🌙 No animation");
+    const symbols = Array.from({ length: 10 }).map((_, i) => {
+      const el = document.createElement("div");
+      el.textContent = getSymbol(animation);
+      el.style.position = "absolute";
+      el.style.left = `${Math.random() * 100}%`;
+      el.style.top = `-${Math.random() * 10}%`;
+      el.style.fontSize = `${Math.random() * 24 + 16}px`;
+      el.style.opacity = "0.9";
+      el.style.animation = `floatDown ${
+        5 + Math.random() * 3
+      }s linear infinite`;
+      el.style.animationDelay = `${Math.random() * 3}s`;
+      container.appendChild(el);
+      return el;
+    });
 
-    // 🔸 Cargar video
-    setVideoSrc(`/videos/${slug}.mp4`);
-  }, [slug]);
-
-  /* 🔹 Pantalla extendida (3 s con barra) */
-  useEffect(() => {
-    let value = 0;
-    const interval = setInterval(() => {
-      value += 1;
-      setProgress(value);
-      if (value >= 100) {
-        clearInterval(interval);
-        setStage("editor");
-      }
-    }, 30);
-    return () => clearInterval(interval);
-  }, []);
-
-  /* 🔹 GiftCard y total */
-  const updateGift = (data) => {
-    setGift(data);
-    setShowGift(false);
-    setTotal(5 + (data?.amount || 0));
-  };
-  const removeGift = () => {
-    setGift(null);
-    setTotal(5);
-  };
-
-  /* 🔹 Mostrar botón de descarga */
-  const handleCardClick = () => {
-    setShowDownload(true);
-    setTimeout(() => setShowDownload(false), 3500);
-  };
-
-  /* 🔹 Descargar video */
-  const handleDownload = () => {
-    const link = document.createElement("a");
-    link.href = videoSrc;
-    link.download = `${slug}.mp4`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  };
+    return () => container.remove();
+  }, [slug, animation]);
 
   return (
-    <div className="flex flex-col items-center justify-center bg-[#fff7f5] overflow-hidden min-h-[100dvh]">
-      {/* 🟣 Pantalla extendida */}
-      {stage === "expanded" && (
-        <motion.div
-          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#fff7f5]"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6 }}
-        >
-          <video
-            src={videoSrc}
-            className="absolute inset-0 w-full h-full object-cover"
-            autoPlay
-            loop
-            muted
-            playsInline
-          />
-          <div className="absolute bottom-8 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-pink-500"
-              initial={{ width: "0%" }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.03, ease: "linear" }}
-            />
-          </div>
-        </motion.div>
-      )}
-
-      {/* 🟢 Editor principal */}
-      {stage === "editor" && (
-        <>
-          {/* ✨ Capa global de animación */}
-          {animation !== "🌙 No animation" && (
-            <AnimationOverlay slug={slug} animation={animation} />
-          )}
-
-          <motion.div
-            key="editor"
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-10 mb-10"
-          >
-            {/* 🎬 Video de la tarjeta */}
-            <div
-              className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50"
-              onClick={handleCardClick}
-            >
-              <video
-                src={videoSrc}
-                className="w-full object-cover"
-                autoPlay
-                loop
-                muted
-                playsInline
-              />
-            </div>
-
-            {/* 📝 Campo de mensaje */}
-            <h3 className="mb-2 text-center text-lg font-semibold text-gray-700">
-              ✨ Customize your message ✨
-            </h3>
-            <textarea
-              className="w-full rounded-2xl border p-3 text-center text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
-              rows={2}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-            />
-
-            {/* 🎨 Selector de animaciones temáticas */}
-            <div className="my-3">
-              <select
-                className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
-                value={animation}
-                onChange={(e) => setAnimation(e.target.value)}
-              >
-                {animations.map((a) => (
-                  <option key={a} value={a}>
-                    {a}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* 🟠 Botones */}
-            <div className="mt-4 flex flex-wrap justify-center gap-3">
-              <button
-                onClick={() => setShowCrop(true)}
-                className="flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-3 font-semibold text-[#3b2b1f] shadow-sm hover:bg-yellow-300"
-              >
-                📸 Add Image
-              </button>
-              <button
-                onClick={() => setShowGift(true)}
-                className="flex items-center gap-2 rounded-full bg-pink-200 px-5 py-3 font-semibold text-pink-700 shadow-sm hover:bg-pink-300"
-              >
-                🎁 Gift Card
-              </button>
-              <button
-                onClick={() => setShowCheckout(true)}
-                className="flex items-center gap-2 rounded-full bg-purple-500 px-6 py-3 font-semibold text-white shadow-sm hover:bg-purple-600"
-              >
-                💳 Checkout
-              </button>
-            </div>
-
-            {/* ⬇️ Botón de descarga */}
-            {showDownload && (
-              <motion.button
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 30 }}
-                transition={{ duration: 0.4 }}
-                onClick={handleDownload}
-                className="fixed bottom-10 right-6 z-[400] rounded-full bg-[#ff7b00] px-6 py-3 text-white font-semibold shadow-lg hover:bg-[#ff9f33]"
-              >
-                ⬇️ Download
-              </motion.button>
-            )}
-          </motion.div>
-        </>
-      )}
-
-      {/* 🔸 Modales */}
-      {showGift && (
-        <GiftCardPopup
-          initial={gift}
-          onSelect={updateGift}
-          onClose={() => setShowGift(false)}
-        />
-      )}
-      {showCheckout && (
-        <CheckoutModal
-          total={total}
-          gift={gift}
-          onGiftChange={() => setShowGift(true)}
-          onGiftRemove={removeGift}
-          onClose={() => setShowCheckout(false)}
-        />
-      )}
-      {showCrop && (
-        <CropperModal
-          open={showCrop}
-          onClose={() => setShowCrop(false)}
-          onDone={() => setShowCrop(false)}
-        />
-      )}
-    </div>
+    <style jsx global>{`
+      @keyframes floatDown {
+        0% {
+          transform: translateY(0) rotate(0deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(100vh) rotate(360deg);
+          opacity: 0;
+        }
+      }
+    `}</style>
   );
 }
+
+/* 🔸 Asignar símbolo según nombre */
+function getSymbol(name = "") {
+  const n = name.toLowerCase();
+  if (n.includes("bunny")) return "🐰";
+  if (n.includes("egg")) return "🥚";
+  if (n.includes("flower") || n.includes("petal")) return "🌸";
+  if (n.includes("chick")) return "🐥";
+  if (n.includes("flag")) return "🇺🇸";
+  if (n.includes("firework") || n.includes("burst")) return "🎆";
+  if (n.includes("star")) return "⭐";
+  if (n.includes("confetti")) return "🎉";
+  if (n.includes("balloon")) return "🎈";
+  if (n.includes("rocket")) return "🧨";
+  if (n.includes("pumpkin")) return "🎃";
+  if (n.includes("ghost")) return "👻";
+  if (n.includes("bat")) return "🦇";
+  if (n.includes("spider")) return "🕷️";
+  if (n.includes("web")) return "🕸️";
+  if (n.includes("skull")) return "💀";
+  if (n.includes("bone")) return "🦴";
+  if (n.includes("paw")) return "🐾";
+  if (n.includes("dog")) return "🐶";
+  if (n.includes("cat")) return "🐱";
+  if (n.includes("reindeer")) return "🦌";
+  if (n.includes("snow")) return "❄️";
+  if (n.includes("tree")) return "🎄";
+  if (n.includes("gift")) return "🎁";
+  if (n.includes("heart")) return "💖";
+  if (n.includes("rose")) return "🌹";
+  if (n.includes("kiss")) return "💋";
+  if (n.includes("ribbon")) return "🎀";
+  if (n.includes("glow")) return "🌈";
+  if (n.includes("sparkle")) return "✨";
+  if (n.includes("twinkle")) return "🌟";
+  if (n.includes("shimmer")) return "💫";
+  if (n.includes("light")) return "💡";
+  return "✨";
+    }
