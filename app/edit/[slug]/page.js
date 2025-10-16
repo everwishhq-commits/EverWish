@@ -10,7 +10,7 @@ import { defaultMessageFromSlug } from "../../lib/messages";
 import { getAnimationsForSlug } from "../../lib/animations";
 import CropperModal from "../../lib/croppermodal";
 import GiftCardPopup from "../../lib/giftcard";
-import CheckoutPopup, { PLANS } from "../../lib/checkout";
+import CheckoutPopup from "../../lib/checkout";
 
 /* ========= Helpers ========= */
 const useIsMobile = () => {
