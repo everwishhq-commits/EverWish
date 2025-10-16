@@ -20,7 +20,6 @@
     "@stripe/stripe-js": "^2.1.1",
     "@stripe/react-stripe-js": "^2.2.0",
     "react-easy-crop": "^5.1.5",
-    "cropperjs-base64": "^1.0.3",
     "classnames": "^2.5.1"
   }
 }
