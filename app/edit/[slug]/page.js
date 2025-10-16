@@ -12,7 +12,8 @@ export default function EditPage({ params }) {
   const slug = params.slug;
   const [stage, setStage] = useState("expanded");
   const [message, setMessage] = useState("");
-  const [animation, setAnimation] = useState("");
+  const [animation, setAnimation] = useState("none"); // ← agregado
+  const [animations, setAnimations] = useState([]); // ← agregado
   const [gift, setGift] = useState(null);
   const [showGift, setShowGift] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
@@ -20,13 +21,16 @@ export default function EditPage({ params }) {
   const [videoSrc, setVideoSrc] = useState("");
   const [total, setTotal] = useState(5);
 
+  // Carga mensaje, video y lista de animaciones
   useEffect(() => {
     setMessage(defaultMessageFromSlug(slug));
-    const anims = getAnimationsForSlug(slug);
-    setAnimation(anims[0] || "none"); // 👈 animación predeterminada según la tarjeta
+    const anims = getAnimationsForSlug(slug) || [];
+    setAnimations(anims);
+    setAnimation(anims[0] || "none"); // selecciona la primera animación por defecto
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
+  // Transición a modo edición
   useEffect(() => {
     const timer = setTimeout(() => setStage("editor"), 3000);
     return () => clearTimeout(timer);
@@ -45,6 +49,7 @@ export default function EditPage({ params }) {
 
   return (
     <div className="flex flex-col items-center justify-center bg-[#fff7f5] overflow-hidden min-h-[100dvh]">
+      {/* 🟢 Pantalla extendida inicial */}
       {stage === "expanded" && (
         <motion.div
           key="expanded"
@@ -67,6 +72,7 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
+      {/* 🟣 Pantalla de edición */}
       {stage === "editor" && (
         <motion.div
           key="editor"
@@ -75,7 +81,7 @@ export default function EditPage({ params }) {
           transition={{ duration: 0.8 }}
           className="z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-10 mb-10"
         >
-          {/* 🟣 Video principal con animación superpuesta */}
+          {/* 🎞️ Contenedor del video + animación */}
           <div className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50">
             <video
               src={videoSrc}
@@ -85,7 +91,6 @@ export default function EditPage({ params }) {
               muted
               playsInline
             />
-            {/* si hay animación activa, se superpone aquí */}
             {animation !== "none" && (
               <video
                 src={animation}
@@ -99,7 +104,7 @@ export default function EditPage({ params }) {
             )}
           </div>
 
-          {/* texto personalizado */}
+          {/* 📝 Texto editable */}
           <h3 className="mb-2 text-center text-lg font-semibold text-gray-700">
             ✨ Customize your message ✨
           </h3>
@@ -110,7 +115,7 @@ export default function EditPage({ params }) {
             onChange={(e) => setMessage(e.target.value)}
           />
 
-          {/* selector de animación */}
+          {/* 🎬 Selector de animación */}
           <div className="my-3">
             <select
               className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
@@ -118,7 +123,7 @@ export default function EditPage({ params }) {
               onChange={(e) => setAnimation(e.target.value)}
             >
               <option value="none">🌙 No animation</option>
-              {getAnimationsForSlug(slug).map((a) => (
+              {animations.map((a) => (
                 <option key={a} value={a}>
                   {a.split("/").pop()}
                 </option>
@@ -126,7 +131,7 @@ export default function EditPage({ params }) {
             </select>
           </div>
 
-          {/* botones */}
+          {/* 🎁 Botones principales */}
           <div className="mt-4 flex flex-wrap justify-center gap-3">
             <button
               onClick={() => setShowCrop(true)}
@@ -150,7 +155,7 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
-      {/* popups */}
+      {/* 🔲 Popups */}
       {showGift && (
         <GiftCardPopup
           initial={gift}
@@ -180,4 +185,4 @@ export default function EditPage({ params }) {
       )}
     </div>
   );
-    }
+}
