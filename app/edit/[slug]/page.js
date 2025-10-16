@@ -118,10 +118,10 @@ export default function EditPage({ params }) {
                   rotate: 360,
                 }}
                 transition={{
-                  duration: 90 + Math.random() * 60, // 🐢 más lento (90–130s)
+                  duration: 90 + Math.random() * 80, // 🐢 más lento (90–130s)
                   repeat: Infinity,
                   ease: "linear",
-                  delay: Math.random() * 2, // menos delay de aparición
+                  delay: Math.random() * 1, // menos delay de aparición
                 }}
               />
             );
