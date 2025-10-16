@@ -11,7 +11,7 @@ import CropperModal from "@/lib/croppermodal";
 
 export default function EditPage({ params }) {
   const slug = params.slug;
-  const [showEditor, setShowEditor] = useState(false);
+  const [stage, setStage] = useState("expanded"); // "expanded" → pantalla completa / "editor" → modo edición
   const [message, setMessage] = useState("");
   const [animation, setAnimation] = useState("");
   const [gift, setGift] = useState(null);
@@ -21,16 +21,16 @@ export default function EditPage({ params }) {
   const [image, setImage] = useState(null);
   const [total, setTotal] = useState(5);
 
-  // iniciar mensaje y animaciones base
+  // Inicializa mensaje y animaciones
   useEffect(() => {
     setMessage(defaultMessageFromSlug(slug));
     const anims = getAnimationsForSlug(slug);
     setAnimation(anims[0]);
   }, [slug]);
 
-  // transición pantalla completa → editor
+  // Transición automática → pasa del modo expandido al editor en 3s
   useEffect(() => {
-    const timer = setTimeout(() => setShowEditor(true), 3000);
+    const timer = setTimeout(() => setStage("editor"), 3000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -46,44 +46,46 @@ export default function EditPage({ params }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#fff7f5] flex flex-col items-center justify-center py-10">
-      {!showEditor ? (
+    <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-[#fff7f5] overflow-hidden">
+      {/* 🔹 PANTALLA EXTENDIDA */}
+      {stage === "expanded" && (
         <motion.div
-          key="preview"
+          key="expanded"
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8 }}
-          className="flex h-[80vh] w-full items-center justify-center"
+          className="fixed inset-0 z-[100] flex h-[100dvh] w-full items-center justify-center bg-[#fff7f5] overflow-hidden"
+          style={{
+            WebkitTouchCallout: "none",
+            WebkitUserSelect: "none",
+            userSelect: "none",
+          }}
         >
-          <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-xl">
+          <div className="relative w-full h-full flex items-center justify-center bg-white">
             <Image
               src={`/cards/${slug}.png`}
               alt="Card preview"
-              width={600}
-              height={600}
-              className="h-auto w-full object-cover"
+              fill
+              priority
+              className="object-contain"
             />
-            <p className="absolute bottom-6 w-full text-center text-gray-500">
-              Card preview
-            </p>
           </div>
         </motion.div>
-      ) : (
+      )}
+
+      {/* 🔹 EDITOR NORMAL */}
+      {stage === "editor" && (
         <motion.div
           key="editor"
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="w-full max-w-md rounded-3xl bg-white p-5 shadow-xl"
+          className="w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-10 mb-10"
         >
           {/* Imagen principal */}
           <div className="mb-4 overflow-hidden rounded-2xl border bg-gray-50">
             {image ? (
-              <img
-                src={image}
-                alt="uploaded"
-                className="w-full object-cover"
-              />
+              <img src={image} alt="uploaded" className="w-full object-cover" />
             ) : (
               <Image
                 src={`/cards/${slug}.png`}
@@ -106,7 +108,7 @@ export default function EditPage({ params }) {
             onChange={(e) => setMessage(e.target.value)}
           />
 
-          {/* Selector animación */}
+          {/* Selector de animación */}
           <div className="my-3">
             <select
               className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
@@ -119,7 +121,7 @@ export default function EditPage({ params }) {
             </select>
           </div>
 
-          {/* Botones inferiores */}
+          {/* Botones */}
           <div className="mt-4 flex flex-wrap justify-center gap-3">
             <button
               onClick={() => setShowCrop(true)}
@@ -143,7 +145,7 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
-      {/* Modales */}
+      {/* 🔹 MODALES */}
       {showGift && (
         <GiftCardPopup
           initial={gift}
@@ -174,4 +176,4 @@ export default function EditPage({ params }) {
       )}
     </div>
   );
-            }
+}
