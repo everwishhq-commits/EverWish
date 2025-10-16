@@ -12,28 +12,15 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 
-/* ======== IMPORTS DEL LIB EN LA RAÍZ DEL PROYECTO ======== */
-/* Si tu carpeta lib está en la raíz (fuera de /app), desde aquí subes 3 niveles */
-import { defaultMessageFromSlug } from "../../../lib/messages";
-import { getAnimationsForSlug } from "../../../lib/animations";
-import CropperModal from "../../../lib/croppermodal";
+/* ====== libs externas (ya creadas en /lib) ====== */
+import { defaultMessageFromSlug } from "@/lib/messages";
+import { getAnimationsForSlug } from "@/lib/animations";
+import CropperModal from "@/lib/croppermodal";
 
-/* ========= Stripe (publishable) ========= */
+/* ========= Stripe ========= */
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
 );
-
-/* ========= Helpers ========= */
-const useIsMobile = () => {
-  const [m, setM] = useState(false);
-  useEffect(() => {
-    const check = () => setM(window.innerWidth < 640);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
-  return m;
-};
 
 /* ========= Stripe inline form ========= */
 function InlineStripeForm({ total, onSuccess }) {
@@ -89,7 +76,7 @@ function InlineStripeForm({ total, onSuccess }) {
   );
 }
 
-/* ========= Gift Card Popup ========= */
+/* ========= Popup Gift Card ========= */
 function GiftCardPopup({ onSelect, onClose, initial }) {
   const tabs = ["Popular", "Lifestyle", "Digital"];
   const [activeTab, setActiveTab] = useState("Popular");
@@ -98,15 +85,25 @@ function GiftCardPopup({ onSelect, onClose, initial }) {
   const [amount, setAmount] = useState(initial?.amount || 0);
 
   const cards = {
-    Popular: { featured: ["Amazon", "Walmart", "Target"], more: ["Apple", "Best Buy", "Starbucks"] },
-    Lifestyle: { featured: ["Nike", "H&M", "Zara"], more: ["Shein", "Etsy", "Bath & Body Works"] },
-    Digital: { featured: ["Google Play", "Spotify", "Netflix"], more: ["Xbox", "PlayStation", "Disney+"] },
+    Popular: {
+      featured: ["Amazon", "Walmart", "Target"],
+      more: ["Apple", "Best Buy", "Starbucks"],
+    },
+    Lifestyle: {
+      featured: ["Nike", "H&M", "Zara"],
+      more: ["Shein", "Etsy", "Bath & Body Works"],
+    },
+    Digital: {
+      featured: ["Google Play", "Spotify", "Netflix"],
+      more: ["Xbox", "PlayStation", "Disney+"],
+    },
   };
 
   const quick = [5, 10, 25, 50, 100];
 
   const done = () => {
-    if (!brand || !Number(amount)) return alert("Please select a brand and amount.");
+    if (!brand || !Number(amount))
+      return alert("Please select a brand and amount.");
     onSelect({ brand, amount: Number(amount) });
   };
 
@@ -128,14 +125,15 @@ function GiftCardPopup({ onSelect, onClose, initial }) {
           Choose a Gift Card 🎁
         </h3>
 
-        {/* Tabs */}
         <div className="flex justify-center gap-6 mb-4">
           {tabs.map((t) => (
             <button
               key={t}
               onClick={() => setActiveTab(t)}
               className={`pb-1 ${
-                activeTab === t ? "text-pink-500 border-b-2 border-pink-500 font-semibold" : "text-gray-400"
+                activeTab === t
+                  ? "text-pink-500 border-b-2 border-pink-500 font-semibold"
+                  : "text-gray-400"
               }`}
             >
               {t}
@@ -150,7 +148,9 @@ function GiftCardPopup({ onSelect, onClose, initial }) {
               key={b}
               onClick={() => setBrand(b)}
               className={`border rounded-xl py-2 px-3 text-sm ${
-                brand === b ? "bg-pink-100 border-pink-400 text-pink-600" : "hover:bg-gray-100"
+                brand === b
+                  ? "bg-pink-100 border-pink-400 text-pink-600"
+                  : "hover:bg-gray-100"
               }`}
             >
               {b}
@@ -166,7 +166,9 @@ function GiftCardPopup({ onSelect, onClose, initial }) {
                 key={b}
                 onClick={() => setBrand(b)}
                 className={`border rounded-xl py-2 px-3 text-sm ${
-                  brand === b ? "bg-pink-100 border-pink-400 text-pink-600" : "hover:bg-gray-100"
+                  brand === b
+                    ? "bg-pink-100 border-pink-400 text-pink-600"
+                    : "hover:bg-gray-100"
                 }`}
               >
                 {b}
@@ -176,21 +178,27 @@ function GiftCardPopup({ onSelect, onClose, initial }) {
         )}
 
         <button
-          onClick={() => setExpanded((p) => ({ ...p, [activeTab]: !p[activeTab] }))}
+          onClick={() =>
+            setExpanded((p) => ({ ...p, [activeTab]: !p[activeTab] }))
+          }
           className="text-sm text-gray-600 hover:text-pink-500 mb-3"
         >
           {expanded[activeTab] ? "Hide more ▲" : "More gift cards ▼"}
         </button>
 
         {/* Amount */}
-        <h4 className="text-sm font-semibold mb-2 text-center text-gray-600">Amount (USD)</h4>
+        <h4 className="text-sm font-semibold mb-2 text-center text-gray-600">
+          Amount (USD)
+        </h4>
         <div className="flex gap-2 justify-center mb-4">
           {quick.map((a) => (
             <button
               key={a}
               onClick={() => setAmount(a)}
               className={`px-3 py-1 rounded-lg border transition ${
-                Number(amount) === a ? "bg-pink-100 border-pink-500 text-pink-600" : "hover:bg-gray-100"
+                Number(amount) === a
+                  ? "bg-pink-100 border-pink-500 text-pink-600"
+                  : "hover:bg-gray-100"
               }`}
             >
               ${a}
@@ -209,157 +217,26 @@ function GiftCardPopup({ onSelect, onClose, initial }) {
   );
 }
 
-/* ========= Checkout popup ========= */
-function CheckoutPopup({ total, gift, onGiftChange, onGiftRemove, onClose }) {
-  const [sender, setSender] = useState({ name: "", email: "", phone: "" });
-  const [recipient, setRecipient] = useState({ name: "", email: "", phone: "" });
-
-  return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[65]">
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="bg-white rounded-3xl shadow-2xl w-11/12 max-w-lg p-6 relative"
-      >
-        <button
-          onClick={onClose}
-          className="absolute right-5 top-4 text-gray-400 hover:text-gray-600"
-          aria-label="Close checkout"
-        >
-          ✕
-        </button>
-
-        <h3 className="text-xl font-bold text-center text-purple-600 mb-1">
-          Secure Checkout with Stripe 💜
-        </h3>
-        <p className="text-center text-sm text-gray-500 mb-4">
-          Your information is encrypted and processed safely.
-        </p>
-
-        {/* Sender / Recipient */}
-        <div className="grid md:grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm font-medium text-gray-600">
-              Sender <span className="text-pink-500">*</span>
-            </p>
-            <input
-              placeholder="Full name"
-              className="w-full rounded-xl border p-3 mb-2"
-              value={sender.name}
-              onChange={(e) => setSender({ ...sender, name: e.target.value })}
-            />
-            <input
-              placeholder="Email"
-              className="w-full rounded-xl border p-3 mb-2"
-              value={sender.email}
-              onChange={(e) => setSender({ ...sender, email: e.target.value })}
-            />
-            <input
-              placeholder="Phone"
-              className="w-full rounded-xl border p-3"
-              value={sender.phone}
-              onChange={(e) => setSender({ ...sender, phone: e.target.value })}
-            />
-          </div>
-
-          <div>
-            <p className="text-sm font-medium text-gray-600">
-              Recipient <span className="text-pink-500">*</span>
-            </p>
-            <input
-              placeholder="Full name"
-              className="w-full rounded-xl border p-3 mb-2"
-              value={recipient.name}
-              onChange={(e) => setRecipient({ ...recipient, name: e.target.value })}
-            />
-            <input
-              placeholder="Email"
-              className="w-full rounded-xl border p-3 mb-2"
-              value={recipient.email}
-              onChange={(e) => setRecipient({ ...recipient, email: e.target.value })}
-            />
-            <input
-              placeholder="Phone"
-              className="w-full rounded-xl border p-3"
-              value={recipient.phone}
-              onChange={(e) => setRecipient({ ...recipient, phone: e.target.value })}
-            />
-          </div>
-        </div>
-
-        {/* Order summary */}
-        <div className="mt-5 border-t pt-4 text-gray-700 text-sm">
-          <p className="font-semibold mb-1">Order summary</p>
-
-          <div className="flex justify-between">
-            <span>Everwish Card</span>
-            <span>$5.00</span>
-          </div>
-
-          <div className="flex justify-between items-center mt-2">
-            <span>
-              Gift Card {gift?.brand ? `(${gift.brand} $${Number(gift.amount || 0)})` : "(none)"}
-            </span>
-            <div className="flex items-center gap-3">
-              {gift?.brand ? (
-                <>
-                  <button onClick={onGiftChange} className="text-pink-600 hover:underline">Change</button>
-                  <button onClick={onGiftRemove} className="text-gray-500 hover:text-red-500" title="Remove gift card">🗑️</button>
-                </>
-              ) : (
-                <button onClick={onGiftChange} className="text-pink-600 hover:underline">Add</button>
-              )}
-            </div>
-          </div>
-
-          <div className="h-px bg-gray-200 my-2" />
-          <div className="flex justify-between font-semibold">
-            <span>Total</span>
-            <span>${total.toFixed(2)}</span>
-          </div>
-        </div>
-
-        {/* Stripe inline */}
-        <Elements stripe={stripePromise}>
-          <InlineStripeForm total={total} onSuccess={onClose} />
-        </Elements>
-      </motion.div>
-    </div>
-  );
-}
-
 /* ========= Página principal ========= */
 export default function EditPage() {
   const { slug } = useParams();
-  const isMobile = useIsMobile();
-
-  // Intro (pantalla extendida)
   const [item, setItem] = useState(null);
   const [showEdit, setShowEdit] = useState(false);
   const [progress, setProgress] = useState(0);
-
-  // Editor
   const [message, setMessage] = useState("");
   const [animOptions, setAnimOptions] = useState([]);
   const [anim, setAnim] = useState("");
-  const CARD_PRICE = 5;
-
-  // User Image
-  const [showCrop, setShowCrop] = useState(false);
-  const [userImage, setUserImage] = useState(null);
-
-  // GiftCard & Checkout
   const [gift, setGift] = useState({ brand: "", amount: 0 });
   const [showGiftPopup, setShowGiftPopup] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
+  const [userImage, setUserImage] = useState(null);
+  const [cropOpen, setCropOpen] = useState(false);
 
-  // Persistencia por slug
+  const CARD_PRICE = 5;
   const keyMsg = `ew_msg_${slug}`;
   const keyAnim = `ew_anim_${slug}`;
   const keyGift = `ew_gift_${slug}`;
-  const keyUserImg = `ew_img_${slug}`;
 
-  // Cargar persistencia
   useEffect(() => {
     try {
       const m = sessionStorage.getItem(keyMsg);
@@ -368,33 +245,27 @@ export default function EditPage() {
       if (a) setAnim(a);
       const g = sessionStorage.getItem(keyGift);
       if (g) setGift(JSON.parse(g));
-      const u = sessionStorage.getItem(keyUserImg);
-      if (u) setUserImage(u);
     } catch {}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
-
-  // Guardar persistencia
-  useEffect(() => {
-    try { sessionStorage.setItem(keyMsg, message); } catch {}
-  }, [message, keyMsg]);
-
-  useEffect(() => {
-    try { sessionStorage.setItem(keyAnim, anim); } catch {}
-  }, [anim, keyAnim]);
-
-  useEffect(() => {
-    try { sessionStorage.setItem(keyGift, JSON.stringify(gift)); } catch {}
-  }, [gift, keyGift]);
 
   useEffect(() => {
     try {
-      if (userImage) sessionStorage.setItem(keyUserImg, userImage);
-      else sessionStorage.removeItem(keyUserImg);
+      sessionStorage.setItem(keyMsg, message);
     } catch {}
-  }, [userImage, keyUserImg]);
+  }, [message, keyMsg]);
 
-  // Cargar video + animaciones
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(keyAnim, anim);
+    } catch {}
+  }, [anim, keyAnim]);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(keyGift, JSON.stringify(gift));
+    } catch {}
+  }, [gift, keyGift]);
+
   useEffect(() => {
     (async () => {
       try {
@@ -402,24 +273,24 @@ export default function EditPage() {
         const list = await res.json();
         const found = list.find((v) => v.slug === slug);
         setItem(found || null);
-
-        if (!sessionStorage.getItem(keyMsg)) setMessage(defaultMessageFromSlug(slug));
+        if (!sessionStorage.getItem(keyMsg)) {
+          setMessage(defaultMessageFromSlug(slug));
+        }
         const opts = getAnimationsForSlug(slug);
         setAnimOptions(opts);
-        if (!sessionStorage.getItem(keyAnim)) setAnim(opts[0] || "❌ None");
+        if (!sessionStorage.getItem(keyAnim)) {
+          setAnim(opts[0] || "❌ None");
+        }
       } catch (e) {
         console.error("Error loading /api/videos", e);
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
-  /* --- Pantalla extendida con barra + autoavance a edición (3s) --- */
   useEffect(() => {
     if (!item) return;
     let timer;
     if (!showEdit) {
-      // Barra de progreso
       const start = performance.now();
       const duration = 3000;
       const tick = () => {
@@ -428,59 +299,11 @@ export default function EditPage() {
         if (p < 1) requestAnimationFrame(tick);
       };
       requestAnimationFrame(tick);
-
-      // Fullscreen best-effort
-      (async () => {
-        try {
-          const el = document.documentElement;
-          if (el.requestFullscreen) await el.requestFullscreen();
-          // @ts-ignore
-          if (!document.fullscreenElement && el.webkitRequestFullscreen)
-            // @ts-ignore
-            await el.webkitRequestFullscreen();
-        } catch {}
-      })();
-
-      // Salir y pasar al editor
-      timer = setTimeout(async () => {
-        try {
-          if (document.fullscreenElement && document.exitFullscreen) {
-            await document.exitFullscreen();
-          }
-          // @ts-ignore
-          if (!document.fullscreenElement && document.webkitExitFullscreen)
-            // @ts-ignore
-            await document.webkitExitFullscreen();
-        } catch {}
-        setShowEdit(true);
-      }, 3000);
+      timer = setTimeout(() => setShowEdit(true), 3000);
     }
     return () => clearTimeout(timer);
   }, [item, showEdit]);
 
-  // Tap de seguridad: si queda atascado en fullscreen, toca para continuar
-  useEffect(() => {
-    const handler = async () => {
-      if (!showEdit) {
-        try {
-          if (document.fullscreenElement && document.exitFullscreen) await document.exitFullscreen();
-          // @ts-ignore
-          if (!document.fullscreenElement && document.webkitExitFullscreen)
-            // @ts-ignore
-            await document.webkitExitFullscreen();
-        } catch {}
-        setShowEdit(true);
-      }
-    };
-    window.addEventListener("click", handler);
-    window.addEventListener("touchstart", handler);
-    return () => {
-      window.removeEventListener("click", handler);
-      window.removeEventListener("touchstart", handler);
-    };
-  }, [showEdit]);
-
-  // Render de animación (suave y por delante, sin bloquear inputs)
   const renderEffect = () => {
     if (!anim || /None/.test(anim)) return null;
     const emoji = anim.split(" ")[0];
@@ -501,7 +324,10 @@ export default function EditPage() {
           ease: "easeInOut",
           delay: i * 0.22,
         }}
-        style={{ top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%` }}
+        style={{
+          top: `${Math.random() * 100}%`,
+          left: `${Math.random() * 100}%`,
+        }}
       >
         {emoji}
       </motion.span>
@@ -510,15 +336,24 @@ export default function EditPage() {
 
   if (!item) return null;
 
-  /* --- Intro (pantalla extendida con barra) --- */
   if (!showEdit) {
     return (
       <div className="fixed inset-0 flex justify-center items-center bg-black">
         {item.src?.endsWith(".mp4") ? (
           <>
-            <video src={item.src} autoPlay muted loop playsInline className="w-full h-full object-cover" />
+            <video
+              src={item.src}
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover"
+            />
             <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/30">
-              <div className="h-full bg-white transition-all duration-200" style={{ width: `${progress}%` }} />
+              <div
+                className="h-full bg-white transition-all duration-200"
+                style={{ width: `${progress}%` }}
+              />
             </div>
           </>
         ) : (
@@ -528,18 +363,13 @@ export default function EditPage() {
     );
   }
 
-  // Alturas pensadas para que TODO quepa en una sola pantalla
-  const mediaHeight = isMobile ? 360 : 440;
-
   /* --- Editor principal --- */
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 relative bg-[#fff8f5] min-h-screen overflow-hidden">
-      {/* Animaciones al frente */}
       <div className="absolute inset-0">{renderEffect()}</div>
 
       <div className="relative z-[30]">
-        {/* Media */}
-        <div className="relative w-full rounded-3xl shadow-md overflow-hidden bg-black">
+        <div className="relative w-full rounded-3xl shadow-md overflow-hidden bg-white">
           {item.src?.endsWith(".mp4") ? (
             <video
               src={item.src}
@@ -547,33 +377,29 @@ export default function EditPage() {
               loop
               autoPlay
               playsInline
-              style={{ height: mediaHeight }}
-              className="w-full object-contain"
+              className="w-full aspect-[3/4] object-cover"
             />
           ) : (
             <img
               src={item.src}
               alt={slug}
-              style={{ height: mediaHeight }}
-              className="w-full object-contain"
+              className="w-full aspect-[3/4] object-cover"
             />
           )}
         </div>
 
-        {/* Controles */}
-        <section className="mt-4 bg-white rounded-3xl shadow-md p-6">
-          <h2 className="text-xl font-semibold text-center mb-3">
-            ✨ Customize your message ✨
+        <section className="mt-6 bg-white rounded-3xl shadow-md p-6">
+          <h2 className="text-xl font-semibold text-center mb-4">
+            Customize your message ✨
           </h2>
 
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            rows={isMobile ? 3 : 2}
+            rows={3}
             className="w-full rounded-2xl border border-gray-300 p-4 text-center focus:ring-2 focus:ring-pink-400"
           />
 
-          {/* Dropdown dinámico por categoría */}
           <select
             value={anim}
             onChange={(e) => setAnim(e.target.value)}
@@ -587,8 +413,74 @@ export default function EditPage() {
             <option value="❌ None">❌ None</option>
           </select>
 
-          {/* Preview de imagen del usuario (debajo del mensaje) */}
+          {/* Botones */}
+          <div className="flex flex-col sm:flex-row gap-3 mt-4">
+            <button
+              onClick={() => setCropOpen(true)}
+              className="flex-1 rounded-full py-3 font-semibold transition bg-yellow-300 hover:bg-yellow-400 text-[#3b2b1f]"
+            >
+              📸 Add Image
+            </button>
+
+            <button
+              onClick={() => setShowGiftPopup(true)}
+              className="flex-1 rounded-full py-3 font-semibold transition bg-pink-100 hover:bg-pink-200 text-pink-700"
+            >
+              🐣 Gift Card
+            </button>
+          </div>
+
           {userImage && (
             <div className="mt-4">
-              <p className="text-sm text-gray-600 mb-2 text-center">Your photo preview</p>
-  
+              <p className="text-sm text-gray-500 mb-2 text-center">
+                Your added image (will appear under the message)
+              </p>
+              <img
+                src={userImage}
+                alt="user"
+                className="mx-auto w-full max-w-md rounded-2xl shadow object-cover"
+              />
+            </div>
+          )}
+
+          <button
+            onClick={() => setShowCheckout(true)}
+            className="w-full mt-5 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 rounded-full transition"
+          >
+            Proceed to Checkout 💳
+          </button>
+        </section>
+      </div>
+
+      {cropOpen && (
+        <CropperModal
+          open={cropOpen}
+          onClose={() => setCropOpen(false)}
+          onDone={(dataUrl) => {
+            setUserImage(dataUrl);
+            setCropOpen(false);
+          }}
+          aspect={4 / 3}
+        />
+      )}
+
+      {showGiftPopup && (
+        <GiftCardPopup
+          initial={gift}
+          onSelect={(g) => {
+            setGift(g);
+            setShowGiftPopup(false);
+          }}
+          onClose={() => setShowGiftPopup(false)}
+        />
+      )}
+
+      {showCheckout && (
+        <InlineStripeForm
+          total={CARD_PRICE + (gift.amount || 0)}
+          onSuccess={() => setShowCheckout(false)}
+        />
+      )}
+    </main>
+  );
+            }
