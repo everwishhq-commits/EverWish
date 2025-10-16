@@ -9,34 +9,34 @@ import GiftCardPopup from "@/lib/giftcard";
 import CheckoutModal from "@/lib/checkout";
 import CropperModal from "@/lib/croppermodal";
 
-/** Util: extrae el primer emoji/ícono de una etiqueta como "🎃 Pumpkin Glow" */
-function pickEmoji(label) {
-  if (!label || label.toLowerCase() === "none") return null;
-  // toma el primer símbolo gráfico (emoji + ZWJ si existiera)
-  const m = [...label.trim()][0];
-  return m || null;
+/** Devuelve el emoji principal según el slug (animación automática) */
+function emojiForSlug(slug) {
+  const map = {
+    "ghost-halloween": "👻",
+    "pumpkin-halloween": "🎃",
+    "bunny-easter": "🐰",
+    "usa-4th-july": "🇺🇸",
+    "pets-day": "🐾",
+    "valentines-love": "❤️",
+    "birthday-celebration": "🎉",
+    "graduation-day": "🎓",
+    "newyear-celebration": "✨",
+    "christmas-day": "🎄",
+  };
+  return map[slug] || "✨";
 }
 
-/** Capa de animación con emoji flotando (no muy rápido, no muy lento) */
-function AnimationOverlay({ label }) {
-  const emoji = pickEmoji(label);
-  if (!emoji) return null;
-
-  const ITEMS = 16; // cantidad de sprites flotando
-
+/** Capa de animación con emojis flotando */
+function AnimationOverlay({ emoji }) {
+  const items = 14;
   return (
-    <div
-      className="pointer-events-none absolute inset-0 z-[35] overflow-hidden"
-      aria-hidden="true"
-    >
-      {Array.from({ length: ITEMS }).map((_, i) => {
-        const delay = i * 0.25;
-        const duration = 6 + (i % 5) * 0.3;
+    <div className="pointer-events-none absolute inset-0 z-[35] overflow-hidden">
+      {Array.from({ length: items }).map((_, i) => {
+        const delay = i * 0.3;
+        const duration = 5 + (i % 3);
         const startX = Math.random() * 100;
-        const driftX = (Math.random() - 0.5) * 40; // -20% a 20%
-        const startY = 110; // arranca fuera por abajo
-        const endY = -15; // termina fuera por arriba
-        const size = 18 + Math.floor(Math.random() * 10); // 18px–28px
+        const driftX = (Math.random() - 0.5) * 40;
+        const size = 18 + Math.random() * 10;
 
         return (
           <motion.span
@@ -44,17 +44,15 @@ function AnimationOverlay({ label }) {
             className="absolute"
             style={{
               left: `${startX}%`,
-              top: `${startY}%`,
+              bottom: "-10%",
               fontSize: `${size}px`,
-              filter: "drop-shadow(0 2px 2px rgba(0,0,0,.15))",
             }}
-            initial={{ opacity: 0 }}
+            initial={{ opacity: 0, y: 0 }}
             animate={{
-              opacity: [0, 0.9, 0.9, 0],
+              opacity: [0, 0.8, 0.8, 0],
+              y: ["0%", "-120%"],
               x: [`0%`, `${driftX}%`],
-              y: [`0%`, `${endY - startY}%`],
-              scale: [0.95, 1.05, 1],
-              rotate: [0, (Math.random() - 0.5) * 20],
+              rotate: [0, (Math.random() - 0.5) * 40],
             }}
             transition={{
               duration,
@@ -73,42 +71,47 @@ function AnimationOverlay({ label }) {
 
 export default function EditPage({ params }) {
   const slug = params.slug;
-
-  // Etapas: pantalla extendida inicial → editor
   const [stage, setStage] = useState("expanded");
-
-  // Estado principal
+  const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("");
-  const [animations, setAnimations] = useState([]); // lista (10) desde lib/animations
-  const [animation, setAnimation] = useState("none"); // etiqueta activa (o "none")
+  const [animation, setAnimation] = useState("none");
+  const [animations, setAnimations] = useState([]);
   const [gift, setGift] = useState(null);
   const [showGift, setShowGift] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showCrop, setShowCrop] = useState(false);
   const [videoSrc, setVideoSrc] = useState("");
   const [total, setTotal] = useState(5);
+  const emoji = emojiForSlug(slug);
 
-  // Carga inicial: mensaje, animaciones, video
   useEffect(() => {
     setMessage(defaultMessageFromSlug(slug));
     const anims = getAnimationsForSlug(slug) || [];
     setAnimations(anims);
-    setAnimation(anims[0] || "none"); // activa 1ra animación por defecto
-    setVideoSrc(`/videos/${slug}.mp4`); // tu archivo está en public/videos
+    setAnimation(anims[0] || "none");
+    setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
-  // Transición de expandida → editor (3s)
+  // Progreso de 3 segundos y cambio de etapa
   useEffect(() => {
-    const timer = setTimeout(() => setStage("editor"), 3000);
-    return () => clearTimeout(timer);
+    let value = 0;
+    const interval = setInterval(() => {
+      value += 1;
+      setProgress(value);
+      if (value >= 100) {
+        clearInterval(interval);
+        setStage("editor");
+      }
+    }, 30); // 30 ms * 100 = 3 segundos
+    return () => clearInterval(interval);
   }, []);
 
-  // GiftCard
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
     setTotal(5 + (data?.amount || 0));
   };
+
   const removeGift = () => {
     setGift(null);
     setTotal(5);
@@ -116,24 +119,36 @@ export default function EditPage({ params }) {
 
   return (
     <div className="flex flex-col items-center justify-center bg-[#fff7f5] overflow-hidden min-h-[100dvh]">
-      {/* Pantalla extendida: ocupa todo, sin barras visibles */}
+      {/* Pantalla extendida con barra de carga */}
       {stage === "expanded" && (
         <motion.div
           key="expanded"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.6 }}
-          className="fixed inset-0 z-[100] bg-black"
+          transition={{ duration: 0.8 }}
+          className="fixed inset-0 z-[100] bg-[#fff7f5] flex flex-col items-center justify-center"
         >
-          <video
-            src={videoSrc}
-            className="absolute inset-0 h-full w-full object-cover"
-            autoPlay
-            loop
-            muted
-            playsInline
-          />
+          <div className="relative w-full h-full">
+            <video
+              src={videoSrc}
+              className="absolute inset-0 w-full h-full object-cover"
+              autoPlay
+              loop
+              muted
+              playsInline
+            />
+            <AnimationOverlay emoji={emoji} />
+          </div>
+
+          {/* Barra de progreso */}
+          <div className="absolute bottom-8 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
+            <motion.div
+              className="h-full bg-pink-500"
+              initial={{ width: "0%" }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.03, ease: "linear" }}
+            />
+          </div>
         </motion.div>
       )}
 
@@ -141,12 +156,12 @@ export default function EditPage({ params }) {
       {stage === "editor" && (
         <motion.div
           key="editor"
-          initial={{ opacity: 0, y: 32 }}
+          initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.8 }}
           className="z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-10 mb-10"
         >
-          {/* Media + Animación encima */}
+          {/* Video principal + animación */}
           <div className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50">
             <video
               src={videoSrc}
@@ -156,13 +171,10 @@ export default function EditPage({ params }) {
               muted
               playsInline
             />
-            {/* Capa de animación (encima del video, no tapa clicks) */}
-            {animation && animation.toLowerCase() !== "none" && (
-              <AnimationOverlay label={animation} />
-            )}
+            {animation !== "none" && <AnimationOverlay emoji={emoji} />}
           </div>
 
-          {/* Mensaje */}
+          {/* Texto */}
           <h3 className="mb-2 text-center text-lg font-semibold text-gray-700">
             ✨ Customize your message ✨
           </h3>
@@ -173,7 +185,7 @@ export default function EditPage({ params }) {
             onChange={(e) => setMessage(e.target.value)}
           />
 
-          {/* Selector de animación (manual) */}
+          {/* Selector de animación */}
           <div className="my-3">
             <select
               className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
@@ -189,7 +201,7 @@ export default function EditPage({ params }) {
             </select>
           </div>
 
-          {/* Botones principales */}
+          {/* Botones */}
           <div className="mt-4 flex flex-wrap justify-center gap-3">
             <button
               onClick={() => setShowCrop(true)}
@@ -221,7 +233,6 @@ export default function EditPage({ params }) {
           onClose={() => setShowGift(false)}
         />
       )}
-
       {showCheckout && (
         <CheckoutModal
           total={total}
@@ -231,7 +242,6 @@ export default function EditPage({ params }) {
           onClose={() => setShowCheckout(false)}
         />
       )}
-
       {showCrop && (
         <CropperModal
           open={showCrop}
