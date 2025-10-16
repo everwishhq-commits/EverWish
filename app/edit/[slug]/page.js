@@ -9,13 +9,12 @@ import CheckoutModal from "@/lib/checkout";
 import CropperModal from "@/lib/croppermodal";
 
 export default function EditPage({ params }) {
-  const slug = params.slug || "";
+  const slug = params.slug;
   const [stage, setStage] = useState("expanded");
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("");
-  const [animation, setAnimation] = useState("");
+  const [animation, setAnimation] = useState("none");
   const [animations, setAnimations] = useState([]);
-  const [headerTitle, setHeaderTitle] = useState("");
   const [gift, setGift] = useState(null);
   const [showGift, setShowGift] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
@@ -24,33 +23,16 @@ export default function EditPage({ params }) {
   const [showDownload, setShowDownload] = useState(false);
   const [total, setTotal] = useState(5);
 
-  /* 🔹 Configuración inicial automática */
+  /* 🔹 Configuración inicial */
   useEffect(() => {
     setMessage(defaultMessageFromSlug(slug));
     const anims = getAnimationsForSlug(slug);
     setAnimations(anims);
-
-    // 🔸 Detectar el set por slug
-    if (slug.includes("easter")) setHeaderTitle("🐰 Easter Animations");
-    else if (slug.includes("usa") || slug.includes("4th")) setHeaderTitle("🎆 4th of July Animations");
-    else if (slug.includes("pet") || slug.includes("dog") || slug.includes("cat"))
-      setHeaderTitle("🐾 Pet Day Animations");
-    else if (slug.includes("ghost") || slug.includes("halloween"))
-      setHeaderTitle("🎃 Halloween Animations");
-    else if (slug.includes("christmas")) setHeaderTitle("🎄 Christmas Animations");
-    else if (slug.includes("valentine")) setHeaderTitle("💖 Valentine Animations");
-    else setHeaderTitle("✨ Everwish Effects");
-
-    // 🔸 Activar automáticamente la primera animación
-    if (anims.length > 0) {
-      setAnimation(anims[0]);
-    }
-
-    // 🔸 Cargar video
+    setAnimation(anims[0] || "none");
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
-  /* 🔹 Iniciar barra de carga */
+  /* 🔹 Pantalla extendida 3 segundos con barra */
   useEffect(() => {
     let value = 0;
     const interval = setInterval(() => {
@@ -64,15 +46,22 @@ export default function EditPage({ params }) {
     return () => clearInterval(interval);
   }, []);
 
-  /* 🔹 GiftCard y total */
+  /* 🔹 Control de regalo y total */
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
     setTotal(5 + (data?.amount || 0));
   };
+
   const removeGift = () => {
     setGift(null);
     setTotal(5);
+  };
+
+  /* 🔹 Mostrar botón de descarga */
+  const handleCardClick = () => {
+    setShowDownload(true);
+    setTimeout(() => setShowDownload(false), 3500);
   };
 
   /* 🔹 Descargar video */
@@ -83,12 +72,6 @@ export default function EditPage({ params }) {
     document.body.appendChild(link);
     link.click();
     link.remove();
-  };
-
-  /* 🔹 Mostrar botón de descarga 3.5s */
-  const handleCardClick = () => {
-    setShowDownload(true);
-    setTimeout(() => setShowDownload(false), 3500);
   };
 
   return (
@@ -123,9 +106,6 @@ export default function EditPage({ params }) {
       {/* 🟢 Editor principal */}
       {stage === "editor" && (
         <>
-          {/* ✨ Animación activa automática */}
-          {animation && <AnimationOverlay slug={slug} animation={animation} />}
-
           <motion.div
             key="editor"
             initial={{ opacity: 0, y: 40 }}
@@ -133,7 +113,7 @@ export default function EditPage({ params }) {
             transition={{ duration: 0.8 }}
             className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-10 mb-10"
           >
-            {/* 🎬 Video principal */}
+            {/* 🖼️ Contenedor de la tarjeta */}
             <div
               className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50"
               onClick={handleCardClick}
@@ -148,9 +128,104 @@ export default function EditPage({ params }) {
               />
             </div>
 
-            {/* 🏷️ Header con categoría */}
-            <h3 className="text-center text-sm font-semibold text-pink-500 mb-2">
-              {headerTitle}
+            {/* ✨ Campo de mensaje */}
+            <h3 className="mb-2 text-center text-lg font-semibold text-gray-700">
+              ✨ Customize your message ✨
             </h3>
 
-            {/* 📝
+            <textarea
+              className="w-full rounded-2xl border p-3 text-center text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
+              rows={2}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+            />
+
+            {/* 🎨 Selector de animación */}
+            <div className="my-3">
+              <select
+                className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
+                value={animation}
+                onChange={(e) => setAnimation(e.target.value)}
+              >
+                <option value="none">🌙 No animation</option>
+                {animations.map((a) => (
+                  <option key={a}>{a}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* 🧩 Botones inferiores */}
+            <div className="mt-4 flex flex-wrap justify-center gap-3">
+              <button
+                onClick={() => setShowCrop(true)}
+                className="flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-3 font-semibold text-[#3b2b1f] shadow-sm hover:bg-yellow-300"
+              >
+                📸 Add Image
+              </button>
+
+              <button
+                onClick={() => setShowGift(true)}
+                className="flex items-center gap-2 rounded-full bg-pink-200 px-5 py-3 font-semibold text-pink-700 shadow-sm hover:bg-pink-300"
+              >
+                🎁 Gift Card
+              </button>
+
+              <button
+                onClick={() => setShowCheckout(true)}
+                className="flex items-center gap-2 rounded-full bg-purple-500 px-6 py-3 font-semibold text-white shadow-sm hover:bg-purple-600"
+              >
+                💳 Checkout
+              </button>
+            </div>
+
+            {/* ⬇️ Botón de descarga */}
+            {showDownload && (
+              <motion.button
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 30 }}
+                transition={{ duration: 0.4 }}
+                onClick={handleDownload}
+                className="fixed bottom-10 right-6 z-[400] rounded-full bg-[#ff7b00] px-6 py-3 text-white font-semibold shadow-lg hover:bg-[#ff9f33]"
+              >
+                ⬇️ Download
+              </motion.button>
+            )}
+          </motion.div>
+
+          {/* ✨ Animación global sobre todo */}
+          {animation !== "none" && (
+            <AnimationOverlay slug={slug} animation={animation} />
+          )}
+        </>
+      )}
+
+      {/* 🔸 Modales */}
+      {showGift && (
+        <GiftCardPopup
+          initial={gift}
+          onSelect={updateGift}
+          onClose={() => setShowGift(false)}
+        />
+      )}
+
+      {showCheckout && (
+        <CheckoutModal
+          total={total}
+          gift={gift}
+          onGiftChange={() => setShowGift(true)}
+          onGiftRemove={removeGift}
+          onClose={() => setShowCheckout(false)}
+        />
+      )}
+
+      {showCrop && (
+        <CropperModal
+          open={showCrop}
+          onClose={() => setShowCrop(false)}
+          onDone={() => setShowCrop(false)}
+        />
+      )}
+    </div>
+  );
+                   }
