@@ -2,8 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import {
+  getAnimationsForSlug,
+  getAnimationOptionsForSlug,
+  AnimationOverlay,
+} from "@/lib/animations";
 import { defaultMessageFromSlug } from "@/lib/messages";
-import { getAnimationsForSlug, AnimationOverlay } from "@/lib/animations";
 import GiftCardPopup from "@/lib/giftcard";
 import CheckoutModal from "@/lib/checkout";
 import CropperModal from "@/lib/croppermodal";
@@ -13,8 +17,8 @@ export default function EditPage({ params }) {
   const [stage, setStage] = useState("expanded");
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("");
-  const [animation, setAnimation] = useState("none");
-  const [animations, setAnimations] = useState([]);
+  const [animation, setAnimation] = useState("");
+  const [animationOptions, setAnimationOptions] = useState([]);
   const [gift, setGift] = useState(null);
   const [showGift, setShowGift] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
@@ -26,9 +30,10 @@ export default function EditPage({ params }) {
   /* 🔹 Configuración inicial */
   useEffect(() => {
     setMessage(defaultMessageFromSlug(slug));
-    const anims = getAnimationsForSlug(slug);
-    setAnimations(anims);
-    setAnimation(anims[0] || "none");
+    const category = getAnimationsForSlug(slug);
+    const options = getAnimationOptionsForSlug(slug);
+    setAnimationOptions(options);
+    setAnimation(options[0] || category); // animación inicial (primera del set)
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
@@ -52,7 +57,6 @@ export default function EditPage({ params }) {
     setShowGift(false);
     setTotal(5 + (data?.amount || 0));
   };
-
   const removeGift = () => {
     setGift(null);
     setTotal(5);
@@ -113,7 +117,6 @@ export default function EditPage({ params }) {
             transition={{ duration: 0.8 }}
             className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-10 mb-10"
           >
-            {/* 🖼️ Contenedor de la tarjeta */}
             <div
               className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50"
               onClick={handleCardClick}
@@ -128,7 +131,6 @@ export default function EditPage({ params }) {
               />
             </div>
 
-            {/* ✨ Campo de mensaje */}
             <h3 className="mb-2 text-center text-lg font-semibold text-gray-700">
               ✨ Customize your message ✨
             </h3>
@@ -140,21 +142,19 @@ export default function EditPage({ params }) {
               onChange={(e) => setMessage(e.target.value)}
             />
 
-            {/* 🎨 Selector de animación */}
+            {/* 🔽 Dropdown dinámico */}
             <div className="my-3">
               <select
                 className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
                 value={animation}
                 onChange={(e) => setAnimation(e.target.value)}
               >
-                <option value="none">🌙 No animation</option>
-                {animations.map((a) => (
+                {animationOptions.map((a) => (
                   <option key={a}>{a}</option>
                 ))}
               </select>
             </div>
 
-            {/* 🧩 Botones inferiores */}
             <div className="mt-4 flex flex-wrap justify-center gap-3">
               <button
                 onClick={() => setShowCrop(true)}
@@ -162,14 +162,12 @@ export default function EditPage({ params }) {
               >
                 📸 Add Image
               </button>
-
               <button
                 onClick={() => setShowGift(true)}
                 className="flex items-center gap-2 rounded-full bg-pink-200 px-5 py-3 font-semibold text-pink-700 shadow-sm hover:bg-pink-300"
               >
                 🎁 Gift Card
               </button>
-
               <button
                 onClick={() => setShowCheckout(true)}
                 className="flex items-center gap-2 rounded-full bg-purple-500 px-6 py-3 font-semibold text-white shadow-sm hover:bg-purple-600"
@@ -178,7 +176,6 @@ export default function EditPage({ params }) {
               </button>
             </div>
 
-            {/* ⬇️ Botón de descarga */}
             {showDownload && (
               <motion.button
                 initial={{ opacity: 0, y: 30 }}
@@ -193,10 +190,8 @@ export default function EditPage({ params }) {
             )}
           </motion.div>
 
-          {/* ✨ Animación global sobre todo */}
-          {animation !== "none" && (
-            <AnimationOverlay slug={slug} animation={animation} />
-          )}
+          {/* ✨ Animación flotante */}
+          {animation && <AnimationOverlay slug={slug} animation={animation} />}
         </>
       )}
 
@@ -208,7 +203,6 @@ export default function EditPage({ params }) {
           onClose={() => setShowGift(false)}
         />
       )}
-
       {showCheckout && (
         <CheckoutModal
           total={total}
@@ -218,7 +212,6 @@ export default function EditPage({ params }) {
           onClose={() => setShowCheckout(false)}
         />
       )}
-
       {showCrop && (
         <CropperModal
           open={showCrop}
@@ -228,4 +221,4 @@ export default function EditPage({ params }) {
       )}
     </div>
   );
-                   }
+              }
