@@ -6,11 +6,11 @@ import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 
 // libs en RAÍZ (fuera de /app)
-import { defaultMessageFromSlug } from "../../lib/messages";
-import { getAnimationsForSlug } from "../../lib/animations";
-import CropperModal from "../../lib/croppermodal";
-import GiftCardPopup from "../../lib/giftcard";
-import CheckoutPopup from "../../lib/checkout";
+import { defaultMessageFromSlug } from "../../../lib/messages";
+import { getAnimationsForSlug } from "../../../lib/animations";
+import CropperModal from "../../../lib/croppermodal";
+import GiftCardPopup from "../../../lib/giftcard";
+import CheckoutPopup from "../../../lib/checkout";
 
 /* ========= Helpers ========= */
 const useIsMobile = () => {
