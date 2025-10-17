@@ -1,26 +1,7 @@
 "use client";
 
-/**
- * 🪄 Everwish – Página principal del editor
- * --------------------------------------------------
- * Este archivo solo orquesta las funciones principales:
- * - Carga del video según el slug
- * - Muestra inicial con barra de progreso
- * - Editor con texto, animación y modales
- *
- * 💡 Toda la lógica (animaciones, mensajes, pagos, crop, etc.)
- *     está separada dentro de `/lib/`:
- *     → animations.js
- *     → messages.js
- *     → giftcard.js
- *     → checkout.js
- *     → croppermodal.js
- */
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-
-// 🔹 Importación de librerías funcionales
 import {
   getAnimationsForSlug,
   getAnimationOptionsForSlug,
@@ -34,7 +15,6 @@ import CropperModal from "@/lib/croppermodal";
 export default function EditPage({ params }) {
   const slug = params.slug;
 
-  // 🧩 Estados principales
   const [stage, setStage] = useState("expanded");
   const [progress, setProgress] = useState(0);
 
@@ -46,11 +26,12 @@ export default function EditPage({ params }) {
   const [showGift, setShowGift] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showCrop, setShowCrop] = useState(false);
+  const [croppedImage, setCroppedImage] = useState(null); // 🆕 imagen en base64
   const [videoSrc, setVideoSrc] = useState("");
   const [showDownload, setShowDownload] = useState(false);
   const [total, setTotal] = useState(5);
 
-  /* 🔹 Cargar mensaje y animaciones según el slug */
+  /* ⚙️ Inicial: mensaje, opciones y video */
   useEffect(() => {
     setMessage(defaultMessageFromSlug(slug));
     const opts = getAnimationOptionsForSlug(slug);
@@ -59,21 +40,21 @@ export default function EditPage({ params }) {
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
-  /* 🔹 Pantalla inicial con progreso (3 seg aprox.) */
+  /* 🕒 Pantalla extendida 3s con barra */
   useEffect(() => {
-    let val = 0;
-    const timer = setInterval(() => {
-      val += 1;
-      setProgress(val);
-      if (val >= 100) {
-        clearInterval(timer);
+    let value = 0;
+    const id = setInterval(() => {
+      value += 1;
+      setProgress(value);
+      if (value >= 100) {
+        clearInterval(id);
         setStage("editor");
       }
     }, 30);
-    return () => clearInterval(timer);
+    return () => clearInterval(id);
   }, []);
 
-  /* 🔹 Actualiza el regalo y total */
+  /* 🎁 Gift y total */
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
@@ -84,7 +65,7 @@ export default function EditPage({ params }) {
     setTotal(5);
   };
 
-  /* 🔹 Descarga del video */
+  /* ⬇️ Descarga */
   const handleCardClick = () => {
     setShowDownload(true);
     setTimeout(() => setShowDownload(false), 3500);
@@ -98,17 +79,22 @@ export default function EditPage({ params }) {
     link.remove();
   };
 
-  /* 🔹 Cambio de animación inmediato */
-  const handleAnimationChange = (e) => {
+  /* ⚡ Cambio de animación inmediato */
+  const onChangeAnim = (e) => {
     const val = e.target.value;
     setAnimation(val);
   };
 
-  /* 🔹 Render principal */
+  /* 📸 Cuando el usuario guarda una imagen recortada */
+  const handleImageDone = (base64Image) => {
+    setCroppedImage(base64Image);
+    setShowCrop(false);
+  };
+
   return (
     <div className="flex flex-col items-center justify-center bg-[#fff7f5] overflow-hidden min-h-[100dvh] relative">
 
-      {/* 🟣 Pantalla inicial con video y barra */}
+      {/* 🟣 Pantalla extendida */}
       {stage === "expanded" && (
         <motion.div
           className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#fff7f5]"
@@ -135,9 +121,10 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
-      {/* 🟢 Editor + Overlay activo */}
+      {/* 🟢 Editor principal */}
       {stage === "editor" && (
         <>
+          {/* Overlay arriba de todo */}
           {animation && <AnimationOverlay slug={slug} animation={animation} />}
 
           <motion.div
@@ -147,6 +134,7 @@ export default function EditPage({ params }) {
             transition={{ duration: 0.6 }}
             className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-10 mb-10"
           >
+            {/* 🎴 Tarjeta */}
             <div
               className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50"
               onClick={handleCardClick}
@@ -161,10 +149,10 @@ export default function EditPage({ params }) {
               />
             </div>
 
+            {/* 💬 Mensaje */}
             <h3 className="mb-2 text-center text-lg font-semibold text-gray-700">
               ✨ Customize your message ✨
             </h3>
-
             <textarea
               className="w-full rounded-2xl border p-3 text-center text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
               rows={2}
@@ -172,12 +160,23 @@ export default function EditPage({ params }) {
               onChange={(e) => setMessage(e.target.value)}
             />
 
+            {/* 📸 Imagen añadida (si existe) */}
+            {croppedImage && (
+              <div className="mt-4 flex justify-center">
+                <img
+                  src={croppedImage}
+                  alt="User uploaded"
+                  className="rounded-2xl max-h-48 object-cover shadow-md"
+                />
+              </div>
+            )}
+
             {/* 🔽 Animaciones */}
             <div className="my-3">
               <select
                 className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
                 value={animation}
-                onChange={handleAnimationChange}
+                onChange={onChangeAnim}
               >
                 {animationOptions.map((a) => (
                   <option key={a}>{a}</option>
@@ -185,11 +184,11 @@ export default function EditPage({ params }) {
               </select>
             </div>
 
-            {/* 🔘 Botones */}
+            {/* 🎁 Botones principales */}
             <div className="mt-4 flex flex-wrap justify-center gap-3">
               <button
                 onClick={() => setShowCrop(true)}
-                className="flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-3 font-semibold text-[#3b2b1f] shadow-sm hover:bg-yellow-300"
+                className="flex items-center gap-2 rounded-full bg-pink-500 px-5 py-3 font-semibold text-white shadow-sm hover:bg-pink-600"
               >
                 📸 Add Image
               </button>
@@ -207,6 +206,7 @@ export default function EditPage({ params }) {
               </button>
             </div>
 
+            {/* ⬇️ Descarga */}
             {showDownload && (
               <motion.button
                 initial={{ opacity: 0, y: 30 }}
@@ -223,7 +223,7 @@ export default function EditPage({ params }) {
         </>
       )}
 
-      {/* 🧩 Modales */}
+      {/* 🔸 Modales */}
       {showGift && (
         <GiftCardPopup
           initial={gift}
@@ -244,9 +244,9 @@ export default function EditPage({ params }) {
         <CropperModal
           open={showCrop}
           onClose={() => setShowCrop(false)}
-          onDone={() => setShowCrop(false)}
+          onDone={handleImageDone} // ✅ devuelve imagen en base64
         />
       )}
     </div>
   );
-          }
+                }
