@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { EverwishAdmin } from "@/lib/admin";
+import SupportModal from "@/lib/supportmodal";
 
 export default function MySpace() {
   const [cards, setCards] = useState([]);
+  const [supportCard, setSupportCard] = useState(null);
 
-  /* 🔹 Simulación de carga de datos (desde backend o localStorage) */
+  /* 🔹 Simulación de carga inicial */
   useEffect(() => {
-    // 🧩 Ejemplo de estructura esperada
     const mock = [
       {
         id: "temp-ghost-halloween-17300001",
@@ -49,30 +50,33 @@ export default function MySpace() {
     setCards(mock);
   }, []);
 
-  /* 🟣 Acciones */
+  /* 🟣 Acciones principales */
   const handleReSend = (card) => {
-    const result = EverwishAdmin.sendToMultiple(card.id, [
-      card.recipient,
-    ]);
+    const result = EverwishAdmin.sendToMultiple(card.id, [card.recipient]);
     alert(`Card resent to ${card.recipient}: ${result[0].link}`);
   };
 
-  const handleView = (card) => {
-    window.open(`/view/${card.id}`, "_blank");
-  };
-
-  const handleEdit = (card) => {
-    window.open(`/edit/${card.slug}`, "_blank");
-  };
+  const handleView = (card) => window.open(`/view/${card.id}`, "_blank");
+  const handleEdit = (card) => window.open(`/edit/${card.slug}`, "_blank");
 
   const handleMarkOpened = (cardId) => {
-    const updated = EverwishAdmin.markAsOpened(cardId);
+    EverwishAdmin.markAsOpened(cardId);
     setCards((prev) =>
       prev.map((c) =>
         c.id === cardId ? { ...c, status: "opened" } : c
       )
     );
-    console.log(updated);
+  };
+
+  /* ⚠️ Reclamo de cliente */
+  const handleDispute = (id) => {
+    setCards((prev) =>
+      prev.map((c) =>
+        c.id === id ? { ...c, status: "disputed" } : c
+      )
+    );
+    alert("Claim submitted. Our support team will contact you soon.");
+    setSupportCard(null);
   };
 
   return (
@@ -88,9 +92,9 @@ export default function MySpace() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="bg-white shadow-lg rounded-3xl p-4 flex flex-col sm:flex-row items-center gap-4 border border-pink-100"
+            className="bg-white shadow-lg rounded-3xl p-4 flex flex-col sm:flex-row items-center gap-4 border border-pink-100 relative"
           >
-            {/* 🎞️ Mini preview */}
+            {/* 🎞️ Preview */}
             <div className="w-full sm:w-1/3 relative">
               <video
                 src={card.videoSrc}
@@ -102,7 +106,7 @@ export default function MySpace() {
               />
             </div>
 
-            {/* 📄 Info */}
+            {/* 📄 Información */}
             <div className="flex-1 text-center sm:text-left">
               <p className="text-gray-700 font-medium">
                 {card.message.length > 60
@@ -115,12 +119,15 @@ export default function MySpace() {
               <p className="text-xs text-gray-400">
                 Created: {new Date(card.createdAt).toLocaleDateString()}
               </p>
+
               <span
                 className={`inline-block mt-2 px-3 py-1 rounded-full text-sm ${
                   card.status === "opened"
                     ? "bg-green-100 text-green-700"
                     : card.status === "sent"
                     ? "bg-blue-100 text-blue-700"
+                    : card.status === "disputed"
+                    ? "bg-red-100 text-red-700"
                     : "bg-yellow-100 text-yellow-700"
                 }`}
               >
@@ -136,6 +143,7 @@ export default function MySpace() {
               >
                 👀 View
               </button>
+
               {card.status !== "opened" && (
                 <button
                   onClick={() => handleEdit(card)}
@@ -144,12 +152,14 @@ export default function MySpace() {
                   ✏️ Edit
                 </button>
               )}
+
               <button
                 onClick={() => handleReSend(card)}
                 className="rounded-full bg-pink-200 text-pink-700 px-4 py-2 text-sm font-semibold shadow hover:bg-pink-300"
               >
                 🔁 Re-send
               </button>
+
               {card.status !== "opened" && (
                 <button
                   onClick={() => handleMarkOpened(card.id)}
@@ -158,19 +168,37 @@ export default function MySpace() {
                   ✅ Mark Opened
                 </button>
               )}
+
+              {/* 💬 Botón de soporte */}
+              <button
+                onClick={() => setSupportCard(card)}
+                className="rounded-full bg-red-100 text-red-700 px-4 py-2 text-sm font-semibold shadow hover:bg-red-200"
+              >
+                💬 Support
+              </button>
             </div>
           </motion.div>
         ))}
 
         {cards.length === 0 && (
           <p className="text-gray-400 text-center">
-            You haven’t created any cards yet.  
+            You haven’t created any cards yet.{" "}
             <Link href="/cards" className="underline text-purple-600">
               Create one now!
             </Link>
           </p>
         )}
       </div>
+
+      {/* 💬 Modal de soporte */}
+      {supportCard && (
+        <SupportModal
+          card={supportCard}
+          onReSend={handleReSend}
+          onDispute={handleDispute}
+          onClose={() => setSupportCard(null)}
+        />
+      )}
     </div>
   );
-      }
+    }
