@@ -1,7 +1,26 @@
 "use client";
 
+/**
+ * 🪄 Everwish – Página principal del editor
+ * --------------------------------------------------
+ * Este archivo solo orquesta las funciones principales:
+ * - Carga del video según el slug
+ * - Muestra inicial con barra de progreso
+ * - Editor con texto, animación y modales
+ *
+ * 💡 Toda la lógica (animaciones, mensajes, pagos, crop, etc.)
+ *     está separada dentro de `/lib/`:
+ *     → animations.js
+ *     → messages.js
+ *     → giftcard.js
+ *     → checkout.js
+ *     → croppermodal.js
+ */
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+
+// 🔹 Importación de librerías funcionales
 import {
   getAnimationsForSlug,
   getAnimationOptionsForSlug,
@@ -15,12 +34,13 @@ import CropperModal from "@/lib/croppermodal";
 export default function EditPage({ params }) {
   const slug = params.slug;
 
+  // 🧩 Estados principales
   const [stage, setStage] = useState("expanded");
   const [progress, setProgress] = useState(0);
 
   const [message, setMessage] = useState("");
-  const [animation, setAnimation] = useState("");          // opción activa (del dropdown)
-  const [animationOptions, setAnimationOptions] = useState([]); // 10 opciones de la categoría
+  const [animation, setAnimation] = useState("");
+  const [animationOptions, setAnimationOptions] = useState([]);
 
   const [gift, setGift] = useState(null);
   const [showGift, setShowGift] = useState(false);
@@ -30,30 +50,30 @@ export default function EditPage({ params }) {
   const [showDownload, setShowDownload] = useState(false);
   const [total, setTotal] = useState(5);
 
-  /* ⚙️ Inicial: mensaje, opciones y video */
+  /* 🔹 Cargar mensaje y animaciones según el slug */
   useEffect(() => {
     setMessage(defaultMessageFromSlug(slug));
     const opts = getAnimationOptionsForSlug(slug);
     setAnimationOptions(opts);
-    setAnimation(opts[0] || "Stars ✨");   // empieza ya con 1 opción
+    setAnimation(opts[0] || "Stars ✨");
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
-  /* 🕒 Pantalla extendida 3s con barra */
+  /* 🔹 Pantalla inicial con progreso (3 seg aprox.) */
   useEffect(() => {
-    let value = 0;
-    const id = setInterval(() => {
-      value += 1;
-      setProgress(value);
-      if (value >= 100) {
-        clearInterval(id);
+    let val = 0;
+    const timer = setInterval(() => {
+      val += 1;
+      setProgress(val);
+      if (val >= 100) {
+        clearInterval(timer);
         setStage("editor");
       }
     }, 30);
-    return () => clearInterval(id);
+    return () => clearInterval(timer);
   }, []);
 
-  /* 🎁 Gift y total */
+  /* 🔹 Actualiza el regalo y total */
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
@@ -64,7 +84,7 @@ export default function EditPage({ params }) {
     setTotal(5);
   };
 
-  /* ⬇️ Descarga */
+  /* 🔹 Descarga del video */
   const handleCardClick = () => {
     setShowDownload(true);
     setTimeout(() => setShowDownload(false), 3500);
@@ -78,16 +98,17 @@ export default function EditPage({ params }) {
     link.remove();
   };
 
-  /* ⚡ Cambio de animación inmediato (sin delay) */
-  const onChangeAnim = (e) => {
+  /* 🔹 Cambio de animación inmediato */
+  const handleAnimationChange = (e) => {
     const val = e.target.value;
-    setAnimation(val); // el overlay se regenera al instante
+    setAnimation(val);
   };
 
+  /* 🔹 Render principal */
   return (
     <div className="flex flex-col items-center justify-center bg-[#fff7f5] overflow-hidden min-h-[100dvh] relative">
 
-      {/* 🟣 Pantalla extendida */}
+      {/* 🟣 Pantalla inicial con video y barra */}
       {stage === "expanded" && (
         <motion.div
           className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#fff7f5]"
@@ -114,10 +135,9 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
-      {/* 🟢 Editor + Overlay */}
+      {/* 🟢 Editor + Overlay activo */}
       {stage === "editor" && (
         <>
-          {/* Overlay SIEMPRE arriba de todo (y toma la opción activa) */}
           {animation && <AnimationOverlay slug={slug} animation={animation} />}
 
           <motion.div
@@ -152,12 +172,12 @@ export default function EditPage({ params }) {
               onChange={(e) => setMessage(e.target.value)}
             />
 
-            {/* 🔽 Dropdown (10 opciones de la categoría del slug) */}
+            {/* 🔽 Animaciones */}
             <div className="my-3">
               <select
                 className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
                 value={animation}
-                onChange={onChangeAnim}
+                onChange={handleAnimationChange}
               >
                 {animationOptions.map((a) => (
                   <option key={a}>{a}</option>
@@ -165,6 +185,7 @@ export default function EditPage({ params }) {
               </select>
             </div>
 
+            {/* 🔘 Botones */}
             <div className="mt-4 flex flex-wrap justify-center gap-3">
               <button
                 onClick={() => setShowCrop(true)}
@@ -202,7 +223,7 @@ export default function EditPage({ params }) {
         </>
       )}
 
-      {/* 🔸 Modales */}
+      {/* 🧩 Modales */}
       {showGift && (
         <GiftCardPopup
           initial={gift}
@@ -228,4 +249,4 @@ export default function EditPage({ params }) {
       )}
     </div>
   );
-                  }
+          }
