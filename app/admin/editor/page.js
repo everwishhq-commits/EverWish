@@ -1,6 +1,7 @@
 "use client";
 
-import AdminPanel from "@/lib/components/AdminPanel";
+import Adminpanel from "@/lib/components/adminpanel";
+
 export default function EditorPage() {
-  return <AdminPanel />;
-}
+  return <Adminpanel />;
+    }
