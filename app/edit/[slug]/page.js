@@ -40,19 +40,19 @@ export default function EditPage({ params }) {
 
   /* 🔹 Pantalla extendida */
   useEffect(() => {
-    let val = 0;
-    const timer = setInterval(() => {
-      val += 1;
-      setProgress(val);
-      if (val >= 100) {
-        clearInterval(timer);
+    let v = 0;
+    const id = setInterval(() => {
+      v += 1;
+      setProgress(v);
+      if (v >= 100) {
+        clearInterval(id);
         setStage("editor");
       }
     }, 30);
-    return () => clearInterval(timer);
+    return () => clearInterval(id);
   }, []);
 
-  /* 🎁 Gift Card */
+  /* 🎁 Gift */
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
@@ -63,18 +63,17 @@ export default function EditPage({ params }) {
     setTotal(5);
   };
 
-  /* 📸 Foto personalizada */
+  /* 📸 Foto */
   const handlePhotoDone = (blob) => {
     setPhoto(blob);
     setShowCrop(false);
   };
 
-  /* ⚡ Cambio de animación */
+  /* ⚡ Animación instantánea */
   const onChangeAnim = (e) => setAnimation(e.target.value);
 
   return (
     <div className="flex flex-col items-center justify-start bg-[#fff7f5] overflow-hidden min-h-[100dvh] relative px-3">
-      {/* 🟣 Pantalla extendida */}
       {stage === "expanded" && (
         <motion.div
           className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#fff7f5]"
@@ -98,7 +97,6 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
-      {/* 🟢 Editor principal */}
       {stage === "editor" && (
         <>
           {animation && <AnimationOverlay slug={slug} animation={animation} />}
@@ -110,6 +108,7 @@ export default function EditPage({ params }) {
             transition={{ duration: 0.6 }}
             className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-4 mb-6"
           >
+            {/* 🎞️ Tarjeta */}
             <div className="relative mb-3 overflow-hidden rounded-2xl border bg-gray-50">
               <video
                 src={videoSrc}
@@ -118,6 +117,7 @@ export default function EditPage({ params }) {
               />
             </div>
 
+            {/* 📝 Mensaje */}
             <textarea
               className="w-full rounded-2xl border p-3 text-center text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
               rows={2}
@@ -125,6 +125,7 @@ export default function EditPage({ params }) {
               onChange={(e) => setMessage(e.target.value)}
             />
 
+            {/* 📸 Imagen personalizada */}
             {photo && (
               <div className="my-3 w-full flex justify-center">
                 <img
@@ -135,6 +136,7 @@ export default function EditPage({ params }) {
               </div>
             )}
 
+            {/* 🔽 Selector de animación */}
             <div className="my-3">
               <select
                 className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
@@ -147,6 +149,7 @@ export default function EditPage({ params }) {
               </select>
             </div>
 
+            {/* 🧭 Botones */}
             <div className="mt-3 flex flex-wrap justify-center gap-3">
               <button
                 onClick={() => setShowCrop(true)}
@@ -185,20 +188,8 @@ export default function EditPage({ params }) {
           gift={gift}
           slug={slug}
           planOptions={[
-            {
-              id: "heartfelt",
-              title: "💌 Heartfelt",
-              price: 3.99,
-              description:
-                "A calm, beautiful card to share your feelings with sincerity.",
-            },
-            {
-              id: "signature",
-              title: "💎 Signature",
-              price: 7.99,
-              description:
-                "A dynamic animated experience with motion, photo, and effects that bring your message to life.",
-            },
+            { id: "heartfelt", title: "💌 Heartfelt", price: 3.99, description: "A calm, beautiful card to share your feelings with sincerity." },
+            { id: "signature", title: "💎 Signature", price: 7.99, description: "A dynamic animated experience with motion, photo, and effects that bring your message to life." },
           ]}
           onGiftChange={() => setShowGift(true)}
           onGiftRemove={removeGift}
@@ -214,4 +205,4 @@ export default function EditPage({ params }) {
       )}
     </div>
   );
-              }
+}
