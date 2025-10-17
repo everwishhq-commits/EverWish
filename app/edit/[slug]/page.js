@@ -1,97 +1,87 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
-  getAnimationsForSlug,
   getAnimationOptionsForSlug,
   AnimationOverlay,
 } from "@/lib/animations";
-import { defaultMessageFromSlug } from "@/lib/messages";
+import {
+  defaultMessageFromSlug,
+  getMessagesForSlug,
+} from "@/lib/messages";
 import GiftCardPopup from "@/lib/giftcard";
 import CheckoutModal from "@/lib/checkout";
 import CropperModal from "@/lib/croppermodal";
 
-/**
- * 🎨 EditPage — Editor de tarjeta Everwish
- * Muestra una sola animación activa, mensaje editable, imagen opcional
- * y botones de giftcard / checkout funcionales.
- */
 export default function EditPage({ params }) {
   const slug = params.slug;
 
+  // UI stages
   const [stage, setStage] = useState("expanded");
   const [progress, setProgress] = useState(0);
 
+  // content
   const [message, setMessage] = useState("");
+  const [messageSet, setMessageSet] = useState([]);
+  const [photo, setPhoto] = useState(null); // dataURL (client-side)
+  const [videoSrc, setVideoSrc] = useState("");
+
+  // animations
   const [animation, setAnimation] = useState("");
   const [animationOptions, setAnimationOptions] = useState([]);
 
+  // modals / totals
   const [gift, setGift] = useState(null);
   const [showGift, setShowGift] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showCrop, setShowCrop] = useState(false);
-
-  const [videoSrc, setVideoSrc] = useState("");
-  const [showDownload, setShowDownload] = useState(false);
   const [total, setTotal] = useState(5);
 
-  /* ⚙️ Configuración inicial */
+  // ---------- init ----------
   useEffect(() => {
     setMessage(defaultMessageFromSlug(slug));
-    const options = getAnimationOptionsForSlug(slug);
-    setAnimationOptions(options);
-    setAnimation(options[0] || "Stars ✨");
+    setMessageSet(getMessagesForSlug(slug));
+    const opts = getAnimationOptionsForSlug(slug);
+    setAnimationOptions(opts);
+    setAnimation(opts[0] || "Stars ✨"); // arranca activo
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
-  /* 🕒 Pantalla extendida */
+  // pantalla extendida 3s
   useEffect(() => {
-    let val = 0;
-    const timer = setInterval(() => {
-      val += 1;
-      setProgress(val);
-      if (val >= 100) {
-        clearInterval(timer);
+    let v = 0;
+    const id = setInterval(() => {
+      v += 1;
+      setProgress(v);
+      if (v >= 100) {
+        clearInterval(id);
         setStage("editor");
       }
     }, 30);
-    return () => clearInterval(timer);
+    return () => clearInterval(id);
   }, []);
 
-  /* 🎁 Gift y total */
+  // gift & total
   const updateGift = (data) => {
     setGift(data);
-    setShowGift(false);
     setTotal(5 + (data?.amount || 0));
+    setShowGift(false);
   };
   const removeGift = () => {
     setGift(null);
     setTotal(5);
   };
 
-  /* 💾 Descargar */
-  const handleCardClick = () => {
-    setShowDownload(true);
-    setTimeout(() => setShowDownload(false), 3500);
-  };
-  const handleDownload = () => {
-    const link = document.createElement("a");
-    link.href = videoSrc;
-    link.download = `${slug}.mp4`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  };
+  // change animation -> instant remount (sin delay)
+  const onChangeAnim = (e) => setAnimation(e.target.value);
 
-  /* ⚡ Cambio rápido de animación */
-  const onChangeAnim = (e) => {
-    setAnimation(e.target.value);
-  };
+  // pick quick message
+  const onPickQuick = (txt) => setMessage(txt);
 
   return (
-    <div className="flex flex-col items-center justify-center bg-[#fff7f5] overflow-hidden min-h-[100dvh] relative">
-      {/* 🟣 Pantalla extendida */}
+    <div className="relative min-h-[100dvh] flex flex-col items-center justify-start bg-[#fff7f5] overflow-hidden">
+      {/* Expanded */}
       {stage === "expanded" && (
         <motion.div
           className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#fff7f5]"
@@ -102,10 +92,7 @@ export default function EditPage({ params }) {
           <video
             src={videoSrc}
             className="absolute inset-0 w-full h-full object-cover"
-            autoPlay
-            loop
-            muted
-            playsInline
+            autoPlay loop muted playsInline
           />
           <div className="absolute bottom-8 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
             <motion.div
@@ -118,38 +105,41 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
-      {/* 🟢 Editor con animación activa */}
+      {/* Editor */}
       {stage === "editor" && (
         <>
-          {/* ✨ ÚNICA animación activa */}
-          {animation && <AnimationOverlay slug={slug} animation={animation} />}
+          {/* Overlay SIEMPRE arriba de la tarjeta, debajo de modales */}
+          {animation && (
+            <AnimationOverlay key={animation} slug={slug} animation={animation} />
+          )}
 
           <motion.div
             key="editor"
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="relative z-[300] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-10 mb-10"
+            transition={{ duration: 0.45 }}
+            className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-10 mb-16"
           >
-            {/* 🎬 Tarjeta */}
-            <div
-              className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50"
-              onClick={handleCardClick}
-            >
-              <video
-                src={videoSrc}
-                className="w-full object-cover"
-                autoPlay
-                loop
-                muted
-                playsInline
-              />
+            {/* Card video */}
+            <div className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50">
+              <video src={videoSrc} className="w-full object-cover" autoPlay loop muted playsInline />
             </div>
 
-            {/* 📝 Mensaje */}
-            <h3 className="mb-2 text-center text-lg font-semibold text-gray-700">
-              ✨ Customize your message ✨
-            </h3>
+            {/* Quick messages (3) */}
+            <div className="flex gap-2 overflow-x-auto no-scrollbar mb-3">
+              {messageSet.slice(0, 3).map((m, i) => (
+                <button
+                  key={i}
+                  onClick={() => onPickQuick(m)}
+                  className="shrink-0 rounded-full border px-3 py-1 text-sm text-gray-600 hover:border-pink-400"
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+
+            {/* Message */}
+            <h3 className="mb-2 text-center text-lg font-semibold text-gray-700">✨ Customize your message ✨</h3>
             <textarea
               className="w-full rounded-2xl border p-3 text-center text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
               rows={2}
@@ -157,7 +147,28 @@ export default function EditPage({ params }) {
               onChange={(e) => setMessage(e.target.value)}
             />
 
-            {/* 🔽 Dropdown animaciones */}
+            {/* Photo preview (si existe) */}
+            {photo && (
+              <div className="mt-3 flex flex-col items-center gap-2">
+                <img src={photo} alt="" className="w-full rounded-xl border object-cover" />
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowCrop(true)}
+                    className="rounded-full px-4 py-1 text-sm border hover:bg-gray-50"
+                  >
+                    Replace
+                  </button>
+                  <button
+                    onClick={() => setPhoto(null)}
+                    className="rounded-full px-4 py-1 text-sm border hover:bg-gray-50"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Dropdown */}
             <div className="my-3">
               <select
                 className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
@@ -170,7 +181,7 @@ export default function EditPage({ params }) {
               </select>
             </div>
 
-            {/* 🧩 Botones */}
+            {/* Actions */}
             <div className="mt-4 flex flex-wrap justify-center gap-3">
               <button
                 onClick={() => setShowCrop(true)}
@@ -191,54 +202,40 @@ export default function EditPage({ params }) {
                 💳 Checkout
               </button>
             </div>
-
-            {/* ⬇️ Botón de descarga */}
-            {showDownload && (
-              <motion.button
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                onClick={handleDownload}
-                className="fixed bottom-10 right-6 z-[500] rounded-full bg-[#ff7b00] px-6 py-3 text-white font-semibold shadow-lg hover:bg-[#ff9f33]"
-              >
-                ⬇️ Download
-              </motion.button>
-            )}
           </motion.div>
-
-          {/* 🔸 Modales siempre visibles sobre todo */}
-          {showGift && (
-            <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/40">
-              <GiftCardPopup
-                initial={gift}
-                onSelect={updateGift}
-                onClose={() => setShowGift(false)}
-              />
-            </div>
-          )}
-
-          {showCheckout && (
-            <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/40">
-              <CheckoutModal
-                total={total}
-                gift={gift}
-                onGiftChange={() => setShowGift(true)}
-                onGiftRemove={removeGift}
-                onClose={() => setShowCheckout(false)}
-              />
-            </div>
-          )}
-
-          {showCrop && (
-            <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/40">
-              <CropperModal
-                open={showCrop}
-                onClose={() => setShowCrop(false)}
-                onDone={() => setShowCrop(false)}
-              />
-            </div>
-          )}
         </>
+      )}
+
+      {/* Modals (z > overlay) */}
+      {showGift && (
+        <GiftCardPopup
+          initial={gift}
+          onSelect={updateGift}
+          onClose={() => setShowGift(false)}
+        />
+      )}
+
+      {showCheckout && (
+        <CheckoutModal
+          totalBase={5}
+          gift={gift}
+          photo={photo}
+          onPhotoAllowedChange={(allow) => {
+            // no-op here; Checkout se encarga de deshabilitar si es Heartfelt
+          }}
+          onClose={() => setShowCheckout(false)}
+        />
+      )}
+
+      {showCrop && (
+        <CropperModal
+          open={showCrop}
+          onClose={() => setShowCrop(false)}
+          onDone={(dataUrl) => {
+            setPhoto(dataUrl);
+            setShowCrop(false);
+          }}
+        />
       )}
     </div>
   );
