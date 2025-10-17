@@ -1,80 +1,88 @@
-// /app/edit/[slug]/page.js
+// app/edit/[slug]/page.js
 "use client";
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import AnimatedOverlay from "@/lib/animations";
-import GiftCardModal from "@/lib/giftcard";
+import {
+  getAnimationOptionsForSlug,
+  AnimationOverlay,
+} from "@/lib/animations";
+import { defaultMessageFromSlug } from "@/lib/messages";
+import GiftCardPopup from "@/lib/giftcard";
 import CheckoutModal from "@/lib/checkout";
 import CropperModal from "@/lib/croppermodal";
-import messages from "@/lib/messages";
 
 export default function EditPage({ params }) {
-  const slug = params.slug || "everwish-general";
+  const slug = params.slug;
 
   const [stage, setStage] = useState("expanded");
   const [progress, setProgress] = useState(0);
 
   const [message, setMessage] = useState("");
-  const [category, setCategory] = useState("pumpkins");
-  const [animationActive, setAnimationActive] = useState(false);
-  const [photo, setPhoto] = useState(null);
-  const [showCrop, setShowCrop] = useState(false);
+  const [image, setImage] = useState(null);
+
+  const [animation, setAnimation] = useState("");
+  const [animationOptions, setAnimationOptions] = useState([]);
+
+  const [gift, setGift] = useState(null);
   const [showGift, setShowGift] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
-  const [giftCards, setGiftCards] = useState([]);
-  const [videoSrc, setVideoSrc] = useState(`/videos/${slug}.mp4`);
+  const [showCrop, setShowCrop] = useState(false);
 
-  /* 🟣 Mensaje inicial y animación inmediata */
+  const [videoSrc, setVideoSrc] = useState("");
+  const [showDownload, setShowDownload] = useState(false);
+
+  /* Inicial: mensaje, opciones, video */
   useEffect(() => {
-    const cat = slug.includes("ghost")
-      ? "ghosts"
-      : slug.includes("pumpkin")
-      ? "pumpkins"
-      : slug.includes("paw")
-      ? "paws"
-      : slug.includes("heart")
-      ? "hearts"
-      : "pumpkins";
-    setCategory(cat);
-
-    const list = messages[cat] || messages["pumpkins"];
-    setMessage(list[0] || "Celebrate this special moment with Everwish. ✨");
+    setMessage(defaultMessageFromSlug(slug));
+    const opts = getAnimationOptionsForSlug(slug);
+    setAnimationOptions(opts);
+    setAnimation(opts[0] || "Stars ✨"); // arranca activo
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
-  /* 🕒 Pantalla extendida con barra */
+  /* Splash extendida 3s */
   useEffect(() => {
-    let value = 0;
-    const timer = setInterval(() => {
-      value += 1;
-      setProgress(value);
-      if (value >= 100) {
-        clearInterval(timer);
+    let v = 0;
+    const id = setInterval(() => {
+      v += 1;
+      setProgress(v);
+      if (v >= 100) {
+        clearInterval(id);
         setStage("editor");
-        setTimeout(() => setAnimationActive(true), 200); // 👈 activar animación inmediato
       }
     }, 30);
-    return () => clearInterval(timer);
+    return () => clearInterval(id);
   }, []);
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setPhoto(url);
-      setShowCrop(true);
-    }
+  const handleCardClick = () => {
+    setShowDownload(true);
+    setTimeout(() => setShowDownload(false), 3500);
   };
 
+  const onSelectGift = (data) => {
+    setGift(data);
+    setShowGift(false);
+  };
+  const onRemoveGift = () => setGift(null);
+
+  const onChangeAnim = (e) => setAnimation(e.target.value); // cambio inmediato
+
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-screen bg-[#fff7f5] overflow-hidden">
-      {/* 🟣 Pantalla extendida */}
+    <div className="flex flex-col items-center justify-center bg-[#fff7f5] overflow-hidden min-h-[100dvh] relative">
+
+      {/* Overlay SIEMPRE arriba */}
+      {stage === "editor" && animation && (
+        <AnimationOverlay slug={slug} animation={animation} />
+      )}
+
+      {/* Splash */}
       {stage === "expanded" && (
         <motion.div
           className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#fff7f5]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.35 }}
         >
           <video
             src={videoSrc}
@@ -95,120 +103,130 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
-      {/* 🟢 Editor */}
+      {/* Editor */}
       {stage === "editor" && (
-        <>
-          {/* ✨ Animación arriba del contenedor */}
-          {animationActive && (
-            <div className="absolute inset-0 z-[120] pointer-events-none">
-              <AnimatedOverlay category={category} active />
-            </div>
-          )}
-
-          <motion.div
-            key="editor"
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-10 mb-10"
+        <motion.div
+          key="editor"
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-10 mb-10"
+        >
+          {/* Tarjeta */}
+          <div
+            className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50"
+            onClick={handleCardClick}
           >
-            <div className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50">
-              <video
-                src={videoSrc}
-                className="w-full object-cover"
-                autoPlay
-                loop
-                muted
-                playsInline
-              />
-            </div>
-
-            <textarea
-              className="w-full text-center border rounded-2xl p-3 text-gray-700 mb-3 focus:ring-pink-400 focus:border-pink-400"
-              rows={2}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
+            <video
+              src={videoSrc}
+              className="w-full object-cover"
+              autoPlay
+              loop
+              muted
+              playsInline
             />
+          </div>
 
-            {photo && (
+          {/* Mensaje */}
+          <h3 className="mb-2 text-center text-lg font-semibold text-gray-700">
+            ✨ Customize your message ✨
+          </h3>
+          <textarea
+            className="w-full rounded-2xl border p-3 text-center text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
+            rows={2}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+          />
+
+          {/* Imagen (si el usuario sube, va DEBAJO del mensaje) */}
+          {image && (
+            <div className="mt-3 mb-1 flex justify-center">
               <img
-                src={photo}
-                alt="Uploaded"
-                className="rounded-xl mx-auto mb-3"
-                style={{ maxHeight: "150px", objectFit: "cover" }}
+                src={image}
+                alt="user"
+                className="max-h-44 rounded-xl object-cover"
               />
-            )}
-
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full border rounded-xl p-2 text-center mb-3"
-            >
-              <option value="pumpkins">🎃 Pumpkins</option>
-              <option value="ghosts">👻 Ghosts</option>
-              <option value="paws">🐾 Paws</option>
-              <option value="hearts">💖 Hearts</option>
-            </select>
-
-            <div className="flex justify-center gap-3">
-              <label className="bg-yellow-400 text-[#3b2b1f] font-semibold rounded-xl px-4 py-2 cursor-pointer">
-                📸 Add Image
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-              </label>
-
-              <button
-                onClick={() => setShowGift(true)}
-                className="bg-pink-200 text-pink-700 font-semibold rounded-xl px-4 py-2 hover:bg-pink-300"
-              >
-                🎁 Gift Card
-              </button>
-
-              <button
-                onClick={() => setShowCheckout(true)}
-                className="bg-purple-600 text-white font-semibold rounded-xl px-4 py-2 hover:bg-purple-700"
-              >
-                💳 Checkout
-              </button>
             </div>
-          </motion.div>
-
-          {showCrop && (
-            <CropperModal
-              imageSrc={photo}
-              onSave={(url) => {
-                setPhoto(url);
-                setShowCrop(false);
-              }}
-              onCancel={() => setShowCrop(false)}
-            />
           )}
 
-          {showGift && (
-            <GiftCardModal
-              onClose={() => setShowGift(false)}
-              onSelect={(cards) => {
-                setGiftCards(cards.map((name) => ({ name, amount: 50 })));
-                setShowGift(false);
-              }}
-            />
-          )}
+          {/* Dropdown animaciones */}
+          <div className="my-3">
+            <select
+              className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
+              value={animation}
+              onChange={onChangeAnim}
+            >
+              {animationOptions.map((a) => (
+                <option key={a}>{a}</option>
+              ))}
+            </select>
+          </div>
 
-          {showCheckout && (
-            <CheckoutModal
-              giftCards={giftCards}
-              onClose={() => setShowCheckout(false)}
-              onConfirm={(plan) => {
-                console.log("Plan:", plan);
-                setShowCheckout(false);
-              }}
-            />
+          {/* Botones */}
+          <div className="mt-4 flex flex-wrap justify-center gap-3">
+            <button
+              onClick={() => setShowCrop(true)}
+              className="flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-3 font-semibold text-[#3b2b1f] shadow-sm hover:bg-yellow-300"
+            >
+              📸 Add Image
+            </button>
+            <button
+              onClick={() => setShowGift(true)}
+              className="flex items-center gap-2 rounded-full bg-pink-200 px-5 py-3 font-semibold text-pink-700 shadow-sm hover:bg-pink-300"
+            >
+              🎁 Gift Card
+            </button>
+            <button
+              onClick={() => setShowCheckout(true)}
+              className="flex items-center gap-2 rounded-full bg-purple-500 px-6 py-3 font-semibold text-white shadow-sm hover:bg-purple-600"
+            >
+              💳 Checkout
+            </button>
+          </div>
+
+          {/* Botón de descarga opcional */}
+          {showDownload && (
+            <motion.button
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 30 }}
+              transition={{ duration: 0.25 }}
+              onClick={() => {}}
+              className="fixed bottom-10 right-6 z-[400] rounded-full bg-[#ff7b00] px-6 py-3 text-white font-semibold shadow-lg hover:bg-[#ff9f33]"
+            >
+              ⬇️ Download
+            </motion.button>
           )}
-        </>
+        </motion.div>
+      )}
+
+      {/* Modales (siempre por encima) */}
+      {showGift && (
+        <GiftCardPopup
+          initial={gift}
+          onSelect={onSelectGift}
+          onClose={() => setShowGift(false)}
+        />
+      )}
+      {showCheckout && (
+        <CheckoutModal
+          total={0}
+          gift={gift}
+          onGiftChange={() => setShowGift(true)}
+          onGiftRemove={onRemoveGift}
+          onClose={() => setShowCheckout(false)}
+        />
+      )}
+      {showCrop && (
+        <CropperModal
+          open={showCrop}
+          onClose={() => setShowCrop(false)}
+          onDone={(file) => {
+            // usar dataUrl/Blob en memoria (no se guarda en tu servidor)
+            setImage(file?.dataUrl || null);
+            setShowCrop(false);
+          }}
+        />
       )}
     </div>
   );
