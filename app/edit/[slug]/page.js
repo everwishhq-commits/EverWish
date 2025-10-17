@@ -14,11 +14,14 @@ import CropperModal from "@/lib/croppermodal";
 
 export default function EditPage({ params }) {
   const slug = params.slug;
+
   const [stage, setStage] = useState("expanded");
   const [progress, setProgress] = useState(0);
+
   const [message, setMessage] = useState("");
-  const [animation, setAnimation] = useState("");
-  const [animationOptions, setAnimationOptions] = useState([]);
+  const [animation, setAnimation] = useState("");          // opción activa (del dropdown)
+  const [animationOptions, setAnimationOptions] = useState([]); // 10 opciones de la categoría
+
   const [gift, setGift] = useState(null);
   const [showGift, setShowGift] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
@@ -26,33 +29,31 @@ export default function EditPage({ params }) {
   const [videoSrc, setVideoSrc] = useState("");
   const [showDownload, setShowDownload] = useState(false);
   const [total, setTotal] = useState(5);
-  const [animKey, setAnimKey] = useState(0); // 🔥 Fuerza el refresh instantáneo
 
-  /* 🔹 Configuración inicial */
+  /* ⚙️ Inicial: mensaje, opciones y video */
   useEffect(() => {
     setMessage(defaultMessageFromSlug(slug));
-    const category = getAnimationsForSlug(slug);
-    const options = getAnimationOptionsForSlug(slug);
-    setAnimationOptions(options);
-    setAnimation(options[0] || category);
+    const opts = getAnimationOptionsForSlug(slug);
+    setAnimationOptions(opts);
+    setAnimation(opts[0] || "Stars ✨");   // empieza ya con 1 opción
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
-  /* 🔹 Pantalla extendida con barra */
+  /* 🕒 Pantalla extendida 3s con barra */
   useEffect(() => {
     let value = 0;
-    const interval = setInterval(() => {
+    const id = setInterval(() => {
       value += 1;
       setProgress(value);
       if (value >= 100) {
-        clearInterval(interval);
+        clearInterval(id);
         setStage("editor");
       }
     }, 30);
-    return () => clearInterval(interval);
+    return () => clearInterval(id);
   }, []);
 
-  /* 🔹 Control de regalo y total */
+  /* 🎁 Gift y total */
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
@@ -63,13 +64,11 @@ export default function EditPage({ params }) {
     setTotal(5);
   };
 
-  /* 🔹 Mostrar botón de descarga */
+  /* ⬇️ Descarga */
   const handleCardClick = () => {
     setShowDownload(true);
     setTimeout(() => setShowDownload(false), 3500);
   };
-
-  /* 🔹 Descargar video */
   const handleDownload = () => {
     const link = document.createElement("a");
     link.href = videoSrc;
@@ -79,52 +78,14 @@ export default function EditPage({ params }) {
     link.remove();
   };
 
-  /* ⚡ Cambio inmediato de animación */
-  const handleAnimationChange = (e) => {
-    const newAnim = e.target.value;
-    setAnimation(newAnim);
-    setAnimKey((k) => k + 1); // Fuerza recarga inmediata sin delay
+  /* ⚡ Cambio de animación inmediato (sin delay) */
+  const onChangeAnim = (e) => {
+    const val = e.target.value;
+    setAnimation(val); // el overlay se regenera al instante
   };
 
   return (
     <div className="flex flex-col items-center justify-center bg-[#fff7f5] overflow-hidden min-h-[100dvh] relative">
-      {/* ✨ Animaciones flotantes suaves */}
-      {animation && stage === "editor" && (
-        <div key={`${animation}-${animKey}`} className="absolute inset-0 pointer-events-none z-[150] overflow-hidden">
-          {[...Array(12)].map((_, i) => {
-            const src = `/animations/${animation}/${i + 1}.png`;
-            return (
-              <motion.img
-                key={i}
-                src={src}
-                alt=""
-                className="absolute w-10 h-10 opacity-50"
-                onError={(e) => (e.currentTarget.style.display = "none")}
-                initial={{
-                  x: Math.random() * window.innerWidth,
-                  y: window.innerHeight + Math.random() * 300,
-                  scale: 0.8 + Math.random() * 0.4,
-                  rotate: Math.random() * 360,
-                }}
-                animate={{
-                  y: ["110vh", "-10vh"],
-                  x: [
-                    Math.random() * window.innerWidth * 0.9,
-                    Math.random() * window.innerWidth * 1.1,
-                  ],
-                  rotate: 360,
-                }}
-                transition={{
-                  duration: 40 + Math.random() * 25, // ⚙️ Más lento y natural
-                  repeat: Infinity,
-                  ease: "linear",
-                  delay: Math.random() * 1, // inicio casi inmediato
-                }}
-              />
-            );
-          })}
-        </div>
-      )}
 
       {/* 🟣 Pantalla extendida */}
       {stage === "expanded" && (
@@ -132,7 +93,7 @@ export default function EditPage({ params }) {
           className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#fff7f5]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.4 }}
         >
           <video
             src={videoSrc}
@@ -153,14 +114,17 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
-      {/* 🟢 Editor principal */}
+      {/* 🟢 Editor + Overlay */}
       {stage === "editor" && (
         <>
+          {/* Overlay SIEMPRE arriba de todo (y toma la opción activa) */}
+          {animation && <AnimationOverlay slug={slug} animation={animation} />}
+
           <motion.div
             key="editor"
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.6 }}
             className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-10 mb-10"
           >
             <div
@@ -188,12 +152,12 @@ export default function EditPage({ params }) {
               onChange={(e) => setMessage(e.target.value)}
             />
 
-            {/* 🔽 Dropdown dinámico */}
+            {/* 🔽 Dropdown (10 opciones de la categoría del slug) */}
             <div className="my-3">
               <select
                 className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
                 value={animation}
-                onChange={handleAnimationChange}
+                onChange={onChangeAnim}
               >
                 {animationOptions.map((a) => (
                   <option key={a}>{a}</option>
@@ -227,7 +191,7 @@ export default function EditPage({ params }) {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 30 }}
-                transition={{ duration: 0.4 }}
+                transition={{ duration: 0.3 }}
                 onClick={handleDownload}
                 className="fixed bottom-10 right-6 z-[400] rounded-full bg-[#ff7b00] px-6 py-3 text-white font-semibold shadow-lg hover:bg-[#ff9f33]"
               >
@@ -235,9 +199,6 @@ export default function EditPage({ params }) {
               </motion.button>
             )}
           </motion.div>
-
-          {/* ✨ Overlay controlado */}
-          {animation && <AnimationOverlay slug={slug} animation={animation} />}
         </>
       )}
 
