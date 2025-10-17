@@ -14,24 +14,22 @@ import CropperModal from "@/lib/croppermodal";
 
 export default function EditPage({ params }) {
   const slug = params.slug;
-
   const [stage, setStage] = useState("expanded");
   const [progress, setProgress] = useState(0);
 
   const [message, setMessage] = useState("");
   const [animation, setAnimation] = useState("");
   const [animationOptions, setAnimationOptions] = useState([]);
+  const [photo, setPhoto] = useState(null);
 
   const [gift, setGift] = useState(null);
   const [showGift, setShowGift] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showCrop, setShowCrop] = useState(false);
-  const [croppedImage, setCroppedImage] = useState(null); // 🆕 imagen en base64
   const [videoSrc, setVideoSrc] = useState("");
-  const [showDownload, setShowDownload] = useState(false);
   const [total, setTotal] = useState(5);
 
-  /* ⚙️ Inicial: mensaje, opciones y video */
+  /* 🔹 Inicialización */
   useEffect(() => {
     setMessage(defaultMessageFromSlug(slug));
     const opts = getAnimationOptionsForSlug(slug);
@@ -40,21 +38,21 @@ export default function EditPage({ params }) {
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
-  /* 🕒 Pantalla extendida 3s con barra */
+  /* 🔹 Pantalla extendida */
   useEffect(() => {
-    let value = 0;
-    const id = setInterval(() => {
-      value += 1;
-      setProgress(value);
-      if (value >= 100) {
-        clearInterval(id);
+    let val = 0;
+    const timer = setInterval(() => {
+      val += 1;
+      setProgress(val);
+      if (val >= 100) {
+        clearInterval(timer);
         setStage("editor");
       }
     }, 30);
-    return () => clearInterval(id);
+    return () => clearInterval(timer);
   }, []);
 
-  /* 🎁 Gift y total */
+  /* 🎁 Gift Card */
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
@@ -65,35 +63,17 @@ export default function EditPage({ params }) {
     setTotal(5);
   };
 
-  /* ⬇️ Descarga */
-  const handleCardClick = () => {
-    setShowDownload(true);
-    setTimeout(() => setShowDownload(false), 3500);
-  };
-  const handleDownload = () => {
-    const link = document.createElement("a");
-    link.href = videoSrc;
-    link.download = `${slug}.mp4`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  };
-
-  /* ⚡ Cambio de animación inmediato */
-  const onChangeAnim = (e) => {
-    const val = e.target.value;
-    setAnimation(val);
-  };
-
-  /* 📸 Cuando el usuario guarda una imagen recortada */
-  const handleImageDone = (base64Image) => {
-    setCroppedImage(base64Image);
+  /* 📸 Foto personalizada */
+  const handlePhotoDone = (blob) => {
+    setPhoto(blob);
     setShowCrop(false);
   };
 
-  return (
-    <div className="flex flex-col items-center justify-center bg-[#fff7f5] overflow-hidden min-h-[100dvh] relative">
+  /* ⚡ Cambio de animación */
+  const onChangeAnim = (e) => setAnimation(e.target.value);
 
+  return (
+    <div className="flex flex-col items-center justify-start bg-[#fff7f5] overflow-hidden min-h-[100dvh] relative px-3">
       {/* 🟣 Pantalla extendida */}
       {stage === "expanded" && (
         <motion.div
@@ -105,10 +85,7 @@ export default function EditPage({ params }) {
           <video
             src={videoSrc}
             className="absolute inset-0 w-full h-full object-cover"
-            autoPlay
-            loop
-            muted
-            playsInline
+            autoPlay loop muted playsInline
           />
           <div className="absolute bottom-8 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
             <motion.div
@@ -124,35 +101,23 @@ export default function EditPage({ params }) {
       {/* 🟢 Editor principal */}
       {stage === "editor" && (
         <>
-          {/* Overlay arriba de todo */}
           {animation && <AnimationOverlay slug={slug} animation={animation} />}
 
           <motion.div
             key="editor"
-            initial={{ opacity: 0, y: 40 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-10 mb-10"
+            className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-4 mb-6"
           >
-            {/* 🎴 Tarjeta */}
-            <div
-              className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50"
-              onClick={handleCardClick}
-            >
+            <div className="relative mb-3 overflow-hidden rounded-2xl border bg-gray-50">
               <video
                 src={videoSrc}
                 className="w-full object-cover"
-                autoPlay
-                loop
-                muted
-                playsInline
+                autoPlay loop muted playsInline
               />
             </div>
 
-            {/* 💬 Mensaje */}
-            <h3 className="mb-2 text-center text-lg font-semibold text-gray-700">
-              ✨ Customize your message ✨
-            </h3>
             <textarea
               className="w-full rounded-2xl border p-3 text-center text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
               rows={2}
@@ -160,18 +125,16 @@ export default function EditPage({ params }) {
               onChange={(e) => setMessage(e.target.value)}
             />
 
-            {/* 📸 Imagen añadida (si existe) */}
-            {croppedImage && (
-              <div className="mt-4 flex justify-center">
+            {photo && (
+              <div className="my-3 w-full flex justify-center">
                 <img
-                  src={croppedImage}
-                  alt="User uploaded"
-                  className="rounded-2xl max-h-48 object-cover shadow-md"
+                  src={URL.createObjectURL(photo)}
+                  alt="user upload"
+                  className="rounded-xl w-[80%] shadow-md"
                 />
               </div>
             )}
 
-            {/* 🔽 Animaciones */}
             <div className="my-3">
               <select
                 className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
@@ -184,11 +147,10 @@ export default function EditPage({ params }) {
               </select>
             </div>
 
-            {/* 🎁 Botones principales */}
-            <div className="mt-4 flex flex-wrap justify-center gap-3">
+            <div className="mt-3 flex flex-wrap justify-center gap-3">
               <button
                 onClick={() => setShowCrop(true)}
-                className="flex items-center gap-2 rounded-full bg-pink-500 px-5 py-3 font-semibold text-white shadow-sm hover:bg-pink-600"
+                className="flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-3 font-semibold text-[#3b2b1f] shadow-sm hover:bg-yellow-300"
               >
                 📸 Add Image
               </button>
@@ -205,20 +167,6 @@ export default function EditPage({ params }) {
                 💳 Checkout
               </button>
             </div>
-
-            {/* ⬇️ Descarga */}
-            {showDownload && (
-              <motion.button
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 30 }}
-                transition={{ duration: 0.3 }}
-                onClick={handleDownload}
-                className="fixed bottom-10 right-6 z-[400] rounded-full bg-[#ff7b00] px-6 py-3 text-white font-semibold shadow-lg hover:bg-[#ff9f33]"
-              >
-                ⬇️ Download
-              </motion.button>
-            )}
           </motion.div>
         </>
       )}
@@ -235,6 +183,23 @@ export default function EditPage({ params }) {
         <CheckoutModal
           total={total}
           gift={gift}
+          slug={slug}
+          planOptions={[
+            {
+              id: "heartfelt",
+              title: "💌 Heartfelt",
+              price: 3.99,
+              description:
+                "A calm, beautiful card to share your feelings with sincerity.",
+            },
+            {
+              id: "signature",
+              title: "💎 Signature",
+              price: 7.99,
+              description:
+                "A dynamic animated experience with motion, photo, and effects that bring your message to life.",
+            },
+          ]}
           onGiftChange={() => setShowGift(true)}
           onGiftRemove={removeGift}
           onClose={() => setShowCheckout(false)}
@@ -244,9 +209,9 @@ export default function EditPage({ params }) {
         <CropperModal
           open={showCrop}
           onClose={() => setShowCrop(false)}
-          onDone={handleImageDone} // ✅ devuelve imagen en base64
+          onDone={handlePhotoDone}
         />
       )}
     </div>
   );
-                }
+              }
