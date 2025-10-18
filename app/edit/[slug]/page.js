@@ -4,41 +4,36 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import Cropper from "react-easy-crop";
-import { animationoverlay, getanimationoptionsforslug } from "@/lib/animations";
-import { defaultMessageFromSlug, getMessagesForSlug } from "@/lib/messages";
-import CheckoutModal from "@/lib/checkout";
+import { AnimationOverlay, getAnimationOptionsForSlug } from "@/lib/animations";
+import { defaultMessageFromSlug } from "@/lib/messages";
 import GiftCardModal from "@/lib/giftcard";
+import CheckoutModal from "@/lib/checkout";
 
 export default function EditPage({ params }) {
   const slug = params.slug;
   const [message, setMessage] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
-  const [animation, setAnimation] = useState("ninguna animación");
+  const [animation, setAnimation] = useState("");
   const [imageSrc, setImageSrc] = useState(null);
   const [isCropOpen, setIsCropOpen] = useState(false);
   const [zoom, setZoom] = useState(1);
-  const [cropped, setCropped] = useState(null);
+  const [isGiftOpen, setIsGiftOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [isGiftModalOpen, setIsGiftModalOpen] = useState(false);
   const [gift, setGift] = useState(null);
 
-  const animationOptions = getanimationoptionsforslug();
+  const animationOptions = getAnimationOptionsForSlug(slug);
 
   // ✅ Inicialización automática
   useEffect(() => {
     setMessage(defaultMessageFromSlug(slug));
-    setSuggestions(getMessagesForSlug(slug));
-    setAnimation("ninguna animación");
+    setAnimation(animationOptions[0]); // primera animación activa de inmediato
   }, [slug]);
 
-  // ✅ Al cambiar animación, activar transición inmediata
-  useEffect(() => {
-    if (animation && animation !== "ninguna animación") {
-      // Pequeña animación de entrada
-      document.body.classList.add("transition-all");
-    }
-  }, [animation]);
+  // ✅ Cambio instantáneo de animación
+  const handleAnimationChange = (value) => {
+    setAnimation(value);
+  };
 
+  // ✅ Subida de imagen
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -51,21 +46,21 @@ export default function EditPage({ params }) {
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-pink-50 to-blue-50 p-6">
-      {/* 🔹 Animación flotante (detrás de los modales, encima del contenedor principal) */}
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-pink-50 to-blue-50 p-6 overflow-hidden">
+      {/* 🔹 Animación activa encima del contenedor */}
       <div className="absolute inset-0 z-[400] pointer-events-none">
-        <animationoverlay animation={animation} />
+        <AnimationOverlay animation={animation} />
       </div>
 
       {/* 🔸 Tarjeta principal */}
       <motion.div
         className="relative z-[500] w-full max-w-md rounded-3xl bg-white shadow-xl p-4 text-center"
-        initial={{ opacity: 0, y: 15 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        {/* Imagen de tarjeta */}
-        <div className="relative w-full h-72 rounded-2xl overflow-hidden bg-gradient-to-tr from-white to-pink-50">
+        {/* Imagen principal */}
+        <div className="relative w-full h-72 rounded-2xl overflow-hidden bg-gray-100">
           <Image
             src={`/${slug}.jpg`}
             alt="Card"
@@ -73,42 +68,31 @@ export default function EditPage({ params }) {
             className="object-cover rounded-2xl"
             priority
           />
+          {imageSrc && (
+            <Image
+              src={imageSrc}
+              alt="User upload"
+              fill
+              className="object-contain p-6"
+            />
+          )}
         </div>
 
-        {/* Mensaje editable */}
+        {/* Mensaje */}
         <div className="mt-4">
-          <h3 className="font-semibold text-gray-700 mb-2">
-            ✨ Customize your message ✨
-          </h3>
           <textarea
             className="w-full rounded-2xl border p-3 text-center text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
             rows={2}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
           />
-
-          {/* 💡 Sugerencias */}
-          {suggestions.length > 0 && (
-            <div className="mt-2 flex flex-wrap justify-center gap-2">
-              {suggestions.map((m, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setMessage(m)}
-                  className="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-sm hover:bg-gray-200"
-                >
-                  {m}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* Dropdown de animaciones */}
         <div className="mt-4">
           <select
             value={animation}
-            onChange={(e) => setAnimation(e.target.value)}
+            onChange={(e) => handleAnimationChange(e.target.value)}
             className="w-full rounded-xl border p-2 text-center text-gray-700 shadow-sm"
           >
             {animationOptions.map((a, i) => (
@@ -131,8 +115,8 @@ export default function EditPage({ params }) {
             />
           </label>
           <button
-            onClick={() => setIsGiftModalOpen(true)}
-            className="bg-pink-300 text-white font-semibold px-4 py-2 rounded-full hover:bg-pink-400"
+            onClick={() => setIsGiftOpen(true)}
+            className="bg-pink-400 text-white font-semibold px-4 py-2 rounded-full hover:bg-pink-500"
           >
             🎁 Gift Card
           </button>
@@ -145,7 +129,7 @@ export default function EditPage({ params }) {
         </div>
       </motion.div>
 
-      {/* 🪞 Modal Cropper */}
+      {/* ✂️ Crop Modal */}
       <AnimatePresence>
         {isCropOpen && (
           <motion.div
@@ -176,10 +160,7 @@ export default function EditPage({ params }) {
                   Cancel
                 </button>
                 <button
-                  onClick={() => {
-                    setCropped(imageSrc);
-                    setIsCropOpen(false);
-                  }}
+                  onClick={() => setIsCropOpen(false)}
                   className="px-4 py-2 rounded-full bg-pink-500 text-white font-semibold"
                 >
                   Save
@@ -190,7 +171,20 @@ export default function EditPage({ params }) {
         )}
       </AnimatePresence>
 
-      {/* 🧾 Checkout Modal */}
+      {/* 🎁 Gift Modal */}
+      <AnimatePresence>
+        {isGiftOpen && (
+          <GiftCardModal
+            onclose={() => setIsGiftOpen(false)}
+            onselect={(g) => {
+              setGift(g);
+              setIsGiftOpen(false);
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* 💳 Checkout Modal */}
       <AnimatePresence>
         {isCheckoutOpen && (
           <CheckoutModal
@@ -198,19 +192,6 @@ export default function EditPage({ params }) {
             gift={gift}
             onclose={() => setIsCheckoutOpen(false)}
             ongiftremove={() => setGift(null)}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* 🎁 GiftCard Modal */}
-      <AnimatePresence>
-        {isGiftModalOpen && (
-          <GiftCardModal
-            onclose={() => setIsGiftModalOpen(false)}
-            onselect={(g) => {
-              setGift(g);
-              setIsGiftModalOpen(false);
-            }}
           />
         )}
       </AnimatePresence>
