@@ -1,200 +1,213 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
-import Cropper from "react-easy-crop";
-import { AnimationOverlay, getAnimationOptionsForSlug } from "@/lib/animations";
+
+import {
+  AnimationOverlay,
+  getAnimationOptionsForSlug,
+} from "@/lib/animations";
 import { defaultMessageFromSlug } from "@/lib/messages";
+
 import GiftCardModal from "@/lib/giftcard";
 import CheckoutModal from "@/lib/checkout";
+import CropperModal from "@/lib/croppermodal";
 
 export default function EditPage({ params }) {
   const slug = params.slug;
+
+  const [stage, setStage] = useState("expanded");
+  const [progress, setProgress] = useState(0);
+
   const [message, setMessage] = useState("");
-  const [animation, setAnimation] = useState("");
+  const [animation, setAnimation] = useState(""); // opción activa
+  const [animationOptions, setAnimationOptions] = useState([]); // 10 opciones
+
   const [imageSrc, setImageSrc] = useState(null);
-  const [isCropOpen, setIsCropOpen] = useState(false);
-  const [zoom, setZoom] = useState(1);
-  const [isGiftOpen, setIsGiftOpen] = useState(false);
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [showCrop, setShowCrop] = useState(false);
+
+  const [showGift, setShowGift] = useState(false);
   const [gift, setGift] = useState(null);
 
-  const animationOptions = getAnimationOptionsForSlug(slug);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [videoSrc, setVideoSrc] = useState("");
 
-  // ✅ Inicialización automática
+  /* ⚙️ Inicial: mensaje, opciones y video */
   useEffect(() => {
     setMessage(defaultMessageFromSlug(slug));
-    setAnimation(animationOptions[0]); // primera animación activa de inmediato
+    const opts = getAnimationOptionsForSlug(slug);
+    setAnimationOptions(opts);
+    setAnimation(opts[0] || "sparkles"); // entra de una
+    setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
-  // ✅ Cambio instantáneo de animación
-  const handleAnimationChange = (value) => {
-    setAnimation(value);
-  };
+  /* 🕒 Pantalla extendida 3s con barra */
+  useEffect(() => {
+    let value = 0;
+    const id = setInterval(() => {
+      value += 1;
+      setProgress(value);
+      if (value >= 100) {
+        clearInterval(id);
+        setStage("editor");
+      }
+    }, 30);
+    return () => clearInterval(id);
+  }, []);
 
-  // ✅ Subida de imagen
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
+  /* 📸 Subida de imagen (no se guarda en tu servidor) */
+  const onUpload = (e) => {
+    const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      setImageSrc(reader.result);
-      setIsCropOpen(true);
+      setImageSrc(reader.result); // data:URL
+      setShowCrop(true);
     };
     reader.readAsDataURL(file);
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-pink-50 to-blue-50 p-6 overflow-hidden">
-      {/* 🔹 Animación activa encima del contenedor */}
-      <div className="absolute inset-0 z-[400] pointer-events-none">
-        <AnimationOverlay animation={animation} />
-      </div>
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-[#fff7f5] overflow-hidden">
 
-      {/* 🔸 Tarjeta principal */}
-      <motion.div
-        className="relative z-[500] w-full max-w-md rounded-3xl bg-white shadow-xl p-4 text-center"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-      >
-        {/* Imagen principal */}
-        <div className="relative w-full h-72 rounded-2xl overflow-hidden bg-gray-100">
-          <Image
-            src={`/${slug}.jpg`}
-            alt="Card"
-            fill
-            className="object-cover rounded-2xl"
-            priority
+      {/* 🟣 Pantalla extendida */}
+      {stage === "expanded" && (
+        <motion.div
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#fff7f5]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.35 }}
+        >
+          <video
+            src={videoSrc}
+            className="absolute inset-0 w-full h-full object-cover"
+            autoPlay
+            loop
+            muted
+            playsInline
           />
-          {imageSrc && (
-            <Image
-              src={imageSrc}
-              alt="User upload"
-              fill
-              className="object-contain p-6"
+          <div className="absolute bottom-8 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
+            <motion.div
+              className="h-full bg-pink-500"
+              initial={{ width: "0%" }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.03, ease: "linear" }}
             />
-          )}
-        </div>
+          </div>
+        </motion.div>
+      )}
 
-        {/* Mensaje */}
-        <div className="mt-4">
-          <textarea
-            className="w-full rounded-2xl border p-3 text-center text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
-            rows={2}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-          />
-        </div>
+      {/* 🟢 Editor + Overlay */}
+      {stage === "editor" && (
+        <>
+          {/* Overlay SIEMPRE arriba de todo (y toma la opción activa) */}
+          {animation && <AnimationOverlay animation={animation} />}
 
-        {/* Dropdown de animaciones */}
-        <div className="mt-4">
-          <select
-            value={animation}
-            onChange={(e) => handleAnimationChange(e.target.value)}
-            className="w-full rounded-xl border p-2 text-center text-gray-700 shadow-sm"
-          >
-            {animationOptions.map((a, i) => (
-              <option key={i} value={a}>
-                {a.charAt(0).toUpperCase() + a.slice(1)}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Botones principales */}
-        <div className="flex justify-center gap-3 mt-5">
-          <label className="bg-yellow-400 text-black font-semibold px-4 py-2 rounded-full cursor-pointer hover:bg-yellow-500">
-            📸 Add Image
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-            />
-          </label>
-          <button
-            onClick={() => setIsGiftOpen(true)}
-            className="bg-pink-400 text-white font-semibold px-4 py-2 rounded-full hover:bg-pink-500"
-          >
-            🎁 Gift Card
-          </button>
-          <button
-            onClick={() => setIsCheckoutOpen(true)}
-            className="bg-purple-500 text-white font-semibold px-4 py-2 rounded-full hover:bg-purple-600"
-          >
-            💳 Checkout
-          </button>
-        </div>
-      </motion.div>
-
-      {/* ✂️ Crop Modal */}
-      <AnimatePresence>
-        {isCropOpen && (
           <motion.div
-            className="fixed inset-0 z-[900] flex items-center justify-center bg-black/30 p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            key="editor"
+            initial={{ opacity: 0, y: 36 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="relative z-[500] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-10 mb-12"
           >
-            <div className="bg-white rounded-3xl p-4 w-full max-w-sm shadow-xl text-center">
-              <h3 className="text-lg font-semibold mb-3">✂️ Edit and Center Your Image</h3>
-              <div className="relative w-full h-64 bg-gray-100 rounded-xl overflow-hidden">
-                <Cropper image={imageSrc} zoom={zoom} aspect={1} onZoomChange={setZoom} />
-              </div>
-              <input
-                type="range"
-                min={1}
-                max={3}
-                step={0.1}
-                value={zoom}
-                onChange={(e) => setZoom(e.target.value)}
-                className="w-full mt-2"
-              />
-              <div className="flex justify-center gap-3 mt-4">
-                <button
-                  onClick={() => setIsCropOpen(false)}
-                  className="px-4 py-2 rounded-full bg-gray-200 text-gray-700"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => setIsCropOpen(false)}
-                  className="px-4 py-2 rounded-full bg-pink-500 text-white font-semibold"
-                >
-                  Save
-                </button>
+            {/* Tarjeta (imagen del slug como base) */}
+            <div className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50">
+              <div className="relative w-full h-72">
+                <Image
+                  src={`/${slug}.jpg`}
+                  alt="Card"
+                  fill
+                  className="object-cover"
+                  priority
+                />
+                {/* imagen del usuario encima */}
+                {imageSrc && (
+                  <Image
+                    src={imageSrc}
+                    alt="User image"
+                    fill
+                    className="object-contain p-6"
+                  />
+                )}
               </div>
             </div>
+
+            {/* Mensaje (único, desde lib/messages) */}
+            <textarea
+              className="w-full rounded-2xl border p-3 text-center text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
+              rows={2}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+            />
+
+            {/* Dropdown (10 opciones de la categoría del slug) */}
+            <div className="my-3">
+              <select
+                className="w-full rounded-xl border p-3 text-center font-medium text-gray-700 focus:border-pink-400 focus:ring-pink-400"
+                value={animation}
+                onChange={(e) => setAnimation(e.target.value)} // cambio inmediato
+              >
+                {animationOptions.map((a) => (
+                  <option key={a} value={a}>{a}</option>
+                ))}
+                <option value="">none</option>
+              </select>
+            </div>
+
+            {/* Botones */}
+            <div className="mt-3 flex flex-wrap justify-center gap-3">
+              <label className="flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-3 font-semibold text-[#3b2b1f] shadow-sm hover:bg-yellow-300 cursor-pointer">
+                📸 Add Image
+                <input type="file" accept="image/*" className="hidden" onChange={onUpload} />
+              </label>
+              <button
+                onClick={() => setShowGift(true)}
+                className="flex items-center gap-2 rounded-full bg-pink-200 px-5 py-3 font-semibold text-pink-700 shadow-sm hover:bg-pink-300"
+              >
+                🎁 Gift Card
+              </button>
+              <button
+                onClick={() => setShowCheckout(true)}
+                className="flex items-center gap-2 rounded-full bg-purple-500 px-6 py-3 font-semibold text-white shadow-sm hover:bg-purple-600"
+              >
+                💳 Checkout
+              </button>
+            </div>
           </motion.div>
-        )}
-      </AnimatePresence>
 
-      {/* 🎁 Gift Modal */}
-      <AnimatePresence>
-        {isGiftOpen && (
-          <GiftCardModal
-            onclose={() => setIsGiftOpen(false)}
-            onselect={(g) => {
-              setGift(g);
-              setIsGiftOpen(false);
-            }}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* 💳 Checkout Modal */}
-      <AnimatePresence>
-        {isCheckoutOpen && (
-          <CheckoutModal
-            total={0}
-            gift={gift}
-            onclose={() => setIsCheckoutOpen(false)}
-            ongiftremove={() => setGift(null)}
-          />
-        )}
-      </AnimatePresence>
+          {/* 🔸 Modales */}
+          {showCrop && (
+            <CropperModal
+              open={showCrop}
+              src={imageSrc}
+              onClose={() => setShowCrop(false)}
+              onDone={(dataUrl) => {
+                setImageSrc(dataUrl);
+                setShowCrop(false);
+              }}
+            />
+          )}
+          {showGift && (
+            <GiftCardModal
+              open={showGift}
+              onClose={() => setShowGift(false)}
+              onSelect={(g) => {
+                // permitir buscar/quitar desde el modal de gift
+                setGift(g);
+                setShowGift(false);
+              }}
+            />
+          )}
+          {showCheckout && (
+            <CheckoutModal
+              open={showCheckout}
+              onClose={() => setShowCheckout(false)}
+              gift={gift}
+            />
+          )}
+        </>
+      )}
     </div>
   );
-}
+                }
