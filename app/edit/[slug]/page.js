@@ -32,25 +32,19 @@ export default function EditPage({ params }) {
   const [showDownload, setShowDownload] = useState(false);
   const [total, setTotal] = useState(5);
 
-  /* Config base: mensaje 1/3, opciones y video */
+  /* --- 1. Config base: mensaje, animaciones y video --- */
   useEffect(() => {
     setMessage(getMessageForSlug(slug));
     const opts = getAnimationOptionsForSlug(slug);
     setAnimationOptions(opts);
-    // arranca con la primera animación válida o None
+
+    // 👉 inicia con la primera animación real, no "None"
     setAnimation(opts[1] || opts[0]);
+
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
-  // ✅ NUEVO BLOQUE — sincroniza animación al cambiar slug o categoría
-  useEffect(() => {
-    if (!animationOptions.includes(animation)) {
-      const firstValid = animationOptions.find((a) => !a.startsWith("✨ None")) || animationOptions[0];
-      setAnimation(firstValid);
-    }
-  }, [slug, animationOptions]);
-
-  /* Pantalla extendida con barra (entra al editor) */
+  /* --- 2. Pantalla expandida con barra de carga --- */
   useEffect(() => {
     let v = 0;
     const id = setInterval(() => {
@@ -64,7 +58,7 @@ export default function EditPage({ params }) {
     return () => clearInterval(id);
   }, []);
 
-  /* Gift y total */
+  /* --- 3. Gift y total --- */
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
@@ -75,7 +69,7 @@ export default function EditPage({ params }) {
     setTotal(5);
   };
 
-  /* Download popup al tocar tarjeta */
+  /* --- 4. Descarga --- */
   const handleCardClick = () => {
     setShowDownload(true);
     setTimeout(() => setShowDownload(false), 3500);
@@ -91,6 +85,7 @@ export default function EditPage({ params }) {
 
   const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
 
+  /* --- 5. Render principal --- */
   return (
     <div className="relative min-h-[100dvh] overflow-hidden bg-[#fff7f5] flex flex-col items-center justify-start">
 
@@ -124,10 +119,10 @@ export default function EditPage({ params }) {
       {/* Editor */}
       {stage === "editor" && (
         <>
-          {/* Overlay */}
+          {/* Overlay actualizado (forzado a refrescar cuando cambia animación) */}
           {animation && (
             <AnimationOverlay 
-              key={`${category}-${animation}`} 
+              key={`${slug}-${category}-${animation}-${Date.now()}`} 
               slug={slug} 
               animation={animation} 
             />
@@ -140,7 +135,7 @@ export default function EditPage({ params }) {
             transition={{ duration: 0.45 }}
             className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-6 mb-10"
           >
-            {/* Tarjeta */}
+            {/* Video / tarjeta */}
             <div
               className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50"
               onClick={handleCardClick}
@@ -166,7 +161,7 @@ export default function EditPage({ params }) {
               onChange={(e) => setMessage(e.target.value)}
             />
 
-            {/* Dropdown animaciones */}
+            {/* Dropdown de animaciones */}
             <div className="my-3">
               <select
                 className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
@@ -201,7 +196,7 @@ export default function EditPage({ params }) {
               </button>
             </div>
 
-            {/* Download flotante */}
+            {/* Botón flotante de descarga */}
             {showDownload && (
               <motion.button
                 initial={{ opacity: 0, y: 30 }}
@@ -250,4 +245,4 @@ export default function EditPage({ params }) {
       )}
     </div>
   );
-              }
+                   }
