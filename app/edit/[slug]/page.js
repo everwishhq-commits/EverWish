@@ -15,7 +15,6 @@ export default function EditPage({ params }) {
   const slug = params.slug;
   const [stage, setStage] = useState("expanded");
   const [progress, setProgress] = useState(0);
-
   const [message, setMessage] = useState("");
   const [animation, setAnimation] = useState("");
   const [animationOptions, setAnimationOptions] = useState([]);
@@ -27,7 +26,6 @@ export default function EditPage({ params }) {
   const [showCrop, setShowCrop] = useState(false);
   const [showDownload, setShowDownload] = useState(false);
   const [total, setTotal] = useState(5);
-
   const [userImage, setUserImage] = useState(null);
 
   useEffect(() => {
@@ -84,6 +82,8 @@ export default function EditPage({ params }) {
 
   return (
     <div className="relative min-h-[100dvh] bg-[#fff7f5] flex flex-col items-center overflow-hidden">
+
+      {/* Pantalla de carga inicial */}
       {stage === "expanded" && (
         <motion.div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-[#fff7f5]"
@@ -94,10 +94,7 @@ export default function EditPage({ params }) {
           <video
             src={videoSrc}
             className="absolute inset-0 w-full h-full object-cover"
-            autoPlay
-            loop
-            muted
-            playsInline
+            autoPlay loop muted playsInline
           />
           <div className="absolute bottom-8 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
             <motion.div
@@ -110,6 +107,7 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
+      {/* Editor principal */}
       {stage === "editor" && (
         <>
           <AnimationOverlay key={animKey} slug={slug} animation={animation} />
@@ -129,10 +127,7 @@ export default function EditPage({ params }) {
               <video
                 src={videoSrc}
                 className="w-full object-cover"
-                autoPlay
-                loop
-                muted
-                playsInline
+                autoPlay loop muted playsInline
               />
             </div>
 
@@ -147,7 +142,7 @@ export default function EditPage({ params }) {
               onChange={(e) => setMessage(e.target.value)}
             />
 
-            {/* Imagen del usuario (si hay) */}
+            {/* Imagen del usuario */}
             {userImage && (
               <div className="my-4">
                 <img
@@ -173,7 +168,7 @@ export default function EditPage({ params }) {
               </select>
             </div>
 
-            {/* Botones */}
+            {/* Botones principales */}
             <div className="mt-4 flex flex-wrap justify-center gap-3">
               <button
                 onClick={() => setShowCrop(true)}
@@ -211,33 +206,41 @@ export default function EditPage({ params }) {
         </>
       )}
 
-      {/* Popups */}
-      {showGift && (
-        <GiftCardPopup
-          initial={gift}
-          onSelect={updateGift}
-          onClose={() => setShowGift(false)}
-        />
-      )}
-      {showCheckout && (
-        <CheckoutModal
-          total={total}
-          gift={gift}
-          onGiftChange={() => setShowGift(true)}
-          onGiftRemove={removeGift}
-          onClose={() => setShowCheckout(false)}
-        />
-      )}
-      {showCrop && (
-        <CropperModal
-          open={showCrop}
-          onClose={() => setShowCrop(false)}
-          onDone={(img) => {
-            setUserImage(img);
-            setShowCrop(false);
-          }}
-        />
-      )}
+      {/* 🔧 Modales siempre encima */}
+      <div className="fixed inset-0 pointer-events-none z-[10050]">
+        {showGift && (
+          <div className="pointer-events-auto relative">
+            <GiftCardPopup
+              initial={gift}
+              onSelect={updateGift}
+              onClose={() => setShowGift(false)}
+            />
+          </div>
+        )}
+        {showCheckout && (
+          <div className="pointer-events-auto relative">
+            <CheckoutModal
+              total={total}
+              gift={gift}
+              onGiftChange={() => setShowGift(true)}
+              onGiftRemove={removeGift}
+              onClose={() => setShowCheckout(false)}
+            />
+          </div>
+        )}
+        {showCrop && (
+          <div className="pointer-events-auto relative">
+            <CropperModal
+              open={showCrop}
+              onClose={() => setShowCrop(false)}
+              onDone={(img) => {
+                setUserImage(img);
+                setShowCrop(false);
+              }}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
-       }
+}
