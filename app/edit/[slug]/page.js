@@ -20,8 +20,8 @@ export default function EditPage({ params }) {
   const [progress, setProgress] = useState(0);
 
   const [message, setMessage] = useState("");
-  const [animation, setAnimation] = useState("");              
-  const [animationOptions, setAnimationOptions] = useState([]); 
+  const [animation, setAnimation] = useState("");
+  const [animationOptions, setAnimationOptions] = useState([]);
 
   const [gift, setGift] = useState(null);
   const [showGift, setShowGift] = useState(false);
@@ -32,19 +32,17 @@ export default function EditPage({ params }) {
   const [showDownload, setShowDownload] = useState(false);
   const [total, setTotal] = useState(5);
 
-  /* --- 1. Config base: mensaje, animaciones y video --- */
+  /* --- Config base --- */
   useEffect(() => {
     setMessage(getMessageForSlug(slug));
     const opts = getAnimationOptionsForSlug(slug);
     setAnimationOptions(opts);
-
-    // 👉 inicia con la primera animación real, no "None"
-    setAnimation(opts[1] || opts[0]);
-
+    // ✅ Selecciona la primera animación real (no “None”)
+    setAnimation(opts.find(a => !a.includes("None")) || opts[0]);
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
-  /* --- 2. Pantalla expandida con barra de carga --- */
+  /* --- Pantalla expandida --- */
   useEffect(() => {
     let v = 0;
     const id = setInterval(() => {
@@ -58,7 +56,7 @@ export default function EditPage({ params }) {
     return () => clearInterval(id);
   }, []);
 
-  /* --- 3. Gift y total --- */
+  /* --- Gift y total --- */
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
@@ -69,7 +67,7 @@ export default function EditPage({ params }) {
     setTotal(5);
   };
 
-  /* --- 4. Descarga --- */
+  /* --- Download --- */
   const handleCardClick = () => {
     setShowDownload(true);
     setTimeout(() => setShowDownload(false), 3500);
@@ -85,25 +83,22 @@ export default function EditPage({ params }) {
 
   const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
 
-  /* --- 5. Render principal --- */
+  /* --- Render principal --- */
   return (
     <div className="relative min-h-[100dvh] overflow-hidden bg-[#fff7f5] flex flex-col items-center justify-start">
 
-      {/* Expanded (intro) */}
+      {/* Expanded */}
       {stage === "expanded" && (
         <motion.div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-[#fff7f5]"
-          initial={{ opacity: 0 }} 
-          animate={{ opacity: 1 }} 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           transition={{ duration: 0.4 }}
         >
           <video
             src={videoSrc}
             className="absolute inset-0 h-full w-full object-cover"
-            autoPlay 
-            loop 
-            muted 
-            playsInline
+            autoPlay loop muted playsInline
           />
           <div className="absolute bottom-8 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
             <motion.div
@@ -119,14 +114,12 @@ export default function EditPage({ params }) {
       {/* Editor */}
       {stage === "editor" && (
         <>
-          {/* Overlay actualizado (forzado a refrescar cuando cambia animación) */}
-          {animation && (
-            <AnimationOverlay 
-              key={`${slug}-${category}-${animation}-${Date.now()}`} 
-              slug={slug} 
-              animation={animation} 
-            />
-          )}
+          {/* ✅ Overlay: fuerza actualización cuando cambia la animación */}
+          <AnimationOverlay
+            key={`${slug}-${category}-${animation}`}
+            slug={slug}
+            animation={animation}
+          />
 
           <motion.div
             key="editor"
@@ -135,7 +128,7 @@ export default function EditPage({ params }) {
             transition={{ duration: 0.45 }}
             className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-6 mb-10"
           >
-            {/* Video / tarjeta */}
+            {/* Video */}
             <div
               className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50"
               onClick={handleCardClick}
@@ -143,10 +136,7 @@ export default function EditPage({ params }) {
               <video
                 src={videoSrc}
                 className="w-full object-cover"
-                autoPlay
-                loop
-                muted
-                playsInline
+                autoPlay loop muted playsInline
               />
             </div>
 
@@ -169,12 +159,14 @@ export default function EditPage({ params }) {
                 onChange={(e) => setAnimation(e.target.value)}
               >
                 {animationOptions.map((a) => (
-                  <option key={a} value={a}>{a}</option>
+                  <option key={a} value={a}>
+                    {a}
+                  </option>
                 ))}
               </select>
             </div>
 
-            {/* Botonera */}
+            {/* Botones */}
             <div className="mt-4 flex flex-wrap justify-center gap-3">
               <button
                 onClick={() => setShowCrop(true)}
@@ -196,7 +188,7 @@ export default function EditPage({ params }) {
               </button>
             </div>
 
-            {/* Botón flotante de descarga */}
+            {/* Download */}
             {showDownload && (
               <motion.button
                 initial={{ opacity: 0, y: 30 }}
@@ -245,4 +237,4 @@ export default function EditPage({ params }) {
       )}
     </div>
   );
-                   }
+                }
