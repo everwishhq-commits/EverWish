@@ -37,10 +37,18 @@ export default function EditPage({ params }) {
     setMessage(getMessageForSlug(slug));
     const opts = getAnimationOptionsForSlug(slug);
     setAnimationOptions(opts);
-    // 👇 Aquí el cambio: inicia con la primera animación REAL, no "None"
-    setAnimation(opts[1] || opts[0]); 
+    // arranca con la primera animación válida o None
+    setAnimation(opts[1] || opts[0]);
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
+
+  // ✅ NUEVO BLOQUE — sincroniza animación al cambiar slug o categoría
+  useEffect(() => {
+    if (!animationOptions.includes(animation)) {
+      const firstValid = animationOptions.find((a) => !a.startsWith("✨ None")) || animationOptions[0];
+      setAnimation(firstValid);
+    }
+  }, [slug, animationOptions]);
 
   /* Pantalla extendida con barra (entra al editor) */
   useEffect(() => {
@@ -116,7 +124,7 @@ export default function EditPage({ params }) {
       {/* Editor */}
       {stage === "editor" && (
         <>
-          {/* Overlay SIEMPRE encima del video y debajo de UI */}
+          {/* Overlay */}
           {animation && (
             <AnimationOverlay 
               key={`${category}-${animation}`} 
@@ -132,7 +140,7 @@ export default function EditPage({ params }) {
             transition={{ duration: 0.45 }}
             className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-6 mb-10"
           >
-            {/* Tarjeta (video) */}
+            {/* Tarjeta */}
             <div
               className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50"
               onClick={handleCardClick}
@@ -147,7 +155,7 @@ export default function EditPage({ params }) {
               />
             </div>
 
-            {/* Mensaje (pre-cargado 1/3) */}
+            {/* Mensaje */}
             <h3 className="mb-2 text-center text-lg font-semibold text-gray-700">
               ✨ Customize your message ✨
             </h3>
@@ -158,7 +166,7 @@ export default function EditPage({ params }) {
               onChange={(e) => setMessage(e.target.value)}
             />
 
-            {/* Dropdown animaciones (10 + None) */}
+            {/* Dropdown animaciones */}
             <div className="my-3">
               <select
                 className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
