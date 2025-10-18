@@ -1,238 +1,219 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import {
-  getAnimationOptionsForSlug,
-  AnimationOverlay,
-} from "@/lib/animations";
-import { defaultMessageFromSlug } from "@/lib/messages";
-import GiftCardPopup from "@/lib/giftcard";
+import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
+import Cropper from "react-easy-crop";
+import { animationoverlay, getanimationoptionsforslug } from "@/lib/animations";
+import { defaultMessageFromSlug, getMessagesForSlug } from "@/lib/messages";
 import CheckoutModal from "@/lib/checkout";
-import CropperModal from "@/lib/croppermodal";
+import GiftCardModal from "@/lib/giftcard";
 
 export default function EditPage({ params }) {
   const slug = params.slug;
-
-  const [stage, setStage] = useState("expanded");
-  const [progress, setProgress] = useState(0);
-
   const [message, setMessage] = useState("");
-  const [animation, setAnimation] = useState(""); // opción activa
-  const [animationOptions, setAnimationOptions] = useState([]);
-
+  const [suggestions, setSuggestions] = useState([]);
+  const [animation, setAnimation] = useState("ninguna animación");
+  const [imageSrc, setImageSrc] = useState(null);
+  const [isCropOpen, setIsCropOpen] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [cropped, setCropped] = useState(null);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isGiftModalOpen, setIsGiftModalOpen] = useState(false);
   const [gift, setGift] = useState(null);
-  const [showGift, setShowGift] = useState(false);
-  const [showCheckout, setShowCheckout] = useState(false);
-  const [showCrop, setShowCrop] = useState(false);
 
-  const [videoSrc, setVideoSrc] = useState("");
-  const [showDownload, setShowDownload] = useState(false);
-  const [total, setTotal] = useState(5);
+  const animationOptions = getanimationoptionsforslug();
 
-  /* ⚙️ Inicial */
+  // ✅ Inicialización automática
   useEffect(() => {
     setMessage(defaultMessageFromSlug(slug));
-
-    const opts = getAnimationOptionsForSlug(slug);
-    setAnimationOptions(opts);
-    setAnimation(opts[0] || "Stars ✨"); // 🔥 arranca ya con la primera
-
-    setVideoSrc(`/videos/${slug}.mp4`);
+    setSuggestions(getMessagesForSlug(slug));
+    setAnimation("ninguna animación");
   }, [slug]);
 
-  /* 🕒 Pantalla extendida 3s con barra */
+  // ✅ Al cambiar animación, activar transición inmediata
   useEffect(() => {
-    let v = 0;
-    const id = setInterval(() => {
-      v += 1;
-      setProgress(v);
-      if (v >= 100) {
-        clearInterval(id);
-        setStage("editor");
-      }
-    }, 30);
-    return () => clearInterval(id);
-  }, []);
+    if (animation && animation !== "ninguna animación") {
+      // Pequeña animación de entrada
+      document.body.classList.add("transition-all");
+    }
+  }, [animation]);
 
-  /* 🎁 Gift y total */
-  const updateGift = (data) => {
-    setGift(data);
-    setShowGift(false);
-    setTotal(5 + (data?.amount || 0));
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImageSrc(reader.result);
+      setIsCropOpen(true);
+    };
+    reader.readAsDataURL(file);
   };
-  const removeGift = () => {
-    setGift(null);
-    setTotal(5);
-  };
-
-  /* ⬇️ Descarga */
-  const handleCardClick = () => {
-    setShowDownload(true);
-    setTimeout(() => setShowDownload(false), 3000);
-  };
-  const handleDownload = () => {
-    const a = document.createElement("a");
-    a.href = videoSrc;
-    a.download = `${slug}.mp4`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  };
-
-  /* ⚡ Cambio inmediato: solo una animación (la del dropdown) */
-  const onChangeAnim = (e) => setAnimation(e.target.value);
 
   return (
-    <div className="flex flex-col items-center justify-center bg-[#fff7f5] overflow-hidden min-h-[100dvh] relative">
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-pink-50 to-blue-50 p-6">
+      {/* 🔹 Animación flotante (detrás de los modales, encima del contenedor principal) */}
+      <div className="absolute inset-0 z-[400] pointer-events-none">
+        <animationoverlay animation={animation} />
+      </div>
 
-      {/* 🟣 Pantalla extendida */}
-      {stage === "expanded" && (
-        <motion.div
-          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#fff7f5]"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          <video
-            src={videoSrc}
-            className="absolute inset-0 w-full h-full object-cover"
-            autoPlay
-            loop
-            muted
-            playsInline
+      {/* 🔸 Tarjeta principal */}
+      <motion.div
+        className="relative z-[500] w-full max-w-md rounded-3xl bg-white shadow-xl p-4 text-center"
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        {/* Imagen de tarjeta */}
+        <div className="relative w-full h-72 rounded-2xl overflow-hidden bg-gradient-to-tr from-white to-pink-50">
+          <Image
+            src={`/${slug}.jpg`}
+            alt="Card"
+            fill
+            className="object-cover rounded-2xl"
+            priority
           />
-          <div className="absolute bottom-8 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-pink-500"
-              initial={{ width: "0%" }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.03, ease: "linear" }}
-            />
-          </div>
-        </motion.div>
-      )}
+        </div>
 
-      {/* 🟢 Editor + Overlay */}
-      {stage === "editor" && (
-        <>
-          {/* ✨ Overlay SIEMPRE visible y encima de la tarjeta */}
-          {animation && (
-            <AnimationOverlay slug={slug} animation={animation} />
+        {/* Mensaje editable */}
+        <div className="mt-4">
+          <h3 className="font-semibold text-gray-700 mb-2">
+            ✨ Customize your message ✨
+          </h3>
+          <textarea
+            className="w-full rounded-2xl border p-3 text-center text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
+            rows={2}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+          />
+
+          {/* 💡 Sugerencias */}
+          {suggestions.length > 0 && (
+            <div className="mt-2 flex flex-wrap justify-center gap-2">
+              {suggestions.map((m, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setMessage(m)}
+                  className="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-sm hover:bg-gray-200"
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
           )}
+        </div>
 
-          <motion.div
-            key="editor"
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-10 mb-10"
+        {/* Dropdown de animaciones */}
+        <div className="mt-4">
+          <select
+            value={animation}
+            onChange={(e) => setAnimation(e.target.value)}
+            className="w-full rounded-xl border p-2 text-center text-gray-700 shadow-sm"
           >
-            <div
-              className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50"
-              onClick={handleCardClick}
-            >
-              <video
-                src={videoSrc}
-                className="w-full object-cover"
-                autoPlay
-                loop
-                muted
-                playsInline
-              />
-            </div>
+            {animationOptions.map((a, i) => (
+              <option key={i} value={a}>
+                {a.charAt(0).toUpperCase() + a.slice(1)}
+              </option>
+            ))}
+          </select>
+        </div>
 
-            <h3 className="mb-2 text-center text-lg font-semibold text-gray-700">
-              ✨ Customize your message ✨
-            </h3>
-
-            <textarea
-              className="w-full rounded-2xl border p-3 text-center text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
-              rows={2}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
+        {/* Botones principales */}
+        <div className="flex justify-center gap-3 mt-5">
+          <label className="bg-yellow-400 text-black font-semibold px-4 py-2 rounded-full cursor-pointer hover:bg-yellow-500">
+            📸 Add Image
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
             />
+          </label>
+          <button
+            onClick={() => setIsGiftModalOpen(true)}
+            className="bg-pink-300 text-white font-semibold px-4 py-2 rounded-full hover:bg-pink-400"
+          >
+            🎁 Gift Card
+          </button>
+          <button
+            onClick={() => setIsCheckoutOpen(true)}
+            className="bg-purple-500 text-white font-semibold px-4 py-2 rounded-full hover:bg-purple-600"
+          >
+            💳 Checkout
+          </button>
+        </div>
+      </motion.div>
 
-            {/* 🔽 Dropdown (solo 1 set activo) */}
-            <div className="my-3">
-              <select
-                className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
-                value={animation}
-                onChange={onChangeAnim}
-              >
-                {animationOptions.map((a) => (
-                  <option key={a}>{a}</option>
-                ))}
-              </select>
+      {/* 🪞 Modal Cropper */}
+      <AnimatePresence>
+        {isCropOpen && (
+          <motion.div
+            className="fixed inset-0 z-[900] flex items-center justify-center bg-black/30 p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div className="bg-white rounded-3xl p-4 w-full max-w-sm shadow-xl text-center">
+              <h3 className="text-lg font-semibold mb-3">✂️ Edit and Center Your Image</h3>
+              <div className="relative w-full h-64 bg-gray-100 rounded-xl overflow-hidden">
+                <Cropper image={imageSrc} zoom={zoom} aspect={1} onZoomChange={setZoom} />
+              </div>
+              <input
+                type="range"
+                min={1}
+                max={3}
+                step={0.1}
+                value={zoom}
+                onChange={(e) => setZoom(e.target.value)}
+                className="w-full mt-2"
+              />
+              <div className="flex justify-center gap-3 mt-4">
+                <button
+                  onClick={() => setIsCropOpen(false)}
+                  className="px-4 py-2 rounded-full bg-gray-200 text-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setCropped(imageSrc);
+                    setIsCropOpen(false);
+                  }}
+                  className="px-4 py-2 rounded-full bg-pink-500 text-white font-semibold"
+                >
+                  Save
+                </button>
+              </div>
             </div>
-
-            <div className="mt-4 flex flex-wrap justify-center gap-3">
-              <button
-                onClick={() => setShowCrop(true)}
-                className="flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-3 font-semibold text-[#3b2b1f] shadow-sm hover:bg-yellow-300"
-              >
-                📸 Add Image
-              </button>
-              <button
-                onClick={() => setShowGift(true)}
-                className="flex items-center gap-2 rounded-full bg-pink-200 px-5 py-3 font-semibold text-pink-700 shadow-sm hover:bg-pink-300"
-              >
-                🎁 Gift Card
-              </button>
-              <button
-                onClick={() => setShowCheckout(true)}
-                className="flex items-center gap-2 rounded-full bg-purple-500 px-6 py-3 font-semibold text-white shadow-sm hover:bg-purple-600"
-              >
-                💳 Checkout
-              </button>
-            </div>
-
-            {showDownload && (
-              <motion.button
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 30 }}
-                transition={{ duration: 0.25 }}
-                onClick={handleDownload}
-                className="fixed bottom-10 right-6 z-[400] rounded-full bg-[#ff7b00] px-6 py-3 text-white font-semibold shadow-lg hover:bg-[#ff9f33]"
-              >
-                ⬇️ Download
-              </motion.button>
-            )}
           </motion.div>
-        </>
-      )}
+        )}
+      </AnimatePresence>
 
-      {/* 🔸 Modales — asegurados arriba del overlay */}
-      {showGift && (
-        <div className="fixed inset-0 z-[900]">
-          <GiftCardPopup
-            initial={gift}
-            onSelect={updateGift}
-            onClose={() => setShowGift(false)}
-          />
-        </div>
-      )}
-      {showCheckout && (
-        <div className="fixed inset-0 z-[900]">
+      {/* 🧾 Checkout Modal */}
+      <AnimatePresence>
+        {isCheckoutOpen && (
           <CheckoutModal
-            total={total}
+            total={0}
             gift={gift}
-            onGiftChange={() => setShowGift(true)}
-            onGiftRemove={removeGift}
-            onClose={() => setShowCheckout(false)}
+            onclose={() => setIsCheckoutOpen(false)}
+            ongiftremove={() => setGift(null)}
           />
-        </div>
-      )}
-      {showCrop && (
-        <div className="fixed inset-0 z-[900]">
-          <CropperModal
-            open={showCrop}
-            onClose={() => setShowCrop(false)}
-            onDone={() => setShowCrop(false)}
+        )}
+      </AnimatePresence>
+
+      {/* 🎁 GiftCard Modal */}
+      <AnimatePresence>
+        {isGiftModalOpen && (
+          <GiftCardModal
+            onclose={() => setIsGiftModalOpen(false)}
+            onselect={(g) => {
+              setGift(g);
+              setIsGiftModalOpen(false);
+            }}
           />
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
-              }
+}
