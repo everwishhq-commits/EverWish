@@ -1,9 +1,9 @@
 // /app/edit/[slug]/page.js
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { getAnimationsForSlug, getAnimationOptionsForSlug, AnimationOverlay } from "@/lib/animations";
+import { AnimationOverlay } from "@/lib/animations";
 import { getMessageForSlug } from "@/lib/messages";
 import GiftCardPopup from "@/lib/giftcard";
 import CheckoutModal from "@/lib/checkout";
@@ -11,12 +11,13 @@ import CropperModal from "@/lib/croppermodal";
 
 export default function EditPage({ params }) {
   const slug = params.slug;
+
   const [stage, setStage] = useState("expanded");
   const [progress, setProgress] = useState(0);
 
   const [message, setMessage] = useState("");
-  const [animation, setAnimation] = useState("");
-  const [animationOptions, setAnimationOptions] = useState([]);
+  const [animation, setAnimation] = useState("Sparkles ✨");
+  const [animationOptions, setAnimationOptions] = useState(["Sparkles ✨"]);
 
   const [gift, setGift] = useState(null);
   const [showGift, setShowGift] = useState(false);
@@ -27,17 +28,18 @@ export default function EditPage({ params }) {
   const [showDownload, setShowDownload] = useState(false);
   const [total, setTotal] = useState(5);
 
-  // Inicializa mensaje, animaciones y video
+  /* -------------------------------
+   * Inicialización general
+   * ------------------------------*/
   useEffect(() => {
     setMessage(getMessageForSlug(slug));
-    const opts = getAnimationOptionsForSlug(slug);
-    setAnimationOptions(opts);
-    setAnimation(opts[0] || "Sparkles ✨");
-    setTimeout(() => setAnimation(opts[0] || "Sparkles ✨"), 100);
     setVideoSrc(`/videos/${slug}.mp4`);
+    setAnimationOptions(["Sparkles ✨", "Hearts ❤️", "Stars ⭐", "Confetti 🎊"]);
   }, [slug]);
 
-  // Pantalla de carga / transición a editor
+  /* -------------------------------
+   * Barra de progreso inicial
+   * ------------------------------*/
   useEffect(() => {
     let v = 0;
     const id = setInterval(() => {
@@ -51,6 +53,9 @@ export default function EditPage({ params }) {
     return () => clearInterval(id);
   }, []);
 
+  /* -------------------------------
+   * Control de regalos y descargas
+   * ------------------------------*/
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
@@ -76,12 +81,13 @@ export default function EditPage({ params }) {
     link.remove();
   };
 
-  const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
-
+  /* -------------------------------
+   * Render principal
+   * ------------------------------*/
   return (
     <div className="relative min-h-[100dvh] overflow-hidden bg-[#fff7f5] flex flex-col items-center justify-start">
-      
-      {/* PANTALLA DE CARGA */}
+
+      {/* --- PANTALLA DE CARGA --- */}
       {stage === "expanded" && (
         <motion.div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-[#fff7f5]"
@@ -108,10 +114,11 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
-      {/* MODO EDITOR */}
+      {/* --- MODO EDITOR --- */}
       {stage === "editor" && (
         <>
-          {animation && <AnimationOverlay slug={slug} message={message} animation={animation} />}
+          {/* Animación automática basada en mensaje + slug */}
+          <AnimationOverlay slug={slug} message={message} animation={animation} />
 
           <motion.div
             key="editor"
@@ -120,7 +127,7 @@ export default function EditPage({ params }) {
             transition={{ duration: 0.5 }}
             className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-10 mb-10"
           >
-            {/* VIDEO PRINCIPAL */}
+            {/* Tarjeta o video */}
             <div
               className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50"
               onClick={handleCardClick}
@@ -135,7 +142,7 @@ export default function EditPage({ params }) {
               />
             </div>
 
-            {/* MENSAJE EDITABLE */}
+            {/* Texto personalizado */}
             <h3 className="mb-2 text-center text-lg font-semibold text-gray-700">
               ✨ Customize your message ✨
             </h3>
@@ -146,7 +153,7 @@ export default function EditPage({ params }) {
               onChange={(e) => setMessage(e.target.value)}
             />
 
-            {/* ANIMACIÓN (sin mostrar categoría) */}
+            {/* Dropdown de animaciones */}
             <div className="my-3">
               <select
                 className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
@@ -161,7 +168,7 @@ export default function EditPage({ params }) {
               </select>
             </div>
 
-            {/* BOTONES */}
+            {/* Botones principales */}
             <div className="mt-4 flex flex-wrap justify-center gap-3">
               <button
                 onClick={() => setShowCrop(true)}
@@ -183,7 +190,7 @@ export default function EditPage({ params }) {
               </button>
             </div>
 
-            {/* DESCARGA */}
+            {/* Botón de descarga */}
             {showDownload && (
               <motion.button
                 initial={{ opacity: 0, y: 30 }}
@@ -200,7 +207,7 @@ export default function EditPage({ params }) {
         </>
       )}
 
-      {/* POPUPS */}
+      {/* Popups */}
       {showGift && (
         <GiftCardPopup
           initial={gift}
@@ -226,4 +233,4 @@ export default function EditPage({ params }) {
       )}
     </div>
   );
-            }
+                       }
