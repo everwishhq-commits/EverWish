@@ -1,213 +1,116 @@
 "use client";
-
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { getMessageForSlug } from "@/lib/messages";
+import { AnimationOverlay } from "@/lib/animations";
 import Image from "next/image";
 
-import {
-  AnimationOverlay,
-  getAnimationOptionsForSlug,
-} from "@/lib/animations";
-import { defaultMessageFromSlug } from "@/lib/messages";
-
-import GiftCardModal from "@/lib/giftcard";
-import CheckoutModal from "@/lib/checkout";
-import CropperModal from "@/lib/croppermodal";
-
 export default function EditPage({ params }) {
-  const slug = params.slug;
-
-  const [stage, setStage] = useState("expanded");
-  const [progress, setProgress] = useState(0);
-
+  const { slug } = params;
   const [message, setMessage] = useState("");
-  const [animation, setAnimation] = useState(""); // opción activa
-  const [animationOptions, setAnimationOptions] = useState([]); // 10 opciones
+  const [animation, setAnimation] = useState("none");
+  const [photo, setPhoto] = useState(null);
+  const [gift, setGift] = useState("");
+  const [signature, setSignature] = useState("");
 
-  const [imageSrc, setImageSrc] = useState(null);
-  const [showCrop, setShowCrop] = useState(false);
-
-  const [showGift, setShowGift] = useState(false);
-  const [gift, setGift] = useState(null);
-
-  const [showCheckout, setShowCheckout] = useState(false);
-  const [videoSrc, setVideoSrc] = useState("");
-
-  /* ⚙️ Inicial: mensaje, opciones y video */
   useEffect(() => {
-    setMessage(defaultMessageFromSlug(slug));
-    const opts = getAnimationOptionsForSlug(slug);
-    setAnimationOptions(opts);
-    setAnimation(opts[0] || "sparkles"); // entra de una
-    setVideoSrc(`/videos/${slug}.mp4`);
+    const msg = getMessageForSlug(slug);
+    setMessage(msg);
   }, [slug]);
 
-  /* 🕒 Pantalla extendida 3s con barra */
-  useEffect(() => {
-    let value = 0;
-    const id = setInterval(() => {
-      value += 1;
-      setProgress(value);
-      if (value >= 100) {
-        clearInterval(id);
-        setStage("editor");
-      }
-    }, 30);
-    return () => clearInterval(id);
-  }, []);
-
-  /* 📸 Subida de imagen (no se guarda en tu servidor) */
-  const onUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      setImageSrc(reader.result); // data:URL
-      setShowCrop(true);
-    };
-    reader.readAsDataURL(file);
+  const handleAnimationChange = (value) => {
+    setAnimation(value);
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-[#fff7f5] overflow-hidden">
-
-      {/* 🟣 Pantalla extendida */}
-      {stage === "expanded" && (
-        <motion.div
-          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#fff7f5]"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.35 }}
-        >
-          <video
-            src={videoSrc}
-            className="absolute inset-0 w-full h-full object-cover"
-            autoPlay
-            loop
-            muted
-            playsInline
-          />
-          <div className="absolute bottom-8 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-pink-500"
-              initial={{ width: "0%" }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.03, ease: "linear" }}
-            />
-          </div>
-        </motion.div>
+    <div className="relative min-h-screen flex flex-col items-center justify-center bg-gray-50">
+      {animation !== "none" && (
+        <AnimationOverlay slug={slug}>
+          <p className="text-xl font-semibold text-white drop-shadow-lg">
+            {animation}
+          </p>
+        </AnimationOverlay>
       )}
 
-      {/* 🟢 Editor + Overlay */}
-      {stage === "editor" && (
-        <>
-          {/* Overlay SIEMPRE arriba de todo (y toma la opción activa) */}
-          {animation && <AnimationOverlay animation={animation} />}
+      <div className="w-full max-w-md p-4 bg-white shadow-lg rounded-2xl relative z-10">
+        <div className="mb-4 text-center">
+          <h2 className="text-lg font-semibold capitalize">{slug}</h2>
+        </div>
 
-          <motion.div
-            key="editor"
-            initial={{ opacity: 0, y: 36 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="relative z-[500] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-10 mb-12"
+        <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          className="w-full border rounded-md p-2 text-sm mb-4"
+        />
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-2">
+            Animation Style
+          </label>
+          <select
+            value={animation}
+            onChange={(e) => handleAnimationChange(e.target.value)}
+            className="w-full border rounded-md p-2 text-sm"
           >
-            {/* Tarjeta (imagen del slug como base) */}
-            <div className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50">
-              <div className="relative w-full h-72">
-                <Image
-                  src={`/${slug}.jpg`}
-                  alt="Card"
-                  fill
-                  className="object-cover"
-                  priority
-                />
-                {/* imagen del usuario encima */}
-                {imageSrc && (
-                  <Image
-                    src={imageSrc}
-                    alt="User image"
-                    fill
-                    className="object-contain p-6"
-                  />
-                )}
-              </div>
-            </div>
+            <option value="none">No Animation</option>
+            <option value="fade">Fade</option>
+            <option value="float">Float</option>
+            <option value="blink">Blink</option>
+            <option value="confetti">Confetti</option>
+            <option value="hearts">Hearts</option>
+          </select>
+        </div>
 
-            {/* Mensaje (único, desde lib/messages) */}
-            <textarea
-              className="w-full rounded-2xl border p-3 text-center text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
-              rows={2}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-            />
-
-            {/* Dropdown (10 opciones de la categoría del slug) */}
-            <div className="my-3">
-              <select
-                className="w-full rounded-xl border p-3 text-center font-medium text-gray-700 focus:border-pink-400 focus:ring-pink-400"
-                value={animation}
-                onChange={(e) => setAnimation(e.target.value)} // cambio inmediato
-              >
-                {animationOptions.map((a) => (
-                  <option key={a} value={a}>{a}</option>
-                ))}
-                <option value="">none</option>
-              </select>
-            </div>
-
-            {/* Botones */}
-            <div className="mt-3 flex flex-wrap justify-center gap-3">
-              <label className="flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-3 font-semibold text-[#3b2b1f] shadow-sm hover:bg-yellow-300 cursor-pointer">
-                📸 Add Image
-                <input type="file" accept="image/*" className="hidden" onChange={onUpload} />
-              </label>
-              <button
-                onClick={() => setShowGift(true)}
-                className="flex items-center gap-2 rounded-full bg-pink-200 px-5 py-3 font-semibold text-pink-700 shadow-sm hover:bg-pink-300"
-              >
-                🎁 Gift Card
-              </button>
-              <button
-                onClick={() => setShowCheckout(true)}
-                className="flex items-center gap-2 rounded-full bg-purple-500 px-6 py-3 font-semibold text-white shadow-sm hover:bg-purple-600"
-              >
-                💳 Checkout
-              </button>
-            </div>
-          </motion.div>
-
-          {/* 🔸 Modales */}
-          {showCrop && (
-            <CropperModal
-              open={showCrop}
-              src={imageSrc}
-              onClose={() => setShowCrop(false)}
-              onDone={(dataUrl) => {
-                setImageSrc(dataUrl);
-                setShowCrop(false);
-              }}
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-2">
+            Upload Photo (optional)
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setPhoto(URL.createObjectURL(e.target.files[0]))}
+            className="w-full border rounded-md p-2 text-sm"
+          />
+          {photo && (
+            <Image
+              src={photo}
+              alt="Preview"
+              width={300}
+              height={300}
+              className="rounded-md mt-2 object-cover"
             />
           )}
-          {showGift && (
-            <GiftCardModal
-              open={showGift}
-              onClose={() => setShowGift(false)}
-              onSelect={(g) => {
-                // permitir buscar/quitar desde el modal de gift
-                setGift(g);
-                setShowGift(false);
-              }}
-            />
-          )}
-          {showCheckout && (
-            <CheckoutModal
-              open={showCheckout}
-              onClose={() => setShowCheckout(false)}
-              gift={gift}
-            />
-          )}
-        </>
-      )}
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-2">Signature</label>
+          <input
+            type="text"
+            value={signature}
+            onChange={(e) => setSignature(e.target.value)}
+            placeholder="Your name or note..."
+            className="w-full border rounded-md p-2 text-sm"
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-2">Giftcard</label>
+          <select
+            value={gift}
+            onChange={(e) => setGift(e.target.value)}
+            className="w-full border rounded-md p-2 text-sm"
+          >
+            <option value="">No Giftcard</option>
+            <option value="amazon">Amazon</option>
+            <option value="target">Target</option>
+            <option value="starbucks">Starbucks</option>
+            <option value="more">See more options...</option>
+          </select>
+        </div>
+
+        <button className="w-full py-2 bg-black text-white rounded-md hover:bg-gray-800">
+          Save and Continue
+        </button>
+      </div>
     </div>
   );
-                }
+            }
