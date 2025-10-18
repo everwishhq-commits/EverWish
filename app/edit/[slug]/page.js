@@ -1,8 +1,13 @@
+// /app/edit/[slug]/page.js
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { AnimationOverlay, getAnimationOptionsForSlug } from "@/lib/animations";
+import {
+  getAnimationsForSlug,
+  getAnimationOptionsForSlug,
+  AnimationOverlay,
+} from "@/lib/animations";
 import { getMessageForSlug } from "@/lib/messages";
 import GiftCardPopup from "@/lib/giftcard";
 import CheckoutModal from "@/lib/checkout";
@@ -13,26 +18,30 @@ export default function EditPage({ params }) {
 
   const [stage, setStage] = useState("expanded");
   const [progress, setProgress] = useState(0);
+
   const [message, setMessage] = useState("");
-  const [animation, setAnimation] = useState("");
-  const [animationOptions, setAnimationOptions] = useState([]);
+  const [animation, setAnimation] = useState("");              // opción activa
+  const [animationOptions, setAnimationOptions] = useState([]);// 10 + None
+
   const [gift, setGift] = useState(null);
   const [showGift, setShowGift] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showCrop, setShowCrop] = useState(false);
+
   const [videoSrc, setVideoSrc] = useState("");
   const [showDownload, setShowDownload] = useState(false);
   const [total, setTotal] = useState(5);
 
+  /* Config base: mensaje 1/3, opciones y video */
   useEffect(() => {
     setMessage(getMessageForSlug(slug));
     const opts = getAnimationOptionsForSlug(slug);
     setAnimationOptions(opts);
-    setAnimation(opts[0] || "Sparkles ✨");
-    setTimeout(() => setAnimation(opts[0] || "Sparkles ✨"), 10);
+    setAnimation(opts[0] || "✨ None (No Animation)"); // queda seleccionada
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
+  /* Pantalla extendida con barra (entra al editor) */
   useEffect(() => {
     let v = 0;
     const id = setInterval(() => {
@@ -46,17 +55,22 @@ export default function EditPage({ params }) {
     return () => clearInterval(id);
   }, []);
 
+  /* Gift y total */
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
     setTotal(5 + (data?.amount || 0));
   };
-
   const removeGift = () => {
     setGift(null);
     setTotal(5);
   };
 
+  /* Download popup al tocar tarjeta */
+  const handleCardClick = () => {
+    setShowDownload(true);
+    setTimeout(() => setShowDownload(false), 3500);
+  };
   const handleDownload = () => {
     const link = document.createElement("a");
     link.href = videoSrc;
@@ -66,30 +80,21 @@ export default function EditPage({ params }) {
     link.remove();
   };
 
-  const handleCardClick = () => {
-    setShowDownload(true);
-    setTimeout(() => setShowDownload(false), 3500);
-  };
-
-  const category = useMemo(() => "", [slug]);
+  const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
 
   return (
     <div className="relative min-h-[100dvh] overflow-hidden bg-[#fff7f5] flex flex-col items-center justify-start">
 
+      {/* Expanded (intro) */}
       {stage === "expanded" && (
         <motion.div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-[#fff7f5]"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4 }}
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}
         >
           <video
             src={videoSrc}
             className="absolute inset-0 h-full w-full object-cover"
-            autoPlay
-            loop
-            muted
-            playsInline
+            autoPlay loop muted playsInline
           />
           <div className="absolute bottom-8 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
             <motion.div
@@ -102,16 +107,22 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
+      {/* Editor */}
       {stage === "editor" && (
         <>
-          {animation && <AnimationOverlay slug={slug} animation={animation} />}
+          {/* Overlay SIEMPRE encima del video y debajo de UI */}
+          {animation && (
+            <AnimationOverlay key={`${category}-${animation}`} slug={slug} animation={animation} />
+          )}
+
           <motion.div
             key="editor"
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-10 mb-10"
+            transition={{ duration: 0.45 }}
+            className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-6 mb-10"
           >
+            {/* Tarjeta (video) */}
             <div
               className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50"
               onClick={handleCardClick}
@@ -126,6 +137,7 @@ export default function EditPage({ params }) {
               />
             </div>
 
+            {/* Mensaje (pre-cargado 1/3) */}
             <h3 className="mb-2 text-center text-lg font-semibold text-gray-700">
               ✨ Customize your message ✨
             </h3>
@@ -136,6 +148,7 @@ export default function EditPage({ params }) {
               onChange={(e) => setMessage(e.target.value)}
             />
 
+            {/* Dropdown animaciones (10 + None) */}
             <div className="my-3">
               <select
                 className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
@@ -143,34 +156,34 @@ export default function EditPage({ params }) {
                 onChange={(e) => setAnimation(e.target.value)}
               >
                 {animationOptions.map((a) => (
-                  <option key={a} value={a}>
-                    {a}
-                  </option>
+                  <option key={a} value={a}>{a}</option>
                 ))}
               </select>
             </div>
 
+            {/* Botonera */}
             <div className="mt-4 flex flex-wrap justify-center gap-3">
               <button
                 onClick={() => setShowCrop(true)}
-                className="flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-3 font-semibold text-[#3b2b1f] shadow-sm hover:bg-yellow-300"
+                className="z-[210] relative flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-3 font-semibold text-[#3b2b1f] shadow-sm hover:bg-yellow-300"
               >
                 📸 Add Image
               </button>
               <button
                 onClick={() => setShowGift(true)}
-                className="flex items-center gap-2 rounded-full bg-pink-200 px-5 py-3 font-semibold text-pink-700 shadow-sm hover:bg-pink-300"
+                className="z-[210] relative flex items-center gap-2 rounded-full bg-pink-200 px-5 py-3 font-semibold text-pink-700 shadow-sm hover:bg-pink-300"
               >
                 🎁 Gift Card
               </button>
               <button
                 onClick={() => setShowCheckout(true)}
-                className="flex items-center gap-2 rounded-full bg-purple-500 px-6 py-3 font-semibold text-white shadow-sm hover:bg-purple-600"
+                className="z-[210] relative flex items-center gap-2 rounded-full bg-purple-500 px-6 py-3 font-semibold text-white shadow-sm hover:bg-purple-600"
               >
                 💳 Checkout
               </button>
             </div>
 
+            {/* Download flotante */}
             {showDownload && (
               <motion.button
                 initial={{ opacity: 0, y: 30 }}
@@ -187,29 +200,36 @@ export default function EditPage({ params }) {
         </>
       )}
 
+      {/* Modales (siempre por encima de todo) */}
       {showGift && (
-        <GiftCardPopup
-          initial={gift}
-          onSelect={updateGift}
-          onClose={() => setShowGift(false)}
-        />
+        <div className="z-[300] relative">
+          <GiftCardPopup
+            initial={gift}
+            onSelect={updateGift}
+            onClose={() => setShowGift(false)}
+          />
+        </div>
       )}
       {showCheckout && (
-        <CheckoutModal
-          total={total}
-          gift={gift}
-          onGiftChange={() => setShowGift(true)}
-          onGiftRemove={removeGift}
-          onClose={() => setShowCheckout(false)}
-        />
+        <div className="z-[300] relative">
+          <CheckoutModal
+            total={total}
+            gift={gift}
+            onGiftChange={() => setShowGift(true)}
+            onGiftRemove={removeGift}
+            onClose={() => setShowCheckout(false)}
+          />
+        </div>
       )}
       {showCrop && (
-        <CropperModal
-          open={showCrop}
-          onClose={() => setShowCrop(false)}
-          onDone={() => setShowCrop(false)}
-        />
+        <div className="z-[300] relative">
+          <CropperModal
+            open={showCrop}
+            onClose={() => setShowCrop(false)}
+            onDone={() => setShowCrop(false)}
+          />
+        </div>
       )}
     </div>
   );
-}
+              }
