@@ -37,7 +37,7 @@ export default function EditPage({ params }) {
     setMessage(getMessageForSlug(slug));
     const opts = getAnimationOptionsForSlug(slug);
     setAnimationOptions(opts);
-    // ✅ Selecciona la primera animación real (no “None”)
+    // inicia con la primera animación real (no None)
     setAnimation(opts.find(a => !a.includes("None")) || opts[0]);
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
@@ -83,6 +83,12 @@ export default function EditPage({ params }) {
 
   const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
 
+  // ⚡ Forzar reinicio del overlay cuando cambia la animación
+  const [animKey, setAnimKey] = useState(0);
+  useEffect(() => {
+    setAnimKey(Date.now()); // nuevo key al cambiar animación
+  }, [animation, category]);
+
   /* --- Render principal --- */
   return (
     <div className="relative min-h-[100dvh] overflow-hidden bg-[#fff7f5] flex flex-col items-center justify-start">
@@ -114,9 +120,9 @@ export default function EditPage({ params }) {
       {/* Editor */}
       {stage === "editor" && (
         <>
-          {/* ✅ Overlay: fuerza actualización cuando cambia la animación */}
+          {/* ✅ Overlay: siempre se reinicia al cambiar animación */}
           <AnimationOverlay
-            key={`${slug}-${category}-${animation}`}
+            key={animKey}
             slug={slug}
             animation={animation}
           />
@@ -151,7 +157,7 @@ export default function EditPage({ params }) {
               onChange={(e) => setMessage(e.target.value)}
             />
 
-            {/* Dropdown de animaciones */}
+            {/* Dropdown */}
             <div className="my-3">
               <select
                 className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
@@ -237,4 +243,4 @@ export default function EditPage({ params }) {
       )}
     </div>
   );
-                }
+              }
