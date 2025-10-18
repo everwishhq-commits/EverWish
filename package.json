@@ -22,7 +22,9 @@
     "react-easy-crop": "^5.1.5",
     "classnames": "^2.5.1",
     "axios": "^1.7.0",
-    "debug": "^4.3.4",
+    "debug": "^4.3.4"
+  },
+  "devDependencies": {
     "supports-color": "^8.1.1"
   }
 }
