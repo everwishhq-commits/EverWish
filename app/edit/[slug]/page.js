@@ -20,8 +20,8 @@ export default function EditPage({ params }) {
   const [progress, setProgress] = useState(0);
 
   const [message, setMessage] = useState("");
-  const [animation, setAnimation] = useState("");
-  const [animationOptions, setAnimationOptions] = useState([]);
+  const [animation, setAnimation] = useState("");              
+  const [animationOptions, setAnimationOptions] = useState([]); 
 
   const [gift, setGift] = useState(null);
   const [showGift, setShowGift] = useState(false);
@@ -32,17 +32,17 @@ export default function EditPage({ params }) {
   const [showDownload, setShowDownload] = useState(false);
   const [total, setTotal] = useState(5);
 
-  /* --- Config base --- */
+  /* Config base: mensaje 1/3, opciones y video */
   useEffect(() => {
     setMessage(getMessageForSlug(slug));
     const opts = getAnimationOptionsForSlug(slug);
     setAnimationOptions(opts);
-    // inicia con la primera animación real (no None)
-    setAnimation(opts.find(a => !a.includes("None")) || opts[0]);
+    // 👇 Aquí el cambio: inicia con la primera animación REAL, no "None"
+    setAnimation(opts[1] || opts[0]); 
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
-  /* --- Pantalla expandida --- */
+  /* Pantalla extendida con barra (entra al editor) */
   useEffect(() => {
     let v = 0;
     const id = setInterval(() => {
@@ -56,7 +56,7 @@ export default function EditPage({ params }) {
     return () => clearInterval(id);
   }, []);
 
-  /* --- Gift y total --- */
+  /* Gift y total */
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
@@ -67,7 +67,7 @@ export default function EditPage({ params }) {
     setTotal(5);
   };
 
-  /* --- Download --- */
+  /* Download popup al tocar tarjeta */
   const handleCardClick = () => {
     setShowDownload(true);
     setTimeout(() => setShowDownload(false), 3500);
@@ -83,28 +83,24 @@ export default function EditPage({ params }) {
 
   const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
 
-  // ⚡ Forzar reinicio del overlay cuando cambia la animación
-  const [animKey, setAnimKey] = useState(0);
-  useEffect(() => {
-    setAnimKey(Date.now()); // nuevo key al cambiar animación
-  }, [animation, category]);
-
-  /* --- Render principal --- */
   return (
     <div className="relative min-h-[100dvh] overflow-hidden bg-[#fff7f5] flex flex-col items-center justify-start">
 
-      {/* Expanded */}
+      {/* Expanded (intro) */}
       {stage === "expanded" && (
         <motion.div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-[#fff7f5]"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={{ opacity: 0 }} 
+          animate={{ opacity: 1 }} 
           transition={{ duration: 0.4 }}
         >
           <video
             src={videoSrc}
             className="absolute inset-0 h-full w-full object-cover"
-            autoPlay loop muted playsInline
+            autoPlay 
+            loop 
+            muted 
+            playsInline
           />
           <div className="absolute bottom-8 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
             <motion.div
@@ -120,12 +116,14 @@ export default function EditPage({ params }) {
       {/* Editor */}
       {stage === "editor" && (
         <>
-          {/* ✅ Overlay: siempre se reinicia al cambiar animación */}
-          <AnimationOverlay
-            key={animKey}
-            slug={slug}
-            animation={animation}
-          />
+          {/* Overlay SIEMPRE encima del video y debajo de UI */}
+          {animation && (
+            <AnimationOverlay 
+              key={`${category}-${animation}`} 
+              slug={slug} 
+              animation={animation} 
+            />
+          )}
 
           <motion.div
             key="editor"
@@ -134,7 +132,7 @@ export default function EditPage({ params }) {
             transition={{ duration: 0.45 }}
             className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-6 mb-10"
           >
-            {/* Video */}
+            {/* Tarjeta (video) */}
             <div
               className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50"
               onClick={handleCardClick}
@@ -142,11 +140,14 @@ export default function EditPage({ params }) {
               <video
                 src={videoSrc}
                 className="w-full object-cover"
-                autoPlay loop muted playsInline
+                autoPlay
+                loop
+                muted
+                playsInline
               />
             </div>
 
-            {/* Mensaje */}
+            {/* Mensaje (pre-cargado 1/3) */}
             <h3 className="mb-2 text-center text-lg font-semibold text-gray-700">
               ✨ Customize your message ✨
             </h3>
@@ -157,7 +158,7 @@ export default function EditPage({ params }) {
               onChange={(e) => setMessage(e.target.value)}
             />
 
-            {/* Dropdown */}
+            {/* Dropdown animaciones (10 + None) */}
             <div className="my-3">
               <select
                 className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
@@ -165,14 +166,12 @@ export default function EditPage({ params }) {
                 onChange={(e) => setAnimation(e.target.value)}
               >
                 {animationOptions.map((a) => (
-                  <option key={a} value={a}>
-                    {a}
-                  </option>
+                  <option key={a} value={a}>{a}</option>
                 ))}
               </select>
             </div>
 
-            {/* Botones */}
+            {/* Botonera */}
             <div className="mt-4 flex flex-wrap justify-center gap-3">
               <button
                 onClick={() => setShowCrop(true)}
@@ -194,7 +193,7 @@ export default function EditPage({ params }) {
               </button>
             </div>
 
-            {/* Download */}
+            {/* Download flotante */}
             {showDownload && (
               <motion.button
                 initial={{ opacity: 0, y: 30 }}
@@ -243,4 +242,4 @@ export default function EditPage({ params }) {
       )}
     </div>
   );
-              }
+    }
