@@ -28,6 +28,8 @@ export default function EditPage({ params }) {
   const [showDownload, setShowDownload] = useState(false);
   const [total, setTotal] = useState(5);
 
+  const [userImage, setUserImage] = useState(null);
+
   useEffect(() => {
     setMessage(getMessageForSlug(slug));
     const opts = getAnimationOptionsForSlug(slug);
@@ -92,7 +94,10 @@ export default function EditPage({ params }) {
           <video
             src={videoSrc}
             className="absolute inset-0 w-full h-full object-cover"
-            autoPlay loop muted playsInline
+            autoPlay
+            loop
+            muted
+            playsInline
           />
           <div className="absolute bottom-8 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
             <motion.div
@@ -116,6 +121,7 @@ export default function EditPage({ params }) {
             transition={{ duration: 0.45 }}
             className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-6 mb-10"
           >
+            {/* Tarjeta principal */}
             <div
               className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50"
               onClick={handleCardClick}
@@ -123,10 +129,14 @@ export default function EditPage({ params }) {
               <video
                 src={videoSrc}
                 className="w-full object-cover"
-                autoPlay loop muted playsInline
+                autoPlay
+                loop
+                muted
+                playsInline
               />
             </div>
 
+            {/* Mensaje */}
             <h3 className="mb-2 text-center text-lg font-semibold text-gray-700">
               ✨ Customize your message ✨
             </h3>
@@ -137,6 +147,18 @@ export default function EditPage({ params }) {
               onChange={(e) => setMessage(e.target.value)}
             />
 
+            {/* Imagen del usuario (si hay) */}
+            {userImage && (
+              <div className="my-4">
+                <img
+                  src={userImage}
+                  alt="User upload"
+                  className="w-full rounded-2xl border border-gray-200 shadow-sm"
+                />
+              </div>
+            )}
+
+            {/* Selector de animación */}
             <div className="my-3">
               <select
                 className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
@@ -151,6 +173,7 @@ export default function EditPage({ params }) {
               </select>
             </div>
 
+            {/* Botones */}
             <div className="mt-4 flex flex-wrap justify-center gap-3">
               <button
                 onClick={() => setShowCrop(true)}
@@ -172,6 +195,7 @@ export default function EditPage({ params }) {
               </button>
             </div>
 
+            {/* Botón de descarga */}
             {showDownload && (
               <motion.button
                 initial={{ opacity: 0, y: 30 }}
@@ -187,9 +211,33 @@ export default function EditPage({ params }) {
         </>
       )}
 
-      {showGift && <GiftCardPopup initial={gift} onSelect={updateGift} onClose={() => setShowGift(false)} />}
-      {showCheckout && <CheckoutModal total={total} gift={gift} onGiftChange={() => setShowGift(true)} onGiftRemove={removeGift} onClose={() => setShowCheckout(false)} />}
-      {showCrop && <CropperModal open={showCrop} onClose={() => setShowCrop(false)} onDone={() => setShowCrop(false)} />}
+      {/* Popups */}
+      {showGift && (
+        <GiftCardPopup
+          initial={gift}
+          onSelect={updateGift}
+          onClose={() => setShowGift(false)}
+        />
+      )}
+      {showCheckout && (
+        <CheckoutModal
+          total={total}
+          gift={gift}
+          onGiftChange={() => setShowGift(true)}
+          onGiftRemove={removeGift}
+          onClose={() => setShowCheckout(false)}
+        />
+      )}
+      {showCrop && (
+        <CropperModal
+          open={showCrop}
+          onClose={() => setShowCrop(false)}
+          onDone={(img) => {
+            setUserImage(img);
+            setShowCrop(false);
+          }}
+        />
+      )}
     </div>
   );
-        }
+       }
