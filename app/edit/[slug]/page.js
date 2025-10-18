@@ -20,8 +20,8 @@ export default function EditPage({ params }) {
   const [progress, setProgress] = useState(0);
 
   const [message, setMessage] = useState("");
-  const [animation, setAnimation] = useState("");              // opción activa
-  const [animationOptions, setAnimationOptions] = useState([]);// 10 + None
+  const [animation, setAnimation] = useState("");              
+  const [animationOptions, setAnimationOptions] = useState([]); 
 
   const [gift, setGift] = useState(null);
   const [showGift, setShowGift] = useState(false);
@@ -37,7 +37,8 @@ export default function EditPage({ params }) {
     setMessage(getMessageForSlug(slug));
     const opts = getAnimationOptionsForSlug(slug);
     setAnimationOptions(opts);
-    setAnimation(opts[0] || "✨ None (No Animation)"); // queda seleccionada
+    // 👇 Aquí el cambio: inicia con la primera animación REAL, no "None"
+    setAnimation(opts[1] || opts[0]); 
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
@@ -89,12 +90,17 @@ export default function EditPage({ params }) {
       {stage === "expanded" && (
         <motion.div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-[#fff7f5]"
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}
+          initial={{ opacity: 0 }} 
+          animate={{ opacity: 1 }} 
+          transition={{ duration: 0.4 }}
         >
           <video
             src={videoSrc}
             className="absolute inset-0 h-full w-full object-cover"
-            autoPlay loop muted playsInline
+            autoPlay 
+            loop 
+            muted 
+            playsInline
           />
           <div className="absolute bottom-8 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
             <motion.div
@@ -112,7 +118,11 @@ export default function EditPage({ params }) {
         <>
           {/* Overlay SIEMPRE encima del video y debajo de UI */}
           {animation && (
-            <AnimationOverlay key={`${category}-${animation}`} slug={slug} animation={animation} />
+            <AnimationOverlay 
+              key={`${category}-${animation}`} 
+              slug={slug} 
+              animation={animation} 
+            />
           )}
 
           <motion.div
@@ -200,7 +210,7 @@ export default function EditPage({ params }) {
         </>
       )}
 
-      {/* Modales (siempre por encima de todo) */}
+      {/* Modales */}
       {showGift && (
         <div className="z-[300] relative">
           <GiftCardPopup
