@@ -2,10 +2,12 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function CategoryVideosPage() {
   const { slug } = useParams();
   const [videos, setVideos] = useState([]);
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchVideos() {
@@ -13,10 +15,9 @@ export default function CategoryVideosPage() {
         const res = await fetch("/api/videos");
         const data = await res.json();
 
-        // ✅ Detecta si el JSON viene como array o como { all: [...] }
         const allVideos = Array.isArray(data) ? data : data.all || [];
 
-        // ✅ Filtra por categoría, título o slug (flexible)
+        // ✅ Filtra por categoría, título o slug
         const filtered = allVideos.filter(
           (v) =>
             v.categories?.includes(slug.toLowerCase()) ||
@@ -34,7 +35,7 @@ export default function CategoryVideosPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-pink-50 via-white to-pink-50 text-center px-4 pt-24 pb-16">
-      {/* 🔙 Back button */}
+      {/* 🔙 Back to Categories */}
       <Link
         href="/categories"
         className="text-pink-500 hover:underline text-sm font-medium"
@@ -52,7 +53,7 @@ export default function CategoryVideosPage() {
         Discover beautiful Everwish cards for {slug} ✨
       </p>
 
-      {/* 🎥 Video grid */}
+      {/* 🎥 Video Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 justify-center items-center max-w-5xl mx-auto">
         {videos.length === 0 ? (
           <p className="text-gray-400 italic">
@@ -62,7 +63,8 @@ export default function CategoryVideosPage() {
           videos.map((video, i) => (
             <div
               key={i}
-              className="relative bg-white rounded-3xl shadow-md hover:shadow-xl overflow-hidden transition-all duration-300"
+              onClick={() => router.push(video.editUrl || `/edit/${video.slug}`)}
+              className="relative bg-white rounded-3xl shadow-md hover:shadow-xl overflow-hidden transition-all duration-300 cursor-pointer group"
             >
               <video
                 src={video.src}
@@ -73,8 +75,8 @@ export default function CategoryVideosPage() {
                 controls={false}
                 preload="auto"
                 disablePictureInPicture
-                onContextMenu={(e) => e.preventDefault()} // ❌ evita clic derecho
-                className="w-full h-auto object-cover rounded-3xl pointer-events-none" // ❌ evita que el usuario pueda tocar/descargar
+                onContextMenu={(e) => e.preventDefault()} // ❌ evita menú de descarga
+                className="w-full h-auto object-cover rounded-3xl transform group-hover:scale-105 transition-transform duration-500"
               />
             </div>
           ))
