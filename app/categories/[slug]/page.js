@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 
-export const dynamic = "force-dynamic"; // evita errores SSR en Vercel
+export const dynamic = "force-dynamic"; // ✅ evita errores SSR en Vercel
 
 export default function CategoryVideosPage() {
   const { slug } = useParams();
@@ -161,4 +161,4 @@ export default function CategoryVideosPage() {
       </div>
     </main>
   );
-      }
+  }
