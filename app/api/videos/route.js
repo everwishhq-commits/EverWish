@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 import fs from "fs";
 import path from "path";
 
-// 🧠 Detecta la categoría por nombre del archivo
+// 🧠 Detecta las categorías por nombre del archivo
 function detectCategory(filename) {
   const s = filename.toLowerCase();
   const cats = [];
@@ -35,6 +35,8 @@ function detectCategory(filename) {
 export async function GET() {
   try {
     const dir = path.join(process.cwd(), "public/videos");
+
+    // ✅ Si la carpeta no existe, devolver vacío
     if (!fs.existsSync(dir)) {
       return new Response(JSON.stringify([]), {
         status: 200,
@@ -42,7 +44,7 @@ export async function GET() {
       });
     }
 
-    // 📁 Cargar archivos .mp4
+    // 📁 Cargar solo los archivos .mp4
     const files = fs
       .readdirSync(dir)
       .filter((f) => f.endsWith(".mp4"))
@@ -71,6 +73,7 @@ export async function GET() {
       });
     });
 
+    // 📦 Devolver JSON con todo
     return new Response(JSON.stringify({ all: files, categories: grouped }, null, 2), {
       status: 200,
       headers: { "Content-Type": "application/json" },
@@ -82,4 +85,4 @@ export async function GET() {
       headers: { "Content-Type": "application/json" },
     });
   }
-        }
+                   }
