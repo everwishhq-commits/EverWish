@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 import fs from "fs";
 import path from "path";
 
-// 🧠 Detecta las categorías por nombre del archivo
+// 🧠 Detecta categorías automáticamente según el nombre del archivo
 function detectCategory(filename) {
   const s = filename.toLowerCase();
   const cats = [];
@@ -32,19 +32,20 @@ function detectCategory(filename) {
   return cats.length > 0 ? cats : ["general"];
 }
 
+// 📦 API GET — Devuelve todos los videos y categorías
 export async function GET() {
   try {
     const dir = path.join(process.cwd(), "public/videos");
 
-    // ✅ Si la carpeta no existe, devolver vacío
+    // Si no existe la carpeta, devolver vacío
     if (!fs.existsSync(dir)) {
-      return new Response(JSON.stringify([]), {
+      return new Response(JSON.stringify({ all: [], categories: {} }, null, 2), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });
     }
 
-    // 📁 Cargar solo los archivos .mp4
+    // 📁 Leer todos los archivos MP4
     const files = fs
       .readdirSync(dir)
       .filter((f) => f.endsWith(".mp4"))
@@ -64,7 +65,7 @@ export async function GET() {
         };
       });
 
-    // 🧩 Agrupar por categorías (una tarjeta puede pertenecer a varias)
+    // 🧩 Agrupar por categoría
     const grouped = {};
     files.forEach((v) => {
       v.categories.forEach((cat) => {
@@ -73,11 +74,14 @@ export async function GET() {
       });
     });
 
-    // 📦 Devolver JSON con todo
-    return new Response(JSON.stringify({ all: files, categories: grouped }, null, 2), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    // ✅ Respuesta final
+    return new Response(
+      JSON.stringify({ all: files, categories: grouped }, null, 2),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
   } catch (err) {
     console.error("❌ Error en /api/videos:", err);
     return new Response(JSON.stringify({ error: err.message }), {
@@ -85,4 +89,4 @@ export async function GET() {
       headers: { "Content-Type": "application/json" },
     });
   }
-                   }
+}
