@@ -60,6 +60,6 @@ JSON.stringify({ error: "Error al cargar videos" }),
 { status: 500 }
 );
 }
-} Éste?? Y se pondrá  en su categoría con la opción de buscar?
+} 
 
    
