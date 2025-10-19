@@ -1,122 +1,113 @@
 "use client";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { useState } from "react";
-
-const categoryData = {
-  "seasonal": {
-    title: "Seasonal & Holidays 🎉",
-    description: "Celebrate every special moment throughout the year.",
-    cards: [
-      { title: "Christmas Joy", image: "/top10/christmas.png" },
-      { title: "Happy Halloween", image: "/top10/halloween.png" },
-      { title: "New Year Spark", image: "/top10/newyear.png" },
-      { title: "Valentine Love", image: "/top10/valentine.png" },
-    ],
-  },
-  "emotions": {
-    title: "Love & Emotions 💘",
-    description: "Express love, gratitude, and deep feelings with Everwish.",
-    cards: [
-      { title: "Thinking of You", image: "/top10/thinking.png" },
-      { title: "You're My Person", image: "/top10/person.png" },
-      { title: "Forever Yours", image: "/top10/forever.png" },
-    ],
-  },
-  "celebrations": {
-    title: "Celebrations & Events 🎊",
-    description: "From birthdays to big achievements — celebrate in style.",
-    cards: [
-      { title: "Happy Birthday!", image: "/top10/birthday.png" },
-      { title: "Congrats Grad!", image: "/top10/graduation.png" },
-      { title: "Baby on the Way", image: "/top10/baby.png" },
-    ],
-  },
-  "everyday": {
-    title: "Everyday Moments 🌅",
-    description: "Because every day deserves a reason to smile.",
-    cards: [
-      { title: "Good Morning Sunshine", image: "/top10/morning.png" },
-      { title: "Relax & Recharge", image: "/top10/relax.png" },
-      { title: "You Got This!", image: "/top10/motivation.png" },
-    ],
-  },
-};
+import { useEffect, useState } from "react";
 
 export default function CategoryPage() {
   const { slug } = useParams();
+  const [videos, setVideos] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
 
-  const category = categoryData[slug];
+  // 🔹 Cargar videos desde la API
+  useEffect(() => {
+    async function loadVideos() {
+      try {
+        const res = await fetch("/api/videos");
+        const data = await res.json();
 
-  if (!category) {
+        // Busca los videos de la categoría actual
+        const matches =
+          data?.categories?.[slug] ||
+          data?.all?.filter((v) => v.category === slug) ||
+          [];
+
+        setVideos(matches);
+      } catch (err) {
+        console.error("❌ Error cargando videos:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadVideos();
+  }, [slug]);
+
+  // 🔍 Filtro interno
+  const filtered = videos.filter((v) =>
+    v.title.toLowerCase().includes(query.toLowerCase())
+  );
+
+  // ⏳ Estado cargando
+  if (loading) {
     return (
-      <main className="min-h-screen flex flex-col items-center justify-center text-center p-6">
-        <h1 className="text-3xl font-bold mb-4">Category not found 😢</h1>
-        <Link href="/categories" className="text-blue-500 hover:underline">
-          ← Back to Categories
-        </Link>
+      <main className="min-h-screen flex items-center justify-center text-gray-600 bg-pink-50">
+        Loading cards...
       </main>
     );
   }
 
-  // Filtrar las tarjetas dentro de la categoría
-  const filteredCards = category.cards.filter(card =>
-    card.title.toLowerCase().includes(query.toLowerCase())
-  );
-
   return (
-    <main className="min-h-screen bg-gray-50 pt-24 px-4 md:px-8">
+    <main className="min-h-screen bg-pink-50 pt-24 pb-16 px-4">
       {/* 🔙 Volver */}
       <div className="max-w-5xl mx-auto mb-6">
-        <Link href="/categories" className="text-blue-500 hover:underline">
+        <Link href="/categories" className="text-pink-500 hover:underline">
           ← Back to Categories
         </Link>
       </div>
 
       {/* 🏷️ Encabezado */}
       <div className="max-w-5xl mx-auto text-center mb-10">
-        <h1 className="text-3xl md:text-5xl font-extrabold mb-3">
-          {category.title}
+        <h1 className="text-3xl md:text-5xl font-extrabold mb-3 capitalize">
+          {slug.replace("-", " ")} Cards
         </h1>
-        <p className="text-gray-700 text-lg">{category.description}</p>
+        <p className="text-gray-700 text-lg">
+          Find all Everwish animated cards in this category 💌
+        </p>
 
-        {/* 🔍 Buscar dentro de la categoría */}
+        {/* 🔍 Buscador */}
         <div className="mt-6">
           <input
             type="text"
-            placeholder={`Search in ${category.title}...`}
+            placeholder={`Search in ${slug.replace("-", " ")}...`}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full md:w-2/3 px-4 py-3 border rounded-full shadow focus:outline-none focus:ring-2 focus:ring-blue-400 text-center text-gray-700"
+            className="w-full md:w-2/3 px-4 py-3 border rounded-full shadow focus:outline-none focus:ring-2 focus:ring-pink-400 text-center text-gray-700"
           />
         </div>
       </div>
 
-      {/* 💌 Tarjetas */}
+      {/* 🎥 Galería de videos */}
       <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {filteredCards.length > 0 ? (
-          filteredCards.map((card, i) => (
+        {filtered.length > 0 ? (
+          filtered.map((v, i) => (
             <div
               key={i}
-              className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition"
+              className="bg-white rounded-3xl shadow-md hover:shadow-xl overflow-hidden transform hover:-translate-y-1 transition cursor-pointer"
             >
-              <img
-                src={card.image}
-                alt={card.title}
-                className="w-full h-48 object-cover"
-              />
-              <div className="p-4 text-center">
-                <h3 className="font-semibold text-gray-800">{card.title}</h3>
+              <Link href={`/edit/${v.slug}`}>
+                <video
+                  src={v.src}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full aspect-[4/5] object-cover bg-gray-100"
+                />
+              </Link>
+              <div className="p-3 text-center">
+                <h3 className="font-semibold text-gray-800 text-sm md:text-base">
+                  {v.title}
+                </h3>
               </div>
             </div>
           ))
         ) : (
-          <p className="col-span-full text-center text-gray-500">
-            No cards found 😅
+          <p className="col-span-full text-center text-gray-500 italic">
+            No cards yet in this category — coming soon 💫
           </p>
         )}
       </div>
     </main>
   );
-}
+                      }
