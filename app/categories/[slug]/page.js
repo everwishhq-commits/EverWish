@@ -1,7 +1,7 @@
 "use client";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const categoryData = {
   seasonal: {
@@ -46,8 +46,24 @@ const categoryData = {
 export default function CategoryPage() {
   const { slug } = useParams();
   const [query, setQuery] = useState("");
+  const [videos, setVideos] = useState([]);
 
   const category = categoryData[slug];
+
+  // 🔹 Cargar videos dinámicos desde la API
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch("/api/videos");
+        const data = await res.json();
+        const matched = data?.categories?.[slug] || [];
+        setVideos(matched);
+      } catch (e) {
+        console.error("Error cargando videos:", e);
+      }
+    }
+    load();
+  }, [slug]);
 
   if (!category) {
     return (
@@ -89,6 +105,7 @@ export default function CategoryPage() {
         </div>
       </div>
 
+      {/* 💌 Tarjetas estáticas */}
       <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {filteredCards.length > 0 ? (
           filteredCards.map((card, i) => (
@@ -112,6 +129,33 @@ export default function CategoryPage() {
           </p>
         )}
       </div>
+
+      {/* 🎬 Videos dinámicos (automáticos) */}
+      {videos.length > 0 && (
+        <div className="max-w-6xl mx-auto mt-10">
+          <h2 className="text-2xl font-bold mb-4">Animated Cards 🎬</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {videos.map((v, i) => (
+              <div
+                key={i}
+                className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition"
+              >
+                <video
+                  src={v.src}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-48 object-cover"
+                />
+                <div className="p-4 text-center">
+                  <h3 className="font-semibold text-gray-800">{v.title}</h3>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </main>
   );
-      }
+}
