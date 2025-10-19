@@ -24,18 +24,17 @@ export default function EditPage({ params }) {
   const [showGift, setShowGift] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showCrop, setShowCrop] = useState(false);
-  const [showDownload, setShowDownload] = useState(false);
   const [total, setTotal] = useState(5);
   const [userImage, setUserImage] = useState(null);
 
-  // 🎨 Estados de animación
+  // 🎨 Animación
   const [intensity, setIntensity] = useState("normal");
   const [opacityLevel, setOpacityLevel] = useState(0.9);
   const [emojiCount, setEmojiCount] = useState(20);
   const [isPurchased, setIsPurchased] = useState(false);
   const [isViewed, setIsViewed] = useState(false);
 
-  // 🎬 Inicializa datos
+  // 🎬 Inicialización
   useEffect(() => {
     setMessage(getMessageForSlug(slug));
     const opts = getAnimationOptionsForSlug(slug);
@@ -44,7 +43,7 @@ export default function EditPage({ params }) {
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
-  // ⏳ Pantalla de carga inicial
+  // ⏳ Carga inicial
   useEffect(() => {
     let v = 0;
     const id = setInterval(() => {
@@ -58,7 +57,7 @@ export default function EditPage({ params }) {
     return () => clearInterval(id);
   }, []);
 
-  // 🎁 Gift Card
+  // 💳 Gift card
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
@@ -69,33 +68,41 @@ export default function EditPage({ params }) {
     setTotal(5);
   };
 
-  // 💾 Descarga
-  const handleCardClick = () => {
-    setShowDownload(true);
-    setTimeout(() => setShowDownload(false), 3500);
-  };
-  const handleDownload = () => {
-    const link = document.createElement("a");
-    link.href = videoSrc;
-    link.download = `${slug}.mp4`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  };
-
   const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
   const [animKey, setAnimKey] = useState(0);
-  useEffect(
-    () => setAnimKey(Date.now()),
-    [animation, category, intensity, opacityLevel, emojiCount]
-  );
+  useEffect(() => setAnimKey(Date.now()), [
+    animation,
+    category,
+    intensity,
+    opacityLevel,
+    emojiCount,
+  ]);
+
+  // 🚫 Bloquear descargas y zoom/pulsaciones
+  useEffect(() => {
+    const prevent = (e) => e.preventDefault();
+    document.addEventListener("contextmenu", prevent);
+    document.addEventListener("dragstart", prevent);
+    document.addEventListener("touchstart", prevent, { passive: false });
+    document.addEventListener("touchmove", prevent, { passive: false });
+    return () => {
+      document.removeEventListener("contextmenu", prevent);
+      document.removeEventListener("dragstart", prevent);
+      document.removeEventListener("touchstart", prevent);
+      document.removeEventListener("touchmove", prevent);
+    };
+  }, []);
 
   return (
     <div
-      className="relative min-h-[100dvh] bg-[#fff7f5] flex flex-col items-center overflow-hidden"
-      style={{ overscrollBehavior: "contain" }}
+      className="fixed inset-0 bg-[#fff7f5] flex flex-col items-center justify-center overflow-hidden"
+      style={{
+        height: "100dvh",
+        overscrollBehavior: "none",
+        touchAction: "none",
+      }}
     >
-      {/* ⏳ Pantalla de carga */}
+      {/* ⏳ Splash inicial */}
       {stage === "expanded" && (
         <motion.div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-[#fff7f5]"
@@ -110,6 +117,9 @@ export default function EditPage({ params }) {
             loop
             muted
             playsInline
+            disablePictureInPicture
+            controlsList="nodownload nofullscreen noremoteplayback"
+            onContextMenu={(e) => e.preventDefault()}
           />
           <div className="absolute bottom-8 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
             <motion.div
@@ -122,7 +132,7 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
-      {/* 🎨 Editor principal */}
+      {/* ✨ Editor principal */}
       {stage === "editor" && (
         <>
           <AnimationOverlay
@@ -134,165 +144,43 @@ export default function EditPage({ params }) {
             emojiCount={emojiCount}
           />
 
-          <motion.div
-            key="editor"
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45 }}
-            className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-6 mb-10"
-          >
-            {/* 🖼 Tarjeta principal */}
-            <div
-              className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50"
-              onClick={handleCardClick}
-            >
+          <div className="relative z-[200] w-full h-full flex flex-col items-center justify-center px-4">
+            {/* 🖼 Video fullscreen */}
+            <div className="relative w-full max-w-[480px] aspect-[4/5] rounded-[8%] overflow-hidden border shadow-lg">
               <video
                 src={videoSrc}
-                className="w-full object-cover"
                 autoPlay
                 loop
                 muted
                 playsInline
+                disablePictureInPicture
+                controls={false}
+                controlsList="nodownload nofullscreen noremoteplayback"
+                onContextMenu={(e) => e.preventDefault()}
+                className="w-full h-full object-cover select-none pointer-events-none"
+                draggable={false}
+              />
+              {/* 🛑 Capa invisible para bloquear pulsaciones largas */}
+              <div
+                className="absolute inset-0 z-[50]"
+                onContextMenu={(e) => e.preventDefault()}
+              ></div>
+            </div>
+
+            {/* 📝 Mensaje personalizado */}
+            <div className="mt-6 text-center max-w-md">
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                ✨ Customize your message ✨
+              </h3>
+              <textarea
+                className="w-full rounded-2xl border p-3 text-center text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
+                rows={2}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
               />
             </div>
 
-            {/* 📝 Mensaje */}
-            <h3 className="mb-2 text-center text-lg font-semibold text-gray-700">
-              ✨ Customize your message ✨
-            </h3>
-            <textarea
-              className="w-full rounded-2xl border p-3 text-center text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
-              rows={2}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-            />
-
-            {/* 📸 Imagen aprobada */}
-            {userImage && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.4 }}
-                className="my-3 cursor-pointer hover:scale-[1.02] transition-transform flex justify-center"
-                onClick={() => setShowCrop(true)}
-              >
-                <img
-                  src={userImage}
-                  alt="User upload"
-                  className="rounded-2xl border border-gray-200 shadow-sm"
-                  style={{
-                    width: "100%",
-                    height: "auto",
-                    objectFit: "cover",
-                    aspectRatio: "4 / 3",
-                    backgroundColor: "#fff7f5",
-                    maxWidth: "100%",
-                  }}
-                />
-              </motion.div>
-            )}
-
-            {!userImage && (
-              <div className="mt-4 flex justify-center">
-                <button
-                  onClick={() => setShowCrop(true)}
-                  className="flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-3 font-semibold text-[#3b2b1f] hover:bg-yellow-300 transition-all shadow-sm"
-                >
-                  📸 Add Image
-                </button>
-              </div>
-            )}
-
-            {/* ✨ Panel de animación */}
-            <div className="my-4">
-              <div
-                className={`flex items-center justify-between w-full rounded-xl transition-all duration-300 ${
-                  animation && !animation.startsWith("✨ None")
-                    ? "bg-gradient-to-r from-pink-100 via-purple-100 to-yellow-100 text-gray-800 shadow-sm"
-                    : "bg-gray-100 text-gray-400"
-                }`}
-                style={{
-                  height: "46px",
-                  padding: "0 8px 0 8px",
-                  border: "1px solid rgba(0,0,0,0.05)",
-                }}
-              >
-                {/* 🔹 Selector de animaciones */}
-                <select
-                  value={animation}
-                  onChange={(e) => setAnimation(e.target.value)}
-                  className={`flex-1 text-sm font-medium focus:outline-none cursor-pointer truncate transition-colors ${
-                    animation.startsWith("✨ None")
-                      ? "text-pink-500 font-semibold"
-                      : "text-gray-700"
-                  }`}
-                  style={{
-                    maxWidth: "43%",
-                    backgroundColor: "transparent",
-                    appearance: "auto",
-                  }}
-                >
-                  {animationOptions
-                    .filter((a) => !a.includes("None"))
-                    .map((a) => (
-                      <option key={a} value={a}>
-                        {a}
-                      </option>
-                    ))}
-                </select>
-
-                {/* 🔸 Controles visibles solo antes de compra o vista */}
-                {!isPurchased && !isViewed && (
-                  <div className="flex items-center gap-2 ml-1">
-                    <div className="flex items-center rounded-md border border-gray-300 overflow-hidden">
-                      <button
-                        className="px-2 text-lg hover:bg-gray-200 transition"
-                        onClick={() =>
-                          setEmojiCount((prev) => Math.max(5, prev - 5))
-                        }
-                      >
-                        –
-                      </button>
-                      <span className="px-2 text-sm font-medium text-gray-700">
-                        {emojiCount}
-                      </span>
-                      <button
-                        className="px-2 text-lg hover:bg-gray-200 transition"
-                        onClick={() =>
-                          setEmojiCount((prev) => Math.min(60, prev + 5))
-                        }
-                      >
-                        +
-                      </button>
-                    </div>
-
-                    <select
-                      value={intensity}
-                      onChange={(e) => setIntensity(e.target.value)}
-                      className="px-2 text-sm bg-transparent font-medium focus:outline-none cursor-pointer"
-                    >
-                      <option value="soft">Soft</option>
-                      <option value="normal">Normal</option>
-                      <option value="vivid">Vivid</option>
-                    </select>
-
-                    <button
-                      className={`ml-1 px-2 text-lg font-bold transition ${
-                        animation && !animation.startsWith("✨ None")
-                          ? "text-red-500 hover:text-red-600"
-                          : "text-gray-400"
-                      }`}
-                      onClick={() => setAnimation("✨ None (No Animation)")}
-                      title="Remove animation"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* 🛍 Botones principales */}
+            {/* 🛍 Botones */}
             <div className="mt-4 flex flex-wrap justify-center gap-3">
               <button
                 onClick={() => setShowGift(true)}
@@ -307,62 +195,42 @@ export default function EditPage({ params }) {
                 💳 Checkout
               </button>
             </div>
-
-            {showDownload && (
-              <motion.button
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                onClick={handleDownload}
-                className="fixed bottom-10 right-6 z-[400] rounded-full bg-[#ff7b00] px-6 py-3 text-white font-semibold shadow-lg hover:bg-[#ff9f33]"
-              >
-                ⬇️ Download
-              </motion.button>
-            )}
-          </motion.div>
+          </div>
         </>
       )}
 
       {/* 🔧 Modales */}
-      <div className="fixed inset-0 pointer-events-none z-[10050]">
-        {showGift && (
-          <div className="pointer-events-auto relative">
-            <GiftCardPopup
-              initial={gift}
-              onSelect={updateGift}
-              onClose={() => setShowGift(false)}
-            />
-          </div>
-        )}
-        {showCheckout && (
-          <div className="pointer-events-auto relative">
-            <CheckoutModal
-              total={total}
-              gift={gift}
-              onGiftChange={() => setShowGift(true)}
-              onGiftRemove={removeGift}
-              onClose={() => setShowCheckout(false)}
-            />
-          </div>
-        )}
-        {showCrop && (
-          <div className="pointer-events-auto relative">
-            <CropperModal
-              open={showCrop}
-              existingImage={userImage}
-              onClose={() => setShowCrop(false)}
-              onDelete={() => {
-                setUserImage(null);
-                setShowCrop(false);
-              }}
-              onDone={(img) => {
-                setUserImage(img);
-                setShowCrop(false);
-              }}
-            />
-          </div>
-        )}
-      </div>
+      {showGift && (
+        <GiftCardPopup
+          initial={gift}
+          onSelect={updateGift}
+          onClose={() => setShowGift(false)}
+        />
+      )}
+      {showCheckout && (
+        <CheckoutModal
+          total={total}
+          gift={gift}
+          onGiftChange={() => setShowGift(true)}
+          onGiftRemove={removeGift}
+          onClose={() => setShowCheckout(false)}
+        />
+      )}
+      {showCrop && (
+        <CropperModal
+          open={showCrop}
+          existingImage={userImage}
+          onClose={() => setShowCrop(false)}
+          onDelete={() => {
+            setUserImage(null);
+            setShowCrop(false);
+          }}
+          onDone={(img) => {
+            setUserImage(img);
+            setShowCrop(false);
+          }}
+        />
+      )}
     </div>
   );
-              }
+    }
