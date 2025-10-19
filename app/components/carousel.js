@@ -11,6 +11,8 @@ export default function Carousel() {
   const touchEndX = useRef(0);
   const pauseRef = useRef(false);
   const swipeDetected = useRef(false);
+  const longPressTimeout = useRef(null); // 🕒 nuevo
+  const longPressActive = useRef(false); // 🚫 evita click si se mantuvo presionado
 
   // ✅ Función de autoplay (reinicia correctamente)
   const startAutoplay = () => {
@@ -51,19 +53,33 @@ export default function Carousel() {
     touchEndX.current = e.touches[0].clientX;
     swipeDetected.current = false;
     pauseRef.current = true;
+    longPressActive.current = false;
     clearInterval(autoplayRef.current);
+
+    // 🕒 inicia detección de long press (800 ms)
+    longPressTimeout.current = setTimeout(() => {
+      longPressActive.current = true;
+    }, 800);
   };
 
   const handleTouchMove = (e) => {
     touchEndX.current = e.touches[0].clientX;
     const diff = touchStartX.current - touchEndX.current;
     if (Math.abs(diff) > 20) swipeDetected.current = true;
+
+    // si se mueve, se cancela long press
+    clearTimeout(longPressTimeout.current);
   };
 
   const handleTouchEnd = () => {
+    clearTimeout(longPressTimeout.current);
+
     const diff = touchStartX.current - touchEndX.current;
 
-    if (swipeDetected.current && Math.abs(diff) > 50) {
+    if (longPressActive.current) {
+      // 🚫 Si fue toque prolongado, no hace nada
+      longPressActive.current = false;
+    } else if (swipeDetected.current && Math.abs(diff) > 50) {
       // 👉 Swipe inmediato
       setIndex((prev) =>
         diff > 0
@@ -165,4 +181,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-        }
+      }
