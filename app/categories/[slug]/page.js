@@ -1,10 +1,10 @@
-"use client"; // 👈 Obligatorio para usar hooks del lado del cliente
+"use client"; // 👈 Obligatorio para usar useEffect, useState, etc.
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 
-export const dynamic = "force-dynamic"; // ✅ evita errores SSR en Vercel
+export const dynamic = "force-dynamic"; // ✅ Evita errores SSR en Vercel
 
 export default function CategoryVideosPage() {
   const { slug } = useParams();
@@ -42,14 +42,17 @@ export default function CategoryVideosPage() {
     async function fetchVideos() {
       console.log("🎬 Fetching videos for slug:", slug);
       try {
-        // ✅ Usa URL absoluta para funcionar local y en Vercel
-        const baseUrl =
-          process.env.NEXT_PUBLIC_BASE_URL || window.location.origin;
-        const res = await fetch(`${baseUrl}/api/videos`);
+        // ✅ Detecta si se ejecuta en cliente o servidor
+        const isClient = typeof window !== "undefined";
+        const baseUrl = isClient
+          ? window.location.origin
+          : process.env.NEXT_PUBLIC_BASE_URL || "https://everwish.cards";
+
+        const res = await fetch(`${baseUrl}/api/videos`, { cache: "no-store" });
         const data = await res.json();
         console.log("✅ Data received:", data);
 
-        // 🔎 Filtra por categoría según el slug actual
+        // 🔎 Filtra los videos por categoría
         const allVideos = data.all || [];
         const filtered = allVideos.filter((v) => {
           const cats = v.categories || [detectCategory(v.title)];
@@ -79,7 +82,7 @@ export default function CategoryVideosPage() {
     );
   }
 
-  // ❌ Sin videos disponibles
+  // ❌ Sin videos
   if (!videos.length) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-pink-50 to-white text-gray-700">
@@ -167,4 +170,4 @@ export default function CategoryVideosPage() {
       </div>
     </main>
   );
-      }
+}
