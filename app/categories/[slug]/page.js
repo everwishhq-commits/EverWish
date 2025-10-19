@@ -24,7 +24,7 @@ export default function CategoryVideosPage({ params }) {
 
   return (
     <main className="min-h-screen bg-[#fff7f7] flex flex-col items-center py-12 px-4">
-      {/* Título */}
+      {/* Encabezado */}
       <h1 className="text-4xl md:text-5xl font-extrabold text-gray-800 mb-2 capitalize">
         {params.slug}
       </h1>
@@ -32,7 +32,7 @@ export default function CategoryVideosPage({ params }) {
         Discover beautiful Everwish cards for {params.slug} ✨
       </p>
 
-      {/* Grid de videos */}
+      {/* Cuadrícula de videos */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-5xl w-full">
         {videos.map((video) => (
           <div
@@ -41,20 +41,24 @@ export default function CategoryVideosPage({ params }) {
           >
             <video
               src={video.src}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover pointer-events-none select-none"
               playsInline
               autoPlay
               loop
               muted
               preload="metadata"
-              controlsList="nodownload noplaybackrate"
+              controls={false}
+              controlsList="nodownload noplaybackrate nofullscreen"
               onContextMenu={(e) => e.preventDefault()}
             />
-            {/* Fondo de gradiente para evitar que se vean nombres ni controles */}
-            <div className="absolute inset-0 bg-gradient-to-t from-white/10 via-transparent to-transparent pointer-events-none" />
+            {/* Capa para proteger clics */}
+            <div
+              className="absolute inset-0 cursor-pointer"
+              onClick={() => window.open(video.src, "_blank")}
+            />
           </div>
         ))}
       </div>
     </main>
   );
-    }
+                }
