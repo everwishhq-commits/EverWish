@@ -38,7 +38,7 @@ export async function GET() {
   try {
     const dir = path.join(process.cwd(), "public/videos");
 
-    // 🧩 Verifica que exista la carpeta
+    // Verifica que exista la carpeta
     if (!fs.existsSync(dir)) {
       return new Response(
         JSON.stringify({ error: "No videos folder found" }),
@@ -49,7 +49,7 @@ export async function GET() {
       );
     }
 
-    // 🎬 Lee los archivos MP4
+    // Lee los archivos MP4
     const files = fs
       .readdirSync(dir)
       .filter((f) => f.endsWith(".mp4"))
@@ -59,14 +59,14 @@ export async function GET() {
         category: detectCategory(file),
       }));
 
-    // 📁 Agrupa por categoría
+    // Agrupa por categoría
     const grouped = files.reduce((acc, file) => {
       acc[file.category] = acc[file.category] || [];
       acc[file.category].push(file);
       return acc;
     }, {});
 
-    // 📤 Devuelve la respuesta en JSON
+    // Devuelve JSON con todo
     return new Response(
       JSON.stringify({ all: files, categories: grouped }, null, 2),
       {
