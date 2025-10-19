@@ -1,5 +1,5 @@
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic"; // 👈 Importante para Vercel dinámico
+export const dynamic = "force-dynamic"; // 👈 Necesario para Vercel dinámico
 
 import fs from "fs";
 import path from "path";
@@ -38,13 +38,18 @@ export async function GET() {
   try {
     const dir = path.join(process.cwd(), "public/videos");
 
+    // 🧩 Verifica que exista la carpeta
     if (!fs.existsSync(dir)) {
-      return new Response(JSON.stringify({ error: "No videos folder found" }), {
-        status: 404,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "No videos folder found" }),
+        {
+          status: 404,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
 
+    // 🎬 Lee los archivos MP4
     const files = fs
       .readdirSync(dir)
       .filter((f) => f.endsWith(".mp4"))
@@ -54,15 +59,20 @@ export async function GET() {
         category: detectCategory(file),
       }));
 
+    // 📁 Agrupa por categoría
     const grouped = files.reduce((acc, file) => {
       acc[file.category] = acc[file.category] || [];
       acc[file.category].push(file);
       return acc;
     }, {});
 
-    return new Response(JSON.stringify({ all: files, categories: grouped }, null, 2), {
-      headers: { "Content-Type": "application/json" },
-    });
+    // 📤 Devuelve la respuesta en JSON
+    return new Response(
+      JSON.stringify({ all: files, categories: grouped }, null, 2),
+      {
+        headers: { "Content-Type": "application/json" },
+      }
+    );
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
