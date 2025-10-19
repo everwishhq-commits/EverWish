@@ -49,6 +49,15 @@ export default function EditPage({ params }) {
     return () => clearInterval(id);
   }, []);
 
+  // Bloquea el scroll cuando está el cropper abierto
+  useEffect(() => {
+    if (showCrop) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+  }, [showCrop]);
+
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
@@ -81,8 +90,11 @@ export default function EditPage({ params }) {
   }, [animation, category]);
 
   return (
-    <div className="relative min-h-[100dvh] bg-[#fff7f5] flex flex-col items-center overflow-hidden">
-      {/* Pantalla de carga inicial */}
+    <div
+      className="relative min-h-[100dvh] bg-[#fff7f5] flex flex-col items-center overflow-hidden"
+      style={{ touchAction: showCrop ? "none" : "auto" }}
+    >
+      {/* Pantalla de carga */}
       {stage === "expanded" && (
         <motion.div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-[#fff7f5]"
@@ -93,7 +105,10 @@ export default function EditPage({ params }) {
           <video
             src={videoSrc}
             className="absolute inset-0 w-full h-full object-cover"
-            autoPlay loop muted playsInline
+            autoPlay
+            loop
+            muted
+            playsInline
           />
           <div className="absolute bottom-8 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
             <motion.div
@@ -126,7 +141,10 @@ export default function EditPage({ params }) {
               <video
                 src={videoSrc}
                 className="w-full object-cover"
-                autoPlay loop muted playsInline
+                autoPlay
+                loop
+                muted
+                playsInline
               />
             </div>
 
@@ -153,7 +171,7 @@ export default function EditPage({ params }) {
                 <img
                   src={userImage}
                   alt="User upload"
-                  className="w-full max-h-48 object-cover rounded-2xl border border-gray-200 shadow-sm"
+                  className="w-full max-h-56 object-contain rounded-2xl border border-gray-200 shadow-sm"
                 />
               </motion.div>
             )}
@@ -217,7 +235,7 @@ export default function EditPage({ params }) {
         </>
       )}
 
-      {/* 🔧 Modales */}
+      {/* Modales */}
       <div className="fixed inset-0 pointer-events-none z-[10050]">
         {showGift && (
           <div className="pointer-events-auto relative">
@@ -253,10 +271,13 @@ export default function EditPage({ params }) {
                 setUserImage(img);
                 setShowCrop(false);
               }}
+              // Nuevo ajuste: mantiene el tamaño correcto del preview
+              aspectRatio={1}
+              containWithin={true}
             />
           </div>
         )}
       </div>
     </div>
   );
-}
+                }
