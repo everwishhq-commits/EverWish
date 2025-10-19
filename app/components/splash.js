@@ -7,16 +7,28 @@ export default function Splash({ onFinish }) {
   const [fade, setFade] = useState(false);
 
   useEffect(() => {
-    let step1 = setTimeout(() => setProgress(50), 500);   // 0 → 50%
-    let step2 = setTimeout(() => setProgress(100), 1000); // 50 → 100%
+    // Evita errores si onFinish no existe o falla
+    const safeFinish = () => {
+      try {
+        if (typeof onFinish === "function") onFinish();
+      } catch (err) {
+        console.warn("⚠️ Splash onFinish error:", err);
+      }
+    };
 
-    let fadeAnim = setInterval(() => setFade(f => !f), 500); // parpadeo logo
+    const step1 = setTimeout(() => setProgress(50), 500);
+    const step2 = setTimeout(() => setProgress(100), 1000);
 
-    let finish = setTimeout(() => {
+    // Parpadeo del logo
+    const fadeAnim = setInterval(() => setFade((f) => !f), 500);
+
+    // Salida segura del splash
+    const finish = setTimeout(() => {
       clearInterval(fadeAnim);
-      onFinish();
+      safeFinish();
     }, 2000);
 
+    // Limpieza al desmontar
     return () => {
       clearTimeout(step1);
       clearTimeout(step2);
@@ -27,7 +39,6 @@ export default function Splash({ onFinish }) {
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-white relative">
-      {/* 🔹 Subimos todo el bloque visual ligeramente */}
       <div className="absolute top-[45%] -translate-y-1/2 flex flex-col items-center">
         {/* Logo parpadeando */}
         <div
@@ -35,7 +46,13 @@ export default function Splash({ onFinish }) {
             fade ? "opacity-100" : "opacity-40"
           }`}
         >
-          <Image src="/logo.png" alt="Everwish Logo" width={180} height={180} />
+          <Image
+            src="/logo.png"
+            alt="Everwish Logo"
+            width={180}
+            height={180}
+            priority
+          />
         </div>
 
         {/* Barra de carga */}
@@ -48,4 +65,4 @@ export default function Splash({ onFinish }) {
       </div>
     </div>
   );
-}
+              }
