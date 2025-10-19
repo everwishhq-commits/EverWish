@@ -1,12 +1,8 @@
 import fs from "fs";
 import path from "path";
 
-/**
- * 🧠 Detecta la categoría por el nombre del archivo
- */
 function detectCategory(filename) {
   const s = filename.toLowerCase();
-
   if (s.includes("halloween")) return "halloween";
   if (s.includes("christmas") || s.includes("xmas")) return "christmas";
   if (s.includes("easter")) return "easter";
@@ -28,7 +24,6 @@ function detectCategory(filename) {
   if (s.includes("sorry") || s.includes("apology")) return "apology";
   if (s.includes("missyou") || s.includes("thinking")) return "emotions";
   if (s.includes("pet") || s.includes("dog") || s.includes("cat")) return "pets";
-
   return "general";
 }
 
@@ -36,7 +31,6 @@ export async function GET() {
   try {
     const dir = path.join(process.cwd(), "public/videos");
 
-    // ✅ Verifica que exista la carpeta de videos  
     if (!fs.existsSync(dir)) {
       console.warn("⚠️ Carpeta /public/videos no encontrada");
       return new Response(JSON.stringify([]), {
@@ -45,7 +39,6 @@ export async function GET() {
       });
     }
 
-    // 🔹 Lee los archivos MP4 de la carpeta  
     const files = fs
       .readdirSync(dir)
       .filter((file) => file.endsWith(".mp4"))
@@ -60,24 +53,10 @@ export async function GET() {
           title,
           src: `/videos/${file}`,
           slug: baseName,
-          category, // 👈 Nueva propiedad automática
+          category,
         };
       });
 
-    // 🔸 Si no hay videos, devuelve un placeholder  
-    if (files.length === 0) {
-      return new Response(
-        JSON.stringify([
-          { title: "Card Coming Soon ✨", src: "", slug: "placeholder" },
-        ]),
-        {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // ✅ Devuelve la lista de videos (misma estructura plana)
     return new Response(JSON.stringify(files, null, 2), {
       status: 200,
       headers: { "Content-Type": "application/json" },
@@ -89,4 +68,4 @@ export async function GET() {
       { status: 500 }
     );
   }
-          }
+                   }
