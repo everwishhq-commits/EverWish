@@ -13,10 +13,10 @@ export default function CategoryVideosPage() {
         const res = await fetch("/api/videos");
         const data = await res.json();
 
-        // ✅ Acceder a la lista dentro de "all"
+        // Accede correctamente a los videos dentro de "all"
         const allVideos = data.all || [];
 
-        // ✅ Filtrar los videos por categoría
+        // Filtra los videos que pertenecen a esta categoría
         const filtered = allVideos.filter((v) =>
           v.categories?.includes(slug.toLowerCase())
         );
@@ -30,7 +30,7 @@ export default function CategoryVideosPage() {
   }, [slug]);
 
   return (
-    <main className="min-h-screen bg-pink-50 text-center px-4 pt-24 pb-16">
+    <main className="min-h-screen bg-pink-50 text-center px-4 pt-24 pb-16 transition-all duration-500">
       <Link
         href="/categories"
         className="text-pink-500 hover:underline text-sm font-medium"
@@ -38,9 +38,10 @@ export default function CategoryVideosPage() {
         ← Back to Categories
       </Link>
 
-      <h1 className="text-4xl font-extrabold text-pink-700 mt-4 capitalize">
+      <h1 className="text-4xl md:text-5xl font-extrabold mt-4 bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent capitalize">
         {slug}
       </h1>
+
       <p className="text-gray-600 mt-2 mb-10">
         Discover beautiful Everwish cards for {slug} ✨
       </p>
@@ -55,7 +56,7 @@ export default function CategoryVideosPage() {
           videos.map((video, i) => (
             <div
               key={i}
-              className="relative bg-white rounded-3xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300"
+              className="relative bg-white rounded-3xl shadow-md hover:shadow-xl overflow-hidden transition-all duration-300"
             >
               <video
                 src={video.src}
@@ -64,9 +65,10 @@ export default function CategoryVideosPage() {
                 muted
                 playsInline
                 controls={false}
+                preload="auto"
                 disablePictureInPicture
                 onContextMenu={(e) => e.preventDefault()}
-                className="w-full h-auto object-cover"
+                className="w-full h-auto object-cover rounded-3xl"
               />
             </div>
           ))
@@ -74,4 +76,4 @@ export default function CategoryVideosPage() {
       </div>
     </main>
   );
-                      }
+          }
