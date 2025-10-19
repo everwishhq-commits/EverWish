@@ -1,63 +1,63 @@
-export const runtime = "nodejs"; // 🔧 Fuerza el uso de Node.js en Vercel
-export const dynamic = "force-dynamic";
+// app/api/videos/route.js
+export const runtime = "nodejs"; // asegura que use Node en Vercel
+export const dynamic = "force-dynamic"; // evita cacheos del build
 
-import { readdirSync, existsSync } from "fs";
-import { join, parse } from "path";
-
+// --- Detecta categoría según el nombre del archivo ---
 function detectCategory(name) {
   const s = name.toLowerCase();
   if (s.includes("halloween")) return "halloween";
   if (s.includes("christmas")) return "christmas";
-  if (s.includes("easter")) return "easter";
-  if (s.includes("valentine")) return "valentines";
   if (s.includes("birthday")) return "birthday";
+  if (s.includes("valentine") || s.includes("love")) return "valentines";
+  if (s.includes("easter")) return "easter";
+  if (s.includes("thanksgiving")) return "thanksgiving";
   if (s.includes("mothers")) return "mothers-day";
   if (s.includes("fathers")) return "fathers-day";
+  if (s.includes("anniversary")) return "anniversary";
   if (s.includes("baby")) return "baby";
   if (s.includes("graduation")) return "graduation";
   if (s.includes("wedding")) return "wedding";
-  if (s.includes("thanksgiving")) return "thanksgiving";
-  if (s.includes("newyear")) return "newyear";
-  if (s.includes("autumn") || s.includes("fall")) return "autumn";
-  if (s.includes("winter")) return "winter";
-  if (s.includes("summer")) return "summer";
-  if (s.includes("spring")) return "spring";
   if (s.includes("getwell")) return "getwell";
-  if (s.includes("anniversary")) return "anniversary";
+  if (s.includes("apology")) return "apology";
   if (s.includes("pet") || s.includes("dog") || s.includes("cat")) return "pets";
+  if (s.includes("newyear")) return "newyear";
   return "general";
 }
 
+// --- Endpoint GET ---
 export async function GET() {
-  try {
-    const dir = join(process.cwd(), "public/videos");
-    if (!existsSync(dir)) {
-      return new Response(JSON.stringify({ categories: {} }), {
-        headers: { "Content-Type": "application/json" },
-      });
-    }
+  // 🔗 URL base del dominio de producción
+  const base = "https://everwishs-projects.vercel.app/videos/";
 
-    const files = readdirSync(dir).filter((f) => f.endsWith(".mp4"));
-    const videos = files.map((file) => ({
-      title: parse(file).name,
-      src: `/videos/${file}`,
-      category: detectCategory(file),
-    }));
+  // 🗂️ Lista de tus archivos dentro de /public/videos/
+  const files = [
+    "pumpkin_halloween_general.mp4",
+    "ghost_halloween_love.mp4",
+    "zombie_halloween_birthday.mp4",
+    "bunny_easter_general.mp4",
+    "turkey_thanksgiving_general.mp4",
+    "hugs_anniversary_love.mp4",
+    "mother_mothersday_celebration.mp4",
+    "turtle_christmas_general_1A.mp4",
+    "yeti_christmas_general_1A.mp4",
+  ];
 
-    const categories = videos.reduce((acc, v) => {
-      if (!acc[v.category]) acc[v.category] = [];
-      acc[v.category].push(v);
-      return acc;
-    }, {});
+  // 📦 Construir objetos por categoría
+  const videos = files.map((file) => ({
+    title: file.replace(".mp4", "").replace(/_/g, " "),
+    src: base + file,
+    category: detectCategory(file),
+  }));
 
-    return new Response(JSON.stringify({ categories }, null, 2), {
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (e) {
-    console.error("❌ Error leyendo videos:", e);
-    return new Response(
-      JSON.stringify({ error: "Error leyendo videos" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
-  }
+  // Agrupar por categoría
+  const categories = videos.reduce((acc, v) => {
+    if (!acc[v.category]) acc[v.category] = [];
+    acc[v.category].push(v);
+    return acc;
+  }, {});
+
+  // 🧾 Respuesta JSON visible desde /api/videos
+  return new Response(JSON.stringify({ categories }, null, 2), {
+    headers: { "Content-Type": "application/json" },
+  });
 }
