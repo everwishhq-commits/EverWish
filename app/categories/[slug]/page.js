@@ -5,8 +5,8 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import "swiper/css";
 
-export default function CategoryPage({ params }) {
-  const { slug } = params;
+export default function CategoryPage({ params = {} }) {
+  const slug = params?.slug || "general";
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -14,12 +14,13 @@ export default function CategoryPage({ params }) {
     async function load() {
       const res = await fetch("/api/videos");
       const data = await res.json();
-      setVideos(data.categories[slug] || []);
+      setVideos(data.categories?.[slug] || []);
       setLoading(false);
     }
     load();
   }, [slug]);
 
+  // 🌀 Pantalla de carga
   if (loading) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-pink-50 to-white text-gray-600">
@@ -28,10 +29,13 @@ export default function CategoryPage({ params }) {
     );
   }
 
+  // ⚠️ Sin resultados
   if (!videos.length) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-pink-50 to-white text-gray-700">
-        <h1 className="text-3xl font-bold mb-4 capitalize">{slug}</h1>
+        <h1 className="text-3xl font-bold mb-4 capitalize">
+          {slug ? slug.replace("-", " ") : "Category"}
+        </h1>
         <p>No videos yet in this category 🎥</p>
         <Link href="/categories" className="mt-4 text-blue-500 underline">
           ← Back to Categories
@@ -40,19 +44,20 @@ export default function CategoryPage({ params }) {
     );
   }
 
+  // 💫 Vista principal
   return (
     <main className="min-h-screen bg-gradient-to-b from-pink-50 to-white pt-24 pb-16 px-4 md:px-8">
       {/* Encabezado */}
       <div className="max-w-5xl mx-auto text-center mb-10">
         <h1 className="text-4xl md:text-5xl font-extrabold mb-3 capitalize bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
-          {slug.replace("-", " ")}
+          {slug ? slug.replace("-", " ") : "Category"}
         </h1>
         <p className="text-gray-600">
           Choose your favorite card — it moves for you 💌
         </p>
       </div>
 
-      {/* 🌀 Carrusel automático tipo Netflix */}
+      {/* 🎞️ Carrusel automático */}
       <Swiper
         slidesPerView={2.3}
         spaceBetween={15}
@@ -73,10 +78,10 @@ export default function CategoryPage({ params }) {
       >
         {videos.map((v, i) => (
           <SwiperSlide key={i}>
-            <Link href={v.editUrl}>
+            <Link href={v.editUrl || "#"}>
               <div className="rounded-3xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-white">
                 <div className="relative w-full aspect-[4/5]">
-                  {/* 🎞 Video autoplay silencioso */}
+                  {/* 🎬 Video silencioso y sin descarga */}
                   <video
                     src={v.src}
                     autoPlay
@@ -89,7 +94,7 @@ export default function CategoryPage({ params }) {
                     className="w-full h-full object-cover rounded-3xl"
                   />
 
-                  {/* 🌸 Overlay para elegancia */}
+                  {/* 🌸 Overlay suave */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-40 rounded-3xl"></div>
 
                   {/* 🏷️ Título */}
@@ -116,4 +121,4 @@ export default function CategoryPage({ params }) {
       </div>
     </main>
   );
-      }
+    }
