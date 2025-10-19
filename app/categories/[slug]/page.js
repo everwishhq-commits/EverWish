@@ -1,21 +1,28 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation"; // ✅ forma segura para obtener el slug
 import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import "swiper/css";
 
-export default function CategoryPage({ params = {} }) {
-  const slug = params?.slug || "general";
+export default function CategoryPage() {
+  const { slug } = useParams() || {}; // 👈 evita undefined
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!slug) return; // 👈 espera a tener slug antes de cargar
     async function load() {
-      const res = await fetch("/api/videos");
-      const data = await res.json();
-      setVideos(data.categories?.[slug] || []);
-      setLoading(false);
+      try {
+        const res = await fetch("/api/videos");
+        const data = await res.json();
+        setVideos(data.categories?.[slug] || []);
+      } catch (err) {
+        console.error("❌ Error fetching videos:", err);
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, [slug]);
@@ -24,7 +31,9 @@ export default function CategoryPage({ params = {} }) {
   if (loading) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-pink-50 to-white text-gray-600">
-        <p className="animate-pulse">Loading {slug} cards...</p>
+        <p className="animate-pulse">
+          Loading {slug ? slug.replace("-", " ") : "cards"}...
+        </p>
       </main>
     );
   }
@@ -36,7 +45,7 @@ export default function CategoryPage({ params = {} }) {
         <h1 className="text-3xl font-bold mb-4 capitalize">
           {slug ? slug.replace("-", " ") : "Category"}
         </h1>
-        <p>No videos yet in this category 🎥</p>
+        <p>No cards yet in this category 🎥</p>
         <Link href="/categories" className="mt-4 text-blue-500 underline">
           ← Back to Categories
         </Link>
@@ -65,7 +74,6 @@ export default function CategoryPage({ params = {} }) {
           delay: 1800,
           disableOnInteraction: false,
           pauseOnMouseEnter: false,
-          reverseDirection: false,
         }}
         speed={1600}
         loop={true}
@@ -81,7 +89,7 @@ export default function CategoryPage({ params = {} }) {
             <Link href={v.editUrl || "#"}>
               <div className="rounded-3xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-white">
                 <div className="relative w-full aspect-[4/5]">
-                  {/* 🎬 Video silencioso y sin descarga */}
+                  {/* 🎬 Video autoplay, silencioso y sin descarga */}
                   <video
                     src={v.src}
                     autoPlay
@@ -121,4 +129,4 @@ export default function CategoryPage({ params = {} }) {
       </div>
     </main>
   );
-    }
+}
