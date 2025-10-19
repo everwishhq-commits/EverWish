@@ -38,15 +38,19 @@ export async function GET() {
   try {
     const dir = path.join(process.cwd(), "public/videos");
 
+    // 🧩 Evita errores si no existe
     if (!fs.existsSync(dir)) {
       console.warn("⚠️ Carpeta /public/videos no encontrada");
-      return new Response(JSON.stringify({ top10: [], all: [] }), {
+      return new Response(JSON.stringify({ top10: [], categories: {} }), {
         status: 200,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store, max-age=0", // 🔥 sin caché
+        },
       });
     }
 
-    // 🔹 Leer archivos MP4 con fecha
+    // 🔹 Leer archivos MP4 con su fecha
     const files = fs
       .readdirSync(dir)
       .filter((f) => f.endsWith(".mp4"))
@@ -64,7 +68,7 @@ export async function GET() {
           src: `/videos/${file}`,
           slug: baseName,
           category,
-          createdAt: stats.birthtimeMs, // para ordenar
+          createdAt: stats.birthtimeMs,
         };
       });
 
@@ -72,27 +76,31 @@ export async function GET() {
       return new Response(
         JSON.stringify({
           top10: [],
-          all: [],
+          categories: {},
           message: "No videos found in /public/videos",
         }),
         {
           status: 200,
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "Cache-Control": "no-store, max-age=0",
+          },
         }
       );
     }
 
-    // 🔝 Ordenar por fecha (recientes primero)
+    // 🔝 Ordenar por fecha (más recientes primero)
     const sorted = files.sort((a, b) => b.createdAt - a.createdAt);
     const top10 = sorted.slice(0, 10);
 
-    // 🧩 Agrupar por categoría
+    // 🗂 Agrupar por categoría
     const grouped = sorted.reduce((acc, v) => {
       if (!acc[v.category]) acc[v.category] = [];
       acc[v.category].push(v);
       return acc;
     }, {});
 
+    // ✅ Respuesta final
     return new Response(
       JSON.stringify(
         {
@@ -106,14 +114,20 @@ export async function GET() {
       ),
       {
         status: 200,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store, max-age=0", // 🔥 sin caché → siempre actualizado
+        },
       }
     );
   } catch (error) {
     console.error("❌ Error en /api/videos:", error);
     return new Response(
       JSON.stringify({ error: "Error al cargar videos" }),
-      { status: 500 }
+      {
+        status: 500,
+        headers: { "Cache-Control": "no-store, max-age=0" },
+      }
     );
   }
-}
+          }
