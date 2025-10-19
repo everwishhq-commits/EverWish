@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 
-export const dynamic = "force-dynamic"; // ✅ evita errores SSR en Vercel
+export const dynamic = "force-dynamic"; // evita errores SSR en Vercel
 
 export default function CategoryVideosPage() {
   const { slug } = useParams();
@@ -46,7 +46,6 @@ export default function CategoryVideosPage() {
         const data = await res.json();
         console.log("✅ Data received:", data);
 
-        // Filtra por categoría (más flexible)
         const allVideos = data.all || [];
         const filtered = allVideos.filter((v) => {
           const cats = v.categories || [detectCategory(v.title)];
@@ -65,7 +64,7 @@ export default function CategoryVideosPage() {
     fetchVideos();
   }, [slug]);
 
-  // ⏳ Estado de carga
+  // ⏳ Pantalla de carga
   if (loading) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-pink-50 to-white text-gray-600">
@@ -76,7 +75,7 @@ export default function CategoryVideosPage() {
     );
   }
 
-  // ❌ Si no hay videos
+  // ❌ Sin videos
   if (!videos.length) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-pink-50 to-white text-gray-700">
@@ -164,4 +163,4 @@ export default function CategoryVideosPage() {
       </div>
     </main>
   );
-  }
+      }
