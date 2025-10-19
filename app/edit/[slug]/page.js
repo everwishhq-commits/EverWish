@@ -28,13 +28,14 @@ export default function EditPage({ params }) {
   const [total, setTotal] = useState(5);
   const [userImage, setUserImage] = useState(null);
 
-  // 🔧 nuevos estados de animación
+  // nuevos estados de animación
+  const [emojiCount, setEmojiCount] = useState(20);
   const [intensity, setIntensity] = useState("normal");
   const [opacityLevel, setOpacityLevel] = useState(0.9);
   const [isPurchased, setIsPurchased] = useState(false);
   const [isViewed, setIsViewed] = useState(false);
 
-  // 🎬 Inicializa datos
+  // Inicializa datos
   useEffect(() => {
     setMessage(getMessageForSlug(slug));
     const opts = getAnimationOptionsForSlug(slug);
@@ -43,7 +44,7 @@ export default function EditPage({ params }) {
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
-  // ⏳ Pantalla de carga inicial
+  // Pantalla de carga inicial
   useEffect(() => {
     let v = 0;
     const id = setInterval(() => {
@@ -57,7 +58,7 @@ export default function EditPage({ params }) {
     return () => clearInterval(id);
   }, []);
 
-  // 🎁 Gift Card
+  // Gift
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
@@ -68,23 +69,12 @@ export default function EditPage({ params }) {
     setTotal(5);
   };
 
-  // 💾 Descarga
-  const handleCardClick = () => {
-    setShowDownload(true);
-    setTimeout(() => setShowDownload(false), 3500);
-  };
-  const handleDownload = () => {
-    const link = document.createElement("a");
-    link.href = videoSrc;
-    link.download = `${slug}.mp4`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  };
-
   const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
   const [animKey, setAnimKey] = useState(0);
-  useEffect(() => setAnimKey(Date.now()), [animation, category, intensity, opacityLevel]);
+  useEffect(
+    () => setAnimKey(Date.now()),
+    [animation, category, intensity, opacityLevel, emojiCount]
+  );
 
   return (
     <div
@@ -127,6 +117,7 @@ export default function EditPage({ params }) {
             animation={animation}
             intensity={intensity}
             opacityLevel={opacityLevel}
+            emojiCount={emojiCount}
           />
 
           <motion.div
@@ -137,10 +128,7 @@ export default function EditPage({ params }) {
             className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-6 mb-10"
           >
             {/* 🖼 Tarjeta principal */}
-            <div
-              className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50"
-              onClick={handleCardClick}
-            >
+            <div className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50">
               <video
                 src={videoSrc}
                 className="w-full object-cover"
@@ -162,31 +150,6 @@ export default function EditPage({ params }) {
               onChange={(e) => setMessage(e.target.value)}
             />
 
-            {/* 📸 Imagen del usuario */}
-            {userImage && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.4 }}
-                className="my-3 cursor-pointer hover:scale-[1.02] transition-transform flex justify-center"
-                onClick={() => setShowCrop(true)}
-              >
-                <img
-                  src={userImage}
-                  alt="User upload"
-                  className="rounded-2xl border border-gray-200 shadow-sm"
-                  style={{
-                    width: "100%",
-                    height: "auto",
-                    objectFit: "cover",
-                    aspectRatio: "4 / 3",
-                    backgroundColor: "#fff7f5",
-                    maxWidth: "100%",
-                  }}
-                />
-              </motion.div>
-            )}
-
             {/* 📷 Botón Add Image */}
             {!userImage && (
               <div className="mt-4 flex justify-center">
@@ -199,7 +162,7 @@ export default function EditPage({ params }) {
               </div>
             )}
 
-            {/* ✨ Nuevo panel compacto con selector e intensidad */}
+            {/* ✨ Panel compacto actualizado */}
             <div className="my-4">
               <div
                 className={`flex items-center justify-between w-full rounded-xl transition-all duration-300 ${
@@ -213,13 +176,23 @@ export default function EditPage({ params }) {
                   border: "1px solid rgba(0,0,0,0.05)",
                 }}
               >
-                {/* 🔹 Selector de animaciones (emoji dropdown) */}
+                {/* 🔹 Selector de animaciones */}
                 <select
                   value={animation}
                   onChange={(e) => setAnimation(e.target.value)}
-                  className="flex-1 text-sm bg-transparent font-medium focus:outline-none cursor-pointer truncate"
-                  style={{ maxWidth: "50%" }}
+                  className={`flex-1 text-sm bg-transparent font-medium cursor-pointer truncate transition ${
+                    animation.startsWith("✨ None")
+                      ? "text-gray-400"
+                      : "text-gray-800"
+                  }`}
+                  style={{
+                    maxWidth: "45%",
+                    appearance: "auto",
+                  }}
                 >
+                  <option value="✨ None (No Animation)">
+                    No animation
+                  </option>
                   {animationOptions
                     .filter((a) => !a.includes("None"))
                     .map((a) => (
@@ -229,43 +202,45 @@ export default function EditPage({ params }) {
                     ))}
                 </select>
 
-                {/* Controles visibles solo antes de compra o vista */}
                 {!isPurchased && !isViewed && (
-                  <div className="flex items-center gap-1 ml-2">
-                    {/* 🔘 Control de intensidad – / + */}
+                  <div className="flex items-center gap-2 ml-2">
+                    {/* ➕➖ Cantidad emojis */}
                     <div className="flex items-center rounded-md border border-gray-300 overflow-hidden">
                       <button
                         className="px-2 text-lg hover:bg-gray-200 transition"
                         onClick={() =>
-                          setOpacityLevel((prev) => Math.max(0.5, prev - 0.1))
+                          setEmojiCount((p) => Math.max(8, p - 4))
                         }
+                        title="Decrease emojis"
                       >
                         –
                       </button>
-
-                      <select
-                        value={intensity}
-                        onChange={(e) => setIntensity(e.target.value)}
-                        className="px-2 text-sm bg-transparent font-medium focus:outline-none cursor-pointer"
-                      >
-                        <option value="soft">Soft</option>
-                        <option value="normal">Normal</option>
-                        <option value="vivid">Vivid</option>
-                      </select>
-
                       <button
                         className="px-2 text-lg hover:bg-gray-200 transition"
                         onClick={() =>
-                          setOpacityLevel((prev) => Math.min(1, prev + 0.1))
+                          setEmojiCount((p) => Math.min(40, p + 4))
                         }
+                        title="Increase emojis"
                       >
                         +
                       </button>
                     </div>
 
-                    {/* ❌ Quitar animación */}
+                    {/* 🎚 Intensidad */}
+                    <select
+                      value={intensity}
+                      onChange={(e) => setIntensity(e.target.value)}
+                      className="px-2 text-sm bg-transparent font-medium focus:outline-none cursor-pointer"
+                      title="Animation opacity & speed"
+                    >
+                      <option value="soft">Soft 🌸</option>
+                      <option value="normal">Normal ✨</option>
+                      <option value="vivid">Vivid 🔥</option>
+                    </select>
+
+                    {/* ❌ Quitar */}
                     <button
-                      className="ml-2 px-2 text-lg font-bold text-gray-600 hover:text-red-500 transition"
+                      className="ml-1 px-2 text-lg font-bold text-gray-600 hover:text-red-500 transition"
                       onClick={() =>
                         setAnimation("✨ None (No Animation)")
                       }
@@ -300,7 +275,14 @@ export default function EditPage({ params }) {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
-                onClick={handleDownload}
+                onClick={() => {
+                  const link = document.createElement("a");
+                  link.href = videoSrc;
+                  link.download = `${slug}.mp4`;
+                  document.body.appendChild(link);
+                  link.click();
+                  link.remove();
+                }}
                 className="fixed bottom-10 right-6 z-[400] rounded-full bg-[#ff7b00] px-6 py-3 text-white font-semibold shadow-lg hover:bg-[#ff9f33]"
               >
                 ⬇️ Download
@@ -313,43 +295,37 @@ export default function EditPage({ params }) {
       {/* 🔧 Modales */}
       <div className="fixed inset-0 pointer-events-none z-[10050]">
         {showGift && (
-          <div className="pointer-events-auto relative">
-            <GiftCardPopup
-              initial={gift}
-              onSelect={updateGift}
-              onClose={() => setShowGift(false)}
-            />
-          </div>
+          <GiftCardPopup
+            initial={gift}
+            onSelect={updateGift}
+            onClose={() => setShowGift(false)}
+          />
         )}
         {showCheckout && (
-          <div className="pointer-events-auto relative">
-            <CheckoutModal
-              total={total}
-              gift={gift}
-              onGiftChange={() => setShowGift(true)}
-              onGiftRemove={removeGift}
-              onClose={() => setShowCheckout(false)}
-            />
-          </div>
+          <CheckoutModal
+            total={total}
+            gift={gift}
+            onGiftChange={() => setShowGift(true)}
+            onGiftRemove={removeGift}
+            onClose={() => setShowCheckout(false)}
+          />
         )}
         {showCrop && (
-          <div className="pointer-events-auto relative">
-            <CropperModal
-              open={showCrop}
-              existingImage={userImage}
-              onClose={() => setShowCrop(false)}
-              onDelete={() => {
-                setUserImage(null);
-                setShowCrop(false);
-              }}
-              onDone={(img) => {
-                setUserImage(img);
-                setShowCrop(false);
-              }}
-            />
-          </div>
+          <CropperModal
+            open={showCrop}
+            existingImage={userImage}
+            onClose={() => setShowCrop(false)}
+            onDelete={() => {
+              setUserImage(null);
+              setShowCrop(false);
+            }}
+            onDone={(img) => {
+              setUserImage(img);
+              setShowCrop(false);
+            }}
+          />
         )}
       </div>
     </div>
   );
-}
+              }
