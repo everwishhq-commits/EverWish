@@ -28,6 +28,7 @@ export default function EditPage({ params }) {
   const [total, setTotal] = useState(5);
   const [userImage, setUserImage] = useState(null);
 
+  // Previsualización correcta de video inicial
   useEffect(() => {
     setMessage(getMessageForSlug(slug));
     const opts = getAnimationOptionsForSlug(slug);
@@ -36,6 +37,7 @@ export default function EditPage({ params }) {
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
+  // Pantalla de carga inicial
   useEffect(() => {
     let v = 0;
     const id = setInterval(() => {
@@ -48,15 +50,6 @@ export default function EditPage({ params }) {
     }, 30);
     return () => clearInterval(id);
   }, []);
-
-  // Bloquea el scroll cuando está el cropper abierto
-  useEffect(() => {
-    if (showCrop) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
-    }
-  }, [showCrop]);
 
   const updateGift = (data) => {
     setGift(data);
@@ -92,7 +85,7 @@ export default function EditPage({ params }) {
   return (
     <div
       className="relative min-h-[100dvh] bg-[#fff7f5] flex flex-col items-center overflow-hidden"
-      style={{ touchAction: showCrop ? "none" : "auto" }}
+      style={{ overscrollBehavior: "contain" }} // 🔒 evita el refresh al mover arriba-abajo
     >
       {/* Pantalla de carga */}
       {stage === "expanded" && (
@@ -171,7 +164,12 @@ export default function EditPage({ params }) {
                 <img
                   src={userImage}
                   alt="User upload"
-                  className="w-full max-h-56 object-contain rounded-2xl border border-gray-200 shadow-sm"
+                  className="w-full object-contain rounded-2xl border border-gray-200 shadow-sm max-h-64" // 🔧 ajusta la imagen
+                  style={{
+                    maxWidth: "100%",
+                    height: "auto",
+                    objectFit: "contain",
+                  }}
                 />
               </motion.div>
             )}
@@ -235,7 +233,7 @@ export default function EditPage({ params }) {
         </>
       )}
 
-      {/* Modales */}
+      {/* 🔧 Modales */}
       <div className="fixed inset-0 pointer-events-none z-[10050]">
         {showGift && (
           <div className="pointer-events-auto relative">
@@ -271,13 +269,10 @@ export default function EditPage({ params }) {
                 setUserImage(img);
                 setShowCrop(false);
               }}
-              // Nuevo ajuste: mantiene el tamaño correcto del preview
-              aspectRatio={1}
-              containWithin={true}
             />
           </div>
         )}
       </div>
     </div>
   );
-                }
+          }
