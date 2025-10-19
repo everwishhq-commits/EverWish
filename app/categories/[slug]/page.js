@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 
-export const dynamic = "force-dynamic"; // ✅ evita errores SSR en Vercel
+export const dynamic = "force-dynamic"; // ✅ Render dinámico para Vercel
 
 export default function CategoryVideosPage() {
   const { slug } = useParams();
@@ -12,7 +12,7 @@ export default function CategoryVideosPage() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
 
-  // 🧠 Detectar categoría por nombre de archivo
+  // 🧠 Detectar categoría automáticamente
   const detectCategory = (filename) => {
     const s = filename.toLowerCase();
     if (s.includes("halloween")) return "halloween";
@@ -41,15 +41,13 @@ export default function CategoryVideosPage() {
   useEffect(() => {
     async function fetchVideos() {
       try {
-        console.log("🎬 Fetching videos for:", slug);
-        const res = await fetch("https://everwish.cards/api/videos", {
-          cache: "no-store",
-        });
-
+        const baseUrl = "https://everwish.cards";
+        const res = await fetch(`${baseUrl}/api/videos`, { cache: "no-store" });
         if (!res.ok) throw new Error(`API error: ${res.status}`);
-        const data = await res.json();
 
+        const data = await res.json();
         const allVideos = data.all || [];
+
         const filtered = allVideos.filter((v) => {
           const cats = v.categories || [detectCategory(v.title)];
           return cats.includes(slug.toLowerCase());
@@ -66,7 +64,7 @@ export default function CategoryVideosPage() {
     fetchVideos();
   }, [slug]);
 
-  // 🕓 Pantalla de carga
+  // ⏳ Pantalla de carga
   if (loading) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-pink-50 to-white text-gray-600">
@@ -80,7 +78,7 @@ export default function CategoryVideosPage() {
   // ❌ Sin videos
   if (!videos.length) {
     return (
-      <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-pink-50 to-white text-gray-700">
+      <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-pink-50 to-white text-gray-700 text-center">
         <h1 className="text-3xl font-bold mb-4 capitalize">{slug}</h1>
         <p>No videos yet in this category 🎥</p>
         <Link href="/categories" className="mt-4 text-pink-500 underline">
@@ -90,7 +88,7 @@ export default function CategoryVideosPage() {
     );
   }
 
-  // ✅ Vista principal
+  // ✅ Vista principal (videos sin título ni controles)
   return (
     <main className="min-h-screen bg-gradient-to-b from-pink-50 to-white pt-24 pb-16 px-4 md:px-8">
       <div className="max-w-5xl mx-auto text-center mb-10">
@@ -98,66 +96,42 @@ export default function CategoryVideosPage() {
           ← Back to Categories
         </Link>
 
-        <h1 className="text-4xl md:text-5xl font-extrabold mt-4 mb-3 bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent capitalize">
+        <h1 className="text-4xl md:text-5xl font-extrabold mt-4 mb-6 bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent capitalize">
           {slug.replace("-", " ")}
         </h1>
 
-        <p className="text-gray-700 text-lg">
-          Discover beautiful Everwish cards for {slug.replace("-", " ")} ✨
-        </p>
-
-        <div className="mt-6">
-          <input
-            type="text"
-            placeholder="Search cards..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="w-full md:w-2/3 px-4 py-3 border rounded-full shadow focus:outline-none focus:ring-2 focus:ring-pink-400 text-center text-gray-700"
-          />
-        </div>
+        <input
+          type="text"
+          placeholder="Search cards..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="w-full md:w-2/3 px-4 py-3 border rounded-full shadow focus:outline-none focus:ring-2 focus:ring-pink-400 text-center text-gray-700"
+        />
       </div>
 
+      {/* Galería de videos */}
       <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {videos
-          .filter((v) =>
-            v.title.toLowerCase().includes(query.toLowerCase())
-          )
+          .filter((v) => v.title.toLowerCase().includes(query.toLowerCase()))
           .map((v, i) => (
             <Link
               key={i}
               href={v.editUrl || `/edit/${v.slug}`}
-              className="rounded-3xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-white"
+              className="rounded-3xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-white relative"
             >
-              <div className="relative w-full aspect-[4/5]">
-                <video
-                  src={v.src}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  disablePictureInPicture
-                  controls={false}
-                  controlsList="nodownload nofullscreen noremoteplayback"
-                  className="w-full h-full object-cover rounded-3xl"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-40 rounded-3xl"></div>
-                <div className="absolute bottom-3 left-3 right-3 text-center">
-                  <p className="text-sm font-semibold text-white drop-shadow-md truncate">
-                    {v.title}
-                  </p>
-                </div>
-              </div>
+              <video
+                src={v.src}
+                autoPlay
+                muted
+                loop
+                playsInline
+                disablePictureInPicture
+                controls={false}
+                controlsList="nodownload nofullscreen noremoteplayback"
+                className="w-full h-full object-cover rounded-3xl select-none pointer-events-none"
+              />
             </Link>
           ))}
-      </div>
-
-      <div className="text-center mt-10">
-        <Link
-          href="/categories"
-          className="text-sm text-gray-500 hover:text-pink-500 transition"
-        >
-          ← Back to Categories
-        </Link>
       </div>
     </main>
   );
