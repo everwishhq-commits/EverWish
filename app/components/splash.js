@@ -16,13 +16,14 @@ export default function Splash({ onFinish }) {
       }
     };
 
+    // Animación de progreso
     const step1 = setTimeout(() => setProgress(50), 500);
     const step2 = setTimeout(() => setProgress(100), 1000);
 
     // Parpadeo del logo
     const fadeAnim = setInterval(() => setFade((f) => !f), 500);
 
-    // Salida segura del splash
+    // Salida segura del splash (2 s)
     const finish = setTimeout(() => {
       clearInterval(fadeAnim);
       safeFinish();
@@ -65,4 +66,4 @@ export default function Splash({ onFinish }) {
       </div>
     </div>
   );
-              }
+}
