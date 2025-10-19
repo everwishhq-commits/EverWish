@@ -1,6 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay } from "swiper/modules";
+import "swiper/css";
 
 export default function CategoryPage({ params }) {
   const { slug } = params;
@@ -19,17 +22,17 @@ export default function CategoryPage({ params }) {
 
   if (loading) {
     return (
-      <main className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-        <p className="text-gray-500">Loading {slug} videos...</p>
+      <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-pink-50 to-white text-gray-600">
+        <p className="animate-pulse">Loading {slug} cards...</p>
       </main>
     );
   }
 
   if (!videos.length) {
     return (
-      <main className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-        <h1 className="text-3xl font-bold mb-4 capitalize">{slug} 🎞️</h1>
-        <p className="text-gray-500">No videos found in this category yet.</p>
+      <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-pink-50 to-white text-gray-700">
+        <h1 className="text-3xl font-bold mb-4 capitalize">{slug}</h1>
+        <p>No videos yet in this category 🎥</p>
         <Link href="/categories" className="mt-4 text-blue-500 underline">
           ← Back to Categories
         </Link>
@@ -38,32 +41,79 @@ export default function CategoryPage({ params }) {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 pt-24 px-4 md:px-8">
+    <main className="min-h-screen bg-gradient-to-b from-pink-50 to-white pt-24 pb-16 px-4 md:px-8">
+      {/* Encabezado */}
       <div className="max-w-5xl mx-auto text-center mb-10">
-        <h1 className="text-3xl md:text-5xl font-extrabold capitalize mb-3">
+        <h1 className="text-4xl md:text-5xl font-extrabold mb-3 capitalize bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
           {slug.replace("-", " ")}
         </h1>
-        <p className="text-gray-600">Select a card to edit or send 💌</p>
+        <p className="text-gray-600">
+          Choose your favorite card — it moves for you 💌
+        </p>
       </div>
 
-      <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {/* 🌀 Carrusel automático tipo Netflix */}
+      <Swiper
+        slidesPerView={2.3}
+        spaceBetween={15}
+        autoplay={{
+          delay: 1800,
+          disableOnInteraction: false,
+          pauseOnMouseEnter: false,
+          reverseDirection: false,
+        }}
+        speed={1600}
+        loop={true}
+        breakpoints={{
+          640: { slidesPerView: 3.2, spaceBetween: 20 },
+          1024: { slidesPerView: 5, spaceBetween: 25 },
+        }}
+        modules={[Autoplay]}
+        className="overflow-visible"
+      >
         {videos.map((v, i) => (
-          <Link key={i} href={v.editUrl}>
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition">
-              <video
-                src={v.src}
-                className="w-full h-48 object-cover"
-                muted
-                loop
-                playsInline
-              />
-              <div className="p-4 text-center">
-                <h3 className="font-semibold text-gray-800">{v.title}</h3>
+          <SwiperSlide key={i}>
+            <Link href={v.editUrl}>
+              <div className="rounded-3xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-white">
+                <div className="relative w-full aspect-[4/5]">
+                  {/* 🎞 Video autoplay silencioso */}
+                  <video
+                    src={v.src}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    disablePictureInPicture
+                    controls={false}
+                    controlsList="nodownload nofullscreen noremoteplayback"
+                    className="w-full h-full object-cover rounded-3xl"
+                  />
+
+                  {/* 🌸 Overlay para elegancia */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-40 rounded-3xl"></div>
+
+                  {/* 🏷️ Título */}
+                  <div className="absolute bottom-3 left-3 right-3 text-center">
+                    <p className="text-sm font-semibold text-white drop-shadow-md truncate">
+                      {v.title}
+                    </p>
+                  </div>
+                </div>
               </div>
-            </div>
-          </Link>
+            </Link>
+          </SwiperSlide>
         ))}
+      </Swiper>
+
+      {/* 🔙 Regresar */}
+      <div className="text-center mt-10">
+        <Link
+          href="/categories"
+          className="text-sm text-gray-500 hover:text-pink-500 transition"
+        >
+          ← Back to Categories
+        </Link>
       </div>
     </main>
   );
-          }
+      }
