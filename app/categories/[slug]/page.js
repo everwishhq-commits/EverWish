@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 
-export const dynamic = "force-dynamic"; // ✅ evita errores SSR en Vercel
+export const dynamic = "force-dynamic"; // evita errores SSR en Vercel
 
 export default function CategoryVideosPage() {
   const { slug } = useParams();
@@ -13,7 +13,7 @@ export default function CategoryVideosPage() {
   const [query, setQuery] = useState("");
 
   // 🧠 Detectar categoría por nombre de archivo
-  function detectCategory(filename) {
+  const detectCategory = (filename) => {
     const s = filename.toLowerCase();
     if (s.includes("halloween")) return "halloween";
     if (s.includes("christmas") || s.includes("xmas")) return "christmas";
@@ -35,18 +35,19 @@ export default function CategoryVideosPage() {
     if (s.includes("spring")) return "spring";
     if (s.includes("pets") || s.includes("dog") || s.includes("cat")) return "pets";
     return "general";
-  }
+  };
 
   // 🎬 Cargar videos desde la API
   useEffect(() => {
     async function fetchVideos() {
-      console.log("🎬 Fetching videos for slug:", slug);
       try {
-        // 🔗 Fuerza el dominio principal para evitar errores en Vercel alterno
-        const baseUrl = "https://everwish.cards";
-        const res = await fetch(`${baseUrl}/api/videos`, { cache: "no-store" });
+        console.log("🎬 Fetching videos for:", slug);
+        const res = await fetch("https://everwish.cards/api/videos", {
+          cache: "no-store",
+        });
+
+        if (!res.ok) throw new Error(`API error: ${res.status}`);
         const data = await res.json();
-        console.log("✅ Data received:", data);
 
         const allVideos = data.all || [];
         const filtered = allVideos.filter((v) => {
@@ -54,7 +55,6 @@ export default function CategoryVideosPage() {
           return cats.includes(slug.toLowerCase());
         });
 
-        console.log("📂 Category videos for", slug, ":", filtered);
         setVideos(filtered);
       } catch (err) {
         console.error("❌ Error fetching videos:", err);
@@ -66,7 +66,7 @@ export default function CategoryVideosPage() {
     fetchVideos();
   }, [slug]);
 
-  // ⏳ Pantalla de carga
+  // 🕓 Pantalla de carga
   if (loading) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-pink-50 to-white text-gray-600">
@@ -161,4 +161,4 @@ export default function CategoryVideosPage() {
       </div>
     </main>
   );
-            }
+      }
