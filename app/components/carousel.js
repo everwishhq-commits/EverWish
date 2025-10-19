@@ -11,10 +11,10 @@ export default function Carousel() {
   const touchEndX = useRef(0);
   const pauseRef = useRef(false);
   const swipeDetected = useRef(false);
-  const longPressTimeout = useRef(null); // 🕒 nuevo
-  const longPressActive = useRef(false); // 🚫 evita click si se mantuvo presionado
+  const longPressTimeout = useRef(null);
+  const longPressActive = useRef(false);
 
-  // ✅ Función de autoplay (reinicia correctamente)
+  // ✅ Autoplay control
   const startAutoplay = () => {
     clearInterval(autoplayRef.current);
     if (videos.length > 0 && !pauseRef.current) {
@@ -41,7 +41,7 @@ export default function Carousel() {
     return () => clearInterval(refresh);
   }, []);
 
-  // 🔁 Autoplay inicial
+  // 🔁 Inicia autoplay
   useEffect(() => {
     startAutoplay();
     return () => clearInterval(autoplayRef.current);
@@ -56,7 +56,7 @@ export default function Carousel() {
     longPressActive.current = false;
     clearInterval(autoplayRef.current);
 
-    // 🕒 inicia detección de long press (800 ms)
+    // 🕒 Detecta long press
     longPressTimeout.current = setTimeout(() => {
       longPressActive.current = true;
     }, 800);
@@ -67,39 +67,36 @@ export default function Carousel() {
     const diff = touchStartX.current - touchEndX.current;
     if (Math.abs(diff) > 20) swipeDetected.current = true;
 
-    // si se mueve, se cancela long press
-    clearTimeout(longPressTimeout.current);
+    clearTimeout(longPressTimeout.current); // cancel long press si mueve
   };
 
   const handleTouchEnd = () => {
     clearTimeout(longPressTimeout.current);
-
     const diff = touchStartX.current - touchEndX.current;
 
     if (longPressActive.current) {
-      // 🚫 Si fue toque prolongado, no hace nada
-      longPressActive.current = false;
+      longPressActive.current = false; // 🚫 evita acción por long press
     } else if (swipeDetected.current && Math.abs(diff) > 50) {
-      // 👉 Swipe inmediato
+      // 👉 Swipe
       setIndex((prev) =>
         diff > 0
           ? (prev + 1) % videos.length
           : (prev - 1 + videos.length) % videos.length
       );
     } else {
-      // 👆 Tap → fullscreen
+      // 👆 Tap → fullscreen y navegación
       const tapped = videos[index];
       if (tapped?.slug) handleClick(tapped.slug);
     }
 
-    // 🕒 Reanuda autoplay tras 4 s
+    // 🕒 Reanuda autoplay
     setTimeout(() => {
       pauseRef.current = false;
       startAutoplay();
     }, 4000);
   };
 
-  // 🔸 Click → fullscreen + navegación
+  // 🔸 Navegación
   const handleClick = async (slug) => {
     try {
       const elem = document.documentElement;
@@ -143,6 +140,9 @@ export default function Carousel() {
                   loop
                   muted
                   playsInline
+                  onContextMenu={(e) => e.preventDefault()} // 🚫 sin menú descarga
+                  controlsList="nodownload noplaybackrate"
+                  draggable="false"
                   className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover object-center bg-white overflow-hidden"
                   style={{ maxHeight: "100%", maxWidth: "100%" }}
                 />
@@ -150,6 +150,8 @@ export default function Carousel() {
                 <img
                   src={video.src}
                   alt={video.title}
+                  onContextMenu={(e) => e.preventDefault()} // 🚫 sin menú descarga
+                  draggable="false"
                   className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover object-center bg-white overflow-hidden"
                   style={{ maxHeight: "100%", maxWidth: "100%" }}
                 />
@@ -181,4 +183,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-      }
+}
