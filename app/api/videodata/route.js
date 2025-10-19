@@ -1,3 +1,6 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic"; // 👈 Esto es CLAVE
+
 import fs from "fs";
 import path from "path";
 
@@ -19,7 +22,7 @@ function detectCategory(filename) {
   if (s.includes("getwell")) return "getwell";
   if (s.includes("anniversary")) return "anniversary";
   if (s.includes("thanksgiving")) return "thanksgiving";
-  if (s.includes("newyear")) return "new-year";
+  if (s.includes("newyear")) return "newyear";
   if (s.includes("autumn") || s.includes("fall")) return "autumn";
   if (s.includes("winter")) return "winter";
   if (s.includes("summer")) return "summer";
@@ -31,58 +34,28 @@ function detectCategory(filename) {
 export async function GET() {
   try {
     const dir = path.join(process.cwd(), "public/videos");
-
-    // ✅ Verifica carpeta
     if (!fs.existsSync(dir)) {
-      console.warn("⚠️ Carpeta /public/videos no encontrada");
-      return new Response(JSON.stringify({ all: [], categories: {} }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(JSON.stringify({ error: "No videos folder found" }), { status: 404 });
     }
 
-    // 🔹 Lee los archivos MP4 de la carpeta
-    const files = fs
-      .readdirSync(dir)
-      .filter((file) => file.endsWith(".mp4"))
-      .map((file) => {
-        const baseName = path.parse(file).name;
-        const title = baseName
-          .replace(/_/g, " ")
-          .replace(/\b\w/g, (c) => c.toUpperCase());
-        const category = detectCategory(file);
-        return {
-          title,
-          src: `/videos/${file}`,
-          slug: baseName,
-          category,
-        };
-      });
+    const files = fs.readdirSync(dir)
+      .filter((f) => f.endsWith(".mp4"))
+      .map((file) => ({
+        title: file.replace(/_/g, " ").replace(".mp4", ""),
+        src: `/videos/${file}`,
+        category: detectCategory(file),
+      }));
 
-    // 🔸 Agrupa por categoría
-    const grouped = files.reduce((acc, video) => {
-      if (!acc[video.category]) acc[video.category] = [];
-      acc[video.category].push(video);
+    const grouped = files.reduce((acc, file) => {
+      acc[file.category] = acc[file.category] || [];
+      acc[file.category].push(file);
       return acc;
     }, {});
 
-    // ✅ Devuelve todo organizado
-    return new Response(
-      JSON.stringify(
-        { all: files, categories: grouped, updated: new Date().toISOString() },
-        null,
-        2
-      ),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
-  } catch (error) {
-    console.error("❌ Error en /api/videodata:", error);
-    return new Response(
-      JSON.stringify({ error: "Error al cargar videos por categorías" }),
-      { status: 500 }
-    );
+    return new Response(JSON.stringify({ all: files, categories: grouped }, null, 2), {
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
-  }
+                }
