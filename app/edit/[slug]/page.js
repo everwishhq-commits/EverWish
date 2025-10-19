@@ -28,7 +28,7 @@ export default function EditPage({ params }) {
   const [total, setTotal] = useState(5);
   const [userImage, setUserImage] = useState(null);
 
-  // nuevos controles de intensidad / opacidad / visibilidad
+  // 🔧 nuevos estados de animación
   const [intensity, setIntensity] = useState("normal");
   const [opacityLevel, setOpacityLevel] = useState(0.9);
   const [isPurchased, setIsPurchased] = useState(false);
@@ -199,7 +199,7 @@ export default function EditPage({ params }) {
               </div>
             )}
 
-            {/* ✨ Nuevo panel compacto de animación */}
+            {/* ✨ Nuevo panel compacto con selector e intensidad */}
             <div className="my-4">
               <div
                 className={`flex items-center justify-between w-full rounded-xl transition-all duration-300 ${
@@ -213,48 +213,57 @@ export default function EditPage({ params }) {
                   border: "1px solid rgba(0,0,0,0.05)",
                 }}
               >
-                {/* Nombre actual */}
-                <div className="flex-1 truncate font-medium text-sm">
-                  {animation && !animation.startsWith("✨ None")
-                    ? animation
-                    : "No animation"}
-                </div>
+                {/* 🔹 Selector de animaciones (emoji dropdown) */}
+                <select
+                  value={animation}
+                  onChange={(e) => setAnimation(e.target.value)}
+                  className="flex-1 text-sm bg-transparent font-medium focus:outline-none cursor-pointer truncate"
+                  style={{ maxWidth: "50%" }}
+                >
+                  {animationOptions
+                    .filter((a) => !a.includes("None"))
+                    .map((a) => (
+                      <option key={a} value={a}>
+                        {a}
+                      </option>
+                    ))}
+                </select>
 
                 {/* Controles visibles solo antes de compra o vista */}
                 {!isPurchased && !isViewed && (
-                  <div className="flex items-center gap-1">
-                    {/* – */}
-                    <button
-                      className="px-2 text-lg hover:opacity-80"
-                      onClick={() =>
-                        setOpacityLevel((prev) => Math.max(0.5, prev - 0.1))
-                      }
-                    >
-                      –
-                    </button>
+                  <div className="flex items-center gap-1 ml-2">
+                    {/* 🔘 Control de intensidad – / + */}
+                    <div className="flex items-center rounded-md border border-gray-300 overflow-hidden">
+                      <button
+                        className="px-2 text-lg hover:bg-gray-200 transition"
+                        onClick={() =>
+                          setOpacityLevel((prev) => Math.max(0.5, prev - 0.1))
+                        }
+                      >
+                        –
+                      </button>
 
-                    {/* Dropdown intensidad */}
-                    <select
-                      value={intensity}
-                      onChange={(e) => setIntensity(e.target.value)}
-                      className="text-sm bg-transparent font-medium focus:outline-none cursor-pointer"
-                    >
-                      <option value="soft">Soft</option>
-                      <option value="normal">Normal</option>
-                      <option value="vivid">Vivid</option>
-                    </select>
+                      <select
+                        value={intensity}
+                        onChange={(e) => setIntensity(e.target.value)}
+                        className="px-2 text-sm bg-transparent font-medium focus:outline-none cursor-pointer"
+                      >
+                        <option value="soft">Soft</option>
+                        <option value="normal">Normal</option>
+                        <option value="vivid">Vivid</option>
+                      </select>
 
-                    {/* + */}
-                    <button
-                      className="px-2 text-lg hover:opacity-80"
-                      onClick={() =>
-                        setOpacityLevel((prev) => Math.min(1, prev + 0.1))
-                      }
-                    >
-                      +
-                    </button>
+                      <button
+                        className="px-2 text-lg hover:bg-gray-200 transition"
+                        onClick={() =>
+                          setOpacityLevel((prev) => Math.min(1, prev + 0.1))
+                        }
+                      >
+                        +
+                      </button>
+                    </div>
 
-                    {/* X quitar animación */}
+                    {/* ❌ Quitar animación */}
                     <button
                       className="ml-2 px-2 text-lg font-bold text-gray-600 hover:text-red-500 transition"
                       onClick={() =>
@@ -343,4 +352,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-            }
+}
