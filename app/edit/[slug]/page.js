@@ -167,7 +167,7 @@ export default function EditPage({ params }) {
               onChange={(e) => setMessage(e.target.value)}
             />
 
-            {/* 📸 Imagen del usuario */}
+            {/* 📸 Imagen aprobada */}
             {userImage && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -213,7 +213,7 @@ export default function EditPage({ params }) {
                 }`}
                 style={{
                   height: "46px",
-                  padding: "0 6px 0 6px", // 👈 ligeramente más estrecho
+                  padding: "0 8px 0 8px",
                   border: "1px solid rgba(0,0,0,0.05)",
                 }}
               >
@@ -221,13 +221,14 @@ export default function EditPage({ params }) {
                 <select
                   value={animation}
                   onChange={(e) => setAnimation(e.target.value)}
-                  className={`flex-1 text-sm bg-transparent font-medium focus:outline-none cursor-pointer truncate transition ${
+                  className={`flex-1 text-sm font-medium focus:outline-none cursor-pointer truncate transition-colors ${
                     animation.startsWith("✨ None")
-                      ? "text-gray-400"
+                      ? "text-pink-500 font-semibold"
                       : "text-gray-700"
                   }`}
                   style={{
-                    maxWidth: "42%",
+                    maxWidth: "43%",
+                    backgroundColor: "transparent",
                     appearance: "auto",
                   }}
                 >
@@ -240,10 +241,9 @@ export default function EditPage({ params }) {
                     ))}
                 </select>
 
-                {/* 🔸 Controles */}
+                {/* 🔸 Controles visibles solo antes de compra o vista */}
                 {!isPurchased && !isViewed && (
                   <div className="flex items-center gap-2 ml-1">
-                    {/* Control cantidad – / + */}
                     <div className="flex items-center rounded-md border border-gray-300 overflow-hidden">
                       <button
                         className="px-2 text-lg hover:bg-gray-200 transition"
@@ -266,7 +266,6 @@ export default function EditPage({ params }) {
                       </button>
                     </div>
 
-                    {/* Intensidad */}
                     <select
                       value={intensity}
                       onChange={(e) => setIntensity(e.target.value)}
@@ -277,7 +276,6 @@ export default function EditPage({ params }) {
                       <option value="vivid">Vivid</option>
                     </select>
 
-                    {/* ❌ Quitar animación */}
                     <button
                       className={`ml-1 px-2 text-lg font-bold transition ${
                         animation && !animation.startsWith("✨ None")
@@ -367,4 +365,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-                       }
+              }
