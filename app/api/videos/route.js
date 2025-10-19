@@ -1,3 +1,4 @@
+export const runtime = "nodejs"; // 🔧 Fuerza el uso de Node.js en Vercel
 export const dynamic = "force-dynamic";
 
 import { readdirSync, existsSync } from "fs";
@@ -59,4 +60,4 @@ export async function GET() {
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
-                             }
+}
