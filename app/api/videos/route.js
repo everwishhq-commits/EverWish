@@ -1,9 +1,6 @@
 import fs from "fs";
 import path from "path";
 
-/**
- * 🧠 Detecta la categoría principal por nombre del archivo
- */
 function detectCategory(filename) {
   const s = filename.toLowerCase();
   if (s.includes("halloween")) return "halloween";
@@ -29,11 +26,6 @@ function detectCategory(filename) {
   return "general";
 }
 
-/**
- * 📦 GET /api/videos
- * Lee automáticamente los .mp4 en /public/videos,
- * los clasifica, y genera top10 + lista completa por categoría.
- */
 export async function GET() {
   try {
     const dir = path.join(process.cwd(), "public/videos");
@@ -46,7 +38,6 @@ export async function GET() {
       });
     }
 
-    // 🔹 Leer archivos MP4 con fecha
     const files = fs
       .readdirSync(dir)
       .filter((f) => f.endsWith(".mp4"))
@@ -54,9 +45,7 @@ export async function GET() {
         const fullPath = path.join(dir, file);
         const stats = fs.statSync(fullPath);
         const baseName = path.parse(file).name;
-        const title = baseName
-          .replace(/_/g, " ")
-          .replace(/\b\w/g, (c) => c.toUpperCase());
+        const title = baseName.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
         const category = detectCategory(file);
 
         return {
@@ -64,7 +53,7 @@ export async function GET() {
           src: `/videos/${file}`,
           slug: baseName,
           category,
-          createdAt: stats.birthtimeMs, // para ordenar
+          createdAt: stats.birthtimeMs,
         };
       });
 
@@ -82,11 +71,8 @@ export async function GET() {
       );
     }
 
-    // 🔝 Ordenar por fecha (recientes primero)
     const sorted = files.sort((a, b) => b.createdAt - a.createdAt);
     const top10 = sorted.slice(0, 10);
-
-    // 🧩 Agrupar por categoría
     const grouped = sorted.reduce((acc, v) => {
       if (!acc[v.category]) acc[v.category] = [];
       acc[v.category].push(v);
@@ -94,26 +80,11 @@ export async function GET() {
     }, {});
 
     return new Response(
-      JSON.stringify(
-        {
-          top10,
-          categories: grouped,
-          totalVideos: sorted.length,
-          updated: new Date().toISOString(),
-        },
-        null,
-        2
-      ),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }
+      JSON.stringify({ top10, categories: grouped, updated: new Date().toISOString() }, null, 2),
+      { status: 200, headers: { "Content-Type": "application/json" } }
     );
   } catch (error) {
     console.error("❌ Error en /api/videos:", error);
-    return new Response(
-      JSON.stringify({ error: "Error al cargar videos" }),
-      { status: 500 }
-    );
+    return new Response(JSON.stringify({ error: "Error al cargar videos" }), { status: 500 });
   }
-          }
+      }
