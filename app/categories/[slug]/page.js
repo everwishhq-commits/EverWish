@@ -86,15 +86,16 @@ export default function CategoryVideosPage() {
                 loop
                 muted
                 playsInline
-                controls={false}
                 preload="auto"
                 disablePictureInPicture
+                controls={false}
                 controlsList="nodownload nofullscreen noremoteplayback"
                 onContextMenu={(e) => e.preventDefault()}
-                className="w-full h-full object-cover rounded-[8%] transform group-hover:scale-105 transition-transform duration-500 select-none pointer-events-none"
-                draggable="false"
-                onDragStart={(e) => e.preventDefault()}
+                className="w-full h-full object-cover rounded-[8%] pointer-events-none select-none transform group-hover:scale-105 transition-transform duration-500"
+                draggable={false}
               />
+              {/* 🛑 Overlay invisible para bloquear descarga */}
+              <div className="absolute inset-0" onContextMenu={(e) => e.preventDefault()}></div>
             </div>
           ))
         )}
