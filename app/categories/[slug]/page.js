@@ -1,4 +1,4 @@
-"use client"; // 👈 debe ir en la primera línea
+"use client"; // 👈 Obligatorio para usar hooks del lado del cliente
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
@@ -42,12 +42,14 @@ export default function CategoryVideosPage() {
     async function fetchVideos() {
       console.log("🎬 Fetching videos for slug:", slug);
       try {
+        // ✅ Usa URL absoluta para funcionar local y en Vercel
         const baseUrl =
           process.env.NEXT_PUBLIC_BASE_URL || window.location.origin;
         const res = await fetch(`${baseUrl}/api/videos`);
         const data = await res.json();
         console.log("✅ Data received:", data);
 
+        // 🔎 Filtra por categoría según el slug actual
         const allVideos = data.all || [];
         const filtered = allVideos.filter((v) => {
           const cats = v.categories || [detectCategory(v.title)];
@@ -77,7 +79,7 @@ export default function CategoryVideosPage() {
     );
   }
 
-  // ❌ Sin videos
+  // ❌ Sin videos disponibles
   if (!videos.length) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-pink-50 to-white text-gray-700">
@@ -93,6 +95,7 @@ export default function CategoryVideosPage() {
   // ✅ Vista principal
   return (
     <main className="min-h-screen bg-gradient-to-b from-pink-50 to-white pt-24 pb-16 px-4 md:px-8">
+      {/* 🔹 Encabezado */}
       <div className="max-w-5xl mx-auto text-center mb-10">
         <Link href="/categories" className="text-pink-500 hover:underline">
           ← Back to Categories
@@ -106,6 +109,7 @@ export default function CategoryVideosPage() {
           Discover beautiful Everwish cards for {slug.replace("-", " ")} ✨
         </p>
 
+        {/* 🔍 Buscador */}
         <div className="mt-6">
           <input
             type="text"
@@ -117,6 +121,7 @@ export default function CategoryVideosPage() {
         </div>
       </div>
 
+      {/* 🎞️ Grid de videos */}
       <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {videos
           .filter((v) =>
@@ -151,6 +156,7 @@ export default function CategoryVideosPage() {
           ))}
       </div>
 
+      {/* 🔙 Volver */}
       <div className="text-center mt-10">
         <Link
           href="/categories"
@@ -161,4 +167,4 @@ export default function CategoryVideosPage() {
       </div>
     </main>
   );
-          }
+      }
