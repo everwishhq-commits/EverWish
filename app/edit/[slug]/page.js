@@ -142,14 +142,32 @@ export default function EditPage({ params }) {
               onChange={(e) => setMessage(e.target.value)}
             />
 
-            {/* Imagen del usuario */}
+            {/* Imagen del usuario debajo del mensaje */}
             {userImage && (
-              <div className="my-4">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.4 }}
+                className="my-4 cursor-pointer transition-transform hover:scale-[1.02]"
+                onClick={() => setShowCrop(true)}
+              >
                 <img
                   src={userImage}
                   alt="User upload"
-                  className="w-full rounded-2xl border border-gray-200 shadow-sm"
+                  className="w-full rounded-2xl border border-gray-200 shadow-sm object-cover"
                 />
+              </motion.div>
+            )}
+
+            {/* Botón Add Image solo si no hay imagen */}
+            {!userImage && (
+              <div className="mt-4 flex justify-center">
+                <button
+                  onClick={() => setShowCrop(true)}
+                  className="z-[210] flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-3 font-semibold text-[#3b2b1f] hover:bg-yellow-300"
+                >
+                  📸 Add Image
+                </button>
               </div>
             )}
 
@@ -170,12 +188,14 @@ export default function EditPage({ params }) {
 
             {/* Botones principales */}
             <div className="mt-4 flex flex-wrap justify-center gap-3">
-              <button
-                onClick={() => setShowCrop(true)}
-                className="z-[210] flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-3 font-semibold text-[#3b2b1f] hover:bg-yellow-300"
-              >
-                📸 Add Image
-              </button>
+              {!userImage && (
+                <button
+                  onClick={() => setShowCrop(true)}
+                  className="z-[210] flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-3 font-semibold text-[#3b2b1f] hover:bg-yellow-300"
+                >
+                  📸 Add Image
+                </button>
+              )}
               <button
                 onClick={() => setShowGift(true)}
                 className="z-[210] flex items-center gap-2 rounded-full bg-pink-200 px-5 py-3 font-semibold text-pink-700 hover:bg-pink-300"
@@ -206,7 +226,7 @@ export default function EditPage({ params }) {
         </>
       )}
 
-      {/* 🔧 Modales siempre encima */}
+      {/* 🔧 Modales */}
       <div className="fixed inset-0 pointer-events-none z-[10050]">
         {showGift && (
           <div className="pointer-events-auto relative">
@@ -232,7 +252,12 @@ export default function EditPage({ params }) {
           <div className="pointer-events-auto relative">
             <CropperModal
               open={showCrop}
+              existingImage={userImage}
               onClose={() => setShowCrop(false)}
+              onDelete={() => {
+                setUserImage(null);
+                setShowCrop(false);
+              }}
               onDone={(img) => {
                 setUserImage(img);
                 setShowCrop(false);
@@ -243,4 +268,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-}
+        }
