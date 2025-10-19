@@ -1,62 +1,81 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 import fs from "fs";
 import path from "path";
+
+// 🧠 Detecta la categoría por el nombre del archivo
+function detectCategory(filename) {
+  const s = filename.toLowerCase();
+  const cats = [];
+
+  if (s.includes("halloween")) cats.push("halloween");
+  if (s.includes("christmas") || s.includes("xmas")) cats.push("christmas");
+  if (s.includes("easter")) cats.push("easter");
+  if (s.includes("valentine") || s.includes("love")) cats.push("valentines");
+  if (s.includes("birthday")) cats.push("birthday");
+  if (s.includes("mothers")) cats.push("mothers-day");
+  if (s.includes("fathers")) cats.push("fathers-day");
+  if (s.includes("baby")) cats.push("new-baby");
+  if (s.includes("graduation")) cats.push("graduation");
+  if (s.includes("wedding")) cats.push("wedding");
+  if (s.includes("getwell")) cats.push("getwell");
+  if (s.includes("anniversary")) cats.push("anniversary");
+  if (s.includes("thanksgiving")) cats.push("thanksgiving");
+  if (s.includes("newyear")) cats.push("new-year");
+  if (s.includes("autumn") || s.includes("fall")) cats.push("autumn");
+  if (s.includes("winter")) cats.push("winter");
+  if (s.includes("summer")) cats.push("summer");
+  if (s.includes("spring")) cats.push("spring");
+  if (s.includes("pets") || s.includes("dog") || s.includes("cat")) cats.push("pets");
+
+  return cats.length > 0 ? cats : ["general"];
+}
 
 export async function GET() {
   try {
     const dir = path.join(process.cwd(), "public/videos");
-
-    // ✅ Verifica que exista la carpeta de videos
     if (!fs.existsSync(dir)) {
-      console.warn("⚠️ Carpeta /public/videos no encontrada");
       return new Response(JSON.stringify([]), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });
     }
 
-    // 🔹 Lee los archivos MP4 de la carpeta
-    const files = fs
-      .readdirSync(dir)
-      .filter((file) => file.endsWith(".mp4"))
+    // 🔹 Carga los archivos MP4
+    const files = fs.readdirSync(dir)
+      .filter((f) => f.endsWith(".mp4"))
       .map((file) => {
         const baseName = path.parse(file).name;
         const title = baseName
           .replace(/_/g, " ")
           .replace(/\b\w/g, (c) => c.toUpperCase());
+        const categories = detectCategory(file);
         return {
           title,
-          src: `/videos/${file}`,
           slug: baseName,
+          src: `/videos/${file}`,
+          categories,
+          editUrl: `/edit/${baseName}`,
         };
       });
 
-    // 🔸 Si no hay videos, devuelve un placeholder
-    if (files.length === 0) {
-      return new Response(
-        JSON.stringify([
-          {
-            title: "Card Coming Soon ✨",
-            src: "",
-            slug: "placeholder",
-          },
-        ]),
-        {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-    }
+    // 🧩 Agrupar por categoría
+    const grouped = {};
+    files.forEach((v) => {
+      v.categories.forEach((cat) => {
+        if (!grouped[cat]) grouped[cat] = [];
+        grouped[cat].push(v);
+      });
+    });
 
-    // ✅ Devuelve la lista de videos (Top actual)
-    return new Response(JSON.stringify(files, null, 2), {
+    return new Response(JSON.stringify({ all: files, categories: grouped }, null, 2), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
-  } catch (error) {
-    console.error("❌ Error en /api/videos:", error);
-    return new Response(
-      JSON.stringify({ error: "Error al cargar videos" }),
-      { status: 500 }
-    );
+
+  } catch (err) {
+    console.error("❌ Error en /api/videos:", err);
+    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
-}
+  }
