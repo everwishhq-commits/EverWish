@@ -7,23 +7,20 @@ export default function Splash({ onFinish }) {
   const [fade, setFade] = useState(false);
 
   useEffect(() => {
-    const safeFinish = () => {
-      try {
-        if (typeof onFinish === "function") onFinish();
-      } catch (err) {
-        console.warn("⚠️ Splash onFinish error:", err);
-      }
-    };
+    // Avance del progreso
+    const step1 = setTimeout(() => setProgress(50), 500);
+    const step2 = setTimeout(() => setProgress(100), 1000);
 
-    const step1 = setTimeout(() => setProgress(50), 500); // 0 → 50%
-    const step2 = setTimeout(() => setProgress(100), 1000); // 50 → 100%
-    const fadeAnim = setInterval(() => setFade((f) => !f), 500); // Parpadeo logo
+    // Parpadeo del logo
+    const fadeAnim = setInterval(() => setFade((f) => !f), 500);
 
+    // Finalizar el splash después de 2 segundos
     const finish = setTimeout(() => {
       clearInterval(fadeAnim);
-      safeFinish();
+      if (typeof onFinish === "function") onFinish();
     }, 2000);
 
+    // Limpieza
     return () => {
       clearTimeout(step1);
       clearTimeout(step2);
@@ -34,7 +31,7 @@ export default function Splash({ onFinish }) {
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-white relative">
-      {/* 🔹 Subimos todo el bloque visual ligeramente */}
+      {/* Bloque central */}
       <div className="absolute top-[45%] -translate-y-1/2 flex flex-col items-center">
         {/* Logo parpadeando */}
         <div
@@ -55,4 +52,4 @@ export default function Splash({ onFinish }) {
       </div>
     </div>
   );
-                                                                         }
+}
