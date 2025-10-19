@@ -2,46 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Importa los estilos del cropper para que se vea la imagen y la cuadrícula */
-@import "react-easy-crop/react-easy-crop.css";
-
-/* 🎨 Estilos globales Everwish */
+/* tus estilos globales extra van aquí /
 body {
-  font-family: 'Poppins', 'Montserrat', sans-serif;
-  background-color: #FFF7F5; /* Fondo pastel rosado cálido Everwish */
-  color: #3b2b1f;
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
-}
+font-family: sans-serif;
+background-color: #EAF6FA; / fondo pastel azul clarito */
+margin: 0;
+padding: 0;
+} Modificar éste
 
-/* Scroll suave y más elegante */
-html {
-  scroll-behavior: smooth;
-}
-
-/* 🔲 Fondo suave del cropper */
-.easy-crop-container {
-  background-color: #fffaf8 !important;
-}
-
-/* 💫 Cuadrícula del cropper estilo Everwish */
-.reactEasyCrop_CropAreaGrid {
-  stroke: rgba(255, 182, 193, 0.8) !important; /* rosado suave */
-}
-
-/* 🌸 Borde de recorte Everwish */
-.reactEasyCrop_CropArea {
-  border: 2px solid rgba(255, 160, 180, 0.9) !important;
-  box-shadow: 0 0 10px rgba(255, 192, 203, 0.4);
-}
-
-/* ✨ Botones modales suaves */
-button {
-  transition: all 0.25s ease-in-out;
-}
-
-button:active {
-  transform: scale(0.97);
-}
