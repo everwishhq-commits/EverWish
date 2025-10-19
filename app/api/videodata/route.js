@@ -53,7 +53,7 @@ export async function GET() {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("❌ Error en /api/videos:", error);
+    console.error("❌ Error en /api/videodata:", error);
     return new Response(
       JSON.stringify({ error: "Error al cargar videos" }),
       { status: 500 }
