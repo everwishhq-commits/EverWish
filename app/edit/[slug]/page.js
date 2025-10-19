@@ -28,7 +28,7 @@ export default function EditPage({ params }) {
   const [total, setTotal] = useState(5);
   const [userImage, setUserImage] = useState(null);
 
-  // Previsualización correcta de video inicial
+  // 🎬 Inicializa datos
   useEffect(() => {
     setMessage(getMessageForSlug(slug));
     const opts = getAnimationOptionsForSlug(slug);
@@ -37,7 +37,7 @@ export default function EditPage({ params }) {
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
-  // Pantalla de carga inicial
+  // ⏳ Pantalla de carga inicial
   useEffect(() => {
     let v = 0;
     const id = setInterval(() => {
@@ -51,22 +51,22 @@ export default function EditPage({ params }) {
     return () => clearInterval(id);
   }, []);
 
+  // 🎁 Gift Card
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
     setTotal(5 + (data?.amount || 0));
   };
-
   const removeGift = () => {
     setGift(null);
     setTotal(5);
   };
 
+  // 💾 Descarga
   const handleCardClick = () => {
     setShowDownload(true);
     setTimeout(() => setShowDownload(false), 3500);
   };
-
   const handleDownload = () => {
     const link = document.createElement("a");
     link.href = videoSrc;
@@ -78,16 +78,14 @@ export default function EditPage({ params }) {
 
   const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
   const [animKey, setAnimKey] = useState(0);
-  useEffect(() => {
-    setAnimKey(Date.now());
-  }, [animation, category]);
+  useEffect(() => setAnimKey(Date.now()), [animation, category]);
 
   return (
     <div
       className="relative min-h-[100dvh] bg-[#fff7f5] flex flex-col items-center overflow-hidden"
-      style={{ overscrollBehavior: "contain" }} // 🔒 evita el refresh al mover arriba-abajo
+      style={{ overscrollBehavior: "contain" }} // evita refresh por scroll
     >
-      {/* Pantalla de carga */}
+      {/* ⏳ Pantalla de carga */}
       {stage === "expanded" && (
         <motion.div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-[#fff7f5]"
@@ -114,7 +112,7 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
-      {/* Editor principal */}
+      {/* 🎨 Editor principal */}
       {stage === "editor" && (
         <>
           <AnimationOverlay key={animKey} slug={slug} animation={animation} />
@@ -126,7 +124,7 @@ export default function EditPage({ params }) {
             transition={{ duration: 0.45 }}
             className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-6 mb-10"
           >
-            {/* Tarjeta principal */}
+            {/* 🖼 Tarjeta principal */}
             <div
               className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50"
               onClick={handleCardClick}
@@ -141,7 +139,7 @@ export default function EditPage({ params }) {
               />
             </div>
 
-            {/* Mensaje */}
+            {/* 📝 Mensaje */}
             <h3 className="mb-2 text-center text-lg font-semibold text-gray-700">
               ✨ Customize your message ✨
             </h3>
@@ -152,29 +150,32 @@ export default function EditPage({ params }) {
               onChange={(e) => setMessage(e.target.value)}
             />
 
-            {/* Imagen del usuario */}
+            {/* 📸 Imagen del usuario */}
             {userImage && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.4 }}
-                className="my-3 cursor-pointer hover:scale-[1.02] transition-transform"
+                className="my-3 cursor-pointer hover:scale-[1.02] transition-transform flex justify-center"
                 onClick={() => setShowCrop(true)}
               >
                 <img
                   src={userImage}
                   alt="User upload"
-                  className="w-full object-contain rounded-2xl border border-gray-200 shadow-sm max-h-64" // 🔧 ajusta la imagen
+                  className="rounded-2xl border border-gray-200 shadow-sm"
                   style={{
-                    maxWidth: "100%",
+                    width: "100%",
                     height: "auto",
-                    objectFit: "contain",
+                    objectFit: "cover", // 🔧 rellena sin dejar franjas
+                    aspectRatio: "4 / 3", // 🔧 mantiene formato rectangular
+                    backgroundColor: "#fff7f5", // 🔧 evita fondo negro
+                    maxWidth: "100%",
                   }}
                 />
               </motion.div>
             )}
 
-            {/* Botón Add Image solo si no hay imagen */}
+            {/* 📷 Botón Add Image */}
             {!userImage && (
               <div className="mt-4 flex justify-center">
                 <button
@@ -186,7 +187,7 @@ export default function EditPage({ params }) {
               </div>
             )}
 
-            {/* Selector de animación */}
+            {/* ✨ Selector de animación */}
             <div className="my-3">
               <select
                 className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
@@ -201,7 +202,7 @@ export default function EditPage({ params }) {
               </select>
             </div>
 
-            {/* Botones principales */}
+            {/* 🛍 Botones principales */}
             <div className="mt-4 flex flex-wrap justify-center gap-3">
               <button
                 onClick={() => setShowGift(true)}
@@ -217,7 +218,7 @@ export default function EditPage({ params }) {
               </button>
             </div>
 
-            {/* Botón de descarga */}
+            {/* ⬇️ Botón de descarga */}
             {showDownload && (
               <motion.button
                 initial={{ opacity: 0, y: 30 }}
@@ -275,4 +276,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-          }
+}
