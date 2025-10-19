@@ -2,6 +2,7 @@
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 
 export default function CategoryVideosPage() {
   const { slug } = useParams();
@@ -9,29 +10,33 @@ export default function CategoryVideosPage() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
 
-  // Función que imita el detectCategory del backend
-  function detectCategory(filename) {
+  // 🧠 Detecta múltiples categorías por nombre
+  function detectCategories(filename) {
     const s = filename.toLowerCase();
-    if (s.includes("halloween")) return "halloween";
-    if (s.includes("christmas") || s.includes("xmas")) return "christmas";
-    if (s.includes("easter")) return "easter";
-    if (s.includes("valentine") || s.includes("love")) return "valentines";
-    if (s.includes("birthday")) return "birthday";
-    if (s.includes("mothers")) return "mothers-day";
-    if (s.includes("fathers")) return "fathers-day";
-    if (s.includes("baby")) return "new-baby";
-    if (s.includes("graduation")) return "graduation";
-    if (s.includes("wedding")) return "wedding";
-    if (s.includes("getwell")) return "getwell";
-    if (s.includes("anniversary")) return "anniversary";
-    if (s.includes("thanksgiving")) return "thanksgiving";
-    if (s.includes("newyear")) return "newyear";
-    if (s.includes("autumn") || s.includes("fall")) return "autumn";
-    if (s.includes("winter")) return "winter";
-    if (s.includes("summer")) return "summer";
-    if (s.includes("spring")) return "spring";
-    if (s.includes("pets") || s.includes("dog") || s.includes("cat")) return "pets";
-    return "general";
+    const categories = [];
+
+    if (s.includes("halloween")) categories.push("halloween");
+    if (s.includes("christmas") || s.includes("xmas")) categories.push("christmas");
+    if (s.includes("easter")) categories.push("easter");
+    if (s.includes("valentine") || s.includes("love")) categories.push("valentines");
+    if (s.includes("birthday")) categories.push("birthday");
+    if (s.includes("mothers")) categories.push("mothers-day");
+    if (s.includes("fathers")) categories.push("fathers-day");
+    if (s.includes("baby")) categories.push("new-baby");
+    if (s.includes("graduation")) categories.push("graduation");
+    if (s.includes("wedding")) categories.push("wedding");
+    if (s.includes("getwell")) categories.push("getwell");
+    if (s.includes("anniversary")) categories.push("anniversary");
+    if (s.includes("thanksgiving")) categories.push("thanksgiving");
+    if (s.includes("newyear")) categories.push("newyear");
+    if (s.includes("autumn") || s.includes("fall")) categories.push("autumn");
+    if (s.includes("winter")) categories.push("winter");
+    if (s.includes("summer")) categories.push("summer");
+    if (s.includes("spring")) categories.push("spring");
+    if (s.includes("pets") || s.includes("dog") || s.includes("cat")) categories.push("pets");
+
+    if (categories.length === 0) categories.push("general");
+    return categories;
   }
 
   useEffect(() => {
@@ -40,15 +45,13 @@ export default function CategoryVideosPage() {
         const res = await fetch("/api/videos");
         const data = await res.json();
 
-        // 🔍 Detecta automáticamente la categoría del nombre del archivo
         const categorized = data.map((v) => ({
           ...v,
-          category: detectCategory(v.title || v.src),
+          categories: detectCategories(v.title || v.src),
         }));
 
-        // 🔥 Filtra solo los videos de esta categoría
-        const filtered = categorized.filter(
-          (v) => v.category === slug.toLowerCase()
+        const filtered = categorized.filter((v) =>
+          v.categories.includes(slug.toLowerCase())
         );
 
         setVideos(filtered);
@@ -87,7 +90,7 @@ export default function CategoryVideosPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 pt-24 px-4 md:px-8">
+    <main className="min-h-screen bg-pink-50 pt-24 px-4 md:px-8 transition-all">
       <div className="max-w-5xl mx-auto mb-6">
         <Link href="/categories" className="text-blue-500 hover:underline">
           ← Back to Categories
@@ -95,7 +98,7 @@ export default function CategoryVideosPage() {
       </div>
 
       <div className="max-w-5xl mx-auto text-center mb-10">
-        <h1 className="text-3xl md:text-5xl font-extrabold mb-3 capitalize">
+        <h1 className="text-4xl md:text-5xl font-extrabold mb-3 capitalize text-pink-700">
           {slug.replace("-", " ")}
         </h1>
         <p className="text-gray-700 text-lg">
@@ -115,20 +118,42 @@ export default function CategoryVideosPage() {
 
       <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {filteredVideos.map((v, i) => (
-          <div
+          <motion.div
             key={i}
-            className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition"
+            className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition relative group"
+            whileHover={{ scale: 1.03 }}
           >
             <video
-              className="w-full h-48 object-cover"
               src={v.src}
-              controls
+              className="w-full h-48 object-cover transition-opacity duration-300 group-hover:opacity-90 pointer-events-none select-none"
+              muted
+              playsInline
               preload="metadata"
+              onMouseEnter={(e) => e.target.play()}
+              onMouseLeave={(e) => {
+                e.target.pause();
+                e.target.currentTime = 0;
+              }}
+              onTouchStart={(e) => e.target.play()}
+              onTouchEnd={(e) => {
+                e.target.pause();
+                e.target.currentTime = 0;
+              }}
             />
             <div className="p-4 text-center">
-              <h3 className="font-semibold text-gray-800">{v.title}</h3>
+              <h3 className="font-semibold text-gray-800 text-sm md:text-base">
+                {v.title}
+              </h3>
+
+              {/* 🔒 No descarga, sólo vista segura */}
+              <button
+                className="mt-2 text-xs text-pink-600 opacity-60 cursor-not-allowed"
+                disabled
+              >
+                🔒 Protected Everwish Card
+              </button>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
     </main>
