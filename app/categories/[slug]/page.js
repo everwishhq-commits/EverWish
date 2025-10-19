@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 
-export const dynamic = "force-dynamic"; // ✅ evita errores SSR en Vercel
+export const dynamic = "force-dynamic"; // ✅ evita errores SSR
 
 export default function CategoryVideosPage() {
   const { slug } = useParams();
@@ -12,7 +12,7 @@ export default function CategoryVideosPage() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
 
-  // 🔍 Detección automática por nombre de archivo
+  // 🔍 Detectar categoría por nombre
   function detectCategory(filename) {
     const s = filename.toLowerCase();
     if (s.includes("halloween")) return "halloween";
@@ -44,7 +44,6 @@ export default function CategoryVideosPage() {
         const res = await fetch("/api/videos");
         const data = await res.json();
 
-        // Detecta y filtra por categoría
         const categorized = data.map((v) => ({
           ...v,
           category: detectCategory(v.title || v.src),
@@ -69,7 +68,7 @@ export default function CategoryVideosPage() {
     v.title.toLowerCase().includes(query.toLowerCase())
   );
 
-  // ⏳ Estado de carga
+  // ⏳ Loading
   if (loading) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-pink-50 to-white text-gray-600">
@@ -96,7 +95,6 @@ export default function CategoryVideosPage() {
   // ✅ Vista principal
   return (
     <main className="min-h-screen bg-gradient-to-b from-pink-50 to-white pt-24 pb-16 px-4 md:px-8">
-      {/* 🔹 Encabezado */}
       <div className="max-w-5xl mx-auto text-center mb-10">
         <Link href="/categories" className="text-pink-500 hover:underline">
           ← Back to Categories
@@ -110,7 +108,6 @@ export default function CategoryVideosPage() {
           Discover beautiful Everwish cards for {slug.replace("-", " ")} ✨
         </p>
 
-        {/* 🔍 Buscador */}
         <div className="mt-6">
           <input
             type="text"
@@ -122,7 +119,6 @@ export default function CategoryVideosPage() {
         </div>
       </div>
 
-      {/* 🎞️ Grid de videos */}
       <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {filteredVideos.map((v, i) => (
           <Link
@@ -156,16 +152,6 @@ export default function CategoryVideosPage() {
           </Link>
         ))}
       </div>
-
-      {/* 🔙 Regresar */}
-      <div className="text-center mt-10">
-        <Link
-          href="/categories"
-          className="text-sm text-gray-500 hover:text-pink-500 transition"
-        >
-          ← Back to Categories
-        </Link>
-      </div>
     </main>
   );
-            }
+      }
