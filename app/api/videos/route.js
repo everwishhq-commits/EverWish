@@ -1,8 +1,13 @@
+// ✅ Forzar ejecución dinámica en Vercel
+export const dynamic = "force-dynamic";
+
 import fs from "fs";
 import path from "path";
 
+// 🧠 Detecta categoría según el nombre del archivo
 function detectCategory(filename) {
   const s = filename.toLowerCase();
+
   if (s.includes("halloween")) return "halloween";
   if (s.includes("christmas") || s.includes("xmas")) return "christmas";
   if (s.includes("easter")) return "easter";
@@ -24,48 +29,59 @@ function detectCategory(filename) {
   if (s.includes("sorry") || s.includes("apology")) return "apology";
   if (s.includes("missyou") || s.includes("thinking")) return "emotions";
   if (s.includes("pet") || s.includes("dog") || s.includes("cat")) return "pets";
+
   return "general";
 }
 
+// 🧩 Agrupa por categoría
+function groupByCategory(videos) {
+  return videos.reduce((acc, video) => {
+    const category = video.category || "general";
+    if (!acc[category]) acc[category] = [];
+    acc[category].push(video);
+    return acc;
+  }, {});
+}
+
+// 📦 Endpoint principal
 export async function GET() {
   try {
-    const dir = path.join(process.cwd(), "public/videos");
+    const videosDir = path.join(process.cwd(), "public/videos");
 
-    if (!fs.existsSync(dir)) {
+    // ⚠️ Si la carpeta no existe, devolvemos vacío
+    if (!fs.existsSync(videosDir)) {
       console.warn("⚠️ Carpeta /public/videos no encontrada");
-      return new Response(JSON.stringify([]), {
+      return new Response(JSON.stringify({ categories: {} }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });
     }
 
+    // 🔹 Leer archivos MP4
     const files = fs
-      .readdirSync(dir)
-      .filter((file) => file.endsWith(".mp4"))
-      .map((file) => {
-        const baseName = path.parse(file).name;
-        const title = baseName
-          .replace(/_/g, " ")
-          .replace(/\b\w/g, (c) => c.toUpperCase());
-        const category = detectCategory(file);
+      .readdirSync(videosDir)
+      .filter((file) => file.endsWith(".mp4"));
 
-        return {
-          title,
-          src: `/videos/${file}`,
-          slug: baseName,
-          category,
-        };
-      });
+    // 🔸 Crear lista de videos
+    const videos = files.map((filename) => ({
+      title: filename.replace(".mp4", ""),
+      category: detectCategory(filename),
+      src: `/videos/${filename}`,
+    }));
 
-    return new Response(JSON.stringify(files, null, 2), {
+    // 🔸 Agrupar por categoría
+    const grouped = groupByCategory(videos);
+
+    // ✅ Respuesta en formato JSON
+    return new Response(JSON.stringify({ categories: grouped }, null, 2), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("❌ Error en /api/videos:", error);
+    console.error("❌ Error al cargar videos:", error);
     return new Response(
       JSON.stringify({ error: "Error al cargar videos" }),
-      { status: 500 }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
-                   }
+                          }
