@@ -9,15 +9,46 @@ export default function CategoryVideosPage() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
 
+  // Función que imita el detectCategory del backend
+  function detectCategory(filename) {
+    const s = filename.toLowerCase();
+    if (s.includes("halloween")) return "halloween";
+    if (s.includes("christmas") || s.includes("xmas")) return "christmas";
+    if (s.includes("easter")) return "easter";
+    if (s.includes("valentine") || s.includes("love")) return "valentines";
+    if (s.includes("birthday")) return "birthday";
+    if (s.includes("mothers")) return "mothers-day";
+    if (s.includes("fathers")) return "fathers-day";
+    if (s.includes("baby")) return "new-baby";
+    if (s.includes("graduation")) return "graduation";
+    if (s.includes("wedding")) return "wedding";
+    if (s.includes("getwell")) return "getwell";
+    if (s.includes("anniversary")) return "anniversary";
+    if (s.includes("thanksgiving")) return "thanksgiving";
+    if (s.includes("newyear")) return "newyear";
+    if (s.includes("autumn") || s.includes("fall")) return "autumn";
+    if (s.includes("winter")) return "winter";
+    if (s.includes("summer")) return "summer";
+    if (s.includes("spring")) return "spring";
+    if (s.includes("pets") || s.includes("dog") || s.includes("cat")) return "pets";
+    return "general";
+  }
+
   useEffect(() => {
     async function fetchVideos() {
       try {
         const res = await fetch("/api/videos");
         const data = await res.json();
 
-        // Filtrar solo los que contengan el nombre de la categoría (slug)
-        const filtered = data.filter((v) =>
-          v.title.toLowerCase().includes(slug.toLowerCase())
+        // 🔍 Detecta automáticamente la categoría del nombre del archivo
+        const categorized = data.map((v) => ({
+          ...v,
+          category: detectCategory(v.title || v.src),
+        }));
+
+        // 🔥 Filtra solo los videos de esta categoría
+        const filtered = categorized.filter(
+          (v) => v.category === slug.toLowerCase()
         );
 
         setVideos(filtered);
@@ -46,7 +77,7 @@ export default function CategoryVideosPage() {
 
   if (videos.length === 0) {
     return (
-      <main className="min-h-screen flex flex-col items-center justify-center text-center p-6">
+      <main className="min-h-screen flex flex-col items-center justify-center text-center p-6 bg-pink-50">
         <h1 className="text-3xl font-bold mb-4">Category not found 😢</h1>
         <Link href="/categories" className="text-blue-500 hover:underline">
           ← Back to Categories
