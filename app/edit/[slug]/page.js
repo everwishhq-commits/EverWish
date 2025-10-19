@@ -82,7 +82,6 @@ export default function EditPage({ params }) {
 
   return (
     <div className="relative min-h-[100dvh] bg-[#fff7f5] flex flex-col items-center overflow-hidden">
-
       {/* Pantalla de carga inicial */}
       {stage === "expanded" && (
         <motion.div
@@ -142,19 +141,19 @@ export default function EditPage({ params }) {
               onChange={(e) => setMessage(e.target.value)}
             />
 
-            {/* Imagen del usuario debajo del mensaje */}
+            {/* Imagen del usuario */}
             {userImage && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.4 }}
-                className="my-4 cursor-pointer transition-transform hover:scale-[1.02]"
+                className="my-3 cursor-pointer hover:scale-[1.02] transition-transform"
                 onClick={() => setShowCrop(true)}
               >
                 <img
                   src={userImage}
                   alt="User upload"
-                  className="w-full rounded-2xl border border-gray-200 shadow-sm object-cover"
+                  className="w-full max-h-48 object-cover rounded-2xl border border-gray-200 shadow-sm"
                 />
               </motion.div>
             )}
@@ -164,7 +163,7 @@ export default function EditPage({ params }) {
               <div className="mt-4 flex justify-center">
                 <button
                   onClick={() => setShowCrop(true)}
-                  className="z-[210] flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-3 font-semibold text-[#3b2b1f] hover:bg-yellow-300"
+                  className="flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-3 font-semibold text-[#3b2b1f] hover:bg-yellow-300 transition-all shadow-sm"
                 >
                   📸 Add Image
                 </button>
@@ -188,23 +187,15 @@ export default function EditPage({ params }) {
 
             {/* Botones principales */}
             <div className="mt-4 flex flex-wrap justify-center gap-3">
-              {!userImage && (
-                <button
-                  onClick={() => setShowCrop(true)}
-                  className="z-[210] flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-3 font-semibold text-[#3b2b1f] hover:bg-yellow-300"
-                >
-                  📸 Add Image
-                </button>
-              )}
               <button
                 onClick={() => setShowGift(true)}
-                className="z-[210] flex items-center gap-2 rounded-full bg-pink-200 px-5 py-3 font-semibold text-pink-700 hover:bg-pink-300"
+                className="flex items-center gap-2 rounded-full bg-pink-200 px-5 py-3 font-semibold text-pink-700 hover:bg-pink-300 transition-all shadow-sm"
               >
                 🎁 Gift Card
               </button>
               <button
                 onClick={() => setShowCheckout(true)}
-                className="z-[210] flex items-center gap-2 rounded-full bg-purple-500 px-6 py-3 font-semibold text-white hover:bg-purple-600"
+                className="flex items-center gap-2 rounded-full bg-purple-500 px-6 py-3 font-semibold text-white hover:bg-purple-600 transition-all shadow-sm"
               >
                 💳 Checkout
               </button>
@@ -268,4 +259,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-        }
+}
