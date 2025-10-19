@@ -2,10 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
-/* tus estilos globales extra van aquí /
+/* 🎨 Estilos globales Everwish */
 body {
-font-family: sans-serif;
-background-color: #EAF6FA; / fondo pastel azul clarito */
-margin: 0;
-padding: 0;
+  font-family: 'Poppins', 'Montserrat', sans-serif;
+  background-color: #FFF7F5; /* Fondo pastel Everwish */
+  color: #3b2b1f;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 🌸 Ajustes suaves */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ✨ Botones con efecto Everwish */
+button {
+  transition: all 0.25s ease-in-out;
+}
+
+button:active {
+  transform: scale(0.97);
 }
