@@ -6,14 +6,16 @@ export default function EditPage() {
   const { slug } = useParams();
   const [video, setVideo] = useState(null);
 
-  // Cargar el video correcto
+  // 🔹 Cargar video ignorando mayúsculas/minúsculas
   useEffect(() => {
     async function loadVideo() {
       try {
         const res = await fetch("/api/videos");
         const data = await res.json();
         const allVideos = Array.isArray(data) ? data : data.all || [];
-        const match = allVideos.find((v) => v.slug === slug);
+        const match = allVideos.find(
+          (v) => v.slug.toLowerCase() === slug.toLowerCase()
+        );
         setVideo(match);
       } catch (err) {
         console.error("Error loading video:", err);
@@ -22,7 +24,7 @@ export default function EditPage() {
     loadVideo();
   }, [slug]);
 
-  // Forzar pantalla completa cuando el usuario toca
+  // 🔹 Entrar en fullscreen cuando toques o hagas clic
   const enterFullscreen = () => {
     const el = document.documentElement;
     if (el.requestFullscreen) el.requestFullscreen();
@@ -69,7 +71,7 @@ export default function EditPage() {
       </div>
       <style jsx global>{`
         video::-internal-media-controls-download-button {
-          display: none;
+          display: none !important;
         }
         video::-webkit-media-controls-enclosure {
           overflow: hidden !important;
