@@ -1,63 +1,62 @@
-// app/api/videos/route.js
-export const runtime = "nodejs"; // asegura que use Node en Vercel
-export const dynamic = "force-dynamic"; // evita cacheos del build
+import fs from "fs";
+import path from "path";
 
-// --- Detecta categoría según el nombre del archivo ---
-function detectCategory(name) {
-  const s = name.toLowerCase();
-  if (s.includes("halloween")) return "halloween";
-  if (s.includes("christmas")) return "christmas";
-  if (s.includes("birthday")) return "birthday";
-  if (s.includes("valentine") || s.includes("love")) return "valentines";
-  if (s.includes("easter")) return "easter";
-  if (s.includes("thanksgiving")) return "thanksgiving";
-  if (s.includes("mothers")) return "mothers-day";
-  if (s.includes("fathers")) return "fathers-day";
-  if (s.includes("anniversary")) return "anniversary";
-  if (s.includes("baby")) return "baby";
-  if (s.includes("graduation")) return "graduation";
-  if (s.includes("wedding")) return "wedding";
-  if (s.includes("getwell")) return "getwell";
-  if (s.includes("apology")) return "apology";
-  if (s.includes("pet") || s.includes("dog") || s.includes("cat")) return "pets";
-  if (s.includes("newyear")) return "newyear";
-  return "general";
-}
-
-// --- Endpoint GET ---
 export async function GET() {
-  // 🔗 URL base del dominio de producción
-  const base = "https://everwishs-projects.vercel.app/videos/";
+  try {
+    const dir = path.join(process.cwd(), "public/videos");
 
-  // 🗂️ Lista de tus archivos dentro de /public/videos/
-  const files = [
-    "pumpkin_halloween_general.mp4",
-    "ghost_halloween_love.mp4",
-    "zombie_halloween_birthday.mp4",
-    "bunny_easter_general.mp4",
-    "turkey_thanksgiving_general.mp4",
-    "hugs_anniversary_love.mp4",
-    "mother_mothersday_celebration.mp4",
-    "turtle_christmas_general_1A.mp4",
-    "yeti_christmas_general_1A.mp4",
-  ];
+    // ✅ Verifica que exista la carpeta de videos
+    if (!fs.existsSync(dir)) {
+      console.warn("⚠️ Carpeta /public/videos no encontrada");
+      return new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
 
-  // 📦 Construir objetos por categoría
-  const videos = files.map((file) => ({
-    title: file.replace(".mp4", "").replace(/_/g, " "),
-    src: base + file,
-    category: detectCategory(file),
-  }));
+    // 🔹 Lee los archivos MP4 de la carpeta
+    const files = fs
+      .readdirSync(dir)
+      .filter((file) => file.endsWith(".mp4"))
+      .map((file) => {
+        const baseName = path.parse(file).name;
+        const title = baseName
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (c) => c.toUpperCase());
+        return {
+          title,
+          src: `/videos/${file}`,
+          slug: baseName,
+        };
+      });
 
-  // Agrupar por categoría
-  const categories = videos.reduce((acc, v) => {
-    if (!acc[v.category]) acc[v.category] = [];
-    acc[v.category].push(v);
-    return acc;
-  }, {});
+    // 🔸 Si no hay videos, devuelve un placeholder
+    if (files.length === 0) {
+      return new Response(
+        JSON.stringify([
+          {
+            title: "Card Coming Soon ✨",
+            src: "",
+            slug: "placeholder",
+          },
+        ]),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
 
-  // 🧾 Respuesta JSON visible desde /api/videos
-  return new Response(JSON.stringify({ categories }, null, 2), {
-    headers: { "Content-Type": "application/json" },
-  });
+    // ✅ Devuelve la lista de videos (Top actual)
+    return new Response(JSON.stringify(files, null, 2), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    console.error("❌ Error en /api/videos:", error);
+    return new Response(
+      JSON.stringify({ error: "Error al cargar videos" }),
+      { status: 500 }
+    );
+  }
 }
