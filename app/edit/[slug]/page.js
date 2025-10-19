@@ -85,13 +85,10 @@ export default function EditPage({ params }) {
 
   const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
   const [animKey, setAnimKey] = useState(0);
-  useEffect(() => setAnimKey(Date.now()), [
-    animation,
-    category,
-    intensity,
-    opacityLevel,
-    emojiCount,
-  ]);
+  useEffect(
+    () => setAnimKey(Date.now()),
+    [animation, category, intensity, opacityLevel, emojiCount]
+  );
 
   return (
     <div
@@ -170,7 +167,7 @@ export default function EditPage({ params }) {
               onChange={(e) => setMessage(e.target.value)}
             />
 
-            {/* 📸 Imagen del usuario (mantiene tu versión aprobada) */}
+            {/* 📸 Imagen del usuario */}
             {userImage && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -195,7 +192,6 @@ export default function EditPage({ params }) {
               </motion.div>
             )}
 
-            {/* 📷 Botón Add Image */}
             {!userImage && (
               <div className="mt-4 flex justify-center">
                 <button
@@ -217,7 +213,7 @@ export default function EditPage({ params }) {
                 }`}
                 style={{
                   height: "46px",
-                  padding: "0 10px",
+                  padding: "0 6px 0 6px", // 👈 ligeramente más estrecho
                   border: "1px solid rgba(0,0,0,0.05)",
                 }}
               >
@@ -225,8 +221,15 @@ export default function EditPage({ params }) {
                 <select
                   value={animation}
                   onChange={(e) => setAnimation(e.target.value)}
-                  className="flex-1 text-sm bg-transparent font-medium focus:outline-none cursor-pointer truncate"
-                  style={{ maxWidth: "45%" }}
+                  className={`flex-1 text-sm bg-transparent font-medium focus:outline-none cursor-pointer truncate transition ${
+                    animation.startsWith("✨ None")
+                      ? "text-gray-400"
+                      : "text-gray-700"
+                  }`}
+                  style={{
+                    maxWidth: "42%",
+                    appearance: "auto",
+                  }}
                 >
                   {animationOptions
                     .filter((a) => !a.includes("None"))
@@ -239,7 +242,7 @@ export default function EditPage({ params }) {
 
                 {/* 🔸 Controles */}
                 {!isPurchased && !isViewed && (
-                  <div className="flex items-center gap-2 ml-2">
+                  <div className="flex items-center gap-2 ml-1">
                     {/* Control cantidad – / + */}
                     <div className="flex items-center rounded-md border border-gray-300 overflow-hidden">
                       <button
@@ -276,10 +279,12 @@ export default function EditPage({ params }) {
 
                     {/* ❌ Quitar animación */}
                     <button
-                      className="ml-1 px-2 text-lg font-bold text-gray-600 hover:text-red-500 transition"
-                      onClick={() =>
-                        setAnimation("✨ None (No Animation)")
-                      }
+                      className={`ml-1 px-2 text-lg font-bold transition ${
+                        animation && !animation.startsWith("✨ None")
+                          ? "text-red-500 hover:text-red-600"
+                          : "text-gray-400"
+                      }`}
+                      onClick={() => setAnimation("✨ None (No Animation)")}
                       title="Remove animation"
                     >
                       ×
@@ -305,7 +310,6 @@ export default function EditPage({ params }) {
               </button>
             </div>
 
-            {/* ⬇️ Download */}
             {showDownload && (
               <motion.button
                 initial={{ opacity: 0, y: 30 }}
@@ -363,4 +367,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-          }
+                       }
