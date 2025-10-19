@@ -2,8 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-// ✅ Evita errores de prerender en Vercel
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"; // ✅ evita errores SSR en Vercel
 
 export default function CategoryPage({ params }) {
   const { slug } = params;
@@ -96,4 +95,4 @@ export default function CategoryPage({ params }) {
       </div>
     </main>
   );
-          }
+      }
