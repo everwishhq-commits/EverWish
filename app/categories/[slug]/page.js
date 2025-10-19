@@ -1,12 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 export default function CategoryVideosPage() {
   const { slug } = useParams();
   const [videos, setVideos] = useState([]);
+  const [search, setSearch] = useState("");
   const router = useRouter();
 
   useEffect(() => {
@@ -14,10 +14,9 @@ export default function CategoryVideosPage() {
       try {
         const res = await fetch("/api/videos");
         const data = await res.json();
-
         const allVideos = Array.isArray(data) ? data : data.all || [];
 
-        // ✅ Filtra por categoría, título o slug
+        // ✅ Filtro flexible por categoría, título o slug
         const filtered = allVideos.filter(
           (v) =>
             v.categories?.includes(slug.toLowerCase()) ||
@@ -32,6 +31,10 @@ export default function CategoryVideosPage() {
     }
     fetchVideos();
   }, [slug]);
+
+  const filteredVideos = videos.filter((v) =>
+    v.title.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-pink-50 via-white to-pink-50 text-center px-4 pt-24 pb-16">
@@ -49,22 +52,33 @@ export default function CategoryVideosPage() {
       </h1>
 
       {/* ✨ Subtitle */}
-      <p className="text-gray-600 mt-2 mb-10">
+      <p className="text-gray-600 mt-2 mb-8">
         Discover beautiful Everwish cards for {slug} ✨
       </p>
 
+      {/* 🔍 Search Bar */}
+      <div className="max-w-md mx-auto mb-10">
+        <input
+          type="text"
+          placeholder="Search cards..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full p-3 rounded-full border border-pink-200 focus:ring-2 focus:ring-pink-400 focus:outline-none shadow-sm text-gray-700"
+        />
+      </div>
+
       {/* 🎥 Video Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 justify-center items-center max-w-5xl mx-auto">
-        {videos.length === 0 ? (
+        {filteredVideos.length === 0 ? (
           <p className="text-gray-400 italic">
             No cards found for this category yet.
           </p>
         ) : (
-          videos.map((video, i) => (
+          filteredVideos.map((video, i) => (
             <div
               key={i}
               onClick={() => router.push(video.editUrl || `/edit/${video.slug}`)}
-              className="relative bg-white rounded-3xl shadow-md hover:shadow-xl overflow-hidden transition-all duration-300 cursor-pointer group"
+              className="relative bg-white rounded-[8%] shadow-md hover:shadow-xl overflow-hidden transition-all duration-300 cursor-pointer group aspect-[4/5]"
             >
               <video
                 src={video.src}
@@ -75,8 +89,8 @@ export default function CategoryVideosPage() {
                 controls={false}
                 preload="auto"
                 disablePictureInPicture
-                onContextMenu={(e) => e.preventDefault()} // ❌ evita menú de descarga
-                className="w-full h-auto object-cover rounded-3xl transform group-hover:scale-105 transition-transform duration-500"
+                onContextMenu={(e) => e.preventDefault()} // ❌ evita clic derecho
+                className="w-full h-full object-cover rounded-[8%] transform group-hover:scale-105 transition-transform duration-500 select-none pointer-events-none"
               />
             </div>
           ))
@@ -84,4 +98,4 @@ export default function CategoryVideosPage() {
       </div>
     </main>
   );
-        }
+            }
