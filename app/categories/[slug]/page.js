@@ -15,7 +15,7 @@ export default function CategoryVideosPage() {
         const res = await fetch("/api/videos");
         const data = await res.json();
 
-        // 🔍 Filtramos los videos que contienen el nombre del slug
+        // Filtrar solo los que contengan el nombre de la categoría (slug)
         const filtered = data.filter((v) =>
           v.title.toLowerCase().includes(slug.toLowerCase())
         );
@@ -47,7 +47,7 @@ export default function CategoryVideosPage() {
   if (videos.length === 0) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center text-center p-6">
-        <h1 className="text-3xl font-bold mb-4">No videos found 😢</h1>
+        <h1 className="text-3xl font-bold mb-4">Category not found 😢</h1>
         <Link href="/categories" className="text-blue-500 hover:underline">
           ← Back to Categories
         </Link>
@@ -83,31 +83,23 @@ export default function CategoryVideosPage() {
       </div>
 
       <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {filteredVideos.length > 0 ? (
-          filteredVideos.map((v, i) => (
-            <div
-              key={i}
-              className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition"
-            >
-              <video
-                className="w-full h-48 object-cover"
-                src={v.src}
-                controls
-                preload="metadata"
-              />
-              <div className="p-4 text-center">
-                <h3 className="font-semibold text-gray-800">
-                  {v.title}
-                </h3>
-              </div>
+        {filteredVideos.map((v, i) => (
+          <div
+            key={i}
+            className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition"
+          >
+            <video
+              className="w-full h-48 object-cover"
+              src={v.src}
+              controls
+              preload="metadata"
+            />
+            <div className="p-4 text-center">
+              <h3 className="font-semibold text-gray-800">{v.title}</h3>
             </div>
-          ))
-        ) : (
-          <p className="col-span-full text-center text-gray-500">
-            No matching videos 😅
-          </p>
-        )}
+          </div>
+        ))}
       </div>
     </main>
   );
-}
+      }
