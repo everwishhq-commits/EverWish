@@ -28,6 +28,12 @@ export default function EditPage({ params }) {
   const [total, setTotal] = useState(5);
   const [userImage, setUserImage] = useState(null);
 
+  // nuevos controles de intensidad / opacidad / visibilidad
+  const [intensity, setIntensity] = useState("normal");
+  const [opacityLevel, setOpacityLevel] = useState(0.9);
+  const [isPurchased, setIsPurchased] = useState(false);
+  const [isViewed, setIsViewed] = useState(false);
+
   // 🎬 Inicializa datos
   useEffect(() => {
     setMessage(getMessageForSlug(slug));
@@ -78,12 +84,12 @@ export default function EditPage({ params }) {
 
   const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
   const [animKey, setAnimKey] = useState(0);
-  useEffect(() => setAnimKey(Date.now()), [animation, category]);
+  useEffect(() => setAnimKey(Date.now()), [animation, category, intensity, opacityLevel]);
 
   return (
     <div
       className="relative min-h-[100dvh] bg-[#fff7f5] flex flex-col items-center overflow-hidden"
-      style={{ overscrollBehavior: "contain" }} // evita refresh por scroll
+      style={{ overscrollBehavior: "contain" }}
     >
       {/* ⏳ Pantalla de carga */}
       {stage === "expanded" && (
@@ -115,7 +121,13 @@ export default function EditPage({ params }) {
       {/* 🎨 Editor principal */}
       {stage === "editor" && (
         <>
-          <AnimationOverlay key={animKey} slug={slug} animation={animation} />
+          <AnimationOverlay
+            key={animKey}
+            slug={slug}
+            animation={animation}
+            intensity={intensity}
+            opacityLevel={opacityLevel}
+          />
 
           <motion.div
             key="editor"
@@ -166,9 +178,9 @@ export default function EditPage({ params }) {
                   style={{
                     width: "100%",
                     height: "auto",
-                    objectFit: "cover", // 🔧 rellena sin dejar franjas
-                    aspectRatio: "4 / 3", // 🔧 mantiene formato rectangular
-                    backgroundColor: "#fff7f5", // 🔧 evita fondo negro
+                    objectFit: "cover",
+                    aspectRatio: "4 / 3",
+                    backgroundColor: "#fff7f5",
                     maxWidth: "100%",
                   }}
                 />
@@ -187,19 +199,74 @@ export default function EditPage({ params }) {
               </div>
             )}
 
-            {/* ✨ Selector de animación */}
-            <div className="my-3">
-              <select
-                className="w-full rounded-xl border p-3 text-center font-medium text-gray-600 focus:border-pink-400 focus:ring-pink-400"
-                value={animation}
-                onChange={(e) => setAnimation(e.target.value)}
+            {/* ✨ Nuevo panel compacto de animación */}
+            <div className="my-4">
+              <div
+                className={`flex items-center justify-between w-full rounded-xl transition-all duration-300 ${
+                  animation && !animation.startsWith("✨ None")
+                    ? "bg-gradient-to-r from-pink-100 via-purple-100 to-yellow-100 text-gray-800 shadow-sm"
+                    : "bg-gray-100 text-gray-400"
+                }`}
+                style={{
+                  height: "46px",
+                  padding: "0 10px",
+                  border: "1px solid rgba(0,0,0,0.05)",
+                }}
               >
-                {animationOptions.map((a) => (
-                  <option key={a} value={a}>
-                    {a}
-                  </option>
-                ))}
-              </select>
+                {/* Nombre actual */}
+                <div className="flex-1 truncate font-medium text-sm">
+                  {animation && !animation.startsWith("✨ None")
+                    ? animation
+                    : "No animation"}
+                </div>
+
+                {/* Controles visibles solo antes de compra o vista */}
+                {!isPurchased && !isViewed && (
+                  <div className="flex items-center gap-1">
+                    {/* – */}
+                    <button
+                      className="px-2 text-lg hover:opacity-80"
+                      onClick={() =>
+                        setOpacityLevel((prev) => Math.max(0.5, prev - 0.1))
+                      }
+                    >
+                      –
+                    </button>
+
+                    {/* Dropdown intensidad */}
+                    <select
+                      value={intensity}
+                      onChange={(e) => setIntensity(e.target.value)}
+                      className="text-sm bg-transparent font-medium focus:outline-none cursor-pointer"
+                    >
+                      <option value="soft">Soft</option>
+                      <option value="normal">Normal</option>
+                      <option value="vivid">Vivid</option>
+                    </select>
+
+                    {/* + */}
+                    <button
+                      className="px-2 text-lg hover:opacity-80"
+                      onClick={() =>
+                        setOpacityLevel((prev) => Math.min(1, prev + 0.1))
+                      }
+                    >
+                      +
+                    </button>
+
+                    {/* X quitar animación */}
+                    <button
+                      className="ml-2 px-2 text-lg font-bold text-gray-600 hover:text-red-500 transition"
+                      onClick={() =>
+                        setAnimation("✨ None (No Animation)")
+                      }
+                      title="Remove animation"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* 🛍 Botones principales */}
@@ -276,4 +343,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-}
+            }
