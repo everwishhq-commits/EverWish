@@ -12,12 +12,13 @@ export default function CategoriesPage() {
   const [videoCategories, setVideoCategories] = useState({});
   const [loading, setLoading] = useState(true);
 
+  // 🧠 Carga de videos desde la API
   useEffect(() => {
     async function fetchVideos() {
       try {
         const res = await fetch("/api/videos", { cache: "no-store" });
         const data = await res.json();
-        setVideoCategories(data.categories || {});
+        setVideoCategories(data?.categories || {});
       } catch (err) {
         console.error("❌ Error cargando videos:", err);
       } finally {
@@ -27,7 +28,7 @@ export default function CategoriesPage() {
 
     fetchVideos();
 
-    // ♻️ Auto-refresh cada 5 min (o ajusta si prefieres)
+    // ♻️ Auto-refresh cada 5 minutos
     const interval = setInterval(fetchVideos, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
@@ -161,7 +162,10 @@ export default function CategoriesPage() {
                 className="overflow-visible"
               >
                 {section.items.map((cat, i) => {
-                  const videos = videoCategories[cat.slug] || [];
+                  const videos =
+                    videoCategories && typeof videoCategories === "object"
+                      ? videoCategories[cat.slug] || []
+                      : [];
                   const hasVideo = videos.length > 0;
                   const latestVideo = hasVideo ? videos[0] : null;
 
@@ -169,9 +173,9 @@ export default function CategoriesPage() {
                     <SwiperSlide key={i}>
                       <Link href={`/categories/${cat.slug}`}>
                         <div
-                          className={`${cat.color} rounded-3xl shadow-md hover:shadow-lg hover:-translate-y-1 transition transform flex flex-col items-center justify-center p-6 aspect-square relative`}
+                          className={`${cat.color} rounded-3xl shadow-md hover:shadow-lg hover:-translate-y-1 transition transform flex flex-col items-center justify-center p-6 aspect-square relative overflow-hidden`}
                         >
-                          {hasVideo && (
+                          {hasVideo && latestVideo?.src && (
                             <video
                               src={latestVideo.src}
                               autoPlay
