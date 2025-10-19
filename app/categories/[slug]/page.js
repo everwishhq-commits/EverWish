@@ -16,7 +16,7 @@ export default function CategoryVideosPage() {
         const data = await res.json();
         const allVideos = Array.isArray(data) ? data : data.all || [];
 
-        // ✅ Filtro flexible por categoría, título o slug
+        // ✅ Filtro flexible
         const filtered = allVideos.filter(
           (v) =>
             v.categories?.includes(slug.toLowerCase()) ||
@@ -89,8 +89,11 @@ export default function CategoryVideosPage() {
                 controls={false}
                 preload="auto"
                 disablePictureInPicture
-                onContextMenu={(e) => e.preventDefault()} // ❌ evita clic derecho
+                controlsList="nodownload nofullscreen noremoteplayback"
+                onContextMenu={(e) => e.preventDefault()}
                 className="w-full h-full object-cover rounded-[8%] transform group-hover:scale-105 transition-transform duration-500 select-none pointer-events-none"
+                draggable="false"
+                onDragStart={(e) => e.preventDefault()}
               />
             </div>
           ))
@@ -98,4 +101,4 @@ export default function CategoryVideosPage() {
       </div>
     </main>
   );
-            }
+        }
