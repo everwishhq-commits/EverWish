@@ -1,19 +1,68 @@
 "use client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 export default function CategoriesPage() {
-  const categories = [
-    { slug: "halloween", emoji: "🎃", title: "Halloween" },
-    { slug: "christmas", emoji: "🎄", title: "Christmas" },
-    { slug: "valentines", emoji: "💘", title: "Valentine’s Day" },
-    { slug: "birthday", emoji: "🎂", title: "Birthdays" },
-    { slug: "mothers-day", emoji: "🌸", title: "Mother’s Day" },
-    { slug: "fathers-day", emoji: "👔", title: "Father’s Day" },
-    { slug: "new-baby", emoji: "👶", title: "New Baby" },
-    { slug: "graduation", emoji: "🎓", title: "Graduation" },
-    { slug: "wedding", emoji: "💍", title: "Weddings" },
-    { slug: "general", emoji: "💌", title: "Everyday" },
-  ];
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const res = await fetch("/api/videos");
+        const data = await res.json();
+        const allVideos = Array.isArray(data) ? data : data.all || [];
+
+        // 📊 Extraer todas las categorías únicas desde los videos
+        const categorySet = new Set();
+        allVideos.forEach((v) =>
+          v.categories?.forEach((cat) => categorySet.add(cat.toLowerCase()))
+        );
+
+        // 🧩 Asignar emojis automáticos según el nombre
+        const emojiMap = {
+          halloween: "🎃",
+          christmas: "🎄",
+          valentines: "💘",
+          love: "💞",
+          birthday: "🎂",
+          mothersday: "🌸",
+          fathersday: "👔",
+          newbaby: "👶",
+          graduation: "🎓",
+          wedding: "💍",
+          condolences: "🕊️",
+          spiritual: "🕯️",
+          pets: "🐾",
+          animals: "🐶",
+          easter: "🐰",
+          independence: "🦅",
+          july4th: "🇺🇸",
+          thanksgiving: "🦃",
+          anniversary: "💖",
+          celebration: "🎉",
+          general: "💌",
+          usa: "⭐",
+          appreciationday: "🌟",
+        };
+
+        // 🧠 Convertir a array ordenado
+        const sortedCats = Array.from(categorySet).sort();
+
+        // 📋 Crear arreglo final
+        const catList = sortedCats.map((cat) => ({
+          slug: cat,
+          title:
+            cat.charAt(0).toUpperCase() + cat.slice(1).replace("-", " "),
+          emoji: emojiMap[cat] || "✨",
+        }));
+
+        setCategories(catList);
+      } catch (err) {
+        console.error("Error loading categories:", err);
+      }
+    }
+    fetchCategories();
+  }, []);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-pink-50 via-white to-pink-50 pt-24 pb-20 px-6 text-center">
@@ -24,6 +73,7 @@ export default function CategoriesPage() {
         Choose a theme to explore animated Everwish cards ✨
       </p>
 
+      {/* 📂 Lista automática */}
       <div className="max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
         {categories.map((cat) => (
           <Link
@@ -35,7 +85,13 @@ export default function CategoriesPage() {
             <p className="font-semibold text-gray-800">{cat.title}</p>
           </Link>
         ))}
+
+        {categories.length === 0 && (
+          <p className="col-span-full text-gray-400 italic">
+            Loading categories...
+          </p>
+        )}
       </div>
     </main>
   );
-    }
+      }
