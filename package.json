@@ -2,11 +2,12 @@
   "name": "everwish-app",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
-    "generate-videos": "node scripts/generate_videos_index.js",
     "build": "npm run generate-videos && next build",
-    "start": "next start"
+    "start": "next start",
+    "generate-videos": "node scripts/generate_videos_index.js"
   },
   "dependencies": {
     "next": "13.5.6",
