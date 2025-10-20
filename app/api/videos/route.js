@@ -10,13 +10,13 @@ export async function GET() {
       title: "Dogcat Pets and Animals Appreciation Day",
       src: "/videos/dogcat_petsandanimals_appreciationday.mp4",
       slug: "dogcat_petsandanimals_appreciationday",
-      categories: ["pets", "animals", "appreciationday"],
+      categories: ["pets", "animals", "appreciation-day"],
     },
     {
       title: "Eagle July 4th Independence Day",
       src: "/videos/eagle_July4th_independenceday_1A.mp4",
       slug: "eagle_July4th_independenceday_1A",
-      categories: ["july4th", "independence", "usa"],
+      categories: ["independence-day", "july4th", "usa"],
     },
     {
       title: "Ghost Halloween Love 1A",
@@ -67,15 +67,44 @@ export async function GET() {
       categories: ["christmas", "general"],
     },
     {
-      title: "Heart Valentine Love 1A",
+      title: "Heart Valentine's Day Love 1A",
       src: "/videos/heart_valentine_love_1A.mp4",
       slug: "heart_valentine_love_1A",
-      categories: ["valentine", "love"],
+      categories: ["valentines", "love"],
+    },
+    {
+      title: "Graduation Celebration 1A",
+      src: "/videos/graduation_celebration_1A.mp4",
+      slug: "graduation_celebration_1A",
+      categories: ["graduation", "celebration"],
+    },
+    {
+      title: "Wedding Love 1A",
+      src: "/videos/wedding_love_1A.mp4",
+      slug: "wedding_love_1A",
+      categories: ["wedding", "love"],
+    },
+    {
+      title: "New Baby Arrival 1A",
+      src: "/videos/newbaby_arrival_1A.mp4",
+      slug: "newbaby_arrival_1A",
+      categories: ["new-baby", "celebration"],
+    },
+    {
+      title: "Father's Day General 1A",
+      src: "/videos/fathersday_general_1A.mp4",
+      slug: "fathersday_general_1A",
+      categories: ["fathers-day", "general"],
+    },
+    {
+      title: "Everyday Greeting 1A",
+      src: "/videos/everyday_greeting_1A.mp4",
+      slug: "everyday_greeting_1A",
+      categories: ["general", "everyday"],
     },
   ];
 
-  // ✅ Devolver solo el array (sin “all”)
   return new Response(JSON.stringify(videos), {
     headers: { "Content-Type": "application/json" },
   });
-}
+      }
