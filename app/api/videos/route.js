@@ -1,80 +1,67 @@
+import fs from "fs";
+import path from "path";
+
 export async function GET() {
-  const videos = [
-    {
-      title: "Bunny Easter General",
-      src: "/videos/bunny_easter_general_1A.mp4",
-      slug: "bunny_easter_general_1A",
-      categories: ["easter", "general"],
-    },
-    {
-      title: "Dogcat Pets and Animals Appreciation Day",
-      src: "/videos/dogcat_petsandanimals_appreciationday_1A.mp4",
-      slug: "dogcat_petsandanimals_appreciationday_1A",
-      categories: ["pets", "animals", "appreciationday"],
-    },
-    {
-      title: "Eagle July 4th Independence Day",
-      src: "/videos/eagle_july4th_independenceday_1A.mp4",
-      slug: "eagle_july4th_independenceday_1A",
-      categories: ["independence", "july4th", "usa"],
-    },
-    {
-      title: "Ghost Halloween Love",
-      src: "/videos/ghost_halloween_love_1A.mp4",
-      slug: "ghost_halloween_love_1A",
-      categories: ["halloween", "love"],
-    },
-    {
-      title: "Hugs Anniversary Love",
-      src: "/videos/hugs_anniversary_love_1A.mp4",
-      slug: "hugs_anniversary_love_1A",
-      categories: ["anniversary", "love"],
-    },
-    {
-      title: "Mother Mother's Day Celebration",
-      src: "/videos/mother_mothersday_celebration_1A.mp4",
-      slug: "mother_mothersday_celebration_1A",
-      categories: ["mothers-day", "celebration"],
-    },
-    {
-      title: "Mother Mother's Day General",
-      src: "/videos/mother_mothersday_general_1A.mp4",
-      slug: "mother_mothersday_general_1A",
-      categories: ["mothers-day", "general"],
-    },
-    {
-      title: "Pumpkin Halloween General",
-      src: "/videos/pumpkin_halloween_general_1A.mp4",
-      slug: "pumpkin_halloween_general_1A",
-      categories: ["halloween", "general"],
-    },
-    {
-      title: "Turkey Thanksgiving General",
-      src: "/videos/turkey_thanksgiving_general_1A.mp4",
-      slug: "turkey_thanksgiving_general_1A",
-      categories: ["thanksgiving", "general"],
-    },
-    {
-      title: "Turtle Christmas General",
-      src: "/videos/turtle_christmas_general_1A.mp4",
-      slug: "turtle_christmas_general_1A",
-      categories: ["christmas", "general"],
-    },
-    {
-      title: "Yeti Christmas General",
-      src: "/videos/yeti_christmas_general_1A.mp4",
-      slug: "yeti_christmas_general_1A",
-      categories: ["christmas", "general"],
-    },
-    {
-      title: "Zombie Halloween Birthday",
-      src: "/videos/zombie_halloween_birthday_1A.mp4",
-      slug: "zombie_halloween_birthday_1A",
-      categories: ["halloween", "birthday"],
-    },
-  ];
+  const dir = path.join(process.cwd(), "public/videos");
+  let videos = [];
+
+  try {
+    // Leer archivos del directorio
+    const files = fs.readdirSync(dir);
+
+    // Filtrar solo .mp4
+    videos = files
+      .filter((file) => file.toLowerCase().endsWith(".mp4"))
+      .map((file) => {
+        try {
+          // Separar el nombre y partes del archivo
+          const base = path.basename(file, ".mp4");
+          const parts = base.split("_");
+
+          // Evitar errores en archivos mal nombrados
+          if (parts.length < 3) {
+            console.warn(`⚠️ Archivo ignorado (formato inválido): ${file}`);
+            return null;
+          }
+
+          // Crear título legible
+          const title = parts
+            .slice(0, -1)
+            .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+            .join(" ");
+
+          // Categorías derivadas
+          const categories = parts
+            .filter(
+              (p) =>
+                !/\d/.test(p) &&
+                p !== "1A" &&
+                p !== "A1" &&
+                p.toLowerCase() !== "general"
+            )
+            .map((p) => p.toLowerCase());
+
+          // Agregar siempre “general” y “everyday” por compatibilidad
+          if (!categories.includes("general")) categories.push("general");
+          if (!categories.includes("everyday")) categories.push("everyday");
+
+          return {
+            title,
+            src: `/videos/${file}`,
+            slug: base,
+            categories,
+          };
+        } catch (err) {
+          console.error(`❌ Error al procesar archivo: ${file}`, err);
+          return null;
+        }
+      })
+      .filter(Boolean);
+  } catch (err) {
+    console.error("❌ Error leyendo /public/videos:", err);
+  }
 
   return new Response(JSON.stringify(videos), {
     headers: { "Content-Type": "application/json" },
   });
-}
+                }
