@@ -27,12 +27,14 @@ export default function EditPage({ params }) {
   const [userImage, setUserImage] = useState(null);
   const [total, setTotal] = useState(5);
 
+  // ✨ Animation settings
   const [intensity, setIntensity] = useState("normal");
   const [opacityLevel, setOpacityLevel] = useState(0.9);
   const [emojiCount, setEmojiCount] = useState(20);
   const [isPurchased, setIsPurchased] = useState(false);
   const [isViewed, setIsViewed] = useState(false);
 
+  // 🎬 Init data
   useEffect(() => {
     setMessage(getMessageForSlug(slug));
     const opts = getAnimationOptionsForSlug(slug);
@@ -41,6 +43,7 @@ export default function EditPage({ params }) {
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
+  // ⏳ Splash screen
   useEffect(() => {
     let val = 0;
     const id = setInterval(() => {
@@ -54,6 +57,7 @@ export default function EditPage({ params }) {
     return () => clearInterval(id);
   }, []);
 
+  // 🎁 Gift card logic
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
@@ -64,6 +68,7 @@ export default function EditPage({ params }) {
     setTotal(5);
   };
 
+  // 🚫 Prevent zoom/download
   useEffect(() => {
     const prevent = (e) => e.preventDefault();
     document.addEventListener("contextmenu", prevent);
@@ -76,6 +81,7 @@ export default function EditPage({ params }) {
     };
   }, []);
 
+  // 🎨 Animation refresh
   const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
   const [animKey, setAnimKey] = useState(0);
   useEffect(() => setAnimKey(Date.now()), [
@@ -91,6 +97,7 @@ export default function EditPage({ params }) {
       className="fixed inset-0 bg-[#fff7f5] flex flex-col items-center justify-center overflow-hidden"
       style={{ height: "100dvh", overscrollBehavior: "none" }}
     >
+      {/* ⏳ Splash loading */}
       {stage === "expanded" && (
         <motion.div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-[#fff7f5]"
@@ -117,6 +124,7 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
+      {/* ✨ Main editor */}
       {stage === "editor" && (
         <>
           <AnimationOverlay
@@ -129,7 +137,7 @@ export default function EditPage({ params }) {
           />
 
           <div className="relative z-[200] w-full h-full flex flex-col items-center justify-center px-4">
-            {/* 🖼 VIDEO */}
+            {/* 🖼 Video */}
             <div className="relative w-full max-w-[480px] aspect-[4/5] rounded-[8%] overflow-hidden border shadow-lg">
               <video
                 src={videoSrc}
@@ -145,7 +153,7 @@ export default function EditPage({ params }) {
               />
             </div>
 
-            {/* ✍️ MENSAJE */}
+            {/* 📝 Message */}
             <div className="mt-6 text-center max-w-md">
               <h3 className="text-lg font-semibold text-gray-700 mb-2">
                 ✨ Customize your message ✨
@@ -158,7 +166,7 @@ export default function EditPage({ params }) {
               />
             </div>
 
-            {/* 📸 IMAGEN */}
+            {/* 📸 Image Section */}
             {userImage && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -193,7 +201,7 @@ export default function EditPage({ params }) {
               </div>
             )}
 
-            {/* ✨ ANIMACIÓN */}
+            {/* 🌈 Animation Controls */}
             <div className="my-4 w-full max-w-[480px] flex items-center justify-between rounded-xl bg-gradient-to-r from-pink-50 to-yellow-50 shadow-sm px-3 py-2 border border-pink-100">
               <select
                 value={animation}
@@ -241,7 +249,7 @@ export default function EditPage({ params }) {
               </div>
             </div>
 
-            {/* 🎁 GIFT Y CHECKOUT */}
+            {/* 🎁 Gift & Checkout */}
             <div className="mt-4 flex flex-wrap justify-center gap-3">
               <button
                 onClick={() => setShowGift(true)}
@@ -260,7 +268,7 @@ export default function EditPage({ params }) {
         </>
       )}
 
-      {/* 🔧 MODALES */}
+      {/* 🔧 Modals */}
       {showGift && (
         <GiftCardPopup
           initial={gift}
@@ -278,19 +286,21 @@ export default function EditPage({ params }) {
         />
       )}
       {showCrop && (
-        <CropperModal
-          open={showCrop}
-          existingImage={userImage}
-          onClose={() => setShowCrop(false)}
-          onDelete={() => {
-            setUserImage(null);
-            setShowCrop(false);
-          }}
-          onDone={(img) => {
-            setUserImage(img);
-            setShowCrop(false);
-          }}
-        />
+        <div className="fixed inset-0 z-[9999]">
+          <CropperModal
+            open={showCrop}
+            existingImage={userImage}
+            onClose={() => setShowCrop(false)}
+            onDelete={() => {
+              setUserImage(null);
+              setShowCrop(false);
+            }}
+            onDone={(img) => {
+              setUserImage(img);
+              setShowCrop(false);
+            }}
+          />
+        </div>
       )}
     </div>
   );
