@@ -135,7 +135,7 @@ export default function EditPage({ params }) {
       {/* 🎨 Editor */}
       {stage === "editor" && (
         <>
-          {/* 🌈 Animación */}
+          {/* 🌈 Animación activa */}
           <AnimationOverlay
             key={animKey}
             slug={slug}
@@ -161,11 +161,7 @@ export default function EditPage({ params }) {
                 className="w-full h-full object-cover select-none pointer-events-none"
                 draggable={false}
               />
-              {/* 🛑 Capa invisible */}
-              <div
-                className="absolute inset-0 z-[50]"
-                onContextMenu={(e) => e.preventDefault()}
-              ></div>
+              <div className="absolute inset-0 z-[50]" onContextMenu={(e) => e.preventDefault()}></div>
             </div>
 
             {/* 📝 Mensaje */}
@@ -181,7 +177,7 @@ export default function EditPage({ params }) {
               />
             </div>
 
-            {/* 📸 Imagen */}
+            {/* 📸 Imagen (con recorte) */}
             {userImage && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -200,6 +196,7 @@ export default function EditPage({ params }) {
                     objectFit: "cover",
                     aspectRatio: "4 / 3",
                     backgroundColor: "#fff7f5",
+                    maxWidth: "100%",
                   }}
                 />
               </motion.div>
@@ -214,6 +211,81 @@ export default function EditPage({ params }) {
                 </button>
               </div>
             )}
+
+            {/* ✨ Panel de animación */}
+            <div className="my-4">
+              <div
+                className={`flex items-center justify-between w-full rounded-xl transition-all duration-300 ${
+                  animation && !animation.startsWith("✨ None")
+                    ? "bg-gradient-to-r from-pink-100 via-purple-100 to-yellow-100 text-gray-800 shadow-sm"
+                    : "bg-gray-100 text-gray-400"
+                }`}
+                style={{
+                  height: "46px",
+                  padding: "0 8px 0 8px",
+                  border: "1px solid rgba(0,0,0,0.05)",
+                }}
+              >
+                <select
+                  value={animation}
+                  onChange={(e) => setAnimation(e.target.value)}
+                  className="flex-1 text-sm font-medium focus:outline-none cursor-pointer truncate transition-colors bg-transparent"
+                  style={{ maxWidth: "45%" }}
+                >
+                  {animationOptions
+                    .filter((a) => !a.includes("None"))
+                    .map((a) => (
+                      <option key={a} value={a}>
+                        {a}
+                      </option>
+                    ))}
+                </select>
+
+                {!isPurchased && !isViewed && (
+                  <div className="flex items-center gap-2 ml-1">
+                    <div className="flex items-center rounded-md border border-gray-300 overflow-hidden">
+                      <button
+                        className="px-2 text-lg hover:bg-gray-200 transition"
+                        onClick={() => setEmojiCount((prev) => Math.max(5, prev - 5))}
+                      >
+                        –
+                      </button>
+                      <span className="px-2 text-sm font-medium text-gray-700">
+                        {emojiCount}
+                      </span>
+                      <button
+                        className="px-2 text-lg hover:bg-gray-200 transition"
+                        onClick={() => setEmojiCount((prev) => Math.min(60, prev + 5))}
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    <select
+                      value={intensity}
+                      onChange={(e) => setIntensity(e.target.value)}
+                      className="px-2 text-sm bg-transparent font-medium focus:outline-none cursor-pointer"
+                    >
+                      <option value="soft">Soft</option>
+                      <option value="normal">Normal</option>
+                      <option value="vivid">Vivid</option>
+                    </select>
+
+                    <button
+                      className={`ml-1 px-2 text-lg font-bold transition ${
+                        animation && !animation.startsWith("✨ None")
+                          ? "text-red-500 hover:text-red-600"
+                          : "text-gray-400"
+                      }`}
+                      onClick={() => setAnimation("✨ None (No Animation)")}
+                      title="Remove animation"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
 
             {/* 🎁 Botones */}
             <div className="mt-4 flex flex-wrap justify-center gap-3">
@@ -268,4 +340,4 @@ export default function EditPage({ params }) {
       )}
     </div>
   );
-}
+                        }
