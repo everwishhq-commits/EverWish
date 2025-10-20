@@ -24,13 +24,19 @@ export default function Carousel() {
     }
   };
 
-  // ✅ Carga de videos
+  // ✅ Cargar Top 10 desde /api/videos
   useEffect(() => {
     async function fetchVideos() {
       try {
         const res = await fetch("/api/videos");
         const data = await res.json();
-        setVideos(data);
+
+        // 🪄 Usa top10 si existe, sino usa all
+        const list = Array.isArray(data)
+          ? data
+          : data.top10 || data.all || [];
+
+        setVideos(list);
       } catch (error) {
         console.error("❌ Error al cargar videos:", error);
       }
@@ -66,8 +72,7 @@ export default function Carousel() {
     touchEndX.current = e.touches[0].clientX;
     const diff = touchStartX.current - touchEndX.current;
     if (Math.abs(diff) > 20) swipeDetected.current = true;
-
-    clearTimeout(longPressTimeout.current); // cancel long press si mueve
+    clearTimeout(longPressTimeout.current);
   };
 
   const handleTouchEnd = () => {
@@ -75,7 +80,7 @@ export default function Carousel() {
     const diff = touchStartX.current - touchEndX.current;
 
     if (longPressActive.current) {
-      longPressActive.current = false; // 🚫 evita acción por long press
+      longPressActive.current = false;
     } else if (swipeDetected.current && Math.abs(diff) > 50) {
       // 👉 Swipe
       setIndex((prev) =>
@@ -96,12 +101,13 @@ export default function Carousel() {
     }, 4000);
   };
 
-  // 🔸 Navegación
+  // 🔸 Navegación → fullscreen + redirect
   const handleClick = async (slug) => {
     try {
       const elem = document.documentElement;
       if (elem.requestFullscreen) await elem.requestFullscreen();
-      else if (elem.webkitRequestFullscreen) await elem.webkitRequestFullscreen();
+      else if (elem.webkitRequestFullscreen)
+        await elem.webkitRequestFullscreen();
       await new Promise((r) => setTimeout(r, 200));
       router.push(`/edit/${slug}`);
     } catch {
@@ -140,20 +146,18 @@ export default function Carousel() {
                   loop
                   muted
                   playsInline
-                  onContextMenu={(e) => e.preventDefault()} // 🚫 sin menú descarga
+                  onContextMenu={(e) => e.preventDefault()}
                   controlsList="nodownload noplaybackrate"
                   draggable="false"
-                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover object-center bg-white overflow-hidden"
-                  style={{ maxHeight: "100%", maxWidth: "100%" }}
+                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover bg-white overflow-hidden"
                 />
               ) : (
                 <img
                   src={video.src}
                   alt={video.title}
-                  onContextMenu={(e) => e.preventDefault()} // 🚫 sin menú descarga
+                  onContextMenu={(e) => e.preventDefault()}
                   draggable="false"
-                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover object-center bg-white overflow-hidden"
-                  style={{ maxHeight: "100%", maxWidth: "100%" }}
+                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover bg-white overflow-hidden"
                 />
               )}
             </div>
@@ -183,4 +187,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-}
+      }
