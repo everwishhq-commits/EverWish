@@ -1,44 +1,89 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
+
+// Deducción de categoría por nombre de archivo/título si la API no trae `categories`
+function detectCategory(str = "") {
+  const s = String(str).toLowerCase();
+  if (s.includes("halloween")) return "halloween";
+  if (s.includes("christmas") || s.includes("xmas")) return "christmas";
+  if (s.includes("valentine") || s.includes("love")) return "valentines";
+  if (s.includes("birthday")) return "birthday";
+  if (s.includes("mother")) return "mothers-day";
+  if (s.includes("father")) return "fathers-day";
+  if (s.includes("easter")) return "easter";
+  if (s.includes("wedding")) return "wedding";
+  if (s.includes("anniversary")) return "anniversary";
+  if (s.includes("thanksgiving")) return "thanksgiving";
+  if (s.includes("newyear")) return "new-year";
+  if (s.includes("pet") || s.includes("dog") || s.includes("cat")) return "pets";
+  return "general";
+}
 
 export default function CategoryVideosPage() {
   const { slug } = useParams();
   const [videos, setVideos] = useState([]);
   const [search, setSearch] = useState("");
-  const router = useRouter();
 
   useEffect(() => {
-    async function fetchVideos() {
+    let mounted = true;
+    (async () => {
       try {
-        const res = await fetch("/api/videos");
+        const res = await fetch("/api/videos", { cache: "no-store" });
         const data = await res.json();
-        const allVideos = Array.isArray(data) ? data : data.all || [];
+        const all = Array.isArray(data) ? data : data.all || [];
 
-        // ✅ Filtro flexible
-        const filtered = allVideos.filter(
+        // Normaliza: asegura slug/editUrl/categories
+        const normalized = all.map((v) => {
+          const safeSlug =
+            v.slug ||
+            String(v.title || "")
+              .toLowerCase()
+              .replace(/\s+/g, "_")
+              .replace(/[^\w\-]+/g, "");
+          const cats = v.categories && v.categories.length
+            ? v.categories.map((c) => c.toLowerCase())
+            : [detectCategory(v.title || safeSlug)];
+          return {
+            title: v.title || safeSlug,
+            slug: safeSlug,
+            src: v.src,
+            categories: cats,
+            editUrl: v.editUrl || `/edit/${safeSlug}`,
+          };
+        });
+
+        const filtered = normalized.filter(
           (v) =>
-            v.categories?.includes(slug.toLowerCase()) ||
-            v.title?.toLowerCase().includes(slug.toLowerCase()) ||
-            v.slug?.toLowerCase().includes(slug.toLowerCase())
+            v.categories.includes(String(slug).toLowerCase()) ||
+            v.title.toLowerCase().includes(String(slug).toLowerCase()) ||
+            v.slug.toLowerCase().includes(String(slug).toLowerCase())
         );
 
-        setVideos(filtered);
-      } catch (err) {
-        console.error("Error loading videos:", err);
+        if (mounted) setVideos(filtered);
+      } catch (e) {
+        console.error("Error loading videos:", e);
+        if (mounted) setVideos([]);
       }
-    }
-    fetchVideos();
+    })();
+    return () => {
+      mounted = false;
+    };
   }, [slug]);
 
-  const filteredVideos = videos.filter((v) =>
-    v.title.toLowerCase().includes(search.toLowerCase())
+  // Búsqueda local
+  const filtered = useMemo(
+    () =>
+      videos.filter((v) =>
+        v.title.toLowerCase().includes(search.toLowerCase())
+      ),
+    [videos, search]
   );
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-pink-50 via-white to-pink-50 text-center px-4 pt-24 pb-16">
-      {/* 🔙 Back to Categories */}
+      {/* Back */}
       <Link
         href="/categories"
         className="text-pink-500 hover:underline text-sm font-medium"
@@ -46,17 +91,16 @@ export default function CategoryVideosPage() {
         ← Back to Categories
       </Link>
 
-      {/* 🏷️ Title */}
+      {/* Título */}
       <h1 className="text-4xl md:text-5xl font-extrabold mt-4 bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent capitalize">
-        {slug}
+        {String(slug).replaceAll("-", " ")}
       </h1>
 
-      {/* ✨ Subtitle */}
       <p className="text-gray-600 mt-2 mb-8">
-        Discover beautiful Everwish cards for {slug} ✨
+        Discover beautiful Everwish cards for {String(slug).replaceAll("-", " ")} ✨
       </p>
 
-      {/* 🔍 Search Bar */}
+      {/* Search */}
       <div className="max-w-md mx-auto mb-10">
         <input
           type="text"
@@ -67,39 +111,46 @@ export default function CategoryVideosPage() {
         />
       </div>
 
-      {/* 🎥 Video Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 justify-center items-center max-w-5xl mx-auto">
-        {filteredVideos.length === 0 ? (
-          <p className="text-gray-400 italic">
+      {/* Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 justify-center items-start max-w-6xl mx-auto">
+        {filtered.length === 0 ? (
+          <p className="col-span-full text-gray-400 italic">
             No cards found for this category yet.
           </p>
         ) : (
-          filteredVideos.map((video, i) => (
-            <div
-              key={i}
-              onClick={() => router.push(video.editUrl || `/edit/${video.slug}`)}
-              className="relative bg-white rounded-[8%] shadow-md hover:shadow-xl overflow-hidden transition-all duration-300 cursor-pointer group aspect-[4/5]"
+          filtered.map((video, i) => (
+            <Link
+              key={`${video.slug}-${i}`}
+              href={video.editUrl}
+              className="rounded-3xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-white"
+              aria-label={`Open ${video.title}`}
+              title={video.title}
             >
-              <video
-                src={video.src}
-                autoPlay
-                loop
-                muted
-                playsInline
-                preload="auto"
-                disablePictureInPicture
-                controls={false}
-                controlsList="nodownload nofullscreen noremoteplayback"
-                onContextMenu={(e) => e.preventDefault()}
-                className="w-full h-full object-cover rounded-[8%] pointer-events-none select-none transform group-hover:scale-105 transition-transform duration-500"
-                draggable={false}
-              />
-              {/* 🛑 Overlay invisible para bloquear descarga */}
-              <div className="absolute inset-0" onContextMenu={(e) => e.preventDefault()}></div>
-            </div>
+              <div className="relative w-full aspect-[4/5]">
+                <video
+                  src={video.src}
+                  // iOS: evita fullscreen automático
+                  playsInline
+                  // autoplay silencioso como el carrusel
+                  autoPlay
+                  muted
+                  loop
+                  preload="metadata"
+                  // Bloqueos de descarga
+                  controls={false}
+                  disablePictureInPicture
+                  controlsList="nodownload nofullscreen noremoteplayback"
+                  onContextMenu={(e) => e.preventDefault()}
+                  className="w-full h-full object-cover pointer-events-none select-none"
+                  draggable={false}
+                />
+                {/* Overlay invisible para bloquear long-press */}
+                <div className="absolute inset-0" onContextMenu={(e) => e.preventDefault()} />
+              </div>
+            </Link>
           ))
         )}
       </div>
     </main>
   );
-        }
+            }
