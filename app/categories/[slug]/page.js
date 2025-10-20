@@ -9,6 +9,7 @@ export default function CategoryVideosPage() {
   const [search, setSearch] = useState("");
   const router = useRouter();
 
+  // ✅ Cargar y refrescar cada 24 h
   useEffect(() => {
     async function fetchVideos() {
       try {
@@ -16,9 +17,10 @@ export default function CategoryVideosPage() {
         const data = await res.json();
         const allVideos = Array.isArray(data) ? data : data.all || [];
 
-        // Filtro flexible
+        // ✅ Filtro flexible
         const filtered = allVideos.filter(
           (v) =>
+            v.categories?.includes(slug.toLowerCase()) ||
             v.title?.toLowerCase().includes(slug.toLowerCase()) ||
             v.slug?.toLowerCase().includes(slug.toLowerCase())
         );
@@ -27,7 +29,10 @@ export default function CategoryVideosPage() {
         console.error("Error loading videos:", err);
       }
     }
+
     fetchVideos();
+    const refresh = setInterval(fetchVideos, 24 * 60 * 60 * 1000);
+    return () => clearInterval(refresh);
   }, [slug]);
 
   const filteredVideos = videos.filter((v) =>
@@ -35,25 +40,25 @@ export default function CategoryVideosPage() {
   );
 
   return (
-    <main
-      className="fixed inset-0 bg-gradient-to-b from-pink-50 via-white to-pink-50 text-center px-4 pt-24 pb-16 overflow-y-auto"
-      style={{ height: "100dvh", overscrollBehavior: "none" }}
-    >
-      {/* 🔝 Barra superior */}
-      <div className="fixed top-0 left-0 right-0 z-[100] bg-white/80 backdrop-blur-md shadow-sm flex justify-between items-center px-5 py-3">
-        <button
-          onClick={() => router.back()}
-          className="text-pink-600 font-semibold hover:underline"
+    <main className="fixed inset-0 bg-gradient-to-b from-pink-50 via-white to-pink-50 text-center px-4 pt-20 pb-16 overflow-y-auto">
+      {/* 🔙 Botones de navegación */}
+      <div className="flex justify-between items-center max-w-5xl mx-auto mb-6">
+        <Link
+          href="/categories"
+          className="text-pink-500 hover:underline text-sm font-medium"
         >
           ← Back
-        </button>
-        <Link href="/" className="text-pink-600 font-semibold hover:underline">
+        </Link>
+        <Link
+          href="/"
+          className="text-purple-600 hover:underline text-sm font-medium"
+        >
           🏠 Home
         </Link>
       </div>
 
       {/* 🏷️ Título */}
-      <h1 className="text-4xl md:text-5xl font-extrabold mt-20 bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent capitalize">
+      <h1 className="text-4xl md:text-5xl font-extrabold mt-2 bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent capitalize">
         {slug}
       </h1>
 
@@ -62,7 +67,7 @@ export default function CategoryVideosPage() {
         Discover beautiful Everwish cards for {slug} ✨
       </p>
 
-      {/* 🔍 Barra de búsqueda */}
+      {/* 🔍 Buscar */}
       <div className="max-w-md mx-auto mb-10">
         <input
           type="text"
@@ -74,7 +79,7 @@ export default function CategoryVideosPage() {
       </div>
 
       {/* 🎥 Grilla de videos */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 justify-center items-center max-w-5xl mx-auto mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 justify-center items-center max-w-5xl mx-auto">
         {filteredVideos.length === 0 ? (
           <p className="text-gray-400 italic">
             No cards found for this category yet.
@@ -99,7 +104,7 @@ export default function CategoryVideosPage() {
                 className="w-full h-full object-cover rounded-[8%] pointer-events-none select-none transform group-hover:scale-105 transition-transform duration-500"
                 draggable={false}
               />
-              {/* Capa invisible para bloquear descarga */}
+              {/* Capa invisible para bloquear descargas */}
               <div
                 className="absolute inset-0"
                 onContextMenu={(e) => e.preventDefault()}
@@ -108,22 +113,6 @@ export default function CategoryVideosPage() {
           ))
         )}
       </div>
-
-      {/* 📍Botones inferiores */}
-      <div className="flex flex-wrap justify-center gap-4 mb-8">
-        <Link
-          href="/categories"
-          className="rounded-full bg-pink-200 px-6 py-3 font-semibold text-pink-700 hover:bg-pink-300 transition-all shadow-sm"
-        >
-          View All Categories
-        </Link>
-        <Link
-          href="/"
-          className="rounded-full bg-purple-500 px-6 py-3 font-semibold text-white hover:bg-purple-600 transition-all shadow-sm"
-        >
-          Go Home
-        </Link>
-      </div>
     </main>
   );
-                  }
+}
