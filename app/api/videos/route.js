@@ -13,7 +13,7 @@ export async function GET() {
       title: "Dogcat Pets and Animals Appreciation Day",
       src: "/videos/dogcat_petsandanimals_appreciationday.mp4",
       slug: "dogcat_petsandanimals_appreciationday",
-      categories: ["pets", "appreciationday"],
+      categories: ["pets", "appreciationday", "general"],
     },
 
     // 🦅 Independence Day
@@ -29,7 +29,7 @@ export async function GET() {
       title: "Ghost Halloween Love",
       src: "/videos/ghost_halloween_love_1A.mp4",
       slug: "ghost_halloween_love_1A",
-      categories: ["halloween", "love"],
+      categories: ["halloween", "love", "valentines"],
     },
     {
       title: "Pumpkin Halloween General",
@@ -49,7 +49,7 @@ export async function GET() {
       title: "Hugs Anniversary Love",
       src: "/videos/hugs_anniversary_love_A1.mp4",
       slug: "hugs_anniversary_love_A1",
-      categories: ["anniversary", "love", "valentines"],
+      categories: ["anniversary", "love", "valentines", "general"],
     },
 
     // 👩‍ Mother’s Day
@@ -57,13 +57,13 @@ export async function GET() {
       title: "Mother Mother's Day Celebration",
       src: "/videos/mother_mother'sday_celebration_1A.mp4",
       slug: "mother_mother'sday_celebration_1A",
-      categories: ["mother", "mothers-day", "celebration"],
+      categories: ["mothers-day", "celebration", "general"],
     },
     {
       title: "Mother Mother's Day General",
       src: "/videos/mother_mothers'day_general_1A.mp4",
       slug: "mother_mothers'day_general_1A",
-      categories: ["mother", "mothers-day", "general"],
+      categories: ["mothers-day", "general"],
     },
 
     // 🦃 Thanksgiving
@@ -92,4 +92,4 @@ export async function GET() {
   return new Response(JSON.stringify(videos), {
     headers: { "Content-Type": "application/json" },
   });
-        }
+}
