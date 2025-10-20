@@ -74,7 +74,8 @@ export async function GET() {
     },
   ];
 
-  return new Response(JSON.stringify({ all: videos }), {
+  // ✅ Devolver solo el array (sin “all”)
+  return new Response(JSON.stringify(videos), {
     headers: { "Content-Type": "application/json" },
   });
 }
