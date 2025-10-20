@@ -27,14 +27,12 @@ export default function EditPage({ params }) {
   const [userImage, setUserImage] = useState(null);
   const [total, setTotal] = useState(5);
 
-  // 🎨 Config animación
   const [intensity, setIntensity] = useState("normal");
   const [opacityLevel, setOpacityLevel] = useState(0.9);
   const [emojiCount, setEmojiCount] = useState(20);
   const [isPurchased, setIsPurchased] = useState(false);
   const [isViewed, setIsViewed] = useState(false);
 
-  // 🎬 Inicializa valores
   useEffect(() => {
     setMessage(getMessageForSlug(slug));
     const opts = getAnimationOptionsForSlug(slug);
@@ -43,13 +41,12 @@ export default function EditPage({ params }) {
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
-  // ⏳ Pantalla de carga
   useEffect(() => {
-    let v = 0;
+    let val = 0;
     const id = setInterval(() => {
-      v += 1;
-      setProgress(v);
-      if (v >= 100) {
+      val += 1;
+      setProgress(val);
+      if (val >= 100) {
         clearInterval(id);
         setStage("editor");
       }
@@ -57,7 +54,6 @@ export default function EditPage({ params }) {
     return () => clearInterval(id);
   }, []);
 
-  // 🎁 GiftCard lógica
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
@@ -68,17 +64,14 @@ export default function EditPage({ params }) {
     setTotal(5);
   };
 
-  // 🚫 Bloqueo descargas, zoom y arrastre
   useEffect(() => {
     const prevent = (e) => e.preventDefault();
     document.addEventListener("contextmenu", prevent);
     document.addEventListener("dragstart", prevent);
-    document.addEventListener("touchstart", prevent, { passive: false });
     document.addEventListener("touchmove", prevent, { passive: false });
     return () => {
       document.removeEventListener("contextmenu", prevent);
       document.removeEventListener("dragstart", prevent);
-      document.removeEventListener("touchstart", prevent);
       document.removeEventListener("touchmove", prevent);
     };
   }, []);
@@ -96,13 +89,8 @@ export default function EditPage({ params }) {
   return (
     <div
       className="fixed inset-0 bg-[#fff7f5] flex flex-col items-center justify-center overflow-hidden"
-      style={{
-        height: "100dvh",
-        overscrollBehavior: "none",
-        touchAction: "none",
-      }}
+      style={{ height: "100dvh", overscrollBehavior: "none" }}
     >
-      {/* ⏳ Pantalla inicial */}
       {stage === "expanded" && (
         <motion.div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-[#fff7f5]"
@@ -117,9 +105,6 @@ export default function EditPage({ params }) {
             loop
             muted
             playsInline
-            disablePictureInPicture
-            controlsList="nodownload nofullscreen noremoteplayback"
-            onContextMenu={(e) => e.preventDefault()}
           />
           <div className="absolute bottom-8 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
             <motion.div
@@ -132,10 +117,8 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
-      {/* 🎨 Editor */}
       {stage === "editor" && (
         <>
-          {/* 🌈 Animación activa */}
           <AnimationOverlay
             key={animKey}
             slug={slug}
@@ -146,7 +129,7 @@ export default function EditPage({ params }) {
           />
 
           <div className="relative z-[200] w-full h-full flex flex-col items-center justify-center px-4">
-            {/* 🖼 Tarjeta principal */}
+            {/* 🖼 VIDEO */}
             <div className="relative w-full max-w-[480px] aspect-[4/5] rounded-[8%] overflow-hidden border shadow-lg">
               <video
                 src={videoSrc}
@@ -158,13 +141,11 @@ export default function EditPage({ params }) {
                 controls={false}
                 controlsList="nodownload nofullscreen noremoteplayback"
                 onContextMenu={(e) => e.preventDefault()}
-                className="w-full h-full object-cover select-none pointer-events-none"
-                draggable={false}
+                className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 z-[50]" onContextMenu={(e) => e.preventDefault()}></div>
             </div>
 
-            {/* 📝 Mensaje */}
+            {/* ✍️ MENSAJE */}
             <div className="mt-6 text-center max-w-md">
               <h3 className="text-lg font-semibold text-gray-700 mb-2">
                 ✨ Customize your message ✨
@@ -177,7 +158,7 @@ export default function EditPage({ params }) {
               />
             </div>
 
-            {/* 📸 Imagen (con recorte) */}
+            {/* 📸 IMAGEN */}
             {userImage && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -212,82 +193,55 @@ export default function EditPage({ params }) {
               </div>
             )}
 
-            {/* ✨ Panel de animación */}
-            <div className="my-4">
-              <div
-                className={`flex items-center justify-between w-full rounded-xl transition-all duration-300 ${
-                  animation && !animation.startsWith("✨ None")
-                    ? "bg-gradient-to-r from-pink-100 via-purple-100 to-yellow-100 text-gray-800 shadow-sm"
-                    : "bg-gray-100 text-gray-400"
-                }`}
-                style={{
-                  height: "46px",
-                  padding: "0 8px 0 8px",
-                  border: "1px solid rgba(0,0,0,0.05)",
-                }}
+            {/* ✨ ANIMACIÓN */}
+            <div className="my-4 w-full max-w-[480px] flex items-center justify-between rounded-xl bg-gradient-to-r from-pink-50 to-yellow-50 shadow-sm px-3 py-2 border border-pink-100">
+              <select
+                value={animation}
+                onChange={(e) => setAnimation(e.target.value)}
+                className="flex-1 bg-transparent text-gray-700 font-medium focus:outline-none"
               >
-                <select
-                  value={animation}
-                  onChange={(e) => setAnimation(e.target.value)}
-                  className="flex-1 text-sm font-medium focus:outline-none cursor-pointer truncate transition-colors bg-transparent"
-                  style={{ maxWidth: "45%" }}
+                {animationOptions
+                  .filter((a) => !a.includes("None"))
+                  .map((a) => (
+                    <option key={a} value={a}>
+                      {a}
+                    </option>
+                  ))}
+              </select>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setEmojiCount((p) => Math.max(5, p - 5))}
+                  className="px-2 text-lg hover:text-pink-600"
                 >
-                  {animationOptions
-                    .filter((a) => !a.includes("None"))
-                    .map((a) => (
-                      <option key={a} value={a}>
-                        {a}
-                      </option>
-                    ))}
+                  –
+                </button>
+                <span className="text-gray-700">{emojiCount}</span>
+                <button
+                  onClick={() => setEmojiCount((p) => Math.min(60, p + 5))}
+                  className="px-2 text-lg hover:text-pink-600"
+                >
+                  +
+                </button>
+                <select
+                  value={intensity}
+                  onChange={(e) => setIntensity(e.target.value)}
+                  className="text-sm bg-transparent text-gray-700 font-medium"
+                >
+                  <option value="soft">Soft</option>
+                  <option value="normal">Normal</option>
+                  <option value="vivid">Vivid</option>
                 </select>
-
-                {!isPurchased && !isViewed && (
-                  <div className="flex items-center gap-2 ml-1">
-                    <div className="flex items-center rounded-md border border-gray-300 overflow-hidden">
-                      <button
-                        className="px-2 text-lg hover:bg-gray-200 transition"
-                        onClick={() => setEmojiCount((prev) => Math.max(5, prev - 5))}
-                      >
-                        –
-                      </button>
-                      <span className="px-2 text-sm font-medium text-gray-700">
-                        {emojiCount}
-                      </span>
-                      <button
-                        className="px-2 text-lg hover:bg-gray-200 transition"
-                        onClick={() => setEmojiCount((prev) => Math.min(60, prev + 5))}
-                      >
-                        +
-                      </button>
-                    </div>
-
-                    <select
-                      value={intensity}
-                      onChange={(e) => setIntensity(e.target.value)}
-                      className="px-2 text-sm bg-transparent font-medium focus:outline-none cursor-pointer"
-                    >
-                      <option value="soft">Soft</option>
-                      <option value="normal">Normal</option>
-                      <option value="vivid">Vivid</option>
-                    </select>
-
-                    <button
-                      className={`ml-1 px-2 text-lg font-bold transition ${
-                        animation && !animation.startsWith("✨ None")
-                          ? "text-red-500 hover:text-red-600"
-                          : "text-gray-400"
-                      }`}
-                      onClick={() => setAnimation("✨ None (No Animation)")}
-                      title="Remove animation"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
+                <button
+                  className="ml-1 text-lg text-red-400 hover:text-red-600"
+                  onClick={() => setAnimation("✨ None (No Animation)")}
+                >
+                  ×
+                </button>
               </div>
             </div>
 
-            {/* 🎁 Botones */}
+            {/* 🎁 GIFT Y CHECKOUT */}
             <div className="mt-4 flex flex-wrap justify-center gap-3">
               <button
                 onClick={() => setShowGift(true)}
@@ -306,7 +260,7 @@ export default function EditPage({ params }) {
         </>
       )}
 
-      {/* 🔧 Modales */}
+      {/* 🔧 MODALES */}
       {showGift && (
         <GiftCardPopup
           initial={gift}
@@ -340,4 +294,4 @@ export default function EditPage({ params }) {
       )}
     </div>
   );
-                        }
+              }
