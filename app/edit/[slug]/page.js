@@ -24,10 +24,10 @@ export default function EditPage({ params }) {
   const [showGift, setShowGift] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showCrop, setShowCrop] = useState(false);
-  const [total, setTotal] = useState(5);
   const [userImage, setUserImage] = useState(null);
+  const [total, setTotal] = useState(5);
 
-  // 🎨 Animación
+  // 🎨 Animación personalizada
   const [intensity, setIntensity] = useState("normal");
   const [opacityLevel, setOpacityLevel] = useState(0.9);
   const [emojiCount, setEmojiCount] = useState(20);
@@ -43,7 +43,7 @@ export default function EditPage({ params }) {
     setVideoSrc(`/videos/${slug}.mp4`);
   }, [slug]);
 
-  // ⏳ Carga inicial
+  // ⏳ Pantalla de carga
   useEffect(() => {
     let v = 0;
     const id = setInterval(() => {
@@ -57,7 +57,7 @@ export default function EditPage({ params }) {
     return () => clearInterval(id);
   }, []);
 
-  // 💳 Gift card
+  // 💳 Gift Card
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
@@ -68,17 +68,7 @@ export default function EditPage({ params }) {
     setTotal(5);
   };
 
-  const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
-  const [animKey, setAnimKey] = useState(0);
-  useEffect(() => setAnimKey(Date.now()), [
-    animation,
-    category,
-    intensity,
-    opacityLevel,
-    emojiCount,
-  ]);
-
-  // 🚫 Bloquear descargas y zoom/pulsaciones
+  // 🚫 Bloqueos táctiles / descargas
   useEffect(() => {
     const prevent = (e) => e.preventDefault();
     document.addEventListener("contextmenu", prevent);
@@ -92,6 +82,16 @@ export default function EditPage({ params }) {
       document.removeEventListener("touchmove", prevent);
     };
   }, []);
+
+  const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
+  const [animKey, setAnimKey] = useState(0);
+  useEffect(() => setAnimKey(Date.now()), [
+    animation,
+    category,
+    intensity,
+    opacityLevel,
+    emojiCount,
+  ]);
 
   return (
     <div
@@ -135,6 +135,7 @@ export default function EditPage({ params }) {
       {/* ✨ Editor principal */}
       {stage === "editor" && (
         <>
+          {/* 🌈 Capa de animaciones */}
           <AnimationOverlay
             key={animKey}
             slug={slug}
@@ -145,7 +146,7 @@ export default function EditPage({ params }) {
           />
 
           <div className="relative z-[200] w-full h-full flex flex-col items-center justify-center px-4">
-            {/* 🖼 Video fullscreen */}
+            {/* 🖼 Video principal */}
             <div className="relative w-full max-w-[480px] aspect-[4/5] rounded-[8%] overflow-hidden border shadow-lg">
               <video
                 src={videoSrc}
@@ -160,14 +161,14 @@ export default function EditPage({ params }) {
                 className="w-full h-full object-cover select-none pointer-events-none"
                 draggable={false}
               />
-              {/* 🛑 Capa invisible para bloquear pulsaciones largas */}
+              {/* 🛑 Capa invisible anti-click derecho */}
               <div
                 className="absolute inset-0 z-[50]"
                 onContextMenu={(e) => e.preventDefault()}
               ></div>
             </div>
 
-            {/* 📝 Mensaje personalizado */}
+            {/* 📝 Mensaje */}
             <div className="mt-6 text-center max-w-md">
               <h3 className="text-lg font-semibold text-gray-700 mb-2">
                 ✨ Customize your message ✨
@@ -180,7 +181,41 @@ export default function EditPage({ params }) {
               />
             </div>
 
-            {/* 🛍 Botones */}
+            {/* 📸 Imagen del usuario */}
+            {userImage && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.4 }}
+                className="my-3 cursor-pointer hover:scale-[1.02] transition-transform flex justify-center"
+                onClick={() => setShowCrop(true)}
+              >
+                <img
+                  src={userImage}
+                  alt="User upload"
+                  className="rounded-2xl border border-gray-200 shadow-sm"
+                  style={{
+                    width: "100%",
+                    height: "auto",
+                    objectFit: "cover",
+                    aspectRatio: "4 / 3",
+                    backgroundColor: "#fff7f5",
+                  }}
+                />
+              </motion.div>
+            )}
+            {!userImage && (
+              <div className="mt-4 flex justify-center">
+                <button
+                  onClick={() => setShowCrop(true)}
+                  className="flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-3 font-semibold text-[#3b2b1f] hover:bg-yellow-300 transition-all shadow-sm"
+                >
+                  📸 Add Image
+                </button>
+              </div>
+            )}
+
+            {/* 🎁 Botones */}
             <div className="mt-4 flex flex-wrap justify-center gap-3">
               <button
                 onClick={() => setShowGift(true)}
@@ -233,4 +268,4 @@ export default function EditPage({ params }) {
       )}
     </div>
   );
-    }
+              }
