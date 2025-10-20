@@ -1,68 +1,124 @@
-export async function GET() {
-  const videos = [
-    {
-      title: "Bunny Easter General",
-      src: "/videos/bunny_easter_general.mp4",
-      slug: "bunny_easter_general",
-      categories: ["easter", "general"],
-    },
-    {
-      title: "Dogcat Pets and Animals Appreciation Day",
-      src: "/videos/dogcat_petsandanimals_appreciationday.mp4",
-      slug: "dogcat_petsandanimals_appreciationday",
-      categories: ["pets", "animals", "appreciationday"],
-    },
-    {
-      title: "Eagle July 4th Independence Day",
-      src: "/videos/eagle_July4th_independenceday_1A.mp4",
-      slug: "eagle_July4th_independenceday_1A",
-      categories: ["independence", "july4th", "usa"],
-    },
-    {
-      title: "Ghost Halloween Love",
-      src: "/videos/ghost_halloween_love_1A.mp4",
-      slug: "ghost_halloween_love_1A",
-      categories: ["halloween", "love"],
-    },
-    {
-      title: "Hugs Anniversary Love",
-      src: "/videos/hugs_anniversary_love_A1.mp4",
-      slug: "hugs_anniversary_love_A1",
-      categories: ["anniversary", "love"],
-    },
-    {
-      title: "Mother Mother's Day Celebration",
-      src: "/videos/mother_mother'sday_celebration_1A.mp4",
-      slug: "mother_mother'sday_celebration_1A",
-      categories: ["mothers-day", "celebration"],
-    },
-    {
-      title: "Mother Mother's Day General",
-      src: "/videos/mother_mothers'day_general_1A.mp4",
-      slug: "mother_mothers'day_general_1A",
-      categories: ["mothers-day", "general"],
-    },
-    {
-      title: "Pumpkin Halloween General",
-      src: "/videos/pumpkin_halloween_general_1A.mp4",
-      slug: "pumpkin_halloween_general_1A",
-      categories: ["halloween", "general"],
-    },
-    {
-      title: "Zombie Halloween Birthday",
-      src: "/videos/zombie_halloween_birthday_1A.mp4",
-      slug: "zombie_halloween_birthday_1A",
-      categories: ["halloween", "birthday"],
-    },
-    {
-      title: "Turkey Thanksgiving General",
-      src: "/videos/turkey_thanksgiving_general1A.mp4",
-      slug: "turkey_thanksgiving_general1A",
-      categories: ["thanksgiving", "general"],
-    },
-  ];
+"use client";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 
-  return new Response(JSON.stringify({ all: videos }), {
-    headers: { "Content-Type": "application/json" },
-  });
+// 🔹 Detecta categoría por nombre
+function detectCategory(title = "", slug = "") {
+  const s = (title + " " + slug).toLowerCase();
+  if (s.includes("halloween")) return "halloween";
+  if (s.includes("christmas")) return "christmas";
+  if (s.includes("valentine")) return "valentines";
+  if (s.includes("birthday")) return "birthday";
+  if (s.includes("mother")) return "mothers-day";
+  if (s.includes("father")) return "fathers-day";
+  if (s.includes("thanksgiving")) return "thanksgiving";
+  if (s.includes("easter")) return "easter";
+  if (s.includes("anniversary")) return "anniversary";
+  return "general";
 }
+
+export default function CategoryVideosPage() {
+  const { slug } = useParams();
+  const router = useRouter();
+  const [videos, setVideos] = useState([]);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    async function fetchVideos() {
+      try {
+        const res = await fetch("/api/videos");
+        const data = await res.json();
+
+        // ✅ Detección automática de categoría por nombre
+        const allVideos = data.map((v) => ({
+          ...v,
+          category: detectCategory(v.title, v.slug),
+        }));
+
+        // ✅ Filtra por el slug de la categoría
+        const filtered = allVideos.filter(
+          (v) =>
+            v.category === slug.toLowerCase() ||
+            v.title.toLowerCase().includes(slug.toLowerCase()) ||
+            v.slug.toLowerCase().includes(slug.toLowerCase())
+        );
+
+        setVideos(filtered);
+      } catch (err) {
+        console.error("Error loading videos:", err);
+      }
+    }
+
+    fetchVideos();
+  }, [slug]);
+
+  const filteredVideos = videos.filter((v) =>
+    v.title.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <main className="min-h-screen bg-gradient-to-b from-pink-50 via-white to-pink-50 text-center px-4 pt-24 pb-16">
+      {/* 🔙 Back to Categories */}
+      <Link
+        href="/categories"
+        className="text-pink-500 hover:underline text-sm font-medium"
+      >
+        ← Back to Categories
+      </Link>
+
+      {/* 🏷️ Title */}
+      <h1 className="text-4xl md:text-5xl font-extrabold mt-4 bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent capitalize">
+        {slug}
+      </h1>
+
+      <p className="text-gray-600 mt-2 mb-8">
+        Discover beautiful Everwish cards for {slug} ✨
+      </p>
+
+      {/* 🔍 Search Bar */}
+      <div className="max-w-md mx-auto mb-10">
+        <input
+          type="text"
+          placeholder="Search cards..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full p-3 rounded-full border border-pink-200 focus:ring-2 focus:ring-pink-400 focus:outline-none shadow-sm text-gray-700"
+        />
+      </div>
+
+      {/* 🎥 Video Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 justify-center items-center max-w-5xl mx-auto">
+        {filteredVideos.length === 0 ? (
+          <p className="text-gray-400 italic">
+            No cards found for this category yet.
+          </p>
+        ) : (
+          filteredVideos.map((video, i) => (
+            <div
+              key={i}
+              onClick={() => router.push(`/edit/${video.slug}`)}
+              className="relative bg-white rounded-[8%] shadow-md hover:shadow-xl overflow-hidden transition-all duration-300 cursor-pointer group aspect-[4/5]"
+            >
+              <video
+                src={video.src}
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="auto"
+                disablePictureInPicture
+                controls={false}
+                controlsList="nodownload nofullscreen noremoteplayback"
+                onContextMenu={(e) => e.preventDefault()}
+                className="w-full h-full object-cover rounded-[8%] pointer-events-none select-none transform group-hover:scale-105 transition-transform duration-500"
+                draggable={false}
+              />
+              <div className="absolute inset-0" onContextMenu={(e) => e.preventDefault()} />
+            </div>
+          ))
+        )}
+      </div>
+    </main>
+  );
+      }
