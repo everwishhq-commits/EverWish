@@ -10,7 +10,7 @@ export async function GET() {
       title: "Dogcat Pets and Animals Appreciation Day",
       src: "/videos/dogcat_petsandanimals_appreciationday.mp4",
       slug: "dogcat_petsandanimals_appreciationday",
-      categories: ["pets", "animals", "appreciation-day"],
+      categories: ["pets", "animals", "appreciationday"],
     },
     {
       title: "Eagle July 4th Independence Day",
@@ -34,13 +34,13 @@ export async function GET() {
       title: "Mother Mother's Day Celebration",
       src: "/videos/mother_mothersday_celebration_1A.mp4",
       slug: "mother_mothersday_celebration_1A",
-      categories: ["mothers-day", "celebration"],
+      categories: ["mothersday", "celebration"],
     },
     {
       title: "Mother Mother's Day General",
       src: "/videos/mother_mothersday_general_1A.mp4",
       slug: "mother_mothersday_general_1A",
-      categories: ["mothers-day", "general"],
+      categories: ["mothersday", "general"],
     },
     {
       title: "Pumpkin Halloween General 1A",
@@ -67,7 +67,7 @@ export async function GET() {
       categories: ["christmas", "general"],
     },
     {
-      title: "Heart Valentine's Day Love 1A",
+      title: "Heart Valentines Love 1A",
       src: "/videos/heart_valentine_love_1A.mp4",
       slug: "heart_valentine_love_1A",
       categories: ["valentines", "love"],
@@ -82,29 +82,29 @@ export async function GET() {
       title: "Wedding Love 1A",
       src: "/videos/wedding_love_1A.mp4",
       slug: "wedding_love_1A",
-      categories: ["wedding", "love"],
+      categories: ["weddings", "love"],
     },
     {
       title: "New Baby Arrival 1A",
       src: "/videos/newbaby_arrival_1A.mp4",
       slug: "newbaby_arrival_1A",
-      categories: ["new-baby", "celebration"],
+      categories: ["newbaby", "celebration"],
     },
     {
       title: "Father's Day General 1A",
       src: "/videos/fathersday_general_1A.mp4",
       slug: "fathersday_general_1A",
-      categories: ["fathers-day", "general"],
+      categories: ["fathersday", "general"],
     },
     {
       title: "Everyday Greeting 1A",
       src: "/videos/everyday_greeting_1A.mp4",
       slug: "everyday_greeting_1A",
-      categories: ["general", "everyday"],
+      categories: ["everyday", "general"],
     },
   ];
 
   return new Response(JSON.stringify(videos), {
     headers: { "Content-Type": "application/json" },
   });
-      }
+}
