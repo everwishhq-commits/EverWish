@@ -27,14 +27,14 @@ export default function EditPage({ params }) {
   const [userImage, setUserImage] = useState(null);
   const [total, setTotal] = useState(5);
 
-  // 🎨 Animación personalizada
+  // 🎨 Config animación
   const [intensity, setIntensity] = useState("normal");
   const [opacityLevel, setOpacityLevel] = useState(0.9);
   const [emojiCount, setEmojiCount] = useState(20);
   const [isPurchased, setIsPurchased] = useState(false);
   const [isViewed, setIsViewed] = useState(false);
 
-  // 🎬 Inicialización
+  // 🎬 Inicializa valores
   useEffect(() => {
     setMessage(getMessageForSlug(slug));
     const opts = getAnimationOptionsForSlug(slug);
@@ -57,7 +57,7 @@ export default function EditPage({ params }) {
     return () => clearInterval(id);
   }, []);
 
-  // 💳 Gift Card
+  // 🎁 GiftCard lógica
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
@@ -68,7 +68,7 @@ export default function EditPage({ params }) {
     setTotal(5);
   };
 
-  // 🚫 Bloqueos táctiles / descargas
+  // 🚫 Bloqueo descargas, zoom y arrastre
   useEffect(() => {
     const prevent = (e) => e.preventDefault();
     document.addEventListener("contextmenu", prevent);
@@ -102,7 +102,7 @@ export default function EditPage({ params }) {
         touchAction: "none",
       }}
     >
-      {/* ⏳ Splash inicial */}
+      {/* ⏳ Pantalla inicial */}
       {stage === "expanded" && (
         <motion.div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-[#fff7f5]"
@@ -132,10 +132,10 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
-      {/* ✨ Editor principal */}
+      {/* 🎨 Editor */}
       {stage === "editor" && (
         <>
-          {/* 🌈 Capa de animaciones */}
+          {/* 🌈 Animación */}
           <AnimationOverlay
             key={animKey}
             slug={slug}
@@ -146,7 +146,7 @@ export default function EditPage({ params }) {
           />
 
           <div className="relative z-[200] w-full h-full flex flex-col items-center justify-center px-4">
-            {/* 🖼 Video principal */}
+            {/* 🖼 Tarjeta principal */}
             <div className="relative w-full max-w-[480px] aspect-[4/5] rounded-[8%] overflow-hidden border shadow-lg">
               <video
                 src={videoSrc}
@@ -161,7 +161,7 @@ export default function EditPage({ params }) {
                 className="w-full h-full object-cover select-none pointer-events-none"
                 draggable={false}
               />
-              {/* 🛑 Capa invisible anti-click derecho */}
+              {/* 🛑 Capa invisible */}
               <div
                 className="absolute inset-0 z-[50]"
                 onContextMenu={(e) => e.preventDefault()}
@@ -181,7 +181,7 @@ export default function EditPage({ params }) {
               />
             </div>
 
-            {/* 📸 Imagen del usuario */}
+            {/* 📸 Imagen */}
             {userImage && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -268,4 +268,4 @@ export default function EditPage({ params }) {
       )}
     </div>
   );
-              }
+}
