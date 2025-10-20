@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "generate-videos": "node scripts/generate_videos_index.js",
+    "build": "npm run generate-videos && next build",
     "start": "next start"
   },
   "dependencies": {
