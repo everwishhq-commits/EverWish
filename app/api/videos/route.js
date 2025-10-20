@@ -1,12 +1,14 @@
-// ✅ app/api/videos/route.js
+// app/api/videos/route.js
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
 export async function GET() {
   try {
+    // 📁 Ruta absoluta al archivo generado automáticamente
     const filePath = path.join(process.cwd(), "public", "videos_index.json");
 
+    // 🧩 Validación
     if (!fs.existsSync(filePath)) {
       console.error("❌ No se encontró videos_index.json");
       return new NextResponse(
@@ -15,11 +17,28 @@ export async function GET() {
       );
     }
 
-    // Leer y parsear JSON
-    const data = fs.readFileSync(filePath, "utf-8");
-    const videos = JSON.parse(data);
+    // 📖 Leer y parsear el JSON
+    const fileContent = fs.readFileSync(filePath, "utf-8");
+    const videoFiles = JSON.parse(fileContent);
 
-    // Responder como JSON estándar
+    // 🪄 Transformar nombres → estructura estándar
+    const videos = videoFiles.map((fileName) => {
+      const cleanName = fileName.replace(".mp4", "");
+      const parts = cleanName.split("_");
+
+      // Formato: nombre_categoria_subcategoria_1A.mp4
+      const title = parts.join(" ").replace(/\b\w/g, (c) => c.toUpperCase());
+      const slug = cleanName;
+      const categories = parts.slice(1, -1); // ejemplo: ["halloween", "love"]
+
+      return {
+        title,
+        slug,
+        src: `/videos/${fileName}`,
+        categories,
+      };
+    });
+
     return new NextResponse(JSON.stringify(videos), {
       headers: { "Content-Type": "application/json" },
     });
