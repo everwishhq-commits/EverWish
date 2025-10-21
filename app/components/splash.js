@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 
 export default function Splash({ onFinish }) {
@@ -39,7 +39,13 @@ export default function Splash({ onFinish }) {
             fade ? "opacity-100" : "opacity-40"
           }`}
         >
-          <Image src="/logo.png" alt="Everwish Logo" width={180} height={180} priority />
+          <Image
+            src="/logo.png"
+            alt="Everwish Logo"
+            width={180}
+            height={180}
+            priority
+          />
         </div>
 
         {/* Barra de carga */}
