@@ -34,38 +34,47 @@ const mainCategories = [
 
 export default function Categories() {
   return (
-    <div className="text-center px-4">
-      <Swiper
-        slidesPerView={2.2}
-        spaceBetween={25} // 🔹 más espacio entre las tarjetas
-        loop={true} // 🔁 loop infinito
-        autoplay={{
-          delay: 2500,
-          disableOnInteraction: false,
-        }}
-        speed={800}
-        breakpoints={{
-          640: { slidesPerView: 3.5, spaceBetween: 30 },
-          1024: { slidesPerView: 5, spaceBetween: 35 },
-        }}
-        modules={[Autoplay]}
-        className="overflow-visible"
-      >
-        {mainCategories.map((cat, i) => (
-          <SwiperSlide key={i}>
-            <Link href={`/categories/${cat.slug}`}>
-              <div
-                className={`${cat.color} rounded-3xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col items-center justify-center w-[150px] h-[130px] sm:w-[160px] sm:h-[140px] md:w-[180px] md:h-[150px] mx-auto`}
-              >
-                <span className="text-5xl mb-3">{cat.emoji}</span>
-                <p className="font-semibold text-sm md:text-base text-gray-800 text-center leading-tight">
-                  {cat.name}
-                </p>
-              </div>
-            </Link>
-          </SwiperSlide>
-        ))}
-      </Swiper>
-    </div>
+    <section className="w-full px-4">
+      <div className="max-w-6xl w-full mx-auto rounded-[24px] bg-white shadow-xl border border-pink-100/40 p-6 sm:p-8">
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-800 text-center">
+          Categories
+        </h2>
+
+        <div className="mt-5">
+          <Swiper
+            slidesPerView={2.2}
+            spaceBetween={26}            // 🔹 más espacio entre tarjetas
+            loop={true}                  // 🔁 bucle infinito
+            autoplay={{
+              delay: 2500,
+              disableOnInteraction: false,
+            }}
+            speed={800}
+            breakpoints={{
+              640:  { slidesPerView: 3.5, spaceBetween: 30 },
+              1024: { slidesPerView: 5,   spaceBetween: 36 },
+            }}
+            modules={[Autoplay]}
+            className="!overflow-visible"
+          >
+            {mainCategories.map((cat, i) => (
+              <SwiperSlide key={i}>
+                <Link href={`/categories/${cat.slug}`}>
+                  <div
+                    className={`${cat.color} rounded-3xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col items-center justify-center mx-auto
+                                w-[150px] h-[130px] sm:w-[170px] sm:h-[140px] md:w-[185px] md:h-[150px]`}
+                  >
+                    <span className="text-5xl mb-3">{cat.emoji}</span>
+                    <p className="font-semibold text-sm md:text-base text-gray-800 text-center leading-tight">
+                      {cat.name}
+                    </p>
+                  </div>
+                </Link>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </div>
+      </div>
+    </section>
   );
-  }
+              }
