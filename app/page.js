@@ -2,50 +2,48 @@
 import { useState } from "react";
 import Link from "next/link";
 
-// ✅ Importaciones relativas correctas (coinciden con tu carpeta /app/components)
-import Splash from "./components/splash";
-import Header from "./components/header";
-import Carousel from "./components/carousel";
-import Categories from "./components/categories";
-import Reviews from "./components/reviews";
-import Footer from "./components/footer";
+// ✅ Importaciones relativas (no "@/")
+import Splash from "./components/splash.js";
+import Header from "./components/header.js";
+import Carousel from "./components/carousel.js";
+import Categories from "./components/categories.js";
+import Reviews from "./components/reviews.js";
+import Footer from "./components/footer.js";
 
 export default function Page() {
   const [loading, setLoading] = useState(true);
 
   return (
     <>
-      {/* 🔸 Pantalla de carga */}
+      {/* Pantalla de carga */}
       {loading && <Splash onFinish={() => setLoading(false)} />}
 
       {!loading && (
         <>
-          {/* 🔹 Encabezado fijo */}
+          {/* Encabezado */}
           <Header />
 
-          {/* 🔹 Contenido principal */}
+          {/* Contenido principal */}
           <main className="pt-24 md:pt-28 lg:pt-32 px-4 max-w-5xl mx-auto text-center">
-            {/* 🏷️ Título */}
             <h1 className="text-3xl md:text-5xl font-extrabold">
               Share every moment that matters with Everwish
             </h1>
 
-            {/* ✨ Subtítulo */}
             <p className="mt-4 text-lg text-gray-700">
               Make it special today ✨
             </p>
 
-            {/* 🎠 Carrusel principal */}
+            {/* Carrusel */}
             <div className="mt-8">
               <Carousel />
             </div>
 
-            {/* 🗂️ Sección de categorías */}
+            {/* Categorías */}
             <section className="mt-12 bg-white rounded-t-3xl shadow-lg py-12 px-4">
               <div className="flex justify-center mb-6">
                 <Link
                   href="/categories"
-                  className="text-2xl font-bold hover:text-blue-500 transition-colors"
+                  className="text-2xl font-bold hover:text-pink-500 transition-colors"
                 >
                   Categories
                 </Link>
@@ -53,16 +51,16 @@ export default function Page() {
               <Categories />
             </section>
 
-            {/* 💬 Reseñas */}
+            {/* Reseñas */}
             <section className="mt-16">
               <Reviews />
             </section>
           </main>
 
-          {/* 🔸 Pie de página */}
+          {/* Pie de página */}
           <Footer />
         </>
       )}
     </>
   );
-        }
+}
