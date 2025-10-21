@@ -1,5 +1,5 @@
-export const dynamic = "force-dynamic"; // Evita prerender SSR de Next.js
 "use client";
+export const dynamic = "force-dynamic"; // Evita prerender SSR de Next.js
 import { useState } from "react";
 import Link from "next/link";
 
@@ -19,27 +19,20 @@ export default function Page() {
       {loading && <Splash onFinish={() => setLoading(false)} />}
       {!loading && (
         <>
-          {/* 🔹 Encabezado fijo */}
           <Header />
-
-          {/* 🔹 Contenido principal */}
           <main className="pt-24 md:pt-28 lg:pt-32 px-4 max-w-5xl mx-auto text-center">
-            {/* 🏷️ Título */}
             <h1 className="text-3xl md:text-5xl font-extrabold">
               Share every moment that matters with Everwish
             </h1>
 
-            {/* ✨ Subtítulo */}
             <p className="mt-4 text-lg text-gray-700">
               Make it special today ✨
             </p>
 
-            {/* 🎠 Carrusel principal */}
             <div className="mt-8">
               <Carousel />
             </div>
 
-            {/* 🗂️ Sección de categorías */}
             <section className="mt-12 bg-white rounded-t-3xl shadow-lg py-12 px-4">
               <div className="flex justify-center mb-6">
                 <Link
@@ -52,13 +45,10 @@ export default function Page() {
               <Categories />
             </section>
 
-            {/* 💬 Reseñas */}
             <section className="mt-16">
               <Reviews />
             </section>
           </main>
-
-          {/* 🔸 Pie de página */}
           <Footer />
         </>
       )}
