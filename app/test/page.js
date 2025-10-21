@@ -1,9 +1,7 @@
 "use client";
 import { useState } from "react";
-
-// ✅ Importaciones absolutas (seguras para producción y Vercel)
-import Splash from "@/components/splash";
-import Carousel from "@/components/carousel";
+import Splash from "../components/splash";
+import Carousel from "../components/carousel";
 
 export default function TestPage() {
   const [loading, setLoading] = useState(true);
@@ -16,8 +14,6 @@ export default function TestPage() {
           <h1 className="text-3xl font-bold mb-4">
             ✅ Test Page — Passed Splash
           </h1>
-
-          {/* 🎠 Carrusel de prueba */}
           <div className="w-full max-w-4xl">
             <Carousel />
           </div>
