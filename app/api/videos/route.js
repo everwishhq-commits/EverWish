@@ -1,58 +1,80 @@
-export async function GET() {
-  const videos = [
-    {
-      title: "Bunny Easter General",
-      src: "/videos/bunny_easter_general.mp4",
-      slug: "bunny_easter_general",
-    },
-    {
-      title: "Dogcat Petsandanimals Appreciationday",
-      src: "/videos/dogcat_petsandanimals_appreciationday.mp4",
-      slug: "dogcat_petsandanimals_appreciationday",
-    },
-    {
-      title: "Eagle July4th Independenceday 1A",
-      src: "/videos/eagle_July4th_independenceday_1A.mp4",
-      slug: "eagle_July4th_independenceday_1A",
-    },
-    {
-      title: "Ghost Halloween Love 1A",
-      src: "/videos/ghost_halloween_love_1A.mp4",
-      slug: "ghost_halloween_love_1A",
-    },
-    {
-      title: "Hugs Anniversary Love A1",
-      src: "/videos/hugs_anniversary_love_A1.mp4",
-      slug: "hugs_anniversary_love_A1",
-    },
-    {
-      title: "Mother Mother'sDay Celebration 1A",
-      src: "/videos/mother_mother'sday_celebration_1A.mp4",
-      slug: "mother_mother'sday_celebration_1A",
-    },
-    {
-      title: "Mother Mothers'Day General 1A",
-      src: "/videos/mother_mothers'day_general_1A.mp4",
-      slug: "mother_mothers'day_general_1A",
-    },
-    {
-      title: "Pumpkin Halloween General 1A",
-      src: "/videos/pumpkin_halloween_general_1A.mp4",
-      slug: "pumpkin_halloween_general_1A",
-    },
-    {
-      title: "Zombie Halloween Birthday 1A",
-      src: "/videos/zombie_halloween_birthday_1A.mp4",
-      slug: "zombie_halloween_birthday_1A",
-    },
-    {
-      title: "Turkey Thanksgiving General1A",
-      src: "/videos/turkey_thanksgiving_general1A.mp4",
-      slug: "turkey_thanksgiving_general1A",
-    },
-  ];
+import fs from "fs";
+import path from "path";
 
-  return new Response(JSON.stringify(videos), {
-    headers: { "Content-Type": "application/json" },
-  });
-                      }
+export async function GET() {
+  try {
+    // 📂 Carpeta donde están los videos
+    const videosDir = path.join(process.cwd(), "public/videos");
+
+    // 📜 Leer los archivos que terminan en .mp4
+    const files = fs
+      .readdirSync(videosDir)
+      .filter((file) => file.endsWith(".mp4"));
+
+    // 📁 Mapa de categorías automáticas por palabra clave
+    const categoryMap = {
+      halloween: "Seasonal & Holidays",
+      christmas: "Seasonal & Holidays",
+      thanksgiving: "Seasonal & Holidays",
+      july4th: "Seasonal & Holidays",
+      easter: "Seasonal & Holidays",
+      independence: "Seasonal & Holidays",
+
+      birthday: "Birthdays",
+      anniversary: "Weddings & Anniversaries",
+      wedding: "Weddings & Anniversaries",
+
+      love: "Love & Romance",
+      valentines: "Love & Romance",
+
+      mother: "Family & Relationships",
+      mothersday: "Family & Relationships",
+      father: "Family & Relationships",
+      fathersday: "Family & Relationships",
+
+      baby: "New Baby",
+      newborn: "New Baby",
+
+      pet: "Pets & Animal Lovers",
+      dog: "Pets & Animal Lovers",
+      cat: "Pets & Animal Lovers",
+
+      condolence: "Condolences",
+      sympathy: "Condolences",
+
+      general: "Everyday",
+    };
+
+    // 🧠 Generar lista de videos automáticamente
+    const videos = files.map((file) => {
+      const slug = file.replace(".mp4", "");
+      const title = slug
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+
+      // 🔍 Detectar categoría automáticamente
+      const lower = slug.toLowerCase();
+      const foundCategory =
+        Object.entries(categoryMap).find(([key]) => lower.includes(key))?.[1] ||
+        "Other";
+
+      return {
+        title,
+        src: `/videos/${file}`,
+        slug,
+        category: foundCategory,
+      };
+    });
+
+    // ✅ Devolver respuesta JSON
+    return new Response(JSON.stringify(videos, null, 2), {
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    console.error("❌ Error reading videos:", error);
+    return new Response(JSON.stringify({ error: "Failed to load videos" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+        }
