@@ -38,7 +38,12 @@ export default function Categories() {
       <Swiper
         slidesPerView={2.3}
         spaceBetween={15}
-        autoplay={{ delay: 3500, disableOnInteraction: false }}
+        loop={true} // 🔁 permite loop infinito
+        autoplay={{
+          delay: 2500,
+          disableOnInteraction: false,
+        }}
+        speed={800} // transición suave
         breakpoints={{
           640: { slidesPerView: 3.5, spaceBetween: 20 },
           1024: { slidesPerView: 5, spaceBetween: 25 },
@@ -50,7 +55,7 @@ export default function Categories() {
           <SwiperSlide key={i}>
             <Link href={`/categories/${cat.slug}`}>
               <div
-                className={`${cat.color} rounded-3xl shadow-md hover:shadow-xl hover:-translate-y-1 transition transform flex flex-col items-center justify-center p-6 aspect-square`}
+                className={`${cat.color} rounded-3xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col items-center justify-center w-[150px] h-[130px] sm:w-[160px] sm:h-[140px] md:w-[180px] md:h-[150px] mx-auto`}
               >
                 <span className="text-5xl mb-3">{cat.emoji}</span>
                 <p className="font-semibold text-sm md:text-base text-gray-800">
@@ -63,4 +68,4 @@ export default function Categories() {
       </Swiper>
     </div>
   );
-  }
+   }
