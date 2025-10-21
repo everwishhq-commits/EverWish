@@ -63,7 +63,7 @@ export async function GET() {
     },
   ];
 
-  // ✅ Respuesta segura y con encabezado correcto
+  // ✅ Respuesta limpia con encabezados correctos
   return new Response(JSON.stringify(videos, null, 2), {
     headers: { "Content-Type": "application/json" },
   });
