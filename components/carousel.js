@@ -3,15 +3,16 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 
 export default function Carousel() {
+  const slides = ["🎉", "💌", "🎃", "🐰"];
   return (
-    <Swiper spaceBetween={20} slidesPerView={1.2}>
-      {[1, 2, 3].map((i) => (
-        <SwiperSlide key={i}>
-          <div className="bg-pink-50 rounded-xl p-6 text-center shadow-sm">
-            <p>Card {i}</p>
-          </div>
-        </SwiperSlide>
-      ))}
-    </Swiper>
+    <div className="w-full max-w-2xl">
+      <Swiper spaceBetween={20} slidesPerView={1} loop>
+        {slides.map((s, i) => (
+          <SwiperSlide key={i}>
+            <div className="text-center text-4xl p-10">{s}</div>
+          </SwiperSlide>
+        ))}
+      </Swiper>
+    </div>
   );
 }
