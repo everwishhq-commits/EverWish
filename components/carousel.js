@@ -9,7 +9,7 @@ export default function Carousel() {
   const autoplayRef = useRef(null);
   const pauseRef = useRef(false);
 
-  // 🧭 Variables de gesto
+  // 🧭 Variables de control de gesto
   const startX = useRef(0);
   const startY = useRef(0);
   const moved = useRef(false);
@@ -17,9 +17,8 @@ export default function Carousel() {
 
   const TAP_THRESHOLD = 10;
   const SWIPE_THRESHOLD = 40;
-  const VERTICAL_THRESHOLD = 20;
 
-  // 🎬 Autoplay
+  // 🕒 Autoplay
   const startAutoplay = () => {
     clearInterval(autoplayRef.current);
     if (!pauseRef.current && videos.length > 0) {
@@ -29,6 +28,7 @@ export default function Carousel() {
     }
   };
 
+  // 🎥 Cargar videos desde API
   useEffect(() => {
     async function fetchVideos() {
       try {
@@ -47,7 +47,7 @@ export default function Carousel() {
     return () => clearInterval(autoplayRef.current);
   }, [videos]);
 
-  // 🖐️ Gestos táctiles precisos
+  // 🖐️ Control táctil con bloqueo vertical
   const handleTouchStart = (e) => {
     const t = e.touches[0];
     startX.current = t.clientX;
@@ -67,17 +67,22 @@ export default function Carousel() {
       moved.current = true;
       direction.current =
         Math.abs(deltaX) > Math.abs(deltaY) ? "horizontal" : "vertical";
+
+      // 🚫 Bloquea propagación si hay movimiento
+      e.stopPropagation();
     }
   };
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e) => {
+    e.stopPropagation(); // 🚫 Evita que suba a la página
+
     if (!moved.current) {
       // TAP real → abrir fullscreen
       const tapped = videos[index];
       if (tapped?.slug) handleClick(tapped.slug);
     } else if (direction.current === "horizontal") {
-      // SWIPE horizontal → cambiar tarjeta
-      const diffX = startX.current - event.changedTouches[0].clientX;
+      // Swipe horizontal → cambia tarjeta
+      const diffX = startX.current - e.changedTouches[0].clientX;
       if (Math.abs(diffX) > SWIPE_THRESHOLD) {
         setIndex((prev) =>
           diffX > 0
@@ -86,18 +91,16 @@ export default function Carousel() {
         );
       }
     } else if (direction.current === "vertical") {
-      // SWIPE vertical → ignorar completamente, permitir scroll
-      // no hacemos nada
+      // Swipe vertical → ignora (solo scroll)
     }
 
-    // 🕒 Reanudar autoplay
     setTimeout(() => {
       pauseRef.current = false;
       startAutoplay();
     }, 3000);
   };
 
-  // 🔗 Abrir pantalla extendida
+  // 🎬 Pantalla extendida
   const handleClick = async (slug) => {
     try {
       const elem = document.documentElement;
@@ -114,7 +117,7 @@ export default function Carousel() {
   return (
     <div
       className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none"
-      style={{ touchAction: "pan-y" }} // 👈 Permite scroll vertical natural
+      style={{ touchAction: "pan-y" }} // ✅ permite scroll vertical global
     >
       <div
         onTouchStart={handleTouchStart}
