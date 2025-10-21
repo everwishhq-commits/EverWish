@@ -8,7 +8,7 @@ import Categories from "@/components/categories";
 import Footer from "@/components/footer";
 import Splash from "@/components/splash";
 
-export default function TestPage() {
+export default function Page() {
   const [loading, setLoading] = useState(true);
 
   return (
@@ -20,7 +20,7 @@ export default function TestPage() {
 
           <main className="flex flex-col items-center justify-center min-h-screen bg-white text-gray-700 pt-20 px-4">
             <h1 className="text-3xl font-bold mb-4">
-              ✅ Test Page — Passed Splash
+              🎉 Home Page — Working!
             </h1>
 
             <div className="w-full max-w-4xl mb-12">
@@ -37,4 +37,4 @@ export default function TestPage() {
       )}
     </>
   );
-        }
+}
