@@ -1,9 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 export default function CategoryVideosPage() {
   const { slug } = useParams();
+  const router = useRouter();
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -26,38 +27,67 @@ export default function CategoryVideosPage() {
 
   if (loading) {
     return (
-      <main className="flex flex-col items-center justify-center min-h-screen text-gray-700">
-        <p>Loading videos for <b>{slug}</b>...</p>
+      <main className="flex flex-col items-center justify-center min-h-screen text-gray-700 bg-[#fff5f8]">
+        <p className="animate-pulse text-lg">
+          Loading beautiful Everwish cards for <b>{slug}</b>...
+        </p>
       </main>
     );
   }
 
   return (
-    <main className="flex flex-col items-center justify-start min-h-screen bg-[#fffafc] text-gray-800 p-6">
-      <h1 className="text-3xl font-bold mb-2 capitalize">{slug}</h1>
-      <p className="text-gray-600 mb-6">
+    <main className="flex flex-col items-center justify-start min-h-screen bg-[#fff5f8] text-gray-800 px-4 py-10">
+      {/* 🔙 Volver */}
+      <button
+        onClick={() => router.push("/")}
+        className="text-pink-500 hover:text-pink-600 font-semibold mb-4"
+      >
+        ← Back to Categories
+      </button>
+
+      {/* 🎄 Encabezado */}
+      <h1 className="text-4xl font-extrabold text-pink-600 mb-2 capitalize">
+        {slug}
+      </h1>
+      <p className="text-gray-600 mb-10 text-center">
         Discover beautiful Everwish cards for {slug} ✨
       </p>
 
+      {/* 🔍 Búsqueda */}
+      <input
+        type="text"
+        placeholder="Search cards..."
+        className="w-full max-w-md mb-10 rounded-full border border-pink-200 bg-white/70 px-4 py-3 text-center shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300"
+        onChange={(e) => {
+          const value = e.target.value.toLowerCase();
+          document.querySelectorAll(".everwish-card").forEach((card) => {
+            card.style.display = card.dataset.title.includes(value)
+              ? "block"
+              : "none";
+          });
+        }}
+      />
+
+      {/* 🖼️ Grid de videos */}
       {videos.length === 0 ? (
-        <p className="text-gray-500">No videos found for this category.</p>
+        <p className="text-gray-500">No cards found for this category.</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 justify-items-center">
           {videos.map((video) => (
             <div
               key={video.slug}
-              className="rounded-2xl overflow-hidden shadow hover:shadow-lg transition"
+              data-title={video.title.toLowerCase()}
+              onClick={() => router.push(`/edit/${video.slug}`)}
+              className="everwish-card cursor-pointer transition-transform hover:scale-[1.04] bg-white rounded-3xl shadow-md border border-pink-100 overflow-hidden"
             >
               <video
                 src={video.src}
-                className="w-full h-auto"
+                className="object-cover w-full h-auto aspect-[4/5]"
                 playsInline
                 loop
                 muted
-                controlsList="nodownload"
-                controls
               />
-              <div className="p-3 font-semibold text-center">
+              <div className="text-center py-2 text-gray-700 font-semibold text-sm">
                 {video.title}
               </div>
             </div>
@@ -66,4 +96,4 @@ export default function CategoryVideosPage() {
       )}
     </main>
   );
-    }
+        }
