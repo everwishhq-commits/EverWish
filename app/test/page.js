@@ -1,10 +1,13 @@
+export const dynamic = "force-dynamic"; // Evita prerender SSR de Next.js
 "use client";
 import { useState } from "react";
-import Header from "../components/header.js";
-import Footer from "../components/footer.js";
-import Carousel from "../components/carousel.js";
-import Categories from "../components/categories.js";
-import Splash from "../components/splash.js";
+
+// ✅ Importaciones absolutas
+import Splash from "@/components/splash";
+import Header from "@/components/header";
+import Carousel from "@/components/carousel";
+import Categories from "@/components/categories";
+import Footer from "@/components/footer";
 
 export default function TestPage() {
   const [loading, setLoading] = useState(true);
@@ -12,24 +15,20 @@ export default function TestPage() {
   return (
     <>
       {loading && <Splash onFinish={() => setLoading(false)} />}
-
       {!loading && (
         <>
           <Header />
 
-          <main className="pt-24 md:pt-28 px-4 max-w-4xl mx-auto text-center">
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">
-              Test Page — Everwish
+          <main className="flex flex-col items-center justify-center min-h-screen bg-white text-gray-700 pt-20 px-4">
+            <h1 className="text-3xl font-bold mb-4">
+              ✅ Test Page — Passed Splash
             </h1>
-            <p className="text-gray-600 mb-8">
-              This page is used to test UI components before deployment.
-            </p>
 
-            <div className="mb-8">
+            <div className="w-full max-w-4xl mb-12">
               <Carousel />
             </div>
 
-            <div className="mt-12">
+            <div className="w-full max-w-5xl">
               <Categories />
             </div>
           </main>
@@ -39,4 +38,4 @@ export default function TestPage() {
       )}
     </>
   );
-}
+        }
