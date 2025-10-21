@@ -1,12 +1,14 @@
 "use client";
+export const dynamic = "force-dynamic";
+
 import { useState } from "react";
-import Link from "next/link";
-import Splash from "./components/splash";
-import Header from "./components/header";
-import Carousel from "./components/carousel";
-import Categories from "./components/categories";
-import Reviews from "./components/reviews";
-import Footer from "./components/footer";
+
+// ✅ Importaciones desde la raíz
+import Header from "@/components/header";
+import Carousel from "@/components/carousel";
+import Categories from "@/components/categories";
+import Footer from "@/components/footer";
+import Splash from "@/components/splash";
 
 export default function Page() {
   const [loading, setLoading] = useState(true);
@@ -17,39 +19,17 @@ export default function Page() {
       {!loading && (
         <>
           <Header />
-          <main className="pt-24 md:pt-28 lg:pt-32 px-4 max-w-5xl mx-auto text-center">
-            {/* Título */}
-            <h1 className="text-3xl md:text-5xl font-extrabold">
-              Share every moment that matters with Everwish
-            </h1>
 
-            {/* Subtítulo */}
-            <p className="mt-4 text-lg text-gray-700">
-              Make it special today ✨
-            </p>
+          <main className="flex flex-col items-center justify-center min-h-screen bg-white text-gray-700 pt-20 px-4">
+            <h1 className="text-3xl font-bold mb-4">🎉 Home Page — Working!</h1>
 
-            {/* Carrusel */}
-            <div className="mt-8">
+            <div className="w-full max-w-4xl mb-12">
               <Carousel />
             </div>
 
-            {/* Categories */}
-            <section className="mt-12 bg-white rounded-t-3xl shadow-lg py-12 px-4">
-              <div className="flex justify-center mb-6">
-                <Link
-                  href="/categories"
-                  className="text-2xl font-bold hover:text-blue-500 transition-colors"
-                >
-                  Categories
-                </Link>
-              </div>
+            <div className="w-full max-w-5xl">
               <Categories />
-            </section>
-
-            {/* Reviews */}
-            <section className="mt-16">
-              <Reviews />
-            </section>
+            </div>
           </main>
 
           <Footer />
@@ -57,4 +37,4 @@ export default function Page() {
       )}
     </>
   );
-                    }
+        }
