@@ -9,13 +9,12 @@ export default function Carousel() {
   const autoplayRef = useRef(null);
   const pauseRef = useRef(false);
 
-  // 🧭 Posiciones de toque
   const startX = useRef(0);
   const startY = useRef(0);
   const endX = useRef(0);
   const endY = useRef(0);
 
-  // 🕹️ Autoplay
+  // 🕒 Autoplay
   const startAutoplay = () => {
     clearInterval(autoplayRef.current);
     if (!pauseRef.current && videos.length > 0) {
@@ -43,7 +42,7 @@ export default function Carousel() {
     return () => clearInterval(autoplayRef.current);
   }, [videos]);
 
-  // 👆 GESTIÓN DE GESTOS
+  // 🖐️ Control táctil con scroll natural
   const handleTouchStart = (e) => {
     const t = e.touches[0];
     startX.current = t.clientX;
@@ -58,39 +57,38 @@ export default function Carousel() {
     const t = e.touches[0];
     endX.current = t.clientX;
     endY.current = t.clientY;
+    // ❗ No bloqueamos scroll vertical natural
   };
 
   const handleTouchEnd = () => {
     const diffX = endX.current - startX.current;
     const diffY = endY.current - startY.current;
-
     const absX = Math.abs(diffX);
     const absY = Math.abs(diffY);
 
-    // 🧠 Decisión basada en dirección
+    // 🧭 Detecta dirección dominante
     if (absX < 10 && absY < 10) {
-      // TAP REAL (sin movimiento)
+      // TAP → pantalla extendida
       const tapped = videos[index];
       if (tapped?.slug) handleClick(tapped.slug);
-    } else if (absY > absX) {
-      // SCROLL VERTICAL → ignorar
     } else if (absX > absY && absX > 40) {
-      // SWIPE HORIZONTAL → cambiar tarjeta
+      // SWIPE HORIZONTAL → cambia tarjeta
       setIndex((prev) =>
         diffX < 0
           ? (prev + 1) % videos.length
           : (prev - 1 + videos.length) % videos.length
       );
     }
+    // 👇 si fue vertical, se deja pasar → scroll natural
 
-    // 🕒 Reanudar autoplay
+    // 🕒 Reanuda autoplay
     setTimeout(() => {
       pauseRef.current = false;
       startAutoplay();
     }, 3000);
   };
 
-  // 🎬 Abrir fullscreen + navegar
+  // 🎬 Pantalla extendida
   const handleClick = async (slug) => {
     try {
       const elem = document.documentElement;
@@ -105,7 +103,10 @@ export default function Carousel() {
   };
 
   return (
-    <div className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none">
+    <div
+      className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none"
+      style={{ touchAction: "pan-y" }} // 👈 Permite scroll vertical
+    >
       <div
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -145,6 +146,7 @@ export default function Carousel() {
         })}
       </div>
 
+      {/* 🔘 Dots */}
       <div className="flex mt-5 gap-2">
         {videos.map((_, i) => (
           <span
@@ -166,4 +168,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-}
+               }
