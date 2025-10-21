@@ -9,12 +9,15 @@ export default function Carousel() {
   const autoplayRef = useRef(null);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
+  const touchStartY = useRef(0);
+  const touchEndY = useRef(0);
   const pauseRef = useRef(false);
   const swipeDetected = useRef(false);
+  const scrollDetected = useRef(false);
   const longPressTimeout = useRef(null);
   const longPressActive = useRef(false);
 
-  // ✅ Autoplay control
+  // 🕹️ Autoplay control
   const startAutoplay = () => {
     clearInterval(autoplayRef.current);
     if (videos.length > 0 && !pauseRef.current) {
@@ -24,7 +27,7 @@ export default function Carousel() {
     }
   };
 
-  // ✅ Carga de videos
+  // 📦 Cargar videos
   useEffect(() => {
     async function fetchVideos() {
       try {
@@ -41,67 +44,93 @@ export default function Carousel() {
     return () => clearInterval(refresh);
   }, []);
 
-  // 🔁 Inicia autoplay
+  // 🔁 Iniciar autoplay
   useEffect(() => {
     startAutoplay();
     return () => clearInterval(autoplayRef.current);
   }, [videos]);
 
-  // 👆 Swipe + toque
+  // 👆 Manejo táctil mejorado
   const handleTouchStart = (e) => {
-    touchStartX.current = e.touches[0].clientX;
-    touchEndX.current = e.touches[0].clientX;
+    const touch = e.touches[0];
+    touchStartX.current = touch.clientX;
+    touchStartY.current = touch.clientY;
+    touchEndX.current = touch.clientX;
+    touchEndY.current = touch.clientY;
+
     swipeDetected.current = false;
+    scrollDetected.current = false;
     pauseRef.current = true;
     longPressActive.current = false;
     clearInterval(autoplayRef.current);
 
-    // 🕒 Detecta long press
+    // ⏳ Detectar long press
     longPressTimeout.current = setTimeout(() => {
       longPressActive.current = true;
     }, 800);
   };
 
   const handleTouchMove = (e) => {
-    touchEndX.current = e.touches[0].clientX;
-    const diff = touchStartX.current - touchEndX.current;
-    if (Math.abs(diff) > 20) swipeDetected.current = true;
+    const touch = e.touches[0];
+    touchEndX.current = touch.clientX;
+    touchEndY.current = touch.clientY;
 
-    clearTimeout(longPressTimeout.current); // cancel long press si mueve
+    const diffX = Math.abs(touchEndX.current - touchStartX.current);
+    const diffY = Math.abs(touchEndY.current - touchStartY.current);
+
+    // Si se mueve más vertical que horizontal → scroll, no clic
+    if (diffY > diffX && diffY > 15) scrollDetected.current = true;
+    if (diffX > 20) swipeDetected.current = true;
+
+    clearTimeout(longPressTimeout.current);
   };
 
   const handleTouchEnd = () => {
     clearTimeout(longPressTimeout.current);
-    const diff = touchStartX.current - touchEndX.current;
 
+    const diffX = touchStartX.current - touchEndX.current;
+    const diffY = Math.abs(touchStartY.current - touchEndY.current);
+
+    // 🚫 Evita acción si fue scroll vertical
+    if (scrollDetected.current) {
+      pauseRef.current = false;
+      startAutoplay();
+      return;
+    }
+
+    // 🚫 Evita acción si fue long press
     if (longPressActive.current) {
-      longPressActive.current = false; // 🚫 evita acción por long press
-    } else if (swipeDetected.current && Math.abs(diff) > 50) {
-      // 👉 Swipe
+      longPressActive.current = false;
+      return;
+    }
+
+    // 👉 Swipe horizontal
+    if (swipeDetected.current && Math.abs(diffX) > 50) {
       setIndex((prev) =>
-        diff > 0
+        diffX > 0
           ? (prev + 1) % videos.length
           : (prev - 1 + videos.length) % videos.length
       );
     } else {
-      // 👆 Tap → fullscreen y navegación
+      // 👆 Tap normal → abrir pantalla extendida
       const tapped = videos[index];
       if (tapped?.slug) handleClick(tapped.slug);
     }
 
-    // 🕒 Reanuda autoplay
+    // ⏯️ Reanudar autoplay
     setTimeout(() => {
       pauseRef.current = false;
       startAutoplay();
-    }, 4000);
+    }, 3000);
   };
 
-  // 🔸 Navegación
+  // 🔗 Navegación + fullscreen
   const handleClick = async (slug) => {
     try {
       const elem = document.documentElement;
       if (elem.requestFullscreen) await elem.requestFullscreen();
-      else if (elem.webkitRequestFullscreen) await elem.webkitRequestFullscreen();
+      else if (elem.webkitRequestFullscreen)
+        await elem.webkitRequestFullscreen();
       await new Promise((r) => setTimeout(r, 200));
       router.push(`/edit/${slug}`);
     } catch {
@@ -140,7 +169,7 @@ export default function Carousel() {
                   loop
                   muted
                   playsInline
-                  onContextMenu={(e) => e.preventDefault()} // 🚫 sin menú descarga
+                  onContextMenu={(e) => e.preventDefault()}
                   controlsList="nodownload noplaybackrate"
                   draggable="false"
                   className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover object-center bg-white overflow-hidden"
@@ -150,7 +179,7 @@ export default function Carousel() {
                 <img
                   src={video.src}
                   alt={video.title}
-                  onContextMenu={(e) => e.preventDefault()} // 🚫 sin menú descarga
+                  onContextMenu={(e) => e.preventDefault()}
                   draggable="false"
                   className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover object-center bg-white overflow-hidden"
                   style={{ maxHeight: "100%", maxWidth: "100%" }}
@@ -161,7 +190,7 @@ export default function Carousel() {
         })}
       </div>
 
-      {/* 🔘 Dots */}
+      {/* 🔘 Indicadores */}
       <div className="flex mt-5 gap-2">
         {videos.map((_, i) => (
           <span
@@ -183,4 +212,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-}
+                    }
