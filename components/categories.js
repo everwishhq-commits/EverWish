@@ -35,46 +35,41 @@ const mainCategories = [
 export default function Categories() {
   return (
     <section className="w-full px-4">
-      <div className="max-w-6xl w-full mx-auto rounded-[24px] bg-white shadow-xl border border-pink-100/40 p-6 sm:p-8">
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-800 text-center">
+      <div className="max-w-6xl mx-auto rounded-[24px] bg-white shadow-lg border border-pink-100/40 p-6 sm:p-8">
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-800 text-center mb-6">
           Categories
         </h2>
 
-        <div className="mt-5">
-          <Swiper
-            slidesPerView={2.2}
-            spaceBetween={26}            // 🔹 más espacio entre tarjetas
-            loop={true}                  // 🔁 bucle infinito
-            autoplay={{
-              delay: 2500,
-              disableOnInteraction: false,
-            }}
-            speed={800}
-            breakpoints={{
-              640:  { slidesPerView: 3.5, spaceBetween: 30 },
-              1024: { slidesPerView: 5,   spaceBetween: 36 },
-            }}
-            modules={[Autoplay]}
-            className="!overflow-visible"
-          >
-            {mainCategories.map((cat, i) => (
-              <SwiperSlide key={i}>
-                <Link href={`/categories/${cat.slug}`}>
-                  <div
-                    className={`${cat.color} rounded-3xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col items-center justify-center mx-auto
-                                w-[150px] h-[130px] sm:w-[170px] sm:h-[140px] md:w-[185px] md:h-[150px]`}
-                  >
-                    <span className="text-5xl mb-3">{cat.emoji}</span>
-                    <p className="font-semibold text-sm md:text-base text-gray-800 text-center leading-tight">
-                      {cat.name}
-                    </p>
-                  </div>
-                </Link>
-              </SwiperSlide>
-            ))}
-          </Swiper>
-        </div>
+        <Swiper
+          slidesPerView={2.2}
+          spaceBetween={28} // 📏 separadas, sin desbordar
+          loop={true}
+          autoplay={{ delay: 2500, disableOnInteraction: false }}
+          speed={800}
+          breakpoints={{
+            640: { slidesPerView: 3.3, spaceBetween: 32 },
+            1024: { slidesPerView: 5, spaceBetween: 36 },
+          }}
+          modules={[Autoplay]}
+          className="!overflow-hidden"
+        >
+          {mainCategories.map((cat, i) => (
+            <SwiperSlide key={i}>
+              <Link href={`/categories/${cat.slug}`}>
+                <div
+                  className={`${cat.color} rounded-3xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col items-center justify-center mx-auto
+                              w-[150px] h-[130px] sm:w-[170px] sm:h-[140px] md:w-[185px] md:h-[150px]`}
+                >
+                  <span className="text-5xl mb-3">{cat.emoji}</span>
+                  <p className="font-semibold text-sm md:text-base text-gray-800 text-center leading-tight">
+                    {cat.name}
+                  </p>
+                </div>
+              </Link>
+            </SwiperSlide>
+          ))}
+        </Swiper>
       </div>
     </section>
   );
-              }
+    }
