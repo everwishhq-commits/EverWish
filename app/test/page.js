@@ -19,7 +19,9 @@ export default function TestPage() {
           <Header />
 
           <main className="flex flex-col items-center justify-center min-h-screen bg-white text-gray-700 pt-20 px-4">
-            <h1 className="text-3xl font-bold mb-4">✅ Test Page — Passed Splash</h1>
+            <h1 className="text-3xl font-bold mb-4">
+              ✅ Test Page — Passed Splash
+            </h1>
 
             <div className="w-full max-w-4xl mb-12">
               <Carousel />
@@ -35,4 +37,4 @@ export default function TestPage() {
       )}
     </>
   );
-       }
+      }
