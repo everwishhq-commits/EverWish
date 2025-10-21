@@ -9,12 +9,17 @@ export default function Carousel() {
   const autoplayRef = useRef(null);
   const pauseRef = useRef(false);
 
+  // 🧭 Variables de gesto
   const startX = useRef(0);
   const startY = useRef(0);
-  const endX = useRef(0);
-  const endY = useRef(0);
+  const moved = useRef(false);
+  const direction = useRef(null);
 
-  // 🕒 Autoplay
+  const TAP_THRESHOLD = 10;
+  const SWIPE_THRESHOLD = 40;
+  const VERTICAL_THRESHOLD = 20;
+
+  // 🎬 Autoplay
   const startAutoplay = () => {
     clearInterval(autoplayRef.current);
     if (!pauseRef.current && videos.length > 0) {
@@ -42,53 +47,57 @@ export default function Carousel() {
     return () => clearInterval(autoplayRef.current);
   }, [videos]);
 
-  // 🖐️ Control táctil con scroll natural
+  // 🖐️ Gestos táctiles precisos
   const handleTouchStart = (e) => {
     const t = e.touches[0];
     startX.current = t.clientX;
     startY.current = t.clientY;
-    endX.current = t.clientX;
-    endY.current = t.clientY;
+    moved.current = false;
+    direction.current = null;
     pauseRef.current = true;
     clearInterval(autoplayRef.current);
   };
 
   const handleTouchMove = (e) => {
     const t = e.touches[0];
-    endX.current = t.clientX;
-    endY.current = t.clientY;
-    // ❗ No bloqueamos scroll vertical natural
+    const deltaX = t.clientX - startX.current;
+    const deltaY = t.clientY - startY.current;
+
+    if (Math.abs(deltaX) > TAP_THRESHOLD || Math.abs(deltaY) > TAP_THRESHOLD) {
+      moved.current = true;
+      direction.current =
+        Math.abs(deltaX) > Math.abs(deltaY) ? "horizontal" : "vertical";
+    }
   };
 
   const handleTouchEnd = () => {
-    const diffX = endX.current - startX.current;
-    const diffY = endY.current - startY.current;
-    const absX = Math.abs(diffX);
-    const absY = Math.abs(diffY);
-
-    // 🧭 Detecta dirección dominante
-    if (absX < 10 && absY < 10) {
-      // TAP → pantalla extendida
+    if (!moved.current) {
+      // TAP real → abrir fullscreen
       const tapped = videos[index];
       if (tapped?.slug) handleClick(tapped.slug);
-    } else if (absX > absY && absX > 40) {
-      // SWIPE HORIZONTAL → cambia tarjeta
-      setIndex((prev) =>
-        diffX < 0
-          ? (prev + 1) % videos.length
-          : (prev - 1 + videos.length) % videos.length
-      );
+    } else if (direction.current === "horizontal") {
+      // SWIPE horizontal → cambiar tarjeta
+      const diffX = startX.current - event.changedTouches[0].clientX;
+      if (Math.abs(diffX) > SWIPE_THRESHOLD) {
+        setIndex((prev) =>
+          diffX > 0
+            ? (prev + 1) % videos.length
+            : (prev - 1 + videos.length) % videos.length
+        );
+      }
+    } else if (direction.current === "vertical") {
+      // SWIPE vertical → ignorar completamente, permitir scroll
+      // no hacemos nada
     }
-    // 👇 si fue vertical, se deja pasar → scroll natural
 
-    // 🕒 Reanuda autoplay
+    // 🕒 Reanudar autoplay
     setTimeout(() => {
       pauseRef.current = false;
       startAutoplay();
     }, 3000);
   };
 
-  // 🎬 Pantalla extendida
+  // 🔗 Abrir pantalla extendida
   const handleClick = async (slug) => {
     try {
       const elem = document.documentElement;
@@ -105,7 +114,7 @@ export default function Carousel() {
   return (
     <div
       className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none"
-      style={{ touchAction: "pan-y" }} // 👈 Permite scroll vertical
+      style={{ touchAction: "pan-y" }} // 👈 Permite scroll vertical natural
     >
       <div
         onTouchStart={handleTouchStart}
@@ -139,7 +148,6 @@ export default function Carousel() {
                 draggable="false"
                 onContextMenu={(e) => e.preventDefault()}
                 className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover object-center bg-white overflow-hidden"
-                style={{ maxHeight: "100%", maxWidth: "100%" }}
               />
             </div>
           );
@@ -168,4 +176,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-               }
+  }
