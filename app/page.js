@@ -1,12 +1,14 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import Splash from "./components/splash";
-import Header from "./components/header";
-import Carousel from "./components/carousel";
-import Categories from "./components/categories";
-import Reviews from "./components/reviews";
-import Footer from "./components/footer";
+
+// ✅ Importaciones absolutas — evitan errores "Element type is invalid"
+import Splash from "@/components/splash";
+import Header from "@/components/header";
+import Carousel from "@/components/carousel";
+import Categories from "@/components/categories";
+import Reviews from "@/components/reviews";
+import Footer from "@/components/footer";
 
 export default function Page() {
   const [loading, setLoading] = useState(true);
@@ -16,24 +18,27 @@ export default function Page() {
       {loading && <Splash onFinish={() => setLoading(false)} />}
       {!loading && (
         <>
+          {/* 🔹 Encabezado fijo */}
           <Header />
+
+          {/* 🔹 Contenido principal */}
           <main className="pt-24 md:pt-28 lg:pt-32 px-4 max-w-5xl mx-auto text-center">
-            {/* Título */}
+            {/* 🏷️ Título */}
             <h1 className="text-3xl md:text-5xl font-extrabold">
               Share every moment that matters with Everwish
             </h1>
 
-            {/* Subtítulo */}
+            {/* ✨ Subtítulo */}
             <p className="mt-4 text-lg text-gray-700">
               Make it special today ✨
             </p>
 
-            {/* Carrusel */}
+            {/* 🎠 Carrusel principal */}
             <div className="mt-8">
               <Carousel />
             </div>
 
-            {/* Categories */}
+            {/* 🗂️ Sección de categorías */}
             <section className="mt-12 bg-white rounded-t-3xl shadow-lg py-12 px-4">
               <div className="flex justify-center mb-6">
                 <Link
@@ -46,15 +51,16 @@ export default function Page() {
               <Categories />
             </section>
 
-            {/* Reviews */}
+            {/* 💬 Reseñas */}
             <section className="mt-16">
               <Reviews />
             </section>
           </main>
 
+          {/* 🔸 Pie de página */}
           <Footer />
         </>
       )}
     </>
   );
-                    }
+        }
