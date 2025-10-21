@@ -1,52 +1,58 @@
-// app/api/videos/route.js
-import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
-
 export async function GET() {
-  try {
-    // 📁 Ruta absoluta al archivo generado automáticamente
-    const filePath = path.join(process.cwd(), "public", "videos_index.json");
+  const videos = [
+    {
+      title: "Bunny Easter General",
+      src: "/videos/bunny_easter_general.mp4",
+      slug: "bunny_easter_general",
+    },
+    {
+      title: "Dogcat Petsandanimals Appreciationday",
+      src: "/videos/dogcat_petsandanimals_appreciationday.mp4",
+      slug: "dogcat_petsandanimals_appreciationday",
+    },
+    {
+      title: "Eagle July4th Independenceday 1A",
+      src: "/videos/eagle_July4th_independenceday_1A.mp4",
+      slug: "eagle_July4th_independenceday_1A",
+    },
+    {
+      title: "Ghost Halloween Love 1A",
+      src: "/videos/ghost_halloween_love_1A.mp4",
+      slug: "ghost_halloween_love_1A",
+    },
+    {
+      title: "Hugs Anniversary Love A1",
+      src: "/videos/hugs_anniversary_love_A1.mp4",
+      slug: "hugs_anniversary_love_A1",
+    },
+    {
+      title: "Mother Mother'sDay Celebration 1A",
+      src: "/videos/mother_mother'sday_celebration_1A.mp4",
+      slug: "mother_mother'sday_celebration_1A",
+    },
+    {
+      title: "Mother Mothers'Day General 1A",
+      src: "/videos/mother_mothers'day_general_1A.mp4",
+      slug: "mother_mothers'day_general_1A",
+    },
+    {
+      title: "Pumpkin Halloween General 1A",
+      src: "/videos/pumpkin_halloween_general_1A.mp4",
+      slug: "pumpkin_halloween_general_1A",
+    },
+    {
+      title: "Zombie Halloween Birthday 1A",
+      src: "/videos/zombie_halloween_birthday_1A.mp4",
+      slug: "zombie_halloween_birthday_1A",
+    },
+    {
+      title: "Turkey Thanksgiving General1A",
+      src: "/videos/turkey_thanksgiving_general1A.mp4",
+      slug: "turkey_thanksgiving_general1A",
+    },
+  ];
 
-    // 🧩 Validación
-    if (!fs.existsSync(filePath)) {
-      console.error("❌ No se encontró videos_index.json");
-      return new NextResponse(
-        JSON.stringify({ error: "Archivo no encontrado" }),
-        { status: 404, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    // 📖 Leer y parsear el JSON
-    const fileContent = fs.readFileSync(filePath, "utf-8");
-    const videoFiles = JSON.parse(fileContent);
-
-    // 🪄 Transformar nombres → estructura estándar
-    const videos = videoFiles.map((fileName) => {
-      const cleanName = fileName.replace(".mp4", "");
-      const parts = cleanName.split("_");
-
-      // Formato: nombre_categoria_subcategoria_1A.mp4
-      const title = parts.join(" ").replace(/\b\w/g, (c) => c.toUpperCase());
-      const slug = cleanName;
-      const categories = parts.slice(1, -1); // ejemplo: ["halloween", "love"]
-
-      return {
-        title,
-        slug,
-        src: `/videos/${fileName}`,
-        categories,
-      };
-    });
-
-    return new NextResponse(JSON.stringify(videos), {
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (error) {
-    console.error("❌ Error cargando videos:", error);
-    return new NextResponse(
-      JSON.stringify({ error: "Error al cargar videos" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
-  }
+  return new Response(JSON.stringify(videos), {
+    headers: { "Content-Type": "application/json" },
+  });
 }
