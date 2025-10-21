@@ -1,5 +1,4 @@
 "use client";
-
 export default function Header() {
   return (
     <header className="w-full py-4 bg-pink-50 text-center shadow-sm">
