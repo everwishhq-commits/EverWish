@@ -18,8 +18,15 @@ export default function Page() {
         <>
           <Header />
 
-          {/* 🌸 Fondo rosado y texto principal */}
-          <main className="flex flex-col items-center justify-start min-h-screen bg-[#fff5f7] text-gray-700 pt-20 px-4">
+          {/* 🌸 Fondo rosado → blanco con transición suave */}
+          <main
+            className="flex flex-col items-center justify-start min-h-screen text-gray-700 pt-20 px-4"
+            style={{
+              background:
+                "linear-gradient(to bottom, #fff5f7 0%, #fff8f9 45%, #ffffff 100%)",
+            }}
+          >
+            {/* ✨ Mensaje principal */}
             <h1 className="text-3xl font-bold mb-3 text-gray-800 text-center">
               Share moments that last forever 💫
             </h1>
@@ -32,7 +39,7 @@ export default function Page() {
               <Carousel />
             </div>
 
-            {/* 📦 Contenedor blanco para categorías */}
+            {/* 📦 Contenedor blanco con sombra */}
             <div className="w-full max-w-5xl bg-white rounded-3xl shadow-lg p-8 mb-16 border border-pink-100">
               <h2 className="text-2xl font-semibold mb-6 text-gray-800 text-center">
                 Categories
@@ -46,4 +53,4 @@ export default function Page() {
       )}
     </>
   );
-              }
+        }
