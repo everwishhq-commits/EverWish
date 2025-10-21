@@ -2,11 +2,11 @@
 export const dynamic = "force-dynamic";
 
 import { useState } from "react";
-import Splash from "@/components/splash";
 import Header from "@/components/header";
 import Carousel from "@/components/carousel";
 import Categories from "@/components/categories";
 import Footer from "@/components/footer";
+import Splash from "@/components/splash";
 
 export default function TestPage() {
   const [loading, setLoading] = useState(true);
@@ -37,4 +37,4 @@ export default function TestPage() {
       )}
     </>
   );
-      }
+        }
