@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 
-// ✅ Importaciones absolutas — evitan errores "Element type is invalid"
+// ✅ Importaciones absolutas (funcionan con jsconfig.json)
 import Splash from "@/components/splash";
 import Header from "@/components/header";
 import Carousel from "@/components/carousel";
@@ -15,15 +15,16 @@ export default function Page() {
 
   return (
     <>
+      {/* 🔹 Pantalla inicial de carga */}
       {loading && <Splash onFinish={() => setLoading(false)} />}
+
+      {/* 🔹 Contenido principal */}
       {!loading && (
         <>
-          {/* 🔹 Encabezado fijo */}
           <Header />
 
-          {/* 🔹 Contenido principal */}
           <main className="pt-24 md:pt-28 lg:pt-32 px-4 max-w-5xl mx-auto text-center">
-            {/* 🏷️ Título */}
+            {/* 🏷️ Título principal */}
             <h1 className="text-3xl md:text-5xl font-extrabold">
               Share every moment that matters with Everwish
             </h1>
@@ -33,7 +34,7 @@ export default function Page() {
               Make it special today ✨
             </p>
 
-            {/* 🎠 Carrusel principal */}
+            {/* 🎠 Carrusel de videos destacados */}
             <div className="mt-8">
               <Carousel />
             </div>
@@ -51,7 +52,7 @@ export default function Page() {
               <Categories />
             </section>
 
-            {/* 💬 Reseñas */}
+            {/* 💬 Reseñas recientes */}
             <section className="mt-16">
               <Reviews />
             </section>
@@ -63,4 +64,4 @@ export default function Page() {
       )}
     </>
   );
-        }
+              }
