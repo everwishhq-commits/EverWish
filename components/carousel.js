@@ -7,13 +7,15 @@ export default function Carousel() {
   const [videos, setVideos] = useState([]);
   const [index, setIndex] = useState(0);
   const autoplayRef = useRef(null);
-  const touchStartX = useRef(0);
-  const touchStartY = useRef(0);
-  const touchMoved = useRef(false);
-  const verticalScroll = useRef(false);
   const pauseRef = useRef(false);
 
-  // 🔁 Autoplay
+  // 🧭 Posiciones de toque
+  const startX = useRef(0);
+  const startY = useRef(0);
+  const endX = useRef(0);
+  const endY = useRef(0);
+
+  // 🕹️ Autoplay
   const startAutoplay = () => {
     clearInterval(autoplayRef.current);
     if (!pauseRef.current && videos.length > 0) {
@@ -41,53 +43,54 @@ export default function Carousel() {
     return () => clearInterval(autoplayRef.current);
   }, [videos]);
 
-  // 🖐️ Gestos táctiles
+  // 👆 GESTIÓN DE GESTOS
   const handleTouchStart = (e) => {
-    const touch = e.touches[0];
-    touchStartX.current = touch.clientX;
-    touchStartY.current = touch.clientY;
-    touchMoved.current = false;
-    verticalScroll.current = false;
+    const t = e.touches[0];
+    startX.current = t.clientX;
+    startY.current = t.clientY;
+    endX.current = t.clientX;
+    endY.current = t.clientY;
     pauseRef.current = true;
     clearInterval(autoplayRef.current);
   };
 
   const handleTouchMove = (e) => {
-    const touch = e.touches[0];
-    const deltaX = Math.abs(touch.clientX - touchStartX.current);
-    const deltaY = Math.abs(touch.clientY - touchStartY.current);
-
-    // Detecta movimiento vertical predominante → no abrir fullscreen
-    if (deltaY > deltaX && deltaY > 6) verticalScroll.current = true;
-    if (deltaX > 8 || deltaY > 8) touchMoved.current = true;
+    const t = e.touches[0];
+    endX.current = t.clientX;
+    endY.current = t.clientY;
   };
 
   const handleTouchEnd = () => {
-    // 🚫 Si el usuario se desplazó verticalmente, no abrir
-    if (verticalScroll.current) {
-      pauseRef.current = false;
-      startAutoplay();
-      return;
+    const diffX = endX.current - startX.current;
+    const diffY = endY.current - startY.current;
+
+    const absX = Math.abs(diffX);
+    const absY = Math.abs(diffY);
+
+    // 🧠 Decisión basada en dirección
+    if (absX < 10 && absY < 10) {
+      // TAP REAL (sin movimiento)
+      const tapped = videos[index];
+      if (tapped?.slug) handleClick(tapped.slug);
+    } else if (absY > absX) {
+      // SCROLL VERTICAL → ignorar
+    } else if (absX > absY && absX > 40) {
+      // SWIPE HORIZONTAL → cambiar tarjeta
+      setIndex((prev) =>
+        diffX < 0
+          ? (prev + 1) % videos.length
+          : (prev - 1 + videos.length) % videos.length
+      );
     }
 
-    // 🚫 Si movió más de 8px (swipe o scroll), tampoco abrir
-    if (touchMoved.current) {
-      pauseRef.current = false;
-      startAutoplay();
-      return;
-    }
-
-    // ✅ Solo si fue un toque real (sin movimiento)
-    const tapped = videos[index];
-    if (tapped?.slug) handleClick(tapped.slug);
-
+    // 🕒 Reanudar autoplay
     setTimeout(() => {
       pauseRef.current = false;
       startAutoplay();
     }, 3000);
   };
 
-  // 🎬 Navegación + fullscreen
+  // 🎬 Abrir fullscreen + navegar
   const handleClick = async (slug) => {
     try {
       const elem = document.documentElement;
@@ -163,4 +166,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-  }
+}
