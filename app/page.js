@@ -18,12 +18,12 @@ export default function Page() {
         <>
           <Header />
 
-          {/* 🌸 Fondo rosado → blanco con transición suave */}
+          {/* 🌸 Fondo rosado → blanco extendido hasta el footer */}
           <main
             className="flex flex-col items-center justify-start min-h-screen text-gray-700 pt-20 px-4"
             style={{
               background:
-                "linear-gradient(to bottom, #fff5f7 0%, #fff8f9 45%, #ffffff 100%)",
+                "linear-gradient(to bottom, #fff5f7 0%, #fff8f9 40%, #ffffff 100%)",
             }}
           >
             {/* ✨ Mensaje principal */}
@@ -40,7 +40,7 @@ export default function Page() {
             </div>
 
             {/* 📦 Contenedor blanco con sombra */}
-            <div className="w-full max-w-5xl bg-white rounded-3xl shadow-lg p-8 mb-16 border border-pink-100">
+            <div className="w-full max-w-5xl bg-white rounded-3xl shadow-lg p-8 mb-20 border border-pink-100">
               <h2 className="text-2xl font-semibold mb-6 text-gray-800 text-center">
                 Categories
               </h2>
@@ -53,4 +53,4 @@ export default function Page() {
       )}
     </>
   );
-        }
+              }
