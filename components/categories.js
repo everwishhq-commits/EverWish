@@ -34,19 +34,19 @@ const mainCategories = [
 
 export default function Categories() {
   return (
-    <div className="text-center">
+    <div className="text-center px-4">
       <Swiper
-        slidesPerView={2.3}
-        spaceBetween={15}
-        loop={true} // 🔁 permite loop infinito
+        slidesPerView={2.2}
+        spaceBetween={25} // 🔹 más espacio entre las tarjetas
+        loop={true} // 🔁 loop infinito
         autoplay={{
           delay: 2500,
           disableOnInteraction: false,
         }}
-        speed={800} // transición suave
+        speed={800}
         breakpoints={{
-          640: { slidesPerView: 3.5, spaceBetween: 20 },
-          1024: { slidesPerView: 5, spaceBetween: 25 },
+          640: { slidesPerView: 3.5, spaceBetween: 30 },
+          1024: { slidesPerView: 5, spaceBetween: 35 },
         }}
         modules={[Autoplay]}
         className="overflow-visible"
@@ -58,7 +58,7 @@ export default function Categories() {
                 className={`${cat.color} rounded-3xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col items-center justify-center w-[150px] h-[130px] sm:w-[160px] sm:h-[140px] md:w-[180px] md:h-[150px] mx-auto`}
               >
                 <span className="text-5xl mb-3">{cat.emoji}</span>
-                <p className="font-semibold text-sm md:text-base text-gray-800">
+                <p className="font-semibold text-sm md:text-base text-gray-800 text-center leading-tight">
                   {cat.name}
                 </p>
               </div>
@@ -68,4 +68,4 @@ export default function Categories() {
       </Swiper>
     </div>
   );
-   }
+  }
