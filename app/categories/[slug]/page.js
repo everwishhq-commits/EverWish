@@ -9,7 +9,6 @@ export default function CategoryVideosPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log("🎥 Loading videos for category:", slug);
     fetch("/api/videos")
       .then((res) => res.json())
       .then((data) => {
@@ -19,10 +18,7 @@ export default function CategoryVideosPage() {
         setVideos(filtered);
         setLoading(false);
       })
-      .catch((err) => {
-        console.error("❌ Error fetching videos:", err);
-        setLoading(false);
-      });
+      .catch(() => setLoading(false));
   }, [slug]);
 
   if (loading) {
@@ -36,7 +32,10 @@ export default function CategoryVideosPage() {
   }
 
   return (
-    <main className="flex flex-col items-center justify-start min-h-screen bg-[#fff5f8] text-gray-800 px-4 py-10">
+    <main
+      className="flex flex-col items-center justify-start min-h-screen bg-[#fff5f8] text-gray-800 px-4 py-10 select-none touch-none"
+      style={{ overscrollBehavior: "contain" }}
+    >
       {/* 🔙 Volver */}
       <button
         onClick={() => router.push("/")}
@@ -45,7 +44,7 @@ export default function CategoryVideosPage() {
         ← Back to Categories
       </button>
 
-      {/* 🎄 Encabezado */}
+      {/* 🎃 Encabezado */}
       <h1 className="text-4xl font-extrabold text-pink-600 mb-2 capitalize">
         {slug}
       </h1>
@@ -79,6 +78,7 @@ export default function CategoryVideosPage() {
               data-title={video.title.toLowerCase()}
               onClick={() => router.push(`/edit/${video.slug}`)}
               className="everwish-card cursor-pointer transition-transform hover:scale-[1.04] bg-white rounded-3xl shadow-md border border-pink-100 overflow-hidden"
+              onContextMenu={(e) => e.preventDefault()} // 🚫 bloquea "descargar video"
             >
               <video
                 src={video.src}
@@ -86,6 +86,10 @@ export default function CategoryVideosPage() {
                 playsInline
                 loop
                 muted
+                disablePictureInPicture
+                controls={false} // ❌ no mostrar controles
+                controlsList="nodownload noremoteplayback nofullscreen"
+                style={{ pointerEvents: "none", touchAction: "none" }}
               />
               <div className="text-center py-2 text-gray-700 font-semibold text-sm">
                 {video.title}
@@ -96,4 +100,4 @@ export default function CategoryVideosPage() {
       )}
     </main>
   );
-        }
+}
