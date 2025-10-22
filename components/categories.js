@@ -6,6 +6,7 @@ import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
 import "swiper/css";
 
+// 🎨 30 categorías (nombre, emoji, slug y color de fondo del círculo)
 const allCategories = [
   { name: "Seasonal & Holidays", emoji: "🎉", slug: "seasonal-holidays", color: "#FFE0E9" },
   { name: "Birthday", emoji: "🎂", slug: "birthday", color: "#FFDDEE" },
@@ -44,84 +45,93 @@ export default function Categories() {
   const [filtered, setFiltered] = useState(allCategories);
   const [videos, setVideos] = useState([]);
 
+  // Cargar /public/videos/index.json
   useEffect(() => {
-    async function loadData() {
+    (async () => {
       try {
-        const res = await fetch("/videos/index.json");
+        const res = await fetch("/videos/index.json", { cache: "no-store" });
         const data = await res.json();
-        setVideos(data);
-      } catch (err) {
-        console.error("❌ Error cargando index.json:", err);
+        setVideos(data || []);
+      } catch (e) {
+        console.error("Error loading /videos/index.json", e);
       }
-    }
-    loadData();
+    })();
   }, []);
 
+  // Filtrar categorías por nombre / tags y por categorías declaradas en index.json
   useEffect(() => {
-    const q = search.toLowerCase();
-    if (!q) return setFiltered(allCategories);
+    const q = search.trim().toLowerCase();
+    if (!q) {
+      setFiltered(allCategories);
+      return;
+    }
 
     const matches = new Set();
-    videos.forEach((item) => {
-      const match =
-        item.name.toLowerCase().includes(q) ||
-        item.tags?.some((t) => t.toLowerCase().includes(q));
-      if (match) {
-        allCategories.forEach((cat) => {
-          if (
-            item.categories?.some(
-              (c) => c.toLowerCase().includes(cat.slug.split("-")[0])
-            )
-          ) {
-            matches.add(cat.name);
-          }
-        });
+
+    for (const item of videos) {
+      const byText =
+        item.name?.toLowerCase().includes(q) ||
+        (item.tags || []).some((t) => t.toLowerCase().includes(q));
+
+      if (!byText) continue;
+
+      // unir categorías + subcategorías del index para mapear a nuestros slugs
+      const cats = [
+        ...(item.categories || []),
+        ...(item.subcategories || []),
+      ].map((c) => c.toLowerCase());
+
+      for (const cat of allCategories) {
+        const tokens = cat.slug.split("-"); // ej: ["weddings","anniversaries"]
+        if (tokens.some((t) => cats.some((c) => c.includes(t)))) {
+          matches.add(cat.name);
+        }
       }
-    });
+    }
 
-    const filteredCats =
-      matches.size > 0
-        ? allCategories.filter((cat) => matches.has(cat.name))
-        : [];
-
-    setFiltered(filteredCats);
+    setFiltered(
+      matches.size ? allCategories.filter((c) => matches.has(c.name)) : []
+    );
   }, [search, videos]);
 
   return (
-    <section id="categories" className="text-center py-12 px-2 overflow-hidden">
+    <section id="categories" className="text-center py-12 px-0 overflow-hidden">
+      {/* Título único */}
       <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
         Categories
       </h2>
 
-      <div className="flex justify-center mb-10">
+      {/* Barra de búsqueda */}
+      <div className="flex justify-center mb-8 px-4">
         <input
           type="text"
           placeholder="Search any theme — e.g. zombie, love, birthday..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-80 md:w-96 px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700"
+          className="w-full max-w-md px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700"
         />
       </div>
 
-      <div className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 md:px-8 overflow-hidden">
+      {/* Carrusel (sin márgenes laterales, con más aire arriba/abajo para que no se corten) */}
+      <div className="relative w-full mx-auto overflow-hidden">
         <Swiper
           slidesPerView={3.2}
-          spaceBetween={12}
+          spaceBetween={6}                // menos espacio entre círculos
           centeredSlides
           loop
           autoplay={{ delay: 2500, disableOnInteraction: false }}
-          speed={1000}
+          speed={900}
           breakpoints={{
-            0: { slidesPerView: 2.2, spaceBetween: 10 },
-            640: { slidesPerView: 3.2, spaceBetween: 12 },
-            1024: { slidesPerView: 5, spaceBetween: 16 },
+            0:   { slidesPerView: 2.3, spaceBetween: 6 },
+            640: { slidesPerView: 3.2, spaceBetween: 10 },
+            1024:{ slidesPerView: 5,   spaceBetween: 12 },
           }}
           modules={[Autoplay]}
-          className="pt-8 pb-10 overflow-visible"
+          className="pt-12 pb-14 overflow-visible" // aire vertical extra
         >
-          {filtered.length > 0 ? (
+          {filtered.length ? (
             filtered.map((cat, i) => (
-              <SwiperSlide key={i} className="flex justify-center">
+              <SwiperSlide key={cat.slug} className="flex justify-center">
                 <motion.div
                   className="flex flex-col items-center justify-center"
                   animate={{ scale: [1, 1.05, 1] }}
@@ -129,38 +139,31 @@ export default function Categories() {
                     duration: 3,
                     repeat: Infinity,
                     ease: "easeInOut",
-                    delay: i * 0.3,
+                    delay: i * 0.15,
                   }}
                 >
                   <motion.div
-                    className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto"
+                    className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px]"
                     style={{ backgroundColor: cat.color }}
                     animate={{
                       boxShadow: [
                         "0 0 10px rgba(255,182,193,0.25)",
                         "0 0 16px rgba(255,214,165,0.35)",
-                        "0 0 20px rgba(255,255,240,0.3)",
-                        "0 0 10px rgba(255,182,193,0.25)"
+                        "0 0 20px rgba(255,255,240,0.30)",
+                        "0 0 10px rgba(255,182,193,0.25)",
                       ],
                     }}
-                    transition={{
-                      duration: 6,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
+                    transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
                   >
                     <motion.span
                       className="text-4xl sm:text-5xl"
                       animate={{ y: [0, -5, 0] }}
-                      transition={{
-                        duration: 3,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }}
+                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                     >
                       {cat.emoji}
                     </motion.span>
                   </motion.div>
+
                   <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
                     {cat.name}
                   </p>
@@ -176,4 +179,4 @@ export default function Categories() {
       </div>
     </section>
   );
-   }
+    }
