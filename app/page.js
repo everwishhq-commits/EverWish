@@ -40,8 +40,8 @@ export default function Page() {
             </div>
 
             {/* 📦 Contenedor blanco con sombra */}
-            <div className="w-full max-w-5xl bg-white rounded-3xl shadow-lg p-8 mb-20 border border-pink-100">
-              <h2 className="text-2xl font-semibold mb-6 text-gray-800 text-center">
+            <div className="w-full bg-white rounded-3xl shadow-lg px-2 py-4 mb-10 border border-pink-100">
+              <h2 className="text-2xl font-semibold mb-4 text-gray-800 text-center">
                 
               </h2>
               <Categories />
