@@ -1,60 +1,88 @@
-/**
- * 📂 /scripts/generateindex.js
- * Genera un index.json con categorías y subcategorías
- */
-
 import fs from "fs";
 import path from "path";
 
 const videosDir = path.join(process.cwd(), "public/videos");
 const outputFile = path.join(videosDir, "index.json");
 
-function getFilesRecursively(dir) {
-  let results = [];
-  const list = fs.readdirSync(dir);
-  list.forEach((file) => {
-    const fullPath = path.join(dir, file);
-    const stat = fs.statSync(fullPath);
-    if (stat.isDirectory()) {
-      results = results.concat(getFilesRecursively(fullPath));
-    } else {
-      results.push(fullPath);
-    }
-  });
-  return results;
-}
+// 📂 Diccionario: categoría → categorías Everwish
+const keywordCategories = {
+  christmas: ["Holidays", "Seasonal & Holidays", "Celebrations"],
+  halloween: ["Holidays", "Seasonal & Holidays", "Celebrations"],
+  easter: ["Seasonal & Holidays", "Celebrations"],
+  thanksgiving: ["Seasonal & Holidays", "Celebrations"],
+  mothersday: ["Family & Relationships", "Celebrations"],
+  fathersday: ["Family & Relationships", "Celebrations"],
+  love: ["Love & Romance", "Celebrations"],
+  birthday: ["Birthday", "Celebrations"],
+  wedding: ["Weddings & Anniversaries", "Love & Romance"],
+  anniversary: ["Weddings & Anniversaries", "Love & Romance"],
+  baby: ["Babies & Parenting", "Family & Relationships"],
+  family: ["Family & Relationships"],
+  congrats: ["Congratulations & Milestones"],
+  work: ["Work & Professional"],
+  school: ["School & Graduation"],
+  graduation: ["School & Graduation"],
+  sympathy: ["Sympathy & Remembrance"],
+  health: ["Health & Support"],
+  ai: ["Custom & AI Creations"],
+  pet: ["Pets & Animal Lovers"],
+  cat: ["Pets & Animal Lovers"],
+  dog: ["Pets & Animal Lovers"],
+  spiritual: ["Spiritual & Mindfulness"],
+  general: ["Just Because & Everyday"],
+  love1a: ["Love & Romance", "Birthday"],
+};
 
-function generateIndex() {
-  if (!fs.existsSync(videosDir)) {
-    console.error("❌ No existe la carpeta /public/videos");
-    return;
+// 🧠 Función para detectar categorías desde palabras
+function detectCategories(keywordList) {
+  const found = new Set();
+
+  for (const keyword of keywordList) {
+    const lower = keyword.toLowerCase();
+    if (keywordCategories[lower]) {
+      keywordCategories[lower].forEach((c) => found.add(c));
+    }
   }
 
-  const files = getFilesRecursively(videosDir);
-  const data = files
-    .filter((f) => /\.(mp4|jpg|jpeg|png|webp)$/i.test(f))
-    .map((filePath) => {
-      const relativePath = path.relative("public", filePath).replace(/\\/g, "/");
+  // Si no detecta nada, lo mete en una categoría general
+  if (found.size === 0) found.add("Just Because & Everyday");
 
-      const base = path.basename(filePath, path.extname(filePath));
-      const parts = base.split("_"); // Ejemplo: zombie_halloween_birthday_1a
+  return Array.from(found);
+}
 
-      const name = parts.join(" ");
-      const tags = parts.map((p) => p.toLowerCase());
-      const categories = parts
-        .slice(1, -1) // ignora nombre principal y sufijo (1a, 1b)
-        .map((p) => p.charAt(0).toUpperCase() + p.slice(1));
+// 🧩 Analiza el nombre del archivo: objeto_categoria_subcategoria_variant
+function parseFileName(filename) {
+  const clean = filename.replace(".mp4", "");
+  const parts = clean.split("_");
 
-      return {
-        name,
-        file: `/${relativePath}`,
-        tags,
-        categories,
-      };
-    });
+  // Asignación flexible
+  const [object, category, subcategory, variant] = parts;
+  const tags = parts.filter(Boolean);
 
-  fs.writeFileSync(outputFile, JSON.stringify(data, null, 2));
-  console.log(`✅ index.json generado con ${data.length} elementos.`);
+  return {
+    name: clean,
+    object: object || "unknown",
+    category: category || "general",
+    subcategory: subcategory || null,
+    variant: variant || null,
+    tags,
+    categories: detectCategories(parts),
+    file: `${filename}`,
+    url: `/videos/${filename}`,
+  };
+}
+
+// 🧾 Generar el index.json
+function generateIndex() {
+  const files = fs
+    .readdirSync(videosDir)
+    .filter((f) => f.endsWith(".mp4"))
+    .sort();
+
+  const index = files.map((f) => parseFileName(f));
+
+  fs.writeFileSync(outputFile, JSON.stringify(index, null, 2));
+  console.log(`✅ Generado index.json con ${index.length} archivos.`);
 }
 
 generateIndex();
