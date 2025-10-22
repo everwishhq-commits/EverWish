@@ -37,7 +37,7 @@ export default function Categories() {
     <div className="text-center mt-14 mb-20 px-0">
       <Swiper
         slidesPerView={2.95} // 👌 tres completas
-        spaceBetween={6} // 🔹 espacio mínimo entre tarjetas
+        spaceBetween={1.5} // 🔹 espacio mínimo
         centeredSlides={true}
         loop={true}
         autoplay={{
@@ -46,9 +46,9 @@ export default function Categories() {
         }}
         speed={800}
         breakpoints={{
-          0: { slidesPerView: 1.4, spaceBetween: 6 },
-          640: { slidesPerView: 2.3, spaceBetween: 6 },
-          1024: { slidesPerView: 2.95, spaceBetween: 6 }, // ✅ tres visibles perfectas
+          0: { slidesPerView: 1.4, spaceBetween: 1.5 },
+          640: { slidesPerView: 2.3, spaceBetween: 1.5 },
+          1024: { slidesPerView: 2.95, spaceBetween: 1.5 }, // ✅ tres completas exactas
         }}
         modules={[Autoplay]}
         className="overflow-visible !px-0"
@@ -71,4 +71,4 @@ export default function Categories() {
       </Swiper>
     </div>
   );
-   }
+          }
