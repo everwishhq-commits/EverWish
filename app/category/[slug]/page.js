@@ -1,43 +1,51 @@
 "use client";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
-export default function SubcategoriesPage() {
-  const { slug } = useParams(); // Ejemplo: seasonal-holidays
+export default function CategoryModalPage() {
+  const { slug } = useParams();
   const router = useRouter();
-  const [subcategories, setSubcategories] = useState([]);
+
+  const [groups, setGroups] = useState({});
+  const [activeSub, setActiveSub] = useState(null);
+  const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // 🧠 Cargar videos y agrupar por subcategoría
   useEffect(() => {
     async function loadData() {
       try {
-        const res = await fetch("/videos/index.json");
+        const res = await fetch("/videos/index.json", { cache: "no-store" });
         const data = await res.json();
 
-        // Buscar subcategorías únicas dentro de esta categoría principal
-        const matched = data.filter((item) =>
-          item.categories?.some((cat) =>
-            cat.toLowerCase().replace(/\s+/g, "-").includes(slug)
+        const filtered = data.filter((v) =>
+          (v.categories || []).some(
+            (c) => c.toLowerCase().replace(/\s+/g, "-") === slug
           )
         );
 
-        // Agrupar por subcategoría (ej: halloween, christmas, thanksgiving)
-        const groups = Array.from(new Set(matched.map((i) => i.category))).filter(Boolean);
-        setSubcategories(groups);
+        const grouped = {};
+        for (const v of filtered) {
+          const sub = v.category || v.subcategory || "General";
+          if (!grouped[sub]) grouped[sub] = [];
+          grouped[sub].push(v);
+        }
+        setGroups(grouped);
       } catch (err) {
-        console.error("❌ Error cargando subcategorías:", err);
+        console.error("❌ Error loading videos:", err);
       } finally {
         setLoading(false);
       }
     }
-
     loadData();
   }, [slug]);
 
+  const subcategories = Object.keys(groups);
+
   if (loading) {
     return (
-      <main className="flex flex-col items-center justify-center min-h-screen text-gray-700 bg-[#fff5f8]">
+      <main className="flex items-center justify-center min-h-screen bg-[#fff5f8] text-gray-600">
         <p className="animate-pulse text-lg">
           Loading {slug.replace("-", " ")} celebrations ✨
         </p>
@@ -45,8 +53,12 @@ export default function SubcategoriesPage() {
     );
   }
 
+  // 💫 Modal activo
+  const activeVideos = activeSub ? groups[activeSub] || [] : [];
+
   return (
-    <main className="min-h-screen bg-[#fff5f8] flex flex-col items-center py-10 px-4">
+    <main className="min-h-screen bg-[#fff5f8] text-gray-800 flex flex-col items-center py-10 px-4">
+      {/* 🔙 Volver */}
       <button
         onClick={() => router.push("/categories")}
         className="text-pink-500 hover:text-pink-600 font-semibold mb-6"
@@ -54,40 +66,100 @@ export default function SubcategoriesPage() {
         ← Back to Main Categories
       </button>
 
-      <h1 className="text-4xl font-extrabold text-pink-600 mb-3 capitalize text-center">
+      {/* 🏷️ Título principal */}
+      <h1 className="text-4xl font-extrabold text-pink-600 mb-8 capitalize text-center">
         {slug.replace("-", " ")}
       </h1>
-      <p className="text-gray-600 mb-10 text-center max-w-lg">
-        Explore the celebrations and moments inside this category 🎉
-      </p>
 
-      {subcategories.length === 0 ? (
-        <p className="text-gray-500 text-center">No subcategories found.</p>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 max-w-5xl w-full">
-          {subcategories.map((sub, i) => (
+      {/* 🌸 Subcategorías */}
+      <div className="flex flex-wrap justify-center gap-4 max-w-5xl">
+        {subcategories.map((sub, i) => (
+          <motion.button
+            key={i}
+            onClick={() => setActiveSub(sub)}
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.2 }}
+            className="px-5 py-3 rounded-full bg-white shadow-sm border border-pink-100 hover:border-pink-200 hover:bg-pink-50 text-gray-700 font-semibold flex items-center gap-2"
+          >
+            <span className="text-lg">{getEmojiForSubcategory(sub)}</span>
+            <span className="capitalize">{sub}</span>
+          </motion.button>
+        ))}
+      </div>
+
+      {/* 💡 Modal (70% pantalla) */}
+      <AnimatePresence>
+        {activeSub && (
+          <>
+            {/* Fondo borroso */}
             <motion.div
-              key={i}
-              whileHover={{ scale: 1.05 }}
+              className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setActiveSub(null)} // 👈 cerrar al tocar fuera
+            />
+            {/* Contenedor principal */}
+            <motion.div
+              className="fixed z-50 inset-0 flex items-center justify-center p-4"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
-              onClick={() => router.push(`/subcategory/${sub.toLowerCase().replace(/\s+/g, "-")}`)}
-              className="cursor-pointer bg-white rounded-3xl shadow-md border border-pink-100 hover:shadow-lg p-6 flex flex-col items-center justify-center"
             >
-              <span className="text-5xl mb-2">
-                {getEmojiForSubcategory(sub)}
-              </span>
-              <span className="text-gray-800 font-semibold capitalize text-center">
-                {sub}
-              </span>
+              <div className="relative bg-white rounded-3xl shadow-xl w-[90%] max-w-5xl h-[70vh] overflow-y-auto border border-pink-100 p-6">
+                {/* ✖ Cerrar */}
+                <button
+                  onClick={() => setActiveSub(null)}
+                  className="absolute top-3 right-5 text-gray-400 hover:text-pink-500 text-2xl font-bold"
+                >
+                  ×
+                </button>
+
+                {/* Título */}
+                <h2 className="text-2xl font-bold text-pink-600 mb-4 capitalize">
+                  {getEmojiForSubcategory(activeSub)} {activeSub}
+                </h2>
+
+                {/* Tarjetas */}
+                {activeVideos.length === 0 ? (
+                  <p className="text-gray-500 text-center mt-10">
+                    No cards found for this subcategory.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 justify-items-center">
+                    {activeVideos.map((video, i) => (
+                      <motion.div
+                        key={i}
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ duration: 0.3 }}
+                        onClick={() => router.push(`/edit/${video.name}`)}
+                        className="cursor-pointer bg-white rounded-3xl shadow-md border border-pink-100 overflow-hidden hover:shadow-lg"
+                      >
+                        <video
+                          src={video.file}
+                          className="object-cover w-full h-auto aspect-[4/5]"
+                          playsInline
+                          loop
+                          muted
+                        />
+                        <div className="text-center py-2 text-gray-700 font-semibold text-sm">
+                          {video.object}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </motion.div>
-          ))}
-        </div>
-      )}
+          </>
+        )}
+      </AnimatePresence>
     </main>
   );
 }
 
-// 🌸 Mapa de emojis sugeridos (puedes ampliarlo)
+// 🌸 Emojis decorativos
 function getEmojiForSubcategory(name) {
   const map = {
     halloween: "🎃",
@@ -99,4 +171,4 @@ function getEmojiForSubcategory(name) {
   };
   const key = name?.toLowerCase() || "";
   return map[key] || "✨";
-      }
+          }
