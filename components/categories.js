@@ -36,7 +36,7 @@ const allCategories = [
   { name: "Adventure", emoji: "🗺️", slug: "adventure" },
   { name: "Friendship", emoji: "🤝", slug: "friendship" },
   { name: "Festivals", emoji: "🎭", slug: "festivals" },
-  { name: "Season Greetings", emoji: "❄️", slug: "season-greetings" }
+  { name: "Season Greetings", emoji: "❄️", slug: "season-greetings" },
 ];
 
 export default function Categories() {
@@ -44,6 +44,7 @@ export default function Categories() {
   const [filtered, setFiltered] = useState(allCategories);
   const [videos, setVideos] = useState([]);
 
+  // 🔹 Cargar index.json
   useEffect(() => {
     async function loadData() {
       try {
@@ -57,6 +58,7 @@ export default function Categories() {
     loadData();
   }, []);
 
+  // 🔍 Filtrado por tags o nombre
   useEffect(() => {
     const q = search.toLowerCase();
     if (!q) return setFiltered(allCategories);
@@ -84,14 +86,13 @@ export default function Categories() {
   }, [search, videos]);
 
   return (
-    <section id="categories" className="text-center py-12 px-2">
-      {/* ✅ Título único */}
+    <section id="categories" className="text-center py-10 px-2">
       <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
         Categories
       </h2>
 
-      {/* 🔍 Barra de búsqueda */}
-      <div className="flex justify-center mb-10">
+      {/* Barra de búsqueda */}
+      <div className="flex justify-center mb-8">
         <input
           type="text"
           placeholder="Search any theme — e.g. zombie, love, birthday..."
@@ -101,58 +102,59 @@ export default function Categories() {
         />
       </div>
 
-      {/* 🎠 Carrusel circular con animación sutil */}
-      <Swiper
-        slidesPerView={3.2}
-        spaceBetween={8} // 🔹 espacio reducido entre categorías
-        centeredSlides={true}
-        loop={true}
-        autoplay={{
-          delay: 2500,
-          disableOnInteraction: false,
-        }}
-        speed={900}
-        breakpoints={{
-          0: { slidesPerView: 2.2, spaceBetween: 6 },
-          640: { slidesPerView: 3.2, spaceBetween: 8 },
-          1024: { slidesPerView: 5, spaceBetween: 10 },
-        }}
-        modules={[Autoplay]}
-        className="overflow-visible pb-8 pt-4"
-        style={{ overflow: "visible" }}
-      >
-        {filtered.length > 0 ? (
-          filtered.map((cat, i) => (
-            <SwiperSlide key={i}>
-              <div className="flex flex-col items-center justify-center">
-                <div className="rounded-full bg-pink-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto overflow-visible">
-                  <motion.span
-                    className="text-4xl sm:text-5xl"
-                    animate={{
-                      y: [0, -5, 0],
-                      scale: [1, 1.05, 1],
-                    }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                  >
-                    {cat.emoji}
-                  </motion.span>
+      {/* 🎠 Carrusel centrado y controlado */}
+      <div className="w-full max-w-5xl mx-auto overflow-hidden px-4">
+        <Swiper
+          slidesPerView={2.5}
+          spaceBetween={10}
+          centeredSlides={true}
+          loop={true}
+          autoplay={{
+            delay: 2500,
+            disableOnInteraction: false,
+          }}
+          speed={900}
+          breakpoints={{
+            0: { slidesPerView: 2.3, spaceBetween: 8 },
+            640: { slidesPerView: 3.3, spaceBetween: 10 },
+            1024: { slidesPerView: 5, spaceBetween: 12 },
+          }}
+          modules={[Autoplay]}
+          className="pb-8 pt-4"
+        >
+          {filtered.length > 0 ? (
+            filtered.map((cat, i) => (
+              <SwiperSlide key={i}>
+                <div className="flex flex-col items-center justify-center">
+                  <div className="rounded-full bg-pink-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto">
+                    <motion.span
+                      className="text-4xl sm:text-5xl"
+                      animate={{
+                        y: [0, -5, 0],
+                        scale: [1, 1.05, 1],
+                      }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    >
+                      {cat.emoji}
+                    </motion.span>
+                  </div>
+                  <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
+                    {cat.name}
+                  </p>
                 </div>
-                <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
-                  {cat.name}
-                </p>
-              </div>
-            </SwiperSlide>
-          ))
-        ) : (
-          <p className="text-gray-500 text-sm mt-8">
-            No matching categories for “{search}”
-          </p>
-        )}
-      </Swiper>
+              </SwiperSlide>
+            ))
+          ) : (
+            <p className="text-gray-500 text-sm mt-8">
+              No matching categories for “{search}”
+            </p>
+          )}
+        </Swiper>
+      </div>
     </section>
   );
-  }
+    }
