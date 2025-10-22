@@ -36,9 +36,9 @@ export default function Categories() {
   return (
     <div className="text-center mt-14 mb-20 px-0">
       <Swiper
-        slidesPerView={2.95} // 👈 ajustado para que entren 3 exactas
-        spaceBetween={28} // 👈 un poco menos de espacio para que no se corte
-        centeredSlides={true} // 👈 centra el carrusel perfectamente
+        slidesPerView={2.95} // tres completas
+        spaceBetween={20} // 🔹 espacio reducido entre ellas
+        centeredSlides={true}
         loop={true}
         autoplay={{
           delay: 2500,
@@ -46,9 +46,9 @@ export default function Categories() {
         }}
         speed={800}
         breakpoints={{
-          0: { slidesPerView: 1.4, spaceBetween: 20 },
-          640: { slidesPerView: 2.3, spaceBetween: 25 },
-          1024: { slidesPerView: 2.95, spaceBetween: 28 }, // ✅ tres completas
+          0: { slidesPerView: 1.4, spaceBetween: 15 },
+          640: { slidesPerView: 2.3, spaceBetween: 18 },
+          1024: { slidesPerView: 2.95, spaceBetween: 20 },
         }}
         modules={[Autoplay]}
         className="overflow-visible !px-0"
@@ -71,4 +71,4 @@ export default function Categories() {
       </Swiper>
     </div>
   );
-                       }
+              }
