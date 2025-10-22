@@ -42,7 +42,7 @@ export default function Page() {
             {/* 📦 Contenedor blanco con sombra */}
             <div className="w-full max-w-5xl bg-white rounded-3xl shadow-lg p-8 mb-20 border border-pink-100">
               <h2 className="text-2xl font-semibold mb-6 text-gray-800 text-center">
-                Categories
+                
               </h2>
               <Categories />
             </div>
