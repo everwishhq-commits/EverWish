@@ -1,74 +1,61 @@
 "use client";
 
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay } from "swiper/modules";
 import Link from "next/link";
-import "swiper/css";
 
-const mainCategories = [
+const categories = [
   { name: "Seasonal & Holidays", emoji: "🎉", color: "bg-yellow-200", slug: "seasonal-holidays" },
-  { name: "Birthdays", emoji: "🎂", color: "bg-pink-200", slug: "birthdays" },
-  { name: "Love & Romance", emoji: "💘", color: "bg-rose-200", slug: "love-romance" },
-  { name: "Family & Relationships", emoji: "👨‍👩‍👧‍👦", color: "bg-blue-200", slug: "family-relationships" },
-  { name: "Babies & Parenting", emoji: "👶", color: "bg-sky-200", slug: "babies-parenting" },
-  { name: "Weddings & Anniversaries", emoji: "💍", color: "bg-indigo-200", slug: "weddings-anniversaries" },
-  { name: "Congratulations & Milestones", emoji: "🏆", color: "bg-amber-200", slug: "congrats-milestones" },
-  { name: "School & Graduation", emoji: "🎓", color: "bg-lime-200", slug: "school-graduation" },
-  { name: "Work & Professional", emoji: "💼", color: "bg-cyan-200", slug: "work-professional" },
-  { name: "House & Moving", emoji: "🏡", color: "bg-emerald-200", slug: "house-moving" },
-  { name: "Health & Support", emoji: "🩺", color: "bg-teal-200", slug: "health-support" },
-  { name: "Sympathy & Remembrance", emoji: "🕊️", color: "bg-gray-200", slug: "sympathy-remembrance" },
-  { name: "Encouragement & Motivation", emoji: "🌟", color: "bg-yellow-100", slug: "encouragement-motivation" },
-  { name: "Thank You & Appreciation", emoji: "🙏", color: "bg-violet-200", slug: "thank-you-appreciation" },
-  { name: "Invitations & Events", emoji: "✉️", color: "bg-fuchsia-200", slug: "invitations-events" },
-  { name: "Spiritual & Mindfulness", emoji: "🕯️", color: "bg-orange-200", slug: "spiritual-mindfulness" },
-  { name: "Art & Cultural", emoji: "🎨", color: "bg-stone-200", slug: "art-cultural" },
+  { name: "Birthday", emoji: "🎂", color: "bg-pink-200", slug: "birthdays" },
+  { name: "Love", emoji: "💘", color: "bg-rose-200", slug: "love-romance" },
+  { name: "Family", emoji: "👨‍👩‍👧‍👦", color: "bg-blue-200", slug: "family-relationships" },
+  { name: "Baby", emoji: "👶", color: "bg-sky-200", slug: "babies-parenting" },
+  { name: "Wedding", emoji: "💍", color: "bg-indigo-200", slug: "weddings-anniversaries" },
+  { name: "Congrats", emoji: "🏆", color: "bg-amber-200", slug: "congrats-milestones" },
+  { name: "Graduation", emoji: "🎓", color: "bg-lime-200", slug: "school-graduation" },
+  { name: "Work", emoji: "💼", color: "bg-cyan-200", slug: "work-professional" },
+  { name: "Home", emoji: "🏡", color: "bg-emerald-200", slug: "house-moving" },
+  { name: "Health", emoji: "🩺", color: "bg-teal-200", slug: "health-support" },
+  { name: "Sympathy", emoji: "🕊️", color: "bg-gray-200", slug: "sympathy-remembrance" },
+  { name: "Encouragement", emoji: "🌟", color: "bg-yellow-100", slug: "encouragement-motivation" },
+  { name: "Thank You", emoji: "🙏", color: "bg-violet-200", slug: "thank-you-appreciation" },
+  { name: "Invitations", emoji: "✉️", color: "bg-fuchsia-200", slug: "invitations-events" },
+  { name: "Spiritual", emoji: "🕯️", color: "bg-orange-200", slug: "spiritual-mindfulness" },
+  { name: "Art & Culture", emoji: "🎨", color: "bg-stone-200", slug: "art-cultural" },
   { name: "Kids & Teens", emoji: "🧸", color: "bg-purple-200", slug: "kids-teens" },
-  { name: "Humor & Memes", emoji: "😄", color: "bg-rose-100", slug: "humor-memes" },
-  { name: "Pets & Animal Lovers", emoji: "🐾", color: "bg-green-100", slug: "pets" },
-  { name: "Just Because & Everyday", emoji: "💌", color: "bg-blue-100", slug: "just-because" },
-  { name: "Gifts & Surprises", emoji: "🎁", color: "bg-purple-100", slug: "gifts-surprises" },
-  { name: "Inspirations & Quotes", emoji: "📝", color: "bg-slate-200", slug: "inspirations-quotes" },
-  { name: "Travel & Adventures", emoji: "✈️", color: "bg-cyan-100", slug: "travel-adventures" },
+  { name: "Humor", emoji: "😄", color: "bg-rose-100", slug: "humor-memes" },
+  { name: "Pets", emoji: "🐾", color: "bg-green-100", slug: "pets" },
+  { name: "Everyday", emoji: "💌", color: "bg-blue-100", slug: "just-because" },
+  { name: "Gifts", emoji: "🎁", color: "bg-purple-100", slug: "gifts-surprises" },
+  { name: "Quotes", emoji: "📝", color: "bg-slate-200", slug: "inspirations-quotes" },
+  { name: "Travel", emoji: "✈️", color: "bg-cyan-100", slug: "travel-adventures" },
+  { name: "Food & Drinks", emoji: "🍰", color: "bg-pink-100", slug: "food-drinks" },
+  { name: "Nature", emoji: "🌿", color: "bg-green-200", slug: "nature" },
+  { name: "Friendship", emoji: "🤝", color: "bg-orange-100", slug: "friendship" },
+  { name: "Hobbies", emoji: "🎮", color: "bg-blue-300", slug: "hobbies" },
+  { name: "Sports", emoji: "⚽", color: "bg-lime-100", slug: "sports" },
   { name: "Custom & AI Creations", emoji: "🤖", color: "bg-teal-100", slug: "custom-ai" },
 ];
 
-export default function Categories() {
+export default function SimpleCategories() {
   return (
-    <div className="text-center px-0">
-      <Swiper
-        slidesPerView={2.95}
-        spaceBetween={1.5}
-        centeredSlides={true}
-        loop={true}
-        autoplay={{
-          delay: 2500,
-          disableOnInteraction: false,
-        }}
-        speed={800}
-        breakpoints={{
-          0: { slidesPerView: 1.4, spaceBetween: 1 },
-          640: { slidesPerView: 2.3, spaceBetween: 1.5 },
-          1024: { slidesPerView: 2.95, spaceBetween: 1.5 },
-        }}
-        modules={[Autoplay]}
-        className="overflow-visible"
-      >
-        {mainCategories.map((cat, i) => (
-          <SwiperSlide key={i}>
-            <Link href={`/categories/${cat.slug}`}>
-              <div
-                className={`${cat.color} rounded-3xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col items-center justify-center w-[180px] h-[150px] sm:w-[190px] sm:h-[160px] md:w-[200px] md:h-[170px] mx-auto`}
-              >
-                <span className="text-6xl mb-3">{cat.emoji}</span>
-                <p className="font-semibold text-sm md:text-base text-gray-800 text-center leading-tight">
-                  {cat.name}
-                </p>
-              </div>
-            </Link>
-          </SwiperSlide>
+    <section id="categories" className="text-center py-14">
+      <h2 className="text-2xl md:text-3xl font-bold mb-10 text-gray-800">
+        Categories
+      </h2>
+
+      <div className="flex flex-wrap justify-center gap-8 md:gap-10">
+        {categories.map((cat, i) => (
+          <Link key={i} href={`/categories/${cat.slug}`}>
+            <div
+              className={`${cat.color} w-24 h-24 md:w-28 md:h-28 rounded-full shadow-md flex flex-col items-center justify-center hover:shadow-xl hover:-translate-y-1 transition-all duration-300`}
+            >
+              <span className="text-4xl md:text-5xl mb-1">{cat.emoji}</span>
+            </div>
+            <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
+              {cat.name}
+            </p>
+          </Link>
         ))}
-      </Swiper>
-    </div>
+      </div>
+    </section>
   );
-  }
+}
