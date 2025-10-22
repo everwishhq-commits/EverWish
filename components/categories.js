@@ -34,10 +34,11 @@ const mainCategories = [
 
 export default function Categories() {
   return (
-    <div className="text-center mt-14 mb-20 px-0"> {/* 🔥 padding lateral eliminado */}
+    <div className="text-center mt-14 mb-20 px-0">
       <Swiper
-        slidesPerView={3} // 👈 tres tarjetas exactas por vista
-        spaceBetween={40} // espacio natural entre ellas
+        slidesPerView={2.95} // 👈 ajustado para que entren 3 exactas
+        spaceBetween={28} // 👈 un poco menos de espacio para que no se corte
+        centeredSlides={true} // 👈 centra el carrusel perfectamente
         loop={true}
         autoplay={{
           delay: 2500,
@@ -45,13 +46,13 @@ export default function Categories() {
         }}
         speed={800}
         breakpoints={{
-          0: { slidesPerView: 1.5, spaceBetween: 25 }, // móviles
-          640: { slidesPerView: 2.5, spaceBetween: 30 }, // tablets
-          1024: { slidesPerView: 3, spaceBetween: 40 }, // desktop
+          0: { slidesPerView: 1.4, spaceBetween: 20 },
+          640: { slidesPerView: 2.3, spaceBetween: 25 },
+          1024: { slidesPerView: 2.95, spaceBetween: 28 }, // ✅ tres completas
         }}
         modules={[Autoplay]}
-        className="overflow-visible !px-0" // 🔥 asegura sin padding en el carrusel
-        style={{ paddingLeft: 0, paddingRight: 0 }} // 🔥 elimina márgenes por completo
+        className="overflow-visible !px-0"
+        style={{ paddingLeft: 0, paddingRight: 0 }}
       >
         {mainCategories.map((cat, i) => (
           <SwiperSlide key={i}>
@@ -70,4 +71,4 @@ export default function Categories() {
       </Swiper>
     </div>
   );
-                }
+                       }
