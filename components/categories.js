@@ -34,10 +34,15 @@ const mainCategories = [
 
 export default function Categories() {
   return (
-    <div className="text-center mt-14 mb-20 px-0">
+    <div id="categories" className="text-center mt-14 mb-20 px-0 scroll-mt-20">
+      {/* 🏷️ Este es el título visible y el ancla */}
+      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
+        Categories
+      </h2>
+
       <Swiper
-        slidesPerView={2.95} // 👌 tres completas exactas
-        spaceBetween={1.5} // 🔹 espacio mínimo justo
+        slidesPerView={2.95}
+        spaceBetween={1.5}
         centeredSlides={true}
         loop={true}
         autoplay={{
@@ -71,4 +76,4 @@ export default function Categories() {
       </Swiper>
     </div>
   );
-}
+  }
