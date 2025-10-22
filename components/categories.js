@@ -34,10 +34,10 @@ const mainCategories = [
 
 export default function Categories() {
   return (
-    <div className="text-center px-4 mt-20 mb-24">
+    <div className="text-center px-6 mt-20 mb-24">
       <Swiper
-        slidesPerView={2.1}
-        spaceBetween={40} // 💨 más aire entre tarjetas (antes 25)
+        slidesPerView={2}
+        spaceBetween={55} // 💨 separación amplia
         loop={true}
         autoplay={{
           delay: 2500,
@@ -45,8 +45,8 @@ export default function Categories() {
         }}
         speed={800}
         breakpoints={{
-          640: { slidesPerView: 3.5, spaceBetween: 45 },
-          1024: { slidesPerView: 5, spaceBetween: 55 },
+          640: { slidesPerView: 3, spaceBetween: 65 },
+          1024: { slidesPerView: 5, spaceBetween: 75 },
         }}
         modules={[Autoplay]}
         className="overflow-visible"
@@ -68,4 +68,4 @@ export default function Categories() {
       </Swiper>
     </div>
   );
-   }
+                }
