@@ -34,10 +34,11 @@ const mainCategories = [
 
 export default function Categories() {
   return (
-    <div className="text-center mt-16 mb-20 px-6"> {/* 🌸 Más espacio arriba/abajo */}
+    <div className="text-center mt-16 mb-20 px-6">
+      {/* 🌸 Más espacio arriba/abajo */}
       <Swiper
         slidesPerView={2.3}
-        spaceBetween={24} {/* 💨 un poco más de aire entre tarjetas */}
+        spaceBetween={24}
         loop={true}
         autoplay={{
           delay: 2500,
@@ -68,4 +69,4 @@ export default function Categories() {
       </Swiper>
     </div>
   );
-}
+          }
