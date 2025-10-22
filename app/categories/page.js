@@ -46,6 +46,17 @@ export default function CategoriesGridPage() {
 
   return (
     <main className="min-h-screen bg-[#fff5f8] flex flex-col items-center py-10 px-4">
+      {/* 🧭 Breadcrumb */}
+      <nav className="text-sm text-gray-500 mb-6">
+        <span
+          onClick={() => router.push("/")}
+          className="cursor-pointer hover:text-pink-500"
+        >
+          Home
+        </span>{" "}
+        › <span className="text-gray-700">Categories</span>
+      </nav>
+
       <h1 className="text-4xl font-extrabold text-pink-600 mb-3 text-center">
         Explore Main Categories 💌
       </h1>
@@ -75,7 +86,7 @@ export default function CategoriesGridPage() {
                 boxShadow: "0 8px 20px rgba(255,182,193,0.35)",
               }}
               transition={{ type: "spring", stiffness: 300 }}
-              onClick={() => router.push(`/category/${cat.slug}`)}
+              onClick={() => router.push(`/category/${cat.slug}`)} // ✅ ENLACE A SUBCATEGORÍAS
               className="cursor-pointer flex flex-col items-center justify-center rounded-3xl shadow-md border border-pink-100 text-gray-800 font-semibold p-6 hover:border-pink-200 hover:bg-pink-50"
               style={{ backgroundColor: cat.color }}
             >
@@ -91,4 +102,4 @@ export default function CategoriesGridPage() {
       </div>
     </main>
   );
-   }
+    }
