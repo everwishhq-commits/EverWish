@@ -34,10 +34,10 @@ const mainCategories = [
 
 export default function Categories() {
   return (
-    <div className="text-center px-2 mt-14 mb-20">
+    <div className="text-center px-4 mt-14 mb-20">
       <Swiper
-        slidesPerView={2}
-        spaceBetween={70} // 💨 más espacio entre tarjetas
+        slidesPerView={3} // 👈 tres tarjetas exactas por vista
+        spaceBetween={40} // espacio natural entre ellas
         loop={true}
         autoplay={{
           delay: 2500,
@@ -45,8 +45,9 @@ export default function Categories() {
         }}
         speed={800}
         breakpoints={{
-          640: { slidesPerView: 3, spaceBetween: 80 },
-          1024: { slidesPerView: 5, spaceBetween: 90 },
+          0: { slidesPerView: 1.5, spaceBetween: 25 }, // móviles
+          640: { slidesPerView: 2.5, spaceBetween: 30 }, // tablets
+          1024: { slidesPerView: 3, spaceBetween: 40 }, // desktop
         }}
         modules={[Autoplay]}
         className="overflow-visible"
@@ -55,7 +56,7 @@ export default function Categories() {
           <SwiperSlide key={i}>
             <Link href={`/categories/${cat.slug}`}>
               <div
-                className={`${cat.color} rounded-3xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col items-center justify-center w-[190px] h-[150px] sm:w-[200px] sm:h-[160px] md:w-[220px] md:h-[170px] mx-auto`}
+                className={`${cat.color} rounded-3xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col items-center justify-center w-[180px] h-[150px] sm:w-[190px] sm:h-[160px] md:w-[200px] md:h-[170px] mx-auto`}
               >
                 <span className="text-6xl mb-3">{cat.emoji}</span>
                 <p className="font-semibold text-sm md:text-base text-gray-800 text-center leading-tight">
@@ -68,4 +69,4 @@ export default function Categories() {
       </Swiper>
     </div>
   );
-                }
+              }
