@@ -6,7 +6,7 @@ import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
 import "swiper/css";
 
-// 🎨 30 categorías (nombre, emoji, slug y color de fondo del círculo)
+// 🎨 Lista visual de categorías fijas
 const allCategories = [
   { name: "Seasonal & Holidays", emoji: "🎉", slug: "seasonal-holidays", color: "#FFE0E9" },
   { name: "Birthday", emoji: "🎂", slug: "birthday", color: "#FFDDEE" },
@@ -45,138 +45,134 @@ export default function Categories() {
   const [filtered, setFiltered] = useState(allCategories);
   const [videos, setVideos] = useState([]);
 
-  // Cargar /public/videos/index.json
   useEffect(() => {
-    (async () => {
+    async function loadData() {
       try {
-        const res = await fetch("/videos/index.json", { cache: "no-store" });
+        const res = await fetch("/videos/index.json");
         const data = await res.json();
-        setVideos(data || []);
-      } catch (e) {
-        console.error("Error loading /videos/index.json", e);
+        setVideos(data);
+      } catch (err) {
+        console.error("❌ Error cargando index.json:", err);
       }
-    })();
+    }
+    loadData();
   }, []);
 
-  // Filtrar categorías por nombre / tags y por categorías declaradas en index.json
   useEffect(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) {
-      setFiltered(allCategories);
-      return;
-    }
+    const q = search.toLowerCase().trim();
+    if (!q) return setFiltered(allCategories);
 
-    const matches = new Set();
+    const foundCategories = new Set();
 
-    for (const item of videos) {
-      const byText =
-        item.name?.toLowerCase().includes(q) ||
-        (item.tags || []).some((t) => t.toLowerCase().includes(q));
+    // 🔍 Buscar coincidencias en nombre, tags, categoría o subcategoría
+    videos.forEach((item) => {
+      const allText = [
+        item.name,
+        ...(item.tags || []),
+        item.category,
+        item.subcategory,
+        item.object
+      ]
+        .join(" ")
+        .toLowerCase();
 
-      if (!byText) continue;
-
-      // unir categorías + subcategorías del index para mapear a nuestros slugs
-      const cats = [
-        ...(item.categories || []),
-        ...(item.subcategories || []),
-      ].map((c) => c.toLowerCase());
-
-      for (const cat of allCategories) {
-        const tokens = cat.slug.split("-"); // ej: ["weddings","anniversaries"]
-        if (tokens.some((t) => cats.some((c) => c.includes(t)))) {
-          matches.add(cat.name);
+      if (allText.includes(q)) {
+        // Si el archivo tiene categorías Everwish definidas, las añadimos
+        if (item.categories && item.categories.length > 0) {
+          item.categories.forEach((c) => foundCategories.add(c));
+        } else {
+          // Si no, lo mandamos a "Just Because"
+          foundCategories.add("Just Because & Everyday");
         }
       }
-    }
+    });
 
-    setFiltered(
-      matches.size ? allCategories.filter((c) => matches.has(c.name)) : []
-    );
+    // 🔁 Filtramos las categorías visibles
+    const results =
+      foundCategories.size > 0
+        ? allCategories.filter((cat) => foundCategories.has(cat.name))
+        : [];
+
+    setFiltered(results);
   }, [search, videos]);
 
   return (
-    <section id="categories" className="text-center py-12 px-0 overflow-hidden">
-      {/* Título único */}
+    <section id="categories" className="text-center py-10 px-3 overflow-hidden">
       <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
         Categories
       </h2>
 
-      {/* Barra de búsqueda */}
-      <div className="flex justify-center mb-8 px-4">
+      {/* 🔍 Barra de búsqueda */}
+      <div className="flex justify-center mb-10">
         <input
           type="text"
-          placeholder="Search any theme — e.g. zombie, love, birthday..."
+          placeholder="Search any theme — e.g. yeti, turtle, love, halloween..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full max-w-md px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700"
+          className="w-80 md:w-96 px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700"
         />
       </div>
 
-      {/* Carrusel (sin márgenes laterales, con más aire arriba/abajo para que no se corten) */}
-      <div className="relative w-full mx-auto overflow-hidden">
-        <Swiper
-          slidesPerView={3.2}
-          spaceBetween={6}                // menos espacio entre círculos
-          centeredSlides
-          loop
-          autoplay={{ delay: 2500, disableOnInteraction: false }}
-          speed={900}
-          breakpoints={{
-            0:   { slidesPerView: 2.3, spaceBetween: 6 },
-            640: { slidesPerView: 3.2, spaceBetween: 10 },
-            1024:{ slidesPerView: 5,   spaceBetween: 12 },
-          }}
-          modules={[Autoplay]}
-          className="pt-12 pb-14 overflow-visible" // aire vertical extra
-        >
-          {filtered.length ? (
-            filtered.map((cat, i) => (
-              <SwiperSlide key={cat.slug} className="flex justify-center">
+      {/* 🎠 Carrusel circular */}
+      <Swiper
+        slidesPerView={3.2}
+        spaceBetween={16}
+        centeredSlides={true}
+        loop={true}
+        autoplay={{
+          delay: 2500,
+          disableOnInteraction: false,
+        }}
+        speed={1000}
+        breakpoints={{
+          0: { slidesPerView: 2.4, spaceBetween: 10 },
+          640: { slidesPerView: 3.4, spaceBetween: 14 },
+          1024: { slidesPerView: 5, spaceBetween: 18 },
+        }}
+        modules={[Autoplay]}
+        className="overflow-visible"
+      >
+        {filtered.length > 0 ? (
+          filtered.map((cat, i) => (
+            <SwiperSlide key={i}>
+              <motion.div
+                className="flex flex-col items-center justify-center"
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: i * 0.2,
+                }}
+              >
                 <motion.div
-                  className="flex flex-col items-center justify-center"
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: i * 0.15,
-                  }}
+                  className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto"
+                  style={{ backgroundColor: cat.color }}
                 >
-                  <motion.div
-                    className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px]"
-                    style={{ backgroundColor: cat.color }}
-                    animate={{
-                      boxShadow: [
-                        "0 0 10px rgba(255,182,193,0.25)",
-                        "0 0 16px rgba(255,214,165,0.35)",
-                        "0 0 20px rgba(255,255,240,0.30)",
-                        "0 0 10px rgba(255,182,193,0.25)",
-                      ],
+                  <motion.span
+                    className="text-4xl sm:text-5xl"
+                    animate={{ y: [0, -5, 0] }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: "easeInOut",
                     }}
-                    transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
                   >
-                    <motion.span
-                      className="text-4xl sm:text-5xl"
-                      animate={{ y: [0, -5, 0] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                    >
-                      {cat.emoji}
-                    </motion.span>
-                  </motion.div>
-
-                  <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
-                    {cat.name}
-                  </p>
+                    {cat.emoji}
+                  </motion.span>
                 </motion.div>
-              </SwiperSlide>
-            ))
-          ) : (
-            <p className="text-gray-500 text-sm mt-8">
-              No matching categories for “{search}”
-            </p>
-          )}
-        </Swiper>
-      </div>
+                <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
+                  {cat.name}
+                </p>
+              </motion.div>
+            </SwiperSlide>
+          ))
+        ) : (
+          <p className="text-gray-500 text-sm mt-8">
+            No matching categories for “{search}”
+          </p>
+        )}
+      </Swiper>
     </section>
   );
-    }
+        }
