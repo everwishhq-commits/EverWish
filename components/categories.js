@@ -34,10 +34,10 @@ const mainCategories = [
 
 export default function Categories() {
   return (
-    <div className="text-center px-2 mt-14 mb-20"> {/* 🔹 Menos padding lateral y superior */}
+    <div className="text-center px-2 mt-14 mb-20">
       <Swiper
-        slidesPerView={2.1}
-        spaceBetween={45} // 💨 espacio central fluido
+        slidesPerView={2}
+        spaceBetween={70} // 💨 más espacio entre tarjetas
         loop={true}
         autoplay={{
           delay: 2500,
@@ -45,8 +45,8 @@ export default function Categories() {
         }}
         speed={800}
         breakpoints={{
-          640: { slidesPerView: 3.3, spaceBetween: 50 },
-          1024: { slidesPerView: 5, spaceBetween: 55 },
+          640: { slidesPerView: 3, spaceBetween: 80 },
+          1024: { slidesPerView: 5, spaceBetween: 90 },
         }}
         modules={[Autoplay]}
         className="overflow-visible"
@@ -55,9 +55,9 @@ export default function Categories() {
           <SwiperSlide key={i}>
             <Link href={`/categories/${cat.slug}`}>
               <div
-                className={`${cat.color} rounded-3xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col items-center justify-center w-[170px] h-[150px] sm:w-[180px] sm:h-[160px] md:w-[200px] md:h-[170px] mx-auto`} // 🔹 más grandes
+                className={`${cat.color} rounded-3xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col items-center justify-center w-[190px] h-[150px] sm:w-[200px] sm:h-[160px] md:w-[220px] md:h-[170px] mx-auto`}
               >
-                <span className="text-6xl mb-3">{cat.emoji}</span> {/* 🔹 ícono más grande */}
+                <span className="text-6xl mb-3">{cat.emoji}</span>
                 <p className="font-semibold text-sm md:text-base text-gray-800 text-center leading-tight">
                   {cat.name}
                 </p>
@@ -68,4 +68,4 @@ export default function Categories() {
       </Swiper>
     </div>
   );
-   }
+                }
