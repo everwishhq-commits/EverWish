@@ -34,19 +34,19 @@ const mainCategories = [
 
 export default function Categories() {
   return (
-    <div className="text-center">
+    <div className="text-center mt-8 mb-12 px-4"> {/* 📏 Espaciado agregado */}
       <Swiper
         slidesPerView={2.3}
-        spaceBetween={15}
-        loop={true} // 🔁 permite loop infinito
+        spaceBetween={20} {/* 💨 más aire horizontal */}
+        loop={true}
         autoplay={{
           delay: 2500,
           disableOnInteraction: false,
         }}
-        speed={800} // transición suave
+        speed={800}
         breakpoints={{
-          640: { slidesPerView: 3.5, spaceBetween: 20 },
-          1024: { slidesPerView: 5, spaceBetween: 25 },
+          640: { slidesPerView: 3.5, spaceBetween: 25 },
+          1024: { slidesPerView: 5, spaceBetween: 30 },
         }}
         modules={[Autoplay]}
         className="overflow-visible"
@@ -68,4 +68,4 @@ export default function Categories() {
       </Swiper>
     </div>
   );
-          }
+    }
