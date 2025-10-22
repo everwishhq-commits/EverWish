@@ -88,12 +88,11 @@ export default function Categories() {
   }, [search, videos]);
 
   return (
-    <section id="categories" className="text-center py-12 px-2">
+    <section id="categories" className="text-center py-12 px-2 overflow-hidden">
       <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
         Categories
       </h2>
 
-      {/* 🔍 Barra de búsqueda */}
       <div className="flex justify-center mb-10">
         <input
           type="text"
@@ -104,79 +103,77 @@ export default function Categories() {
         />
       </div>
 
-      {/* 🎠 Carrusel circular */}
-      <Swiper
-        slidesPerView={3.2}
-        spaceBetween={12}
-        centeredSlides={true}
-        loop={true}
-        autoplay={{
-          delay: 2500,
-          disableOnInteraction: false,
-        }}
-        speed={1000}
-        breakpoints={{
-          0: { slidesPerView: 2.2, spaceBetween: 10 },
-          640: { slidesPerView: 3.2, spaceBetween: 12 },
-          1024: { slidesPerView: 5, spaceBetween: 16 },
-        }}
-        modules={[Autoplay]}
-        className="overflow-visible"
-      >
-        {filtered.length > 0 ? (
-          filtered.map((cat, i) => (
-            <SwiperSlide key={i}>
-              <motion.div
-                className="flex flex-col items-center justify-center"
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: i * 0.3,
-                }}
-              >
+      <div className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 md:px-8 overflow-hidden">
+        <Swiper
+          slidesPerView={3.2}
+          spaceBetween={12}
+          centeredSlides
+          loop
+          autoplay={{ delay: 2500, disableOnInteraction: false }}
+          speed={1000}
+          breakpoints={{
+            0: { slidesPerView: 2.2, spaceBetween: 10 },
+            640: { slidesPerView: 3.2, spaceBetween: 12 },
+            1024: { slidesPerView: 5, spaceBetween: 16 },
+          }}
+          modules={[Autoplay]}
+          className="pt-8 pb-10 overflow-visible"
+        >
+          {filtered.length > 0 ? (
+            filtered.map((cat, i) => (
+              <SwiperSlide key={i} className="flex justify-center">
                 <motion.div
-                  className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto"
-                  style={{ backgroundColor: cat.color }}
-                  animate={{
-                    boxShadow: [
-                      "0 0 10px rgba(255,182,193,0.25)",
-                      "0 0 16px rgba(255,214,165,0.35)",
-                      "0 0 20px rgba(255,255,240,0.3)",
-                      "0 0 10px rgba(255,182,193,0.25)"
-                    ],
-                  }}
+                  className="flex flex-col items-center justify-center"
+                  animate={{ scale: [1, 1.05, 1] }}
                   transition={{
-                    duration: 6,
+                    duration: 3,
                     repeat: Infinity,
                     ease: "easeInOut",
+                    delay: i * 0.3,
                   }}
                 >
-                  <motion.span
-                    className="text-4xl sm:text-5xl"
-                    animate={{ y: [0, -5, 0] }}
+                  <motion.div
+                    className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto"
+                    style={{ backgroundColor: cat.color }}
+                    animate={{
+                      boxShadow: [
+                        "0 0 10px rgba(255,182,193,0.25)",
+                        "0 0 16px rgba(255,214,165,0.35)",
+                        "0 0 20px rgba(255,255,240,0.3)",
+                        "0 0 10px rgba(255,182,193,0.25)"
+                      ],
+                    }}
                     transition={{
-                      duration: 3,
+                      duration: 6,
                       repeat: Infinity,
                       ease: "easeInOut",
                     }}
                   >
-                    {cat.emoji}
-                  </motion.span>
+                    <motion.span
+                      className="text-4xl sm:text-5xl"
+                      animate={{ y: [0, -5, 0] }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    >
+                      {cat.emoji}
+                    </motion.span>
+                  </motion.div>
+                  <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
+                    {cat.name}
+                  </p>
                 </motion.div>
-                <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
-                  {cat.name}
-                </p>
-              </motion.div>
-            </SwiperSlide>
-          ))
-        ) : (
-          <p className="text-gray-500 text-sm mt-8">
-            No matching categories for “{search}”
-          </p>
-        )}
-      </Swiper>
+              </SwiperSlide>
+            ))
+          ) : (
+            <p className="text-gray-500 text-sm mt-8">
+              No matching categories for “{search}”
+            </p>
+          )}
+        </Swiper>
+      </div>
     </section>
   );
    }
