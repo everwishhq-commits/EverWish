@@ -9,28 +9,37 @@ export default function CategoryModalPage() {
 
   const [groups, setGroups] = useState({});
   const [activeSub, setActiveSub] = useState(null);
-  const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 🧠 Cargar videos y agrupar por subcategoría
   useEffect(() => {
     async function loadData() {
       try {
         const res = await fetch("/videos/index.json", { cache: "no-store" });
         const data = await res.json();
 
+        // 🔹 Filtra todos los videos que pertenezcan a esta categoría principal
         const filtered = data.filter((v) =>
           (v.categories || []).some(
             (c) => c.toLowerCase().replace(/\s+/g, "-") === slug
           )
         );
 
+        // 🔹 Agrupa por subcategoría o categoría (corrige mayúsculas, guiones, etc.)
         const grouped = {};
         for (const v of filtered) {
-          const sub = v.category || v.subcategory || "General";
-          if (!grouped[sub]) grouped[sub] = [];
-          grouped[sub].push(v);
+          const sub =
+            (v.subcategory && v.subcategory.trim()) ||
+            (v.category && v.category.trim()) ||
+            "General";
+
+          const clean = sub
+            .replace(/_/g, " ")
+            .replace(/\b\w/g, (c) => c.toUpperCase());
+
+          if (!grouped[clean]) grouped[clean] = [];
+          grouped[clean].push(v);
         }
+
         setGroups(grouped);
       } catch (err) {
         console.error("❌ Error loading videos:", err);
@@ -38,10 +47,12 @@ export default function CategoryModalPage() {
         setLoading(false);
       }
     }
+
     loadData();
   }, [slug]);
 
   const subcategories = Object.keys(groups);
+  const activeVideos = activeSub ? groups[activeSub] || [] : [];
 
   if (loading) {
     return (
@@ -52,9 +63,6 @@ export default function CategoryModalPage() {
       </main>
     );
   }
-
-  // 💫 Modal activo
-  const activeVideos = activeSub ? groups[activeSub] || [] : [];
 
   return (
     <main className="min-h-screen bg-[#fff5f8] text-gray-800 flex flex-col items-center py-10 px-4">
@@ -72,26 +80,30 @@ export default function CategoryModalPage() {
       </h1>
 
       {/* 🌸 Subcategorías */}
-      <div className="flex flex-wrap justify-center gap-4 max-w-5xl">
-        {subcategories.map((sub, i) => (
-          <motion.button
-            key={i}
-            onClick={() => setActiveSub(sub)}
-            whileHover={{ scale: 1.05 }}
-            transition={{ duration: 0.2 }}
-            className="px-5 py-3 rounded-full bg-white shadow-sm border border-pink-100 hover:border-pink-200 hover:bg-pink-50 text-gray-700 font-semibold flex items-center gap-2"
-          >
-            <span className="text-lg">{getEmojiForSubcategory(sub)}</span>
-            <span className="capitalize">{sub}</span>
-          </motion.button>
-        ))}
-      </div>
+      {subcategories.length > 0 ? (
+        <div className="flex flex-wrap justify-center gap-4 max-w-5xl">
+          {subcategories.map((sub, i) => (
+            <motion.button
+              key={i}
+              onClick={() => setActiveSub(sub)}
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.2 }}
+              className="px-5 py-3 rounded-full bg-white shadow-sm border border-pink-100 hover:border-pink-200 hover:bg-pink-50 text-gray-700 font-semibold flex items-center gap-2"
+            >
+              <span className="text-lg">{getEmojiForSubcategory(sub)}</span>
+              <span className="capitalize">{sub}</span>
+            </motion.button>
+          ))}
+        </div>
+      ) : (
+        <p className="text-gray-500 text-center">No subcategories found.</p>
+      )}
 
-      {/* 💡 Modal (70% pantalla) */}
+      {/* 💫 Modal elegante */}
       <AnimatePresence>
         {activeSub && (
           <>
-            {/* Fondo borroso */}
+            {/* Fondo con blur */}
             <motion.div
               className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
               initial={{ opacity: 0 }}
@@ -99,7 +111,7 @@ export default function CategoryModalPage() {
               exit={{ opacity: 0 }}
               onClick={() => setActiveSub(null)} // 👈 cerrar al tocar fuera
             />
-            {/* Contenedor principal */}
+            {/* Contenedor modal */}
             <motion.div
               className="fixed z-50 inset-0 flex items-center justify-center p-4"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -116,12 +128,12 @@ export default function CategoryModalPage() {
                   ×
                 </button>
 
-                {/* Título */}
+                {/* Título subcategoría */}
                 <h2 className="text-2xl font-bold text-pink-600 mb-4 capitalize">
                   {getEmojiForSubcategory(activeSub)} {activeSub}
                 </h2>
 
-                {/* Tarjetas */}
+                {/* Tarjetas dentro del modal */}
                 {activeVideos.length === 0 ? (
                   <p className="text-gray-500 text-center mt-10">
                     No cards found for this subcategory.
