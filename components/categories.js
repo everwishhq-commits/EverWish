@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import "swiper/css";
 
-// 🎨 Lista visual de categorías fijas
 const allCategories = [
   { name: "Seasonal & Holidays", emoji: "🎉", slug: "seasonal-holidays", color: "#FFE0E9" },
   { name: "Birthday", emoji: "🎂", slug: "birthday", color: "#FFDDEE" },
@@ -64,7 +64,6 @@ export default function Categories() {
 
     const foundCategories = new Set();
 
-    // 🔍 Buscar coincidencias en nombre, tags, categoría o subcategoría
     videos.forEach((item) => {
       const allText = [
         item.name,
@@ -77,17 +76,14 @@ export default function Categories() {
         .toLowerCase();
 
       if (allText.includes(q)) {
-        // Si el archivo tiene categorías Everwish definidas, las añadimos
         if (item.categories && item.categories.length > 0) {
           item.categories.forEach((c) => foundCategories.add(c));
         } else {
-          // Si no, lo mandamos a "Just Because"
           foundCategories.add("Just Because & Everyday");
         }
       }
     });
 
-    // 🔁 Filtramos las categorías visibles
     const results =
       foundCategories.size > 0
         ? allCategories.filter((cat) => foundCategories.has(cat.name))
@@ -102,7 +98,6 @@ export default function Categories() {
         Categories
       </h2>
 
-      {/* 🔍 Barra de búsqueda */}
       <div className="flex justify-center mb-10">
         <input
           type="text"
@@ -113,7 +108,6 @@ export default function Categories() {
         />
       </div>
 
-      {/* 🎠 Carrusel circular */}
       <Swiper
         slidesPerView={3.2}
         spaceBetween={16}
@@ -135,36 +129,32 @@ export default function Categories() {
         {filtered.length > 0 ? (
           filtered.map((cat, i) => (
             <SwiperSlide key={i}>
-              <motion.div
-                className="flex flex-col items-center justify-center"
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: i * 0.2,
-                }}
-              >
+              <Link href={`/category/${cat.slug}`}>
                 <motion.div
-                  className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto"
-                  style={{ backgroundColor: cat.color }}
+                  className="flex flex-col items-center justify-center cursor-pointer"
+                  whileHover={{ scale: 1.07 }}
                 >
-                  <motion.span
-                    className="text-4xl sm:text-5xl"
-                    animate={{ y: [0, -5, 0] }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
+                  <motion.div
+                    className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md"
+                    style={{ backgroundColor: cat.color }}
                   >
-                    {cat.emoji}
-                  </motion.span>
+                    <motion.span
+                      className="text-4xl sm:text-5xl"
+                      animate={{ y: [0, -5, 0] }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    >
+                      {cat.emoji}
+                    </motion.span>
+                  </motion.div>
+                  <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
+                    {cat.name}
+                  </p>
                 </motion.div>
-                <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
-                  {cat.name}
-                </p>
-              </motion.div>
+              </Link>
             </SwiperSlide>
           ))
         ) : (
@@ -175,4 +165,4 @@ export default function Categories() {
       </Swiper>
     </section>
   );
-        }
+    }
