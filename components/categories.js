@@ -29,17 +29,13 @@ const mainCategories = [
   { name: "Just Because & Everyday", emoji: "💌", color: "bg-blue-100", slug: "just-because" },
   { name: "Gifts & Surprises", emoji: "🎁", color: "bg-purple-100", slug: "gifts-surprises" },
   { name: "Inspirations & Quotes", emoji: "📝", color: "bg-slate-200", slug: "inspirations-quotes" },
+  { name: "Travel & Adventures", emoji: "✈️", color: "bg-cyan-100", slug: "travel-adventures" },
   { name: "Custom & AI Creations", emoji: "🤖", color: "bg-teal-100", slug: "custom-ai" },
 ];
 
 export default function Categories() {
   return (
-    <div id="categories" className="text-center mt-14 mb-20 px-0 scroll-mt-20">
-      {/* 🏷️ Este es el título visible y el ancla */}
-      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
-        Categories
-      </h2>
-
+    <div className="text-center px-0">
       <Swiper
         slidesPerView={2.95}
         spaceBetween={1.5}
@@ -56,8 +52,7 @@ export default function Categories() {
           1024: { slidesPerView: 2.95, spaceBetween: 1.5 },
         }}
         modules={[Autoplay]}
-        className="overflow-visible !px-0"
-        style={{ paddingLeft: 0, paddingRight: 0 }}
+        className="overflow-visible"
       >
         {mainCategories.map((cat, i) => (
           <SwiperSlide key={i}>
