@@ -1,124 +1,174 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay } from "swiper/modules";
+import { motion } from "framer-motion";
+import Link from "next/link";
+import "swiper/css";
+
+const allCategories = [
+  { name: "Seasonal & Holidays", emoji: "🎉", slug: "seasonal-holidays", color: "#FFE0E9" },
+  { name: "Birthday", emoji: "🎂", slug: "birthday", color: "#FFDDEE" },
+  { name: "Love & Romance", emoji: "💘", slug: "love-romance", color: "#FFECEC" },
+  { name: "Family & Relationships", emoji: "👨‍👩‍👧‍👦", slug: "family-relationships", color: "#E5EDFF" },
+  { name: "Babies & Parenting", emoji: "👶", slug: "babies-parenting", color: "#DFF7FF" },
+  { name: "Weddings & Anniversaries", emoji: "💍", slug: "weddings-anniversaries", color: "#F3E5FF" },
+  { name: "Congratulations & Milestones", emoji: "🏆", slug: "congrats-milestones", color: "#FFF3C4" },
+  { name: "School & Graduation", emoji: "🎓", slug: "school-graduation", color: "#E2FFD7" },
+  { name: "Work & Professional", emoji: "💼", slug: "work-professional", color: "#D9F3FF" },
+  { name: "House & Moving", emoji: "🏡", slug: "house-moving", color: "#E8FFF3" },
+  { name: "Health & Support", emoji: "🩺", slug: "health-support", color: "#DFFAFF" },
+  { name: "Sympathy & Remembrance", emoji: "🕊️", slug: "sympathy-remembrance", color: "#F3F3F3" },
+  { name: "Encouragement & Motivation", emoji: "🌟", slug: "encouragement-motivation", color: "#FFF5D9" },
+  { name: "Thank You & Appreciation", emoji: "🙏", slug: "thank-you-appreciation", color: "#FFF0E5" },
+  { name: "Invitations & Events", emoji: "✉️", slug: "invitations-events", color: "#FFD9E8" },
+  { name: "Spiritual & Mindfulness", emoji: "🕯️", slug: "spiritual-mindfulness", color: "#EDEAFF" },
+  { name: "Art & Cultural", emoji: "🎨", slug: "art-cultural", color: "#FFEDDF" },
+  { name: "Kids & Teens", emoji: "🧸", slug: "kids-teens", color: "#FFE6FA" },
+  { name: "Humor & Memes", emoji: "😄", slug: "humor-memes", color: "#E7F7FF" },
+  { name: "Pets & Animal Lovers", emoji: "🐾", slug: "pets-animal-lovers", color: "#FFF3E0" },
+  { name: "Just Because & Everyday", emoji: "💌", slug: "just-because", color: "#FDE6E6" },
+  { name: "Gifts & Surprises", emoji: "🎁", slug: "gifts-surprises", color: "#E7E9FF" },
+  { name: "Inspirations & Quotes", emoji: "📝", slug: "inspirations-quotes", color: "#E8F6FF" },
+  { name: "Custom & AI Creations", emoji: "🤖", slug: "custom-ai-creations", color: "#E5FFE2" },
+  { name: "Celebrations", emoji: "🎊", slug: "celebrations", color: "#FFF0C7" },
+  { name: "Holidays", emoji: "🏖️", slug: "holidays", color: "#E4FFF7" },
+  { name: "Adventure", emoji: "🗺️", slug: "adventure", color: "#E8ECFF" },
+  { name: "Friendship", emoji: "🤝", slug: "friendship", color: "#FFEAF5" },
+  { name: "Festivals", emoji: "🎭", slug: "festivals", color: "#FEEAFF" },
+  { name: "Season Greetings", emoji: "❄️", slug: "season-greetings", color: "#EAF4FF" }
+];
 
 export default function Categories() {
-  const [categories, setCategories] = useState([]);
-  const [query, setQuery] = useState("");
-  const [filtered, setFiltered] = useState([]);
-  const router = useRouter();
+  const [search, setSearch] = useState("");
+  const [filtered, setFiltered] = useState(allCategories);
+  const [videos, setVideos] = useState([]);
 
-  // 🎠 CATEGORÍAS PRINCIPALES (carrusel)
+  // 📥 Cargar todos los videos del JSON real
   useEffect(() => {
-    setCategories([
-      { name: "Love & Romance", icon: "💖", slug: "love-romance", color: "#FFE4EC" },
-      { name: "Family & Relationships", icon: "👨‍👩‍👧", slug: "family-relationships", color: "#E7E7FF" },
-      { name: "Babies & Parenting", icon: "👶", slug: "babies-parenting", color: "#FFF1D6" },
-      { name: "Friendship", icon: "🤝", slug: "friendship", color: "#E7FFF5" },
-      { name: "Birthdays", icon: "🎂", slug: "birthdays", color: "#FFF3E0" },
-      { name: "Celebrations", icon: "🎉", slug: "celebrations", color: "#FFEFEF" },
-      { name: "Encouragement", icon: "🌈", slug: "encouragement", color: "#F0FFF0" },
-      { name: "Pets & Animal Lovers", icon: "🐾", slug: "pets-animal-lovers", color: "#E8F9FF" },
-      { name: "Work & Success", icon: "💼", slug: "work-success", color: "#F9EFFF" },
-      { name: "Get Well Soon", icon: "💐", slug: "get-well-soon", color: "#FFF0F5" },
-      { name: "Thank You", icon: "🙏", slug: "thank-you", color: "#FFF9E3" },
-      { name: "Anniversaries", icon: "💍", slug: "anniversaries", color: "#E3FFE9" },
-      { name: "Weddings", icon: "👰", slug: "weddings", color: "#FFF0E8" },
-      { name: "New Baby", icon: "🍼", slug: "new-baby", color: "#E8FBFF" },
-      { name: "Holidays", icon: "🎄", slug: "holidays", color: "#FFF5E6" },
-      { name: "Halloween", icon: "🎃", slug: "halloween", color: "#FFECD1" },
-      { name: "Christmas", icon: "🎁", slug: "christmas", color: "#E7F9E7" },
-      { name: "Easter", icon: "🐰", slug: "easter", color: "#FFF0F5" },
-      { name: "New Year", icon: "🎆", slug: "new-year", color: "#EAF4FF" },
-      { name: "Valentine’s Day", icon: "💌", slug: "valentines-day", color: "#FFE4E9" },
-      { name: "Mother’s Day", icon: "🌸", slug: "mothers-day", color: "#FFF6F9" },
-      { name: "Father’s Day", icon: "🧢", slug: "fathers-day", color: "#E6F3FF" },
-      { name: "Graduation", icon: "🎓", slug: "graduation", color: "#F0FFF0" },
-      { name: "Thanksgiving", icon: "🦃", slug: "thanksgiving", color: "#FFF8E3" },
-      { name: "Condolences", icon: "🕊️", slug: "condolences", color: "#F9FAFB" },
-      { name: "Motivation", icon: "🔥", slug: "motivation", color: "#FFF1F0" },
-      { name: "Seasonal", icon: "🌤️", slug: "seasonal", color: "#E8F7FF" },
-      { name: "Sports & Team Spirit", icon: "⚽", slug: "sports-team", color: "#F5FFF1" },
-      { name: "Congratulations", icon: "🏆", slug: "congratulations", color: "#FFFDEB" },
-      { name: "Travel & Adventure", icon: "✈️", slug: "travel-adventure", color: "#E8F7FF" },
-    ]);
-  }, []);
-
-  // 🔍 FILTRO PRINCIPAL — busca en index.json y devuelve categoría
-  useEffect(() => {
-    async function search() {
-      if (!query.trim()) {
-        setFiltered([]);
-        return;
-      }
-
+    async function loadVideos() {
       try {
         const res = await fetch("/videos/index.json", { cache: "no-store" });
         const data = await res.json();
-        const q = query.toLowerCase();
-
-        // busca coincidencias por nombre o subcategoría
-        const matches = data.filter(
-          (item) =>
-            item.name?.toLowerCase().includes(q) ||
-            item.object?.toLowerCase().includes(q) ||
-            item.subcategory?.toLowerCase().includes(q)
-        );
-
-        if (matches.length > 0) {
-          const catSlug = matches[0].category?.toLowerCase().replace(/\s+/g, "-");
-          const found = categories.find(
-            (c) => c.slug.toLowerCase() === catSlug || c.name.toLowerCase() === matches[0].category?.toLowerCase()
-          );
-          setFiltered(found ? [found] : []);
-        } else {
-          setFiltered([]);
-        }
+        setVideos(data);
       } catch (err) {
-        console.error("❌ Error searching index.json:", err);
+        console.error("❌ Error loading /videos/index.json:", err);
       }
     }
+    loadVideos();
+  }, []);
 
-    search();
-  }, [query, categories]);
+  // 🔍 Buscar coincidencias en videos → mostrar solo categoría principal
+  useEffect(() => {
+    const q = search.toLowerCase().trim();
+    if (!q) {
+      setFiltered(allCategories);
+      return;
+    }
 
-  const handleClick = (slug) => router.push(`/category/${slug}`);
+    const foundCategories = new Set();
+
+    videos.forEach((item) => {
+      const searchableText = [
+        item.name,
+        item.object,
+        item.subcategory,
+        item.category,
+        ...(item.tags || [])
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      if (searchableText.includes(q)) {
+        if (item.category) {
+          foundCategories.add(item.category.trim());
+        }
+      }
+    });
+
+    const matches = allCategories.filter((cat) =>
+      [...foundCategories].some(
+        (f) => f.toLowerCase().replace("&", "and").includes(cat.name.toLowerCase().split("&")[0].trim())
+      )
+    );
+
+    setFiltered(matches.length > 0 ? matches : []);
+  }, [search, videos]);
 
   return (
-    <section className="text-center">
-      <h2 className="text-2xl font-semibold mb-4 text-gray-800">Categories</h2>
+    <section id="categories" className="text-center py-10 px-3 overflow-hidden">
+      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
+        Categories
+      </h2>
 
       {/* 🔎 Barra de búsqueda */}
-      <input
-        type="text"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search any theme — e.g. yeti, turtle, love"
-        className="w-80 max-w-full px-5 py-3 mb-6 border border-pink-100 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-200"
-      />
-
-      {/* 🎨 Categorías filtradas o todas */}
-      <div className="flex flex-wrap justify-center gap-6 px-4">
-        {(filtered.length > 0 ? filtered : categories).map((cat, i) => (
-          <button
-            key={i}
-            onClick={() => handleClick(cat.slug)}
-            className="w-28 h-28 flex flex-col items-center justify-center rounded-full shadow-md border border-pink-100 hover:shadow-lg transition-all duration-200"
-            style={{ backgroundColor: cat.color }}
-          >
-            <span className="text-3xl mb-2">{cat.icon}</span>
-            <span className="text-sm font-medium text-gray-700 text-center px-2">
-              {cat.name}
-            </span>
-          </button>
-        ))}
+      <div className="flex justify-center mb-10">
+        <input
+          type="text"
+          placeholder="Search any theme — e.g. yeti, turtle, love, halloween..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-80 md:w-96 px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700"
+        />
       </div>
 
-      {/* 🌱 No results */}
-      {filtered.length === 0 && query.trim() && (
-        <p className="text-gray-400 mt-6">No matches found 🌱</p>
-      )}
+      {/* 🎠 Carrusel */}
+      <Swiper
+        slidesPerView={3.2}
+        spaceBetween={16}
+        centeredSlides={true}
+        loop={true}
+        autoplay={{
+          delay: 2500,
+          disableOnInteraction: false,
+        }}
+        speed={1000}
+        breakpoints={{
+          0: { slidesPerView: 2.4, spaceBetween: 10 },
+          640: { slidesPerView: 3.4, spaceBetween: 14 },
+          1024: { slidesPerView: 5, spaceBetween: 18 },
+        }}
+        modules={[Autoplay]}
+        className="overflow-visible"
+      >
+        {filtered.length > 0 ? (
+          filtered.map((cat, i) => (
+            <SwiperSlide key={i}>
+              <Link href={`/category/${cat.slug}`}>
+                <motion.div
+                  className="flex flex-col items-center justify-center cursor-pointer"
+                  whileHover={{ scale: 1.07 }}
+                >
+                  <motion.div
+                    className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md"
+                    style={{ backgroundColor: cat.color }}
+                  >
+                    <motion.span
+                      className="text-4xl sm:text-5xl"
+                      animate={{ y: [0, -5, 0] }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    >
+                      {cat.emoji}
+                    </motion.span>
+                  </motion.div>
+                  <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
+                    {cat.name}
+                  </p>
+                </motion.div>
+              </Link>
+            </SwiperSlide>
+          ))
+        ) : (
+          <p className="text-gray-500 text-sm mt-8">
+            No matching categories for “{search}”
+          </p>
+        )}
+      </Swiper>
     </section>
   );
-        }
+                        }
