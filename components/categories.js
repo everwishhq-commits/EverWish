@@ -5,7 +5,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import "swiper/css";
 
 const allCategories = [
@@ -42,14 +42,18 @@ const allCategories = [
 ];
 
 export default function Categories() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const initialQuery = searchParams.get("q") || "";
-  const [search, setSearch] = useState(initialQuery);
+  const [search, setSearch] = useState("");
   const [filtered, setFiltered] = useState(allCategories);
   const [videos, setVideos] = useState([]);
 
-  // 📥 Cargar los videos reales
+  // ✅ Rellenar automáticamente si la URL tiene ?q=
+  useEffect(() => {
+    const q = searchParams.get("q");
+    if (q) setSearch(q);
+  }, [searchParams]);
+
+  // 📥 Cargar videos reales
   useEffect(() => {
     async function loadVideos() {
       try {
@@ -101,25 +105,27 @@ export default function Categories() {
     setFiltered(matches.length > 0 ? matches : []);
   }, [search, videos]);
 
-  // ✨ Actualizar URL cuando se escribe
+  // ✨ Actualiza la URL sin recargar
   const handleSearchChange = (val) => {
     setSearch(val);
-    const newUrl = val ? `?q=${encodeURIComponent(val)}` : "";
-    router.replace(`/categories${newUrl}`);
+
+    clearTimeout(window._searchTimeout);
+    window._searchTimeout = setTimeout(() => {
+      const newUrl = val ? `?q=${encodeURIComponent(val)}` : "";
+      window.history.replaceState({}, "", `/categories${newUrl}`);
+    }, 600);
   };
 
   // ❌ Limpiar búsqueda
   const clearSearch = () => {
     setSearch("");
-    router.replace(`/categories`);
     setFiltered(allCategories);
+    window.history.replaceState({}, "", "/categories");
   };
 
   return (
     <section id="categories" className="text-center py-10 px-3 overflow-hidden">
-      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
-        Categories
-      </h2>
+      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">Categories</h2>
 
       {/* 🔍 Barra de búsqueda */}
       <div className="relative flex justify-center mb-10">
@@ -163,9 +169,7 @@ export default function Categories() {
         {filtered.length > 0 ? (
           filtered.map((cat, i) => (
             <SwiperSlide key={i}>
-              <Link
-                href={`/category/${cat.slug}${search ? `?q=${encodeURIComponent(search)}` : ""}`}
-              >
+              <Link href={`/category/${cat.slug}${search ? `?q=${encodeURIComponent(search)}` : ""}`}>
                 <motion.div
                   className="flex flex-col items-center justify-center cursor-pointer"
                   whileHover={{ scale: 1.07 }}
@@ -194,11 +198,9 @@ export default function Categories() {
             </SwiperSlide>
           ))
         ) : (
-          <p className="text-gray-500 text-sm mt-8">
-            No matching categories for “{search}”
-          </p>
+          <p className="text-gray-500 text-sm mt-8">No matching categories for “{search}”</p>
         )}
       </Swiper>
     </section>
   );
-    }
+}
