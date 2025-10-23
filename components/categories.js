@@ -5,6 +5,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import "swiper/css";
 
 const allCategories = [
@@ -41,11 +42,14 @@ const allCategories = [
 ];
 
 export default function Categories() {
-  const [search, setSearch] = useState("");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialQuery = searchParams.get("q") || "";
+  const [search, setSearch] = useState(initialQuery);
   const [filtered, setFiltered] = useState(allCategories);
   const [videos, setVideos] = useState([]);
 
-  // 📥 Cargar todos los videos del JSON real
+  // 📥 Cargar los videos reales
   useEffect(() => {
     async function loadVideos() {
       try {
@@ -53,13 +57,13 @@ export default function Categories() {
         const data = await res.json();
         setVideos(data);
       } catch (err) {
-        console.error("❌ Error loading /videos/index.json:", err);
+        console.error("❌ Error cargando /videos/index.json:", err);
       }
     }
     loadVideos();
   }, []);
 
-  // 🔍 Buscar coincidencias en videos → mostrar solo categoría principal
+  // 🔍 Filtrado por texto
   useEffect(() => {
     const q = search.toLowerCase().trim();
     if (!q) {
@@ -89,12 +93,27 @@ export default function Categories() {
 
     const matches = allCategories.filter((cat) =>
       [...foundCategories].some(
-        (f) => f.toLowerCase().replace("&", "and").includes(cat.name.toLowerCase().split("&")[0].trim())
+        (f) =>
+          f.toLowerCase().replace("&", "and").includes(cat.name.toLowerCase().split("&")[0].trim())
       )
     );
 
     setFiltered(matches.length > 0 ? matches : []);
   }, [search, videos]);
+
+  // ✨ Actualizar URL cuando se escribe
+  const handleSearchChange = (val) => {
+    setSearch(val);
+    const newUrl = val ? `?q=${encodeURIComponent(val)}` : "";
+    router.replace(`/categories${newUrl}`);
+  };
+
+  // ❌ Limpiar búsqueda
+  const clearSearch = () => {
+    setSearch("");
+    router.replace(`/categories`);
+    setFiltered(allCategories);
+  };
 
   return (
     <section id="categories" className="text-center py-10 px-3 overflow-hidden">
@@ -102,19 +121,28 @@ export default function Categories() {
         Categories
       </h2>
 
-      {/* 🔎 Barra de búsqueda */}
-      <div className="flex justify-center mb-10">
+      {/* 🔍 Barra de búsqueda */}
+      <div className="relative flex justify-center mb-10">
         <input
           type="text"
           placeholder="Search any theme — e.g. yeti, turtle, love, halloween..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => handleSearchChange(e.target.value)}
           className="w-80 md:w-96 px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700"
         />
+        {search && (
+          <button
+            onClick={clearSearch}
+            className="absolute right-[calc(50%-9.5rem)] md:right-[calc(50%-12rem)] top-2.5 text-gray-400 hover:text-gray-600 text-lg"
+          >
+            ✕
+          </button>
+        )}
       </div>
 
       {/* 🎠 Carrusel */}
       <Swiper
+        key={search || "all"}
         slidesPerView={3.2}
         spaceBetween={16}
         centeredSlides={true}
@@ -135,7 +163,9 @@ export default function Categories() {
         {filtered.length > 0 ? (
           filtered.map((cat, i) => (
             <SwiperSlide key={i}>
-              <Link href={`/category/${cat.slug}`}>
+              <Link
+                href={`/category/${cat.slug}${search ? `?q=${encodeURIComponent(search)}` : ""}`}
+              >
                 <motion.div
                   className="flex flex-col items-center justify-center cursor-pointer"
                   whileHover={{ scale: 1.07 }}
@@ -171,4 +201,4 @@ export default function Categories() {
       </Swiper>
     </section>
   );
-                        }
+    }
