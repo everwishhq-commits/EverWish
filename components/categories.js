@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
 import "swiper/css";
 
+// 🩷 Categorías principales (diseño Everwish)
 const allCategories = [
   { name: "Seasonal & Holidays", emoji: "🎉", slug: "seasonal-holidays", color: "#FFE0E9" },
   { name: "Birthday", emoji: "🎂", slug: "birthday", color: "#FFDDEE" },
@@ -34,7 +35,6 @@ export default function Categories() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [videos, setVideos] = useState([]);
-  const [filtered, setFiltered] = useState(allCategories);
 
   // 🔹 Cargar /public/videos/index.json
   useEffect(() => {
@@ -51,18 +51,16 @@ export default function Categories() {
     loadVideos();
   }, []);
 
-  // 🔍 Filtrar categorías visuales mientras se escribe
-  useEffect(() => {
+  // 🚀 Al presionar Enter o Buscar
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!search.trim()) return;
+
     const term = search.toLowerCase().trim();
-    if (!term) {
-      setFiltered(allCategories);
-      return;
-    }
 
-    const matches = new Set();
-
-    videos.forEach((v) => {
-      const fields = [
+    // Buscar coincidencia en index.json
+    const found = videos.find((v) =>
+      [
         v.name,
         v.object,
         v.category,
@@ -70,60 +68,30 @@ export default function Categories() {
         ...(v.categories || []),
       ]
         .filter(Boolean)
-        .map((t) => t.toLowerCase());
-
-      if (fields.some((t) => t.includes(term))) {
-        if (v.categories?.length) v.categories.forEach((c) => matches.add(c));
-        else if (v.category) matches.add(v.category);
-      }
-    });
-
-    if (matches.size > 0) {
-      setFiltered(allCategories.filter((c) => matches.has(c.name)));
-    } else {
-      setFiltered(allCategories.filter((c) => c.name.toLowerCase().includes(term)));
-    }
-  }, [search, videos]);
-
-  // 🚀 Enviar búsqueda
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!search) return;
-
-    // 1️⃣ Si hay coincidencias filtradas
-    if (filtered.length > 0) {
-      router.push(`/category/${filtered[0].slug}`);
-      return;
-    }
-
-    // 2️⃣ Si no hay coincidencias, buscar en el index
-    const found = videos.find((v) =>
-      [v.category, v.subcategory, ...(v.categories || [])]
-        .filter(Boolean)
         .map((t) => t.toLowerCase())
-        .some((t) => t.includes(search.toLowerCase()))
+        .some((t) => t.includes(term))
     );
 
     if (found) {
-      const cat =
+      const category =
         (found.categories && found.categories[0]) ||
         found.category ||
-        found.subcategory;
-      if (cat) {
-        const slug = cat.toLowerCase().replace(/\s+/g, "-");
-        router.push(`/category/${slug}`);
-        return;
-      }
-    }
+        found.subcategory ||
+        "general";
 
-    alert(`No matches found for "${search}"`);
+      // Normalizar slug
+      const slug = category.toLowerCase().replace(/\s+/g, "-");
+      router.push(`/category/${slug}`);
+    } else {
+      alert(`No matches found for "${search}"`);
+    }
   };
 
   return (
     <section id="categories" className="text-center py-10 px-3 overflow-hidden">
       <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">Categories</h2>
 
-      {/* 🔍 Barra */}
+      {/* 🔍 Barra de búsqueda */}
       <form onSubmit={handleSubmit} className="flex justify-center mb-10">
         <input
           type="text"
@@ -134,7 +102,7 @@ export default function Categories() {
         />
       </form>
 
-      {/* 🎠 Carrusel */}
+      {/* 🎠 Carrusel de categorías */}
       <Swiper
         slidesPerView={3.2}
         spaceBetween={16}
@@ -150,43 +118,37 @@ export default function Categories() {
         modules={[Autoplay]}
         className="overflow-visible"
       >
-        {filtered.length > 0 ? (
-          filtered.map((cat) => (
-            <SwiperSlide key={cat.slug}>
-              <button
-                type="button"
-                onClick={() => router.push(`/category/${cat.slug}`)}
-                className="w-full"
+        {allCategories.map((cat) => (
+          <SwiperSlide key={cat.slug}>
+            <button
+              type="button"
+              onClick={() => router.push(`/category/${cat.slug}`)}
+              className="w-full"
+            >
+              <motion.div
+                className="flex flex-col items-center justify-center cursor-pointer"
+                whileHover={{ scale: 1.07 }}
               >
                 <motion.div
-                  className="flex flex-col items-center justify-center cursor-pointer"
-                  whileHover={{ scale: 1.07 }}
+                  className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md"
+                  style={{ backgroundColor: cat.color }}
                 >
-                  <motion.div
-                    className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md"
-                    style={{ backgroundColor: cat.color }}
+                  <motion.span
+                    className="text-4xl sm:text-5xl"
+                    animate={{ y: [0, -5, 0] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                   >
-                    <motion.span
-                      className="text-4xl sm:text-5xl"
-                      animate={{ y: [0, -5, 0] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                    >
-                      {cat.emoji}
-                    </motion.span>
-                  </motion.div>
-                  <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
-                    {cat.name}
-                  </p>
+                    {cat.emoji}
+                  </motion.span>
                 </motion.div>
-              </button>
-            </SwiperSlide>
-          ))
-        ) : (
-          <p className="text-gray-500 text-sm mt-8">
-            No matching categories for “{search}”
-          </p>
-        )}
+                <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
+                  {cat.name}
+                </p>
+              </motion.div>
+            </button>
+          </SwiperSlide>
+        ))}
       </Swiper>
     </section>
   );
-    }
+}
