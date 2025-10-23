@@ -60,7 +60,7 @@ export default function Categories() {
     loadData();
   }, []);
 
-  // Filtrar categorías por palabra clave
+  // Filtrar categorías por palabra clave (revisando también category/subcategory)
   useEffect(() => {
     const q = search.toLowerCase().trim();
     if (!q) return setFiltered(allCategories);
@@ -79,8 +79,14 @@ export default function Categories() {
         .toLowerCase();
 
       if (allText.includes(q)) {
-        if (item.categories && item.categories.length > 0) {
-          item.categories.forEach((c) => foundCategories.add(c));
+        const possibleCats = [
+          ...(item.categories || []),
+          item.category,
+          item.subcategory,
+        ].filter(Boolean);
+
+        if (possibleCats.length > 0) {
+          possibleCats.forEach((c) => foundCategories.add(c));
         } else {
           foundCategories.add("Just Because & Everyday");
         }
@@ -105,7 +111,7 @@ export default function Categories() {
       <div className="flex justify-center mb-10">
         <input
           type="text"
-          placeholder="Search any theme — e.g. yeti, turtle, love, halloween..."
+          placeholder="Search any theme — e.g. zombie, yeti, halloween, love..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-80 md:w-96 px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700"
@@ -138,11 +144,12 @@ export default function Categories() {
                 className="flex flex-col items-center justify-center cursor-pointer"
                 whileHover={{ scale: 1.07 }}
                 onClick={() => {
-                  // 👇 cierra el teclado si está abierto
+                  // 👇 Cierra el teclado si está abierto (previene salto visual)
                   if (document.activeElement && document.activeElement.blur) {
                     document.activeElement.blur();
                   }
-                  // redirige con query si hay búsqueda
+
+                  // Redirige con query si hay búsqueda activa
                   const url = `/category/${cat.slug}${
                     search ? `?q=${encodeURIComponent(search)}` : ""
                   }`;
@@ -179,4 +186,4 @@ export default function Categories() {
       </Swiper>
     </section>
   );
-}
+    }
