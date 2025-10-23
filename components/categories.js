@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import "swiper/css";
 
 const allCategories = [
@@ -37,22 +37,23 @@ const allCategories = [
   { name: "Adventure", emoji: "🗺️", slug: "adventure", color: "#E8ECFF" },
   { name: "Friendship", emoji: "🤝", slug: "friendship", color: "#FFEAF5" },
   { name: "Festivals", emoji: "🎭", slug: "festivals", color: "#FEEAFF" },
-  { name: "Season Greetings", emoji: "❄️", slug: "season-greetings", color: "#EAF4FF" }
+  { name: "Season Greetings", emoji: "❄️", slug: "season-greetings", color: "#EAF4FF" },
 ];
 
 export default function Categories() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
   const [filtered, setFiltered] = useState(allCategories);
   const [videos, setVideos] = useState([]);
 
-  // ✅ Mantiene la palabra si se vuelve desde otra página
+  // ✅ Mantiene el texto buscado al volver
   useEffect(() => {
     const q = searchParams.get("q");
     if (q) setSearch(q);
   }, [searchParams]);
 
-  // 📥 Cargar los videos desde /videos/index.json
+  // 📥 Cargar los videos del index.json
   useEffect(() => {
     async function loadVideos() {
       try {
@@ -105,7 +106,7 @@ export default function Categories() {
     setFiltered(results.length > 0 ? results : []);
   }, [search, videos]);
 
-  // ✨ Mantiene la URL ?q=
+  // ✨ Actualiza URL sin recargar
   const handleSearchChange = (val) => {
     setSearch(val);
     clearTimeout(window._searchTimeout);
@@ -153,6 +154,8 @@ export default function Categories() {
         spaceBetween={16}
         centeredSlides={true}
         loop={true}
+        preventClicks={true}
+        preventClicksPropagation={true}
         autoplay={{
           delay: 2500,
           disableOnInteraction: false,
@@ -169,16 +172,15 @@ export default function Categories() {
         {filtered.length > 0 ? (
           filtered.map((cat, i) => (
             <SwiperSlide key={i}>
-              {/* ✅ Navegación corregida — sin doble toque */}
               <motion.div
                 className="flex flex-col items-center justify-center cursor-pointer"
                 whileHover={{ scale: 1.07 }}
                 onClick={() => {
-                  setTimeout(() => {
-                    window.location.href = `/category/${cat.slug}${
+                  router.push(
+                    `/category/${cat.slug}${
                       search ? `?q=${encodeURIComponent(search)}` : ""
-                    }`;
-                  }, 100);
+                    }`
+                  );
                 }}
               >
                 <motion.div
