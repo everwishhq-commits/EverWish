@@ -10,7 +10,7 @@ export default function Categories() {
   const [categories, setCategories] = useState([]); // categorías principales
   const [subcategories, setSubcategories] = useState([]); // subcategorías
   const [filtered, setFiltered] = useState([]); // resultados combinados
-  const router = useRouter();
+  const router = useRouter(); // ✅ solo una vez
 
   // 🎠 CATEGORÍAS PRINCIPALES (para carrusel)
   useEffect(() => {
@@ -121,7 +121,6 @@ export default function Categories() {
     setFiltered(unique);
   }, [query, categories, subcategories]);
 
-  const router = useRouter();
   const handleClick = (slug) => router.push(`/category/${slug}`);
 
   return (
@@ -190,4 +189,4 @@ export default function Categories() {
       )}
     </div>
   );
-        }
+}
