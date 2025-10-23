@@ -6,8 +6,7 @@
   "scripts": {
     "dev": "node scripts/generateindex.js && next dev",
     "build": "node scripts/generateindex.js && next build",
-    "start": "next start",
-    "fix-swc": "npx next telemetry disable && npx next build"
+    "start": "next start"
   },
   "dependencies": {
     "next": "13.5.6",
