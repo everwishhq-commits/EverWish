@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import "swiper/css";
 
-// 🎨 Tus categorías originales
 const allCategories = [
   { name: "Seasonal & Holidays", emoji: "🎉", slug: "seasonal-holidays", color: "#FFE0E9" },
   { name: "Birthday", emoji: "🎂", slug: "birthday", color: "#FFDDEE" },
@@ -38,38 +38,34 @@ const allCategories = [
   { name: "Adventure", emoji: "🗺️", slug: "adventure", color: "#E8ECFF" },
   { name: "Friendship", emoji: "🤝", slug: "friendship", color: "#FFEAF5" },
   { name: "Festivals", emoji: "🎭", slug: "festivals", color: "#FEEAFF" },
-  { name: "Season Greetings", emoji: "❄️", slug: "season-greetings", color: "#EAF4FF" },
+  { name: "Season Greetings", emoji: "❄️", slug: "season-greetings", color: "#EAF4FF" }
 ];
 
-// 🧩 Helpers
 const slugify = (s = "") =>
-  s
-    .toString()
-    .toLowerCase()
-    .replace(/&/g, "and")
-    .replace(/[^\p{L}\p{N}]+/gu, "-")
-    .replace(/^-+|-+$/g, "");
+  s.toString().toLowerCase().replace(/&/g, "and").replace(/[^\p{L}\p{N}]+/gu, "-");
 
 export default function Categories() {
-  const [search, setSearch] = useState("");
+  const router = useRouter();
+  const params = useSearchParams();
+  const queryParam = params.get("search") || "";
+  const [search, setSearch] = useState(queryParam);
   const [filtered, setFiltered] = useState(allCategories);
   const [videos, setVideos] = useState([]);
 
-  // 🧠 Cargar los videos
+  // Cargar videos
   useEffect(() => {
-    async function loadData() {
+    (async () => {
       try {
         const res = await fetch("/videos/index.json", { cache: "no-store" });
         const data = await res.json();
         setVideos(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.warn("⚠️ Error cargando /videos/index.json", err);
+      } catch (e) {
+        console.error("⚠️ Error cargando videos:", e);
       }
-    }
-    loadData();
+    })();
   }, []);
 
-  // 🔍 Búsqueda que conecta nombres con categorías/subcategorías
+  // Filtrar por búsqueda
   useEffect(() => {
     const q = search.toLowerCase().trim();
     if (!q) {
@@ -80,14 +76,14 @@ export default function Categories() {
     const catMap = new Map(allCategories.map((c) => [slugify(c.slug || c.name), c]));
     const matches = new Set();
 
-    for (const item of videos) {
+    for (const v of videos) {
       const text = [
-        item.name,
-        item.object,
-        item.category,
-        item.subcategory,
-        ...(item.categories || []),
-        ...(item.tags || []),
+        v.name,
+        v.object,
+        v.category,
+        v.subcategory,
+        ...(v.categories || []),
+        ...(v.tags || []),
       ]
         .filter(Boolean)
         .join(" ")
@@ -95,28 +91,39 @@ export default function Categories() {
 
       if (!text.includes(q)) continue;
 
-      if (Array.isArray(item.categories) && item.categories.length > 0) {
-        for (const c of item.categories) {
+      if (Array.isArray(v.categories) && v.categories.length > 0) {
+        for (const c of v.categories) {
           const s = slugify(c);
           if (catMap.has(s)) matches.add(s);
         }
-      } else if (item.category) {
-        const s = slugify(item.category);
+      } else if (v.category) {
+        const s = slugify(v.category);
         if (catMap.has(s)) matches.add(s);
-      } else {
-        matches.add(slugify("Just Because & Everyday"));
       }
     }
 
-    const result = allCategories.filter((c) =>
-      matches.has(slugify(c.slug || c.name))
-    );
+    const result = allCategories.filter((c) => matches.has(slugify(c.slug || c.name)));
     setFiltered(result);
   }, [search, videos]);
 
+  // Navegar con query cuando viene desde Home
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setSearch(value);
+    router.replace(`/categories?search=${encodeURIComponent(value)}`);
+  };
+
   return (
     <section id="categories" className="text-center py-10 px-3 overflow-hidden">
-      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">Categories</h2>
+      {search && (
+        <p className="text-sm text-gray-500 mb-2">
+          Showing results for: <b className="text-pink-500">{search}</b>
+        </p>
+      )}
+
+      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
+        Categories
+      </h2>
 
       {/* 🔎 Barra de búsqueda */}
       <div className="flex justify-center mb-10">
@@ -127,9 +134,9 @@ export default function Categories() {
           autoCorrect="off"
           autoCapitalize="none"
           inputMode="search"
-          placeholder="Search any theme — e.g. yeti, turtle, love, halloween..."
+          placeholder="Search any theme — e.g. yeti, turtle, love..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={handleSearch}
           className="w-80 md:w-96 px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700"
         />
       </div>
@@ -189,4 +196,4 @@ export default function Categories() {
       </Swiper>
     </section>
   );
-          }
+}
