@@ -47,13 +47,13 @@ export default function Categories() {
   const [filtered, setFiltered] = useState(allCategories);
   const [videos, setVideos] = useState([]);
 
-  // ✅ Rellenar automáticamente si la URL tiene ?q=
+  // ✅ Si hay ?q= en la URL, rellenar el campo
   useEffect(() => {
     const q = searchParams.get("q");
     if (q) setSearch(q);
   }, [searchParams]);
 
-  // 📥 Cargar videos reales
+  // 📥 Cargar videos
   useEffect(() => {
     async function loadVideos() {
       try {
@@ -67,7 +67,7 @@ export default function Categories() {
     loadVideos();
   }, []);
 
-  // 🔍 Filtrado por texto
+  // 🔍 Filtrar por palabra
   useEffect(() => {
     const q = search.toLowerCase().trim();
     if (!q) {
@@ -78,37 +78,37 @@ export default function Categories() {
     const foundCategories = new Set();
 
     videos.forEach((item) => {
-      const searchableText = [
+      const allText = [
         item.name,
         item.object,
-        item.subcategory,
         item.category,
-        ...(item.tags || [])
+        item.subcategory,
+        ...(item.tags || []),
       ]
         .join(" ")
         .toLowerCase();
 
-      if (searchableText.includes(q)) {
-        if (item.category) {
-          foundCategories.add(item.category.trim());
+      if (allText.includes(q)) {
+        if (item.categories && item.categories.length > 0) {
+          item.categories.forEach((c) => foundCategories.add(c));
+        } else if (item.category) {
+          foundCategories.add(item.category);
         }
       }
     });
 
-    const matches = allCategories.filter((cat) =>
-      [...foundCategories].some(
-        (f) =>
-          f.toLowerCase().replace("&", "and").includes(cat.name.toLowerCase().split("&")[0].trim())
+    const results = allCategories.filter((cat) =>
+      [...foundCategories].some((f) =>
+        f.toLowerCase().includes(cat.name.toLowerCase().split("&")[0].trim())
       )
     );
 
-    setFiltered(matches.length > 0 ? matches : []);
+    setFiltered(results.length > 0 ? results : []);
   }, [search, videos]);
 
-  // ✨ Actualiza la URL sin recargar
+  // ✨ Mantener la URL actualizada sin recargar
   const handleSearchChange = (val) => {
     setSearch(val);
-
     clearTimeout(window._searchTimeout);
     window._searchTimeout = setTimeout(() => {
       const newUrl = val ? `?q=${encodeURIComponent(val)}` : "";
@@ -116,7 +116,6 @@ export default function Categories() {
     }, 600);
   };
 
-  // ❌ Limpiar búsqueda
   const clearSearch = () => {
     setSearch("");
     setFiltered(allCategories);
@@ -127,7 +126,7 @@ export default function Categories() {
     <section id="categories" className="text-center py-10 px-3 overflow-hidden">
       <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">Categories</h2>
 
-      {/* 🔍 Barra de búsqueda */}
+      {/* 🔍 Buscador */}
       <div className="relative flex justify-center mb-10">
         <input
           type="text"
@@ -198,9 +197,11 @@ export default function Categories() {
             </SwiperSlide>
           ))
         ) : (
-          <p className="text-gray-500 text-sm mt-8">No matching categories for “{search}”</p>
+          <p className="text-gray-500 text-sm mt-8">
+            No matching categories for “{search}”
+          </p>
         )}
       </Swiper>
     </section>
   );
-}
+          }
