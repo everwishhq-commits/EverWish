@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import "swiper/css";
 
+// 🎨 Tus categorías originales
 const allCategories = [
   { name: "Seasonal & Holidays", emoji: "🎉", slug: "seasonal-holidays", color: "#FFE0E9" },
   { name: "Birthday", emoji: "🎂", slug: "birthday", color: "#FFDDEE" },
@@ -37,70 +38,95 @@ const allCategories = [
   { name: "Adventure", emoji: "🗺️", slug: "adventure", color: "#E8ECFF" },
   { name: "Friendship", emoji: "🤝", slug: "friendship", color: "#FFEAF5" },
   { name: "Festivals", emoji: "🎭", slug: "festivals", color: "#FEEAFF" },
-  { name: "Season Greetings", emoji: "❄️", slug: "season-greetings", color: "#EAF4FF" }
+  { name: "Season Greetings", emoji: "❄️", slug: "season-greetings", color: "#EAF4FF" },
 ];
+
+// 🧩 Helpers
+const slugify = (s = "") =>
+  s
+    .toString()
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^\p{L}\p{N}]+/gu, "-")
+    .replace(/^-+|-+$/g, "");
 
 export default function Categories() {
   const [search, setSearch] = useState("");
   const [filtered, setFiltered] = useState(allCategories);
   const [videos, setVideos] = useState([]);
 
+  // 🧠 Cargar los videos
   useEffect(() => {
     async function loadData() {
       try {
-        const res = await fetch("/videos/index.json");
+        const res = await fetch("/videos/index.json", { cache: "no-store" });
         const data = await res.json();
-        setVideos(data);
+        setVideos(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error("❌ Error cargando index.json:", err);
+        console.warn("⚠️ Error cargando /videos/index.json", err);
       }
     }
     loadData();
   }, []);
 
+  // 🔍 Búsqueda que conecta nombres con categorías/subcategorías
   useEffect(() => {
     const q = search.toLowerCase().trim();
-    if (!q) return setFiltered(allCategories);
+    if (!q) {
+      setFiltered(allCategories);
+      return;
+    }
 
-    const foundCategories = new Set();
+    const catMap = new Map(allCategories.map((c) => [slugify(c.slug || c.name), c]));
+    const matches = new Set();
 
-    videos.forEach((item) => {
-      const allText = [
+    for (const item of videos) {
+      const text = [
         item.name,
-        ...(item.tags || []),
+        item.object,
         item.category,
         item.subcategory,
-        item.object
+        ...(item.categories || []),
+        ...(item.tags || []),
       ]
+        .filter(Boolean)
         .join(" ")
         .toLowerCase();
 
-      if (allText.includes(q)) {
-        if (item.categories && item.categories.length > 0) {
-          item.categories.forEach((c) => foundCategories.add(c));
-        } else {
-          foundCategories.add("Just Because & Everyday");
+      if (!text.includes(q)) continue;
+
+      if (Array.isArray(item.categories) && item.categories.length > 0) {
+        for (const c of item.categories) {
+          const s = slugify(c);
+          if (catMap.has(s)) matches.add(s);
         }
+      } else if (item.category) {
+        const s = slugify(item.category);
+        if (catMap.has(s)) matches.add(s);
+      } else {
+        matches.add(slugify("Just Because & Everyday"));
       }
-    });
+    }
 
-    const results =
-      foundCategories.size > 0
-        ? allCategories.filter((cat) => foundCategories.has(cat.name))
-        : [];
-
-    setFiltered(results);
+    const result = allCategories.filter((c) =>
+      matches.has(slugify(c.slug || c.name))
+    );
+    setFiltered(result);
   }, [search, videos]);
 
   return (
     <section id="categories" className="text-center py-10 px-3 overflow-hidden">
-      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
-        Categories
-      </h2>
+      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">Categories</h2>
 
+      {/* 🔎 Barra de búsqueda */}
       <div className="flex justify-center mb-10">
         <input
           type="text"
+          name="category-search"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="none"
+          inputMode="search"
           placeholder="Search any theme — e.g. yeti, turtle, love, halloween..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -108,15 +134,13 @@ export default function Categories() {
         />
       </div>
 
+      {/* 🎠 Carrusel */}
       <Swiper
         slidesPerView={3.2}
         spaceBetween={16}
-        centeredSlides={true}
-        loop={true}
-        autoplay={{
-          delay: 2500,
-          disableOnInteraction: false,
-        }}
+        centeredSlides
+        loop
+        autoplay={{ delay: 2500, disableOnInteraction: false }}
         speed={1000}
         breakpoints={{
           0: { slidesPerView: 2.4, spaceBetween: 10 },
@@ -165,4 +189,4 @@ export default function Categories() {
       </Swiper>
     </section>
   );
-            }
+          }
