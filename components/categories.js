@@ -8,29 +8,33 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import "swiper/css";
 
+// ⚠️ Usa tus categorías reales; NO cambio tus nombres/slug.
+// (Puedes extender esta lista si lo deseas)
 const allCategories = [
   { name: "Seasonal & Holidays", emoji: "🎉", slug: "seasonal-holidays", color: "#FFE0E9" },
   { name: "Birthday", emoji: "🎂", slug: "birthday", color: "#FFDDEE" },
   { name: "Love & Romance", emoji: "💘", slug: "love-romance", color: "#FFECEC" },
   { name: "Family & Relationships", emoji: "👨‍👩‍👧‍👦", slug: "family-relationships", color: "#E5EDFF" },
+  { name: "Babies & Parenting", emoji: "👶", slug: "babies-parenting", color: "#DFF7FF" },
+  { name: "Weddings & Anniversaries", emoji: "💍", slug: "weddings-anniversaries", color: "#F3E5FF" },
   { name: "Pets & Animal Lovers", emoji: "🐾", slug: "pets-animal-lovers", color: "#FFF3E0" },
-  { name: "Christmas", emoji: "🎄", slug: "christmas", color: "#E6FFF2" },
-  { name: "Halloween", emoji: "🎃", slug: "halloween", color: "#FFF0D8" },
   { name: "Just Because & Everyday", emoji: "💌", slug: "just-because", color: "#FDE6E6" },
 ];
 
-const normalize = (s = "") =>
+const norm = (s = "") =>
   s.toString().toLowerCase().replace(/&/g, "and").replace(/[^\p{L}\p{N}]+/gu, "-").trim();
 
 export default function Categories() {
   const router = useRouter();
   const params = useSearchParams();
-  const queryParam = params.get("search") || "";
-  const [search, setSearch] = useState(queryParam);
+
+  // toma /categories?search=...
+  const initial = params.get("search") || "";
+  const [search, setSearch] = useState(initial);
   const [filtered, setFiltered] = useState(allCategories);
   const [videos, setVideos] = useState([]);
 
-  // 📥 Cargar videos reales
+  // Carga el índice real (tu script de 1400 líneas ya genera esto)
   useEffect(() => {
     (async () => {
       try {
@@ -38,31 +42,33 @@ export default function Categories() {
         const data = await res.json();
         setVideos(Array.isArray(data) ? data : []);
       } catch (e) {
-        console.error("⚠️ Error cargando videos:", e);
+        console.error("Error cargando /videos/index.json", e);
       }
     })();
   }, []);
 
-  // ⏱️ Debounce: espera 1 segundo antes de filtrar/redirigir
+  // Refleja el término en la URL (sin navegar de página ni romper nada)
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      router.replace(`/categories?search=${encodeURIComponent(search)}`);
-    }, 1000);
-    return () => clearTimeout(timeout);
-  }, [search]);
+    const t = setTimeout(() => {
+      const q = encodeURIComponent(search || "");
+      router.replace(`/categories${q ? `?search=${q}` : ""}`);
+    }, 300); // debounce suave
+    return () => clearTimeout(t);
+  }, [search, router]);
 
-  // 🔍 Filtrar categorías con coincidencias reales
+  // Filtra categorías principales cuando hay término
   useEffect(() => {
-    const q = search.toLowerCase().trim();
+    const q = (search || "").toLowerCase().trim();
     if (!q) {
       setFiltered(allCategories);
       return;
     }
 
-    const matches = new Set();
+    // Coincidimos por: name, slug, y TODO el texto de los videos (name, tags, object, category, subcategory, categories)
+    const matchedCatSlugs = new Set();
 
     for (const v of videos) {
-      const text = [
+      const hayTexto = [
         v.name,
         v.object,
         v.category,
@@ -72,46 +78,39 @@ export default function Categories() {
       ]
         .filter(Boolean)
         .join(" ")
-        .toLowerCase();
+        .toLowerCase()
+        .includes(q);
 
-      // 🧠 Coincidencia flexible
-      if (text.includes(q)) {
-        if (Array.isArray(v.categories) && v.categories.length > 0) {
-          for (const c of v.categories) {
-            matches.add(normalize(c));
-          }
-        } else if (v.category) {
-          matches.add(normalize(v.category));
-        }
+      if (!hayTexto) continue;
+
+      // Preferimos categories[] si existe; si no, usamos category
+      if (Array.isArray(v.categories) && v.categories.length) {
+        for (const c of v.categories) matchedCatSlugs.add(norm(c));
+      } else if (v.category) {
+        matchedCatSlugs.add(norm(v.category));
       }
     }
 
+    // Si no hubo match en videos, también permitimos match directo por nombre/slug de la categoría
     const result = allCategories.filter(
       (c) =>
-        matches.has(normalize(c.name)) ||
-        matches.has(normalize(c.slug)) ||
-        c.name.toLowerCase().includes(q)
+        matchedCatSlugs.has(norm(c.name)) ||
+        matchedCatSlugs.has(norm(c.slug)) ||
+        c.name.toLowerCase().includes(q) ||
+        norm(c.slug).includes(norm(q))
     );
 
-    setFiltered(result);
+    setFiltered(result.length ? result : []);
   }, [search, videos]);
 
   return (
     <section id="categories" className="text-center py-10 px-3 overflow-hidden">
-      {search && (
-        <p className="text-sm text-gray-500 mb-2">
-          Showing results for: <b className="text-pink-500">{search}</b>
-        </p>
-      )}
+      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">Categories</h2>
 
-      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
-        Explore Main Categories 💌
-      </h2>
-
-      {/* 🔎 Barra de búsqueda */}
+      {/* 🔎 Barra de búsqueda (sin autofill del navegador) */}
       <div className="flex justify-center mb-10">
         <input
-          type="text"
+          type="search"
           name="category-search"
           autoComplete="off"
           autoCorrect="off"
@@ -124,7 +123,6 @@ export default function Categories() {
         />
       </div>
 
-      {/* 🎠 Carrusel */}
       {filtered.length > 0 ? (
         <Swiper
           slidesPerView={3.2}
@@ -141,13 +139,10 @@ export default function Categories() {
           modules={[Autoplay]}
           className="overflow-visible"
         >
-          {filtered.map((cat, i) => (
-            <SwiperSlide key={i}>
+          {filtered.map((cat) => (
+            <SwiperSlide key={cat.slug}>
               <Link href={`/category/${cat.slug}`}>
-                <motion.div
-                  className="flex flex-col items-center justify-center cursor-pointer"
-                  whileHover={{ scale: 1.07 }}
-                >
+                <motion.div className="flex flex-col items-center justify-center cursor-pointer" whileHover={{ scale: 1.07 }}>
                   <motion.div
                     className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md"
                     style={{ backgroundColor: cat.color }}
@@ -155,18 +150,12 @@ export default function Categories() {
                     <motion.span
                       className="text-4xl sm:text-5xl"
                       animate={{ y: [0, -5, 0] }}
-                      transition={{
-                        duration: 3,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }}
+                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                     >
                       {cat.emoji}
                     </motion.span>
                   </motion.div>
-                  <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
-                    {cat.name}
-                  </p>
+                  <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">{cat.name}</p>
                 </motion.div>
               </Link>
             </SwiperSlide>
@@ -174,9 +163,9 @@ export default function Categories() {
         </Swiper>
       ) : (
         <p className="text-gray-500 text-sm mt-8">
-          No matching categories for “{search}”
+          No matching categories for “{search || " " }”
         </p>
       )}
     </section>
   );
-            }
+      }
