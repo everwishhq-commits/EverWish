@@ -1,154 +1,193 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
+import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 
-// 🩷 Categorías principales (diseño Everwish)
-const allCategories = [
-  { name: "Seasonal & Holidays", emoji: "🎉", slug: "seasonal-holidays", color: "#FFE0E9" },
-  { name: "Birthday", emoji: "🎂", slug: "birthday", color: "#FFDDEE" },
-  { name: "Love & Romance", emoji: "💘", slug: "love-romance", color: "#FFECEC" },
-  { name: "Family & Relationships", emoji: "👨‍👩‍👧‍👦", slug: "family-relationships", color: "#E5EDFF" },
-  { name: "Babies & Parenting", emoji: "👶", slug: "babies-parenting", color: "#DFF7FF" },
-  { name: "Weddings & Anniversaries", emoji: "💍", slug: "weddings-anniversaries", color: "#F3E5FF" },
-  { name: "Congratulations & Milestones", emoji: "🏆", slug: "congrats-milestones", color: "#FFF3C4" },
-  { name: "School & Graduation", emoji: "🎓", slug: "school-graduation", color: "#E2FFD7" },
-  { name: "Pets & Animal Lovers", emoji: "🐾", slug: "pets-animal-lovers", color: "#FFF3E0" },
-  { name: "Celebrations", emoji: "🎊", slug: "celebrations", color: "#FFF0C7" },
-  { name: "Humor & Memes", emoji: "😄", slug: "humor-memes", color: "#E7F7FF" },
-  { name: "Adventure", emoji: "🗺️", slug: "adventure", color: "#E8ECFF" },
-  { name: "Friendship", emoji: "🤝", slug: "friendship", color: "#FFEAF5" },
-  { name: "Holidays", emoji: "🏖️", slug: "holidays", color: "#E4FFF7" },
-  { name: "Season Greetings", emoji: "❄️", slug: "season-greetings", color: "#EAF4FF" },
-  { name: "Thank You & Appreciation", emoji: "🙏", slug: "thank-you-appreciation", color: "#FFF0E5" },
-  { name: "Inspirations & Quotes", emoji: "📝", slug: "inspirations-quotes", color: "#E8F6FF" },
-  { name: "Gifts & Surprises", emoji: "🎁", slug: "gifts-surprises", color: "#E7E9FF" },
-  { name: "Art & Cultural", emoji: "🎨", slug: "art-cultural", color: "#FFEDDF" },
-  { name: "Just Because & Everyday", emoji: "💌", slug: "just-because", color: "#FDE6E6" }
-];
-
 export default function Categories() {
+  const [query, setQuery] = useState("");
+  const [categories, setCategories] = useState([]); // categorías principales
+  const [subcategories, setSubcategories] = useState([]); // subcategorías
+  const [filtered, setFiltered] = useState([]); // resultados combinados
   const router = useRouter();
-  const [search, setSearch] = useState("");
-  const [videos, setVideos] = useState([]);
 
-  // 🔹 Cargar /public/videos/index.json
+  // 🎠 CATEGORÍAS PRINCIPALES (para carrusel)
   useEffect(() => {
-    async function loadVideos() {
-      try {
-        const res = await fetch("/videos/index.json", { cache: "no-store" });
-        if (!res.ok) throw new Error("index.json not found");
-        const data = await res.json();
-        setVideos(data);
-      } catch (err) {
-        console.error("❌ Error loading /videos/index.json:", err);
-      }
-    }
-    loadVideos();
+    setCategories([
+      { name: "Love & Romance", icon: "💖", slug: "love-romance" },
+      { name: "Family & Relationships", icon: "👨‍👩‍👧", slug: "family-relationships" },
+      { name: "Babies & Parenting", icon: "👶", slug: "babies-parenting" },
+      { name: "Friendship", icon: "🤝", slug: "friendship" },
+      { name: "Birthdays", icon: "🎂", slug: "birthdays" },
+      { name: "Celebrations", icon: "🎉", slug: "celebrations" },
+      { name: "Encouragement", icon: "🌈", slug: "encouragement" },
+      { name: "Pets & Animal Lovers", icon: "🐾", slug: "pets-animal-lovers" },
+      { name: "Work & Success", icon: "💼", slug: "work-success" },
+      { name: "Get Well Soon", icon: "💐", slug: "get-well-soon" },
+      { name: "Thank You", icon: "🙏", slug: "thank-you" },
+      { name: "Anniversaries", icon: "💍", slug: "anniversaries" },
+      { name: "Weddings", icon: "👰", slug: "weddings" },
+      { name: "New Baby", icon: "🍼", slug: "new-baby" },
+      { name: "Holidays", icon: "🎄", slug: "holidays" },
+      { name: "Halloween", icon: "🎃", slug: "halloween" },
+      { name: "Christmas", icon: "🎁", slug: "christmas" },
+      { name: "Easter", icon: "🐰", slug: "easter" },
+      { name: "New Year", icon: "🎆", slug: "new-year" },
+      { name: "Valentine’s Day", icon: "💌", slug: "valentines-day" },
+      { name: "Mother’s Day", icon: "🌸", slug: "mothers-day" },
+      { name: "Father’s Day", icon: "🧢", slug: "fathers-day" },
+      { name: "Graduation", icon: "🎓", slug: "graduation" },
+      { name: "Thanksgiving", icon: "🦃", slug: "thanksgiving" },
+      { name: "Condolences", icon: "🕊️", slug: "condolences" },
+      { name: "Motivation", icon: "🔥", slug: "motivation" },
+      { name: "Seasonal", icon: "🌤️", slug: "seasonal" },
+      { name: "Sports & Team Spirit", icon: "⚽", slug: "sports-team" },
+      { name: "Congratulations", icon: "🏆", slug: "congratulations" },
+      { name: "Travel & Adventure", icon: "✈️", slug: "travel-adventure" },
+    ]);
   }, []);
 
-  // 🚀 Al presionar Enter o Buscar
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!search.trim()) return;
+  // 📂 SUBCATEGORÍAS DESDE JSON
+  useEffect(() => {
+    async function loadSubcategories() {
+      try {
+        const res = await fetch("/data/subcategories.json", { cache: "no-store" });
+        const data = await res.json();
+        const flat = [];
 
-    const term = search.toLowerCase().trim();
+        Object.entries(data).forEach(([categorySlug, subs]) => {
+          subs.forEach((sub) => {
+            flat.push({
+              categorySlug,
+              name_en: sub.name_en,
+              name_es: sub.name_es,
+              slug: sub.slug,
+            });
+          });
+        });
 
-    // Buscar coincidencia en index.json
-    const found = videos.find((v) =>
-      [
-        v.name,
-        v.object,
-        v.category,
-        v.subcategory,
-        ...(v.categories || []),
-      ]
-        .filter(Boolean)
-        .map((t) => t.toLowerCase())
-        .some((t) => t.includes(term))
+        setSubcategories(flat);
+      } catch (err) {
+        console.error("❌ Error loading subcategories:", err);
+      }
+    }
+
+    loadSubcategories();
+  }, []);
+
+  // 🔍 BÚSQUEDA COMBINADA (categorías + subcategorías)
+  useEffect(() => {
+    if (!query.trim()) {
+      setFiltered([]);
+      return;
+    }
+
+    const lower = query.toLowerCase();
+
+    // Buscar en categorías principales
+    const catResults = categories.filter(
+      (c) => c.name.toLowerCase().includes(lower) || c.slug.toLowerCase().includes(lower)
     );
 
-    if (found) {
-      const category =
-        (found.categories && found.categories[0]) ||
-        found.category ||
-        found.subcategory ||
-        "general";
+    // Buscar en subcategorías
+    const subResults = subcategories.filter(
+      (s) =>
+        s.name_en.toLowerCase().includes(lower) ||
+        s.name_es.toLowerCase().includes(lower) ||
+        s.categorySlug.toLowerCase().includes(lower)
+    );
 
-      // Normalizar slug
-      const slug = category.toLowerCase().replace(/\s+/g, "-");
-      router.push(`/category/${slug}`);
-    } else {
-      alert(`No matches found for "${search}"`);
-    }
-  };
+    // Combinar ambos resultados y quitar duplicados
+    const combined = [
+      ...catResults.map((c) => ({
+        name: c.name,
+        icon: c.icon,
+        slug: c.slug,
+        type: "category",
+      })),
+      ...subResults.map((s) => ({
+        name: s.name_en,
+        icon: "🌸",
+        slug: s.categorySlug,
+        type: "subcategory",
+      })),
+    ];
+
+    const unique = combined.filter(
+      (item, index, self) => index === self.findIndex((t) => t.slug === item.slug)
+    );
+
+    setFiltered(unique);
+  }, [query, categories, subcategories]);
+
+  const router = useRouter();
+  const handleClick = (slug) => router.push(`/category/${slug}`);
 
   return (
-    <section id="categories" className="text-center py-10 px-3 overflow-hidden">
-      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">Categories</h2>
+    <div className="w-full flex flex-col items-center">
+      <h2 className="text-2xl font-bold text-gray-800 mb-3 text-center">
+        Categories
+      </h2>
 
-      {/* 🔍 Barra de búsqueda */}
-      <form onSubmit={handleSubmit} className="flex justify-center mb-10">
-        <input
-          type="text"
-          placeholder="Search any theme — e.g. yeti, turtle, love, halloween..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-80 md:w-96 px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700"
-        />
-      </form>
+      {/* 🔎 Barra de búsqueda */}
+      <input
+        type="text"
+        placeholder="Search any theme — e.g. yeti, turtle, love"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        className="w-full max-w-md px-4 py-2 mb-8 text-gray-700 border border-pink-200 rounded-full focus:outline-none focus:ring-2 focus:ring-pink-300 text-center shadow-sm"
+      />
 
-      {/* 🎠 Carrusel de categorías */}
-      <Swiper
-        slidesPerView={3.2}
-        spaceBetween={16}
-        centeredSlides
-        loop
-        autoplay={{ delay: 2500, disableOnInteraction: false }}
-        speed={1000}
-        breakpoints={{
-          0: { slidesPerView: 2.2, spaceBetween: 8 },
-          640: { slidesPerView: 3.5, spaceBetween: 14 },
-          1024: { slidesPerView: 5, spaceBetween: 18 },
-        }}
-        modules={[Autoplay]}
-        className="overflow-visible"
-      >
-        {allCategories.map((cat) => (
-          <SwiperSlide key={cat.slug}>
-            <button
-              type="button"
-              onClick={() => router.push(`/category/${cat.slug}`)}
-              className="w-full"
-            >
-              <motion.div
-                className="flex flex-col items-center justify-center cursor-pointer"
-                whileHover={{ scale: 1.07 }}
-              >
+      {/* 🎠 Carrusel visible si no hay búsqueda */}
+      {!query && (
+        <div className="w-full max-w-5xl mb-8">
+          <Swiper
+            spaceBetween={20}
+            slidesPerView={3.2}
+            breakpoints={{
+              640: { slidesPerView: 4 },
+              1024: { slidesPerView: 6 },
+            }}
+          >
+            {categories.map((cat, i) => (
+              <SwiperSlide key={i}>
                 <motion.div
-                  className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md"
-                  style={{ backgroundColor: cat.color }}
+                  onClick={() => handleClick(cat.slug)}
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ duration: 0.2 }}
+                  className="bg-white border border-pink-100 shadow-sm hover:shadow-md rounded-3xl px-6 py-6 text-gray-700 font-semibold text-center cursor-pointer"
                 >
-                  <motion.span
-                    className="text-4xl sm:text-5xl"
-                    animate={{ y: [0, -5, 0] }}
-                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                  >
-                    {cat.emoji}
-                  </motion.span>
+                  <div className="text-4xl mb-2">{cat.icon}</div>
+                  <p className="text-sm">{cat.name}</p>
                 </motion.div>
-                <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
-                  {cat.name}
-                </p>
-              </motion.div>
-            </button>
-          </SwiperSlide>
-        ))}
-      </Swiper>
-    </section>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </div>
+      )}
+
+      {/* 🏷️ Resultados de búsqueda */}
+      {query && (
+        <div className="flex flex-wrap justify-center gap-6 w-full max-w-4xl">
+          {filtered.length > 0 ? (
+            filtered.map((r, i) => (
+              <motion.button
+                key={i}
+                onClick={() => handleClick(r.slug)}
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.2 }}
+                className="bg-white border border-pink-100 shadow-sm hover:shadow-md rounded-3xl px-6 py-4 text-gray-700 font-semibold text-center w-[140px] h-[140px] flex flex-col justify-center items-center hover:border-pink-300"
+              >
+                <span className="text-3xl mb-2">{r.icon}</span>
+                <span className="text-sm text-center">{r.name}</span>
+              </motion.button>
+            ))
+          ) : (
+            <p className="text-gray-400 mt-4">No matches found 🌱</p>
+          )}
+        </div>
+      )}
+    </div>
   );
-}
+        }
