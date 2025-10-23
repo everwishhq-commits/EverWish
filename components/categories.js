@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import "swiper/css";
 
+// 🎨 Lista de categorías principales
 const allCategories = [
   { name: "Seasonal & Holidays", emoji: "🎉", slug: "seasonal-holidays", color: "#FFE0E9" },
   { name: "Birthday", emoji: "🎂", slug: "birthday", color: "#FFDDEE" },
@@ -23,35 +25,33 @@ const allCategories = [
   { name: "Encouragement & Motivation", emoji: "🌟", slug: "encouragement-motivation", color: "#FFF5D9" },
   { name: "Thank You & Appreciation", emoji: "🙏", slug: "thank-you-appreciation", color: "#FFF0E5" },
   { name: "Invitations & Events", emoji: "✉️", slug: "invitations-events", color: "#FFD9E8" },
-  { name: "Spiritual & Mindfulness", emoji: "🕯️", slug: "spiritual-mindfulness", color: "#EDEAFF" },
   { name: "Art & Cultural", emoji: "🎨", slug: "art-cultural", color: "#FFEDDF" },
   { name: "Kids & Teens", emoji: "🧸", slug: "kids-teens", color: "#FFE6FA" },
   { name: "Humor & Memes", emoji: "😄", slug: "humor-memes", color: "#E7F7FF" },
   { name: "Pets & Animal Lovers", emoji: "🐾", slug: "pets-animal-lovers", color: "#FFF3E0" },
+  { name: "Adventure", emoji: "🗺️", slug: "adventure", color: "#E8ECFF" },
+  { name: "Celebrations", emoji: "🎊", slug: "celebrations", color: "#FFF0C7" },
   { name: "Just Because & Everyday", emoji: "💌", slug: "just-because", color: "#FDE6E6" },
   { name: "Gifts & Surprises", emoji: "🎁", slug: "gifts-surprises", color: "#E7E9FF" },
   { name: "Inspirations & Quotes", emoji: "📝", slug: "inspirations-quotes", color: "#E8F6FF" },
   { name: "Custom & AI Creations", emoji: "🤖", slug: "custom-ai-creations", color: "#E5FFE2" },
-  { name: "Celebrations", emoji: "🎊", slug: "celebrations", color: "#FFF0C7" },
-  { name: "Holidays", emoji: "🏖️", slug: "holidays", color: "#E4FFF7" },
-  { name: "Adventure", emoji: "🗺️", slug: "adventure", color: "#E8ECFF" },
-  { name: "Friendship", emoji: "🤝", slug: "friendship", color: "#FFEAF5" },
   { name: "Festivals", emoji: "🎭", slug: "festivals", color: "#FEEAFF" },
-  { name: "Season Greetings", emoji: "❄️", slug: "season-greetings", color: "#EAF4FF" }
+  { name: "Holidays", emoji: "🏖️", slug: "holidays", color: "#E4FFF7" },
 ];
 
 export default function Categories() {
   const [search, setSearch] = useState("");
   const [filtered, setFiltered] = useState(allCategories);
   const [videos, setVideos] = useState([]);
+  const pathname = usePathname(); // Detecta si estamos en / o en /category
 
-  // 📥 Cargar todos los videos del JSON real
+  // 📥 Cargar todos los videos
   useEffect(() => {
     async function loadVideos() {
       try {
         const res = await fetch("/videos/index.json", { cache: "no-store" });
         const data = await res.json();
-        setVideos(data);
+        setVideos(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("❌ Error loading /videos/index.json:", err);
       }
@@ -59,7 +59,7 @@ export default function Categories() {
     loadVideos();
   }, []);
 
-  // 🔍 Buscar coincidencias en videos → mostrar solo categoría principal
+  // 🔍 Filtrar según búsqueda
   useEffect(() => {
     const q = search.toLowerCase().trim();
     if (!q) {
@@ -70,18 +70,22 @@ export default function Categories() {
     const foundCategories = new Set();
 
     videos.forEach((item) => {
-      const searchableText = [
+      const text = [
         item.name,
         item.object,
         item.subcategory,
         item.category,
-        ...(item.tags || [])
+        ...(item.tags || []),
+        ...(item.categories || []),
       ]
+        .filter(Boolean)
         .join(" ")
         .toLowerCase();
 
-      if (searchableText.includes(q)) {
-        if (item.category) {
+      if (text.includes(q)) {
+        if (item.categories && item.categories.length > 0) {
+          item.categories.forEach((c) => foundCategories.add(c));
+        } else if (item.category) {
           foundCategories.add(item.category.trim());
         }
       }
@@ -89,24 +93,31 @@ export default function Categories() {
 
     const matches = allCategories.filter((cat) =>
       [...foundCategories].some(
-        (f) => f.toLowerCase().replace("&", "and").includes(cat.name.toLowerCase().split("&")[0].trim())
+        (f) =>
+          f.toLowerCase().replace("&", "and").includes(cat.name.toLowerCase().split("&")[0].trim()) ||
+          f.toLowerCase().includes(cat.slug)
       )
     );
 
     setFiltered(matches.length > 0 ? matches : []);
   }, [search, videos]);
 
+  // 🧠 Detectar si estamos en Home
+  const isHome = pathname === "/";
+
   return (
     <section id="categories" className="text-center py-10 px-3 overflow-hidden">
-      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
-        Categories
-      </h2>
+      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">Categories</h2>
 
       {/* 🔎 Barra de búsqueda */}
       <div className="flex justify-center mb-10">
         <input
           type="text"
-          placeholder="Search any theme — e.g. yeti, turtle, love, halloween..."
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="none"
+          inputMode="search"
+          placeholder="Search any theme — e.g. yeti, turtle, love..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-80 md:w-96 px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700"
@@ -135,7 +146,13 @@ export default function Categories() {
         {filtered.length > 0 ? (
           filtered.map((cat, i) => (
             <SwiperSlide key={i}>
-              <Link href={`/category/${cat.slug}`}>
+              <Link
+                href={
+                  isHome
+                    ? `/category/${cat.slug}?search=${encodeURIComponent(search)}`
+                    : `/category/${cat.slug}`
+                }
+              >
                 <motion.div
                   className="flex flex-col items-center justify-center cursor-pointer"
                   whileHover={{ scale: 1.07 }}
@@ -171,4 +188,4 @@ export default function Categories() {
       </Swiper>
     </section>
   );
-                        }
+                   }
