@@ -1,90 +1,90 @@
 /**
- * 🔮 Everwish Smart Index Generator
- * Este script analiza todos los archivos MP4 en /public/videos
- * y genera automáticamente un index.json con:
- *  - nombre del archivo
- *  - objeto (primera palabra)
- *  - categoría (palabra intermedia)
- *  - subcategoría (palabra siguiente)
- *  - variante (última parte, ej. 1A)
- *  - categorías Everwish (mapeadas automáticamente)
- *  - tags autogenerados (nombre completo + partes)
+ * 🔮 Everwish Smart Index Generator (v2)
+ * Lee todos los .mp4 desde /public/videos/** (recursivo)
+ * Cruza con /public/data/subcategories.json
+ * Crea /public/videos/index.json automáticamente.
  */
 
 import fs from "fs";
 import path from "path";
 
-const videosDir = path.join(process.cwd(), "public/videos");
-const indexFile = path.join(videosDir, "index.json");
+// 🔹 Rutas
+const videosRoot = path.join(process.cwd(), "public/videos");
+const indexFile = path.join(videosRoot, "index.json");
+const subcategoryMapPath = path.join(process.cwd(), "public/data/subcategories.json");
 
-// 🔹 Mapa de palabras clave → categorías de Everwish
-const categoryMap = {
-  halloween: ["Seasonal & Holidays", "Celebrations"],
-  christmas: ["Holidays", "Seasonal & Holidays", "Celebrations"],
-  easter: ["Seasonal & Holidays", "Celebrations"],
-  thanksgiving: ["Seasonal & Holidays"],
-  birthday: ["Birthday"],
-  love: ["Love & Romance"],
-  wedding: ["Weddings & Anniversaries"],
-  anniversary: ["Weddings & Anniversaries"],
-  baby: ["Babies & Parenting"],
-  graduation: ["School & Graduation"],
-  work: ["Work & Professional"],
-  mother: ["Family & Relationships"],
-  father: ["Family & Relationships"],
-  pet: ["Pets & Animal Lovers"],
-  sympathy: ["Sympathy & Remembrance"],
-  encouragement: ["Encouragement & Motivation"],
-  spiritual: ["Spiritual & Mindfulness"],
-  art: ["Art & Cultural"],
-  friendship: ["Friendship"],
-  general: ["Just Because & Everyday"],
-  funny: ["Humor & Memes"]
-};
+// 🔹 Cargar subcategorías base
+let subcategoryMap = {};
+try {
+  subcategoryMap = JSON.parse(fs.readFileSync(subcategoryMapPath, "utf-8"));
+} catch (err) {
+  console.error("⚠️ No se pudo cargar subcategories.json:", err);
+}
 
-// 🔹 Convertir texto a formato legible
+// 🔹 Buscar archivos recursivamente
+function getAllMp4Files(dir) {
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  return entries.flatMap(entry => {
+    const fullPath = path.join(dir, entry.name);
+    return entry.isDirectory() ? getAllMp4Files(fullPath)
+      : entry.name.toLowerCase().endsWith(".mp4") ? [fullPath] : [];
+  });
+}
+
+// 🔹 Formatear texto bonito
 function formatWord(word) {
   if (!word) return "";
-  return word.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  return word.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
 }
 
+// 🔹 Detectar categoría según palabras
 function detectCategory(words) {
-  for (const w of words) {
-    const key = w.toLowerCase();
-    if (categoryMap[key]) return categoryMap[key];
+  const lower = words.map(w => w.toLowerCase());
+  for (const [mainCat, subs] of Object.entries(subcategoryMap)) {
+    for (const sub of subs) {
+      const allTerms = [
+        sub.name_en.toLowerCase(),
+        sub.name_es.toLowerCase(),
+        mainCat.replace(/-/g, " ")
+      ];
+      if (allTerms.some(term => lower.some(w => w.includes(term.split(" ")[0])))) {
+        return [mainCat, sub.name_en];
+      }
+    }
   }
-  return ["Just Because & Everyday"];
+  return ["Just Because & Everyday", "General"];
 }
 
+// 🔹 Generar índice
 function generateIndex() {
-  const files = fs.readdirSync(videosDir).filter((f) => f.endsWith(".mp4"));
+  const files = getAllMp4Files(videosRoot);
+  const index = files.map(filePath => {
+    const relative = path.relative(videosRoot, filePath).replace(/\\/g, "/");
+    const name = path.basename(filePath, ".mp4");
+    const parts = name.split("_");
 
-  const index = files.map((file) => {
-    const base = path.basename(file, ".mp4");
-    const parts = base.split("_").map((p) => p.toLowerCase());
+    const object = formatWord(parts[0] || "Unknown");
+    const [category, subcategory] = detectCategory(parts);
+    const variant = parts[parts.length - 1]?.toUpperCase() || "";
 
-    const object = parts[0] || "unknown";
-    const category = parts[1] || "general";
-    const subcategory = parts[2] || "misc";
-    const variant = parts[3] || "";
-
-    const categories = detectCategory(parts);
-    const tags = Array.from(new Set([...parts, object, category, subcategory, variant].filter(Boolean)));
+    const tags = Array.from(new Set([
+      object, category, subcategory, variant, ...parts
+    ].filter(Boolean).map(t => t.toLowerCase())));
 
     return {
-      name: base,
-      file: `/videos/${file}`,
-      object: formatWord(object),
-      category: formatWord(category),
-      subcategory: formatWord(subcategory),
-      variant: variant.toUpperCase(),
-      categories,
+      name,
+      file: `/videos/${relative}`,
+      object,
+      category,
+      subcategory,
+      variant,
+      categories: [category],
       tags
     };
   });
 
   fs.writeFileSync(indexFile, JSON.stringify(index, null, 2), "utf-8");
-  console.log(`✅ Index generado con ${index.length} archivos.`);
+  console.log(`✅ Index actualizado con ${index.length} archivos.`);
 }
 
 generateIndex();
