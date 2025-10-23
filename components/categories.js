@@ -7,7 +7,6 @@ import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
 import "swiper/css";
 
-// 🩷 Lista principal (se mantiene tu diseño)
 const allCategories = [
   { name: "Seasonal & Holidays", emoji: "🎉", slug: "seasonal-holidays", color: "#FFE0E9" },
   { name: "Birthday", emoji: "🎂", slug: "birthday", color: "#FFDDEE" },
@@ -36,35 +35,31 @@ export default function Categories() {
   const [search, setSearch] = useState("");
   const [videos, setVideos] = useState([]);
   const [filtered, setFiltered] = useState(allCategories);
-  const [suggestions, setSuggestions] = useState([]);
 
-  // ✅ Cargar videos/index.json una vez
+  // 🔹 Cargar /public/videos/index.json
   useEffect(() => {
     async function loadVideos() {
       try {
         const res = await fetch("/videos/index.json", { cache: "no-store" });
-        if (!res.ok) throw new Error("File not found");
+        if (!res.ok) throw new Error("index.json not found");
         const data = await res.json();
         setVideos(data);
       } catch (err) {
-        console.warn("⚠️ No se pudo cargar videos/index.json (modo local sin errores)");
+        console.error("❌ Error loading /videos/index.json:", err);
       }
     }
     loadVideos();
   }, []);
 
-  // 🔍 Buscar coincidencias mientras se escribe
+  // 🔍 Filtrar categorías visuales mientras se escribe
   useEffect(() => {
     const term = search.toLowerCase().trim();
     if (!term) {
       setFiltered(allCategories);
-      setSuggestions([]);
       return;
     }
 
-    // 1️⃣ Buscar coincidencias dentro del index.json
     const matches = new Set();
-    const termMatches = [];
 
     videos.forEach((v) => {
       const fields = [
@@ -73,7 +68,6 @@ export default function Categories() {
         v.category,
         v.subcategory,
         ...(v.categories || []),
-        ...(v.tags || []),
       ]
         .filter(Boolean)
         .map((t) => t.toLowerCase());
@@ -81,34 +75,45 @@ export default function Categories() {
       if (fields.some((t) => t.includes(term))) {
         if (v.categories?.length) v.categories.forEach((c) => matches.add(c));
         else if (v.category) matches.add(v.category);
-        termMatches.push(...fields.filter((t) => t.includes(term)));
       }
     });
 
-    // 2️⃣ Mostrar sugerencias (limitadas)
-    setSuggestions([...new Set(termMatches)].slice(0, 5));
-
-    // 3️⃣ Filtrar categorías visibles en el carrusel
     if (matches.size > 0) {
       setFiltered(allCategories.filter((c) => matches.has(c.name)));
     } else {
-      setFiltered(
-        allCategories.filter((c) =>
-          c.name.toLowerCase().includes(term)
-        )
-      );
+      setFiltered(allCategories.filter((c) => c.name.toLowerCase().includes(term)));
     }
   }, [search, videos]);
 
-  // 🚀 Cuando el usuario da Enter o clic
+  // 🚀 Enviar búsqueda
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!search) return;
 
-    // Si hay resultados filtrados
+    // 1️⃣ Si hay coincidencias filtradas
     if (filtered.length > 0) {
       router.push(`/category/${filtered[0].slug}`);
       return;
+    }
+
+    // 2️⃣ Si no hay coincidencias, buscar en el index
+    const found = videos.find((v) =>
+      [v.category, v.subcategory, ...(v.categories || [])]
+        .filter(Boolean)
+        .map((t) => t.toLowerCase())
+        .some((t) => t.includes(search.toLowerCase()))
+    );
+
+    if (found) {
+      const cat =
+        (found.categories && found.categories[0]) ||
+        found.category ||
+        found.subcategory;
+      if (cat) {
+        const slug = cat.toLowerCase().replace(/\s+/g, "-");
+        router.push(`/category/${slug}`);
+        return;
+      }
     }
 
     alert(`No matches found for "${search}"`);
@@ -118,8 +123,8 @@ export default function Categories() {
     <section id="categories" className="text-center py-10 px-3 overflow-hidden">
       <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">Categories</h2>
 
-      {/* 🔍 Barra de búsqueda */}
-      <form onSubmit={handleSubmit} className="relative flex justify-center mb-10">
+      {/* 🔍 Barra */}
+      <form onSubmit={handleSubmit} className="flex justify-center mb-10">
         <input
           type="text"
           placeholder="Search any theme — e.g. yeti, turtle, love, halloween..."
@@ -127,21 +132,6 @@ export default function Categories() {
           onChange={(e) => setSearch(e.target.value)}
           className="w-80 md:w-96 px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700"
         />
-        {/* 🔽 Sugerencias */}
-        {suggestions.length > 0 && (
-          <div className="absolute top-12 bg-white border border-gray-200 rounded-xl shadow-md w-80 md:w-96 z-10">
-            {suggestions.map((s, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setSearch(s)}
-                className="block w-full text-left px-4 py-2 hover:bg-pink-50 text-gray-700"
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-        )}
       </form>
 
       {/* 🎠 Carrusel */}
@@ -199,4 +189,4 @@ export default function Categories() {
       </Swiper>
     </section>
   );
-}
+    }
