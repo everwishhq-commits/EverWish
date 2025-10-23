@@ -88,7 +88,7 @@
     { "name_en": "Family Walk", "name_es": "Paseo Familiar", "slug": "family-walk", "emoji": "🚼" },
     { "name_en": "Cuddle Time", "name_es": "Momento de Mimos", "slug": "cuddle-time", "emoji": "🧸" }
   ],
-    ,
+    
   "weddings-anniversaries": [
     { "name_en": "Wedding Day", "name_es": "Día de la Boda", "slug": "wedding-day", "emoji": "💍" },
     { "name_en": "Engagement", "name_es": "Compromiso", "slug": "engagement", "emoji": "💎" },
@@ -179,7 +179,7 @@
     { "name_en": "New Memories", "name_es": "Nuevos Recuerdos", "slug": "new-memories", "emoji": "📸" }
   ],
 
-    ,
+
   "health-support": [
     { "name_en": "Get Well Soon", "name_es": "Pronta Recuperación", "slug": "get-well-soon", "emoji": "🌼" },
     { "name_en": "Mental Health", "name_es": "Salud Mental", "slug": "mental-health", "emoji": "🧠" },
