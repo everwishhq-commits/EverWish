@@ -162,4 +162,4 @@ function getEmojiForSubcategory(name) {
   };
   const key = name?.toLowerCase() || "";
   return map[key] || "✨";
-          }
+}
