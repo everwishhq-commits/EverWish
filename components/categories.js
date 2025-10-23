@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import "swiper/css";
 
 const allCategories = [
@@ -37,53 +37,43 @@ const allCategories = [
   { name: "Adventure", emoji: "🗺️", slug: "adventure", color: "#E8ECFF" },
   { name: "Friendship", emoji: "🤝", slug: "friendship", color: "#FFEAF5" },
   { name: "Festivals", emoji: "🎭", slug: "festivals", color: "#FEEAFF" },
-  { name: "Season Greetings", emoji: "❄️", slug: "season-greetings", color: "#EAF4FF" },
+  { name: "Season Greetings", emoji: "❄️", slug: "season-greetings", color: "#EAF4FF" }
 ];
 
 export default function Categories() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
   const [filtered, setFiltered] = useState(allCategories);
   const [videos, setVideos] = useState([]);
+  const router = useRouter();
 
-  // ✅ Mantiene el texto buscado al volver
+  // Cargar index.json con info de videos
   useEffect(() => {
-    const q = searchParams.get("q");
-    if (q) setSearch(q);
-  }, [searchParams]);
-
-  // 📥 Cargar los videos del index.json
-  useEffect(() => {
-    async function loadVideos() {
+    async function loadData() {
       try {
-        const res = await fetch("/videos/index.json", { cache: "no-store" });
+        const res = await fetch("/videos/index.json");
         const data = await res.json();
         setVideos(data);
       } catch (err) {
         console.error("❌ Error cargando index.json:", err);
       }
     }
-    loadVideos();
+    loadData();
   }, []);
 
-  // 🔍 Filtro inteligente
+  // Filtrar categorías por palabra clave
   useEffect(() => {
     const q = search.toLowerCase().trim();
-    if (!q) {
-      setFiltered(allCategories);
-      return;
-    }
+    if (!q) return setFiltered(allCategories);
 
     const foundCategories = new Set();
 
     videos.forEach((item) => {
       const allText = [
         item.name,
-        item.object,
+        ...(item.tags || []),
         item.category,
         item.subcategory,
-        ...(item.tags || []),
+        item.object,
       ]
         .join(" ")
         .toLowerCase();
@@ -91,36 +81,19 @@ export default function Categories() {
       if (allText.includes(q)) {
         if (item.categories && item.categories.length > 0) {
           item.categories.forEach((c) => foundCategories.add(c));
-        } else if (item.category) {
-          foundCategories.add(item.category);
+        } else {
+          foundCategories.add("Just Because & Everyday");
         }
       }
     });
 
-    const results = allCategories.filter((cat) =>
-      [...foundCategories].some((f) =>
-        f.toLowerCase().includes(cat.name.toLowerCase().split("&")[0].trim())
-      )
-    );
+    const results =
+      foundCategories.size > 0
+        ? allCategories.filter((cat) => foundCategories.has(cat.name))
+        : [];
 
-    setFiltered(results.length > 0 ? results : []);
+    setFiltered(results);
   }, [search, videos]);
-
-  // ✨ Actualiza URL sin recargar
-  const handleSearchChange = (val) => {
-    setSearch(val);
-    clearTimeout(window._searchTimeout);
-    window._searchTimeout = setTimeout(() => {
-      const newUrl = val ? `?q=${encodeURIComponent(val)}` : "";
-      window.history.replaceState({}, "", `/categories${newUrl}`);
-    }, 600);
-  };
-
-  const clearSearch = () => {
-    setSearch("");
-    setFiltered(allCategories);
-    window.history.replaceState({}, "", "/categories");
-  };
 
   return (
     <section id="categories" className="text-center py-10 px-3 overflow-hidden">
@@ -129,33 +102,22 @@ export default function Categories() {
       </h2>
 
       {/* 🔍 Barra de búsqueda */}
-      <div className="relative flex justify-center mb-10">
+      <div className="flex justify-center mb-10">
         <input
           type="text"
           placeholder="Search any theme — e.g. yeti, turtle, love, halloween..."
           value={search}
-          onChange={(e) => handleSearchChange(e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
           className="w-80 md:w-96 px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700"
         />
-        {search && (
-          <button
-            onClick={clearSearch}
-            className="absolute right-[calc(50%-9.5rem)] md:right-[calc(50%-12rem)] top-2.5 text-gray-400 hover:text-gray-600 text-lg"
-          >
-            ✕
-          </button>
-        )}
       </div>
 
-      {/* 🎠 Carrusel */}
+      {/* 🎠 Carrusel de categorías */}
       <Swiper
-        key={search || "all"}
         slidesPerView={3.2}
         spaceBetween={16}
         centeredSlides={true}
         loop={true}
-        preventClicks={true}
-        preventClicksPropagation={true}
         autoplay={{
           delay: 2500,
           disableOnInteraction: false,
@@ -176,11 +138,15 @@ export default function Categories() {
                 className="flex flex-col items-center justify-center cursor-pointer"
                 whileHover={{ scale: 1.07 }}
                 onClick={() => {
-                  router.push(
-                    `/category/${cat.slug}${
-                      search ? `?q=${encodeURIComponent(search)}` : ""
-                    }`
-                  );
+                  // 👇 cierra el teclado si está abierto
+                  if (document.activeElement && document.activeElement.blur) {
+                    document.activeElement.blur();
+                  }
+                  // redirige con query si hay búsqueda
+                  const url = `/category/${cat.slug}${
+                    search ? `?q=${encodeURIComponent(search)}` : ""
+                  }`;
+                  router.push(url);
                 }}
               >
                 <motion.div
@@ -213,4 +179,4 @@ export default function Categories() {
       </Swiper>
     </section>
   );
-          }
+}
