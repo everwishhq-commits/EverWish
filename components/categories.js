@@ -7,28 +7,23 @@ import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
 import "swiper/css";
 
-// 🩷 Lista principal de categorías
+// 🎨 Lista base de categorías (nombres limpios y visibles)
 const allCategories = [
   { name: "Seasonal & Holidays", emoji: "🎉", slug: "seasonal-holidays", color: "#FFE0E9" },
+  { name: "Christmas", emoji: "🎄", slug: "christmas", color: "#EAF4FF" },
   { name: "Birthday", emoji: "🎂", slug: "birthday", color: "#FFDDEE" },
   { name: "Love & Romance", emoji: "💘", slug: "love-romance", color: "#FFECEC" },
   { name: "Family & Relationships", emoji: "👨‍👩‍👧‍👦", slug: "family-relationships", color: "#E5EDFF" },
   { name: "Babies & Parenting", emoji: "👶", slug: "babies-parenting", color: "#DFF7FF" },
-  { name: "Weddings & Anniversaries", emoji: "💍", slug: "weddings-anniversaries", color: "#F3E5FF" },
-  { name: "Congratulations & Milestones", emoji: "🏆", slug: "congrats-milestones", color: "#FFF3C4" },
-  { name: "School & Graduation", emoji: "🎓", slug: "school-graduation", color: "#E2FFD7" },
   { name: "Pets & Animal Lovers", emoji: "🐾", slug: "pets-animal-lovers", color: "#FFF3E0" },
-  { name: "Holidays", emoji: "🏖️", slug: "holidays", color: "#E4FFF7" },
-  { name: "Season Greetings", emoji: "❄️", slug: "season-greetings", color: "#EAF4FF" },
-  { name: "Celebrations", emoji: "🎊", slug: "celebrations", color: "#FFF0C7" },
   { name: "Humor & Memes", emoji: "😄", slug: "humor-memes", color: "#E7F7FF" },
-  { name: "Friendship", emoji: "🤝", slug: "friendship", color: "#FFEAF5" },
-  { name: "Adventure", emoji: "🗺️", slug: "adventure", color: "#E8ECFF" },
   { name: "Thank You & Appreciation", emoji: "🙏", slug: "thank-you-appreciation", color: "#FFF0E5" },
   { name: "Inspirations & Quotes", emoji: "📝", slug: "inspirations-quotes", color: "#E8F6FF" },
+  { name: "Adventure", emoji: "🗺️", slug: "adventure", color: "#E8ECFF" },
+  { name: "Friendship", emoji: "🤝", slug: "friendship", color: "#FFEAF5" },
+  { name: "Weddings & Anniversaries", emoji: "💍", slug: "weddings-anniversaries", color: "#F3E5FF" },
   { name: "Gifts & Surprises", emoji: "🎁", slug: "gifts-surprises", color: "#E7E9FF" },
-  { name: "Art & Cultural", emoji: "🎨", slug: "art-cultural", color: "#FFEDDF" },
-  { name: "Just Because & Everyday", emoji: "💌", slug: "just-because", color: "#FDE6E6" }
+  { name: "Just Because", emoji: "💌", slug: "just-because", color: "#FDE6E6" },
 ];
 
 export default function Categories() {
@@ -36,37 +31,35 @@ export default function Categories() {
   const [search, setSearch] = useState("");
   const [videos, setVideos] = useState([]);
   const [filtered, setFiltered] = useState(allCategories);
-  const [suggestions, setSuggestions] = useState([]);
 
-  // ✅ Carga de videos/index.json
+  // ✅ Carga index.json
   useEffect(() => {
-    async function loadVideos() {
+    async function load() {
       try {
         const res = await fetch("/videos/index.json", { cache: "no-store" });
         if (!res.ok) throw new Error("index.json not found");
         const data = await res.json();
         setVideos(data);
-      } catch (err) {
-        console.warn("⚠️ No se pudo cargar videos/index.json (modo local sin error)");
+      } catch {
+        console.warn("⚠️ index.json no encontrado — usando modo local");
       }
     }
-    loadVideos();
+    load();
   }, []);
 
-  // 🔍 Filtrado de búsqueda
+  // 🔍 Sincroniza búsqueda
   useEffect(() => {
     const term = search.toLowerCase().trim();
     if (!term) {
       setFiltered(allCategories);
-      setSuggestions([]);
       return;
     }
 
-    const matches = new Set();
-    const foundTerms = [];
+    // Buscar coincidencias dentro del index.json
+    const matchedCategories = new Set();
 
     videos.forEach((v) => {
-      const fields = [
+      const allText = [
         v.name,
         v.object,
         v.category,
@@ -77,28 +70,26 @@ export default function Categories() {
         .filter(Boolean)
         .map((t) => t.toLowerCase());
 
-      if (fields.some((t) => t.includes(term))) {
-        if (v.categories?.length) v.categories.forEach((c) => matches.add(c));
-        else if (v.category) matches.add(v.category);
-        foundTerms.push(...fields.filter((t) => t.includes(term)));
+      if (allText.some((t) => t.includes(term))) {
+        if (v.categories?.length)
+          v.categories.forEach((c) => matchedCategories.add(c));
+        else if (v.category) matchedCategories.add(v.category);
       }
     });
 
-    // Genera sugerencias (máx. 5)
-    setSuggestions([...new Set(foundTerms)].slice(0, 5));
+    // Filtrar categorías visibles según coincidencias
+    const newFiltered =
+      matchedCategories.size > 0
+        ? allCategories.filter((c) =>
+            [...matchedCategories].some((m) =>
+              c.name.toLowerCase().includes(m.toLowerCase())
+            )
+          )
+        : allCategories.filter((c) =>
+            c.name.toLowerCase().includes(term)
+          );
 
-    // Actualiza carrusel
-    if (matches.size > 0) {
-      setFiltered(
-        allCategories.filter((c) =>
-          [...matches].some((m) => c.name.toLowerCase().includes(m.toLowerCase()))
-        )
-      );
-    } else {
-      setFiltered(
-        allCategories.filter((c) => c.name.toLowerCase().includes(term))
-      );
-    }
+    setFiltered(newFiltered);
   }, [search, videos]);
 
   // 🚀 Enviar búsqueda
@@ -107,20 +98,8 @@ export default function Categories() {
     if (!search) return;
 
     const match = filtered[0];
-    if (match) {
-      router.push(`/category/${match.slug}`);
-    } else {
-      alert(`No matches found for "${search}"`);
-    }
-  };
-
-  // 📱 Mostrar sugerencias clicables
-  const handleSuggestionClick = (value) => {
-    setSearch(value);
-    const related = allCategories.find((c) =>
-      c.name.toLowerCase().includes(value.toLowerCase())
-    );
-    if (related) router.push(`/category/${related.slug}`);
+    if (match) router.push(`/category/${match.slug}`);
+    else alert(`No results found for "${search}"`);
   };
 
   return (
@@ -129,32 +108,25 @@ export default function Categories() {
         Categories
       </h2>
 
-      {/* 🔍 Barra de búsqueda */}
-      <form onSubmit={handleSubmit} className="relative flex justify-center mb-10">
+      {/* 🔍 Barra de búsqueda limpia y sin autofill */}
+      <form
+        onSubmit={handleSubmit}
+        className="relative flex justify-center mb-10"
+        autoComplete="off"
+      >
         <input
           type="text"
+          name="search"
+          autoComplete="off"
+          spellCheck="false"
           placeholder="Search any theme — e.g. yeti, turtle, love, halloween..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-80 md:w-96 px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700"
         />
-        {suggestions.length > 0 && (
-          <div className="absolute top-12 bg-white border border-gray-200 rounded-xl shadow-md w-80 md:w-96 z-10">
-            {suggestions.map((s, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => handleSuggestionClick(s)}
-                className="block w-full text-left px-4 py-2 hover:bg-pink-50 text-gray-700"
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-        )}
       </form>
 
-      {/* 🎠 Carrusel */}
+      {/* 🎠 Carrusel de categorías */}
       <Swiper
         slidesPerView={3.2}
         spaceBetween={16}
