@@ -1,14 +1,17 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function CategoryPage() {
   const { slug } = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [groups, setGroups] = useState({});
   const [activeSub, setActiveSub] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const query = (searchParams.get("q") || "").toLowerCase().trim();
 
   useEffect(() => {
     async function loadVideos() {
@@ -16,33 +19,37 @@ export default function CategoryPage() {
         const res = await fetch("/videos/index.json", { cache: "no-store" });
         const data = await res.json();
 
-        // ✅ Normaliza cadenas para evitar fallos por guiones, &, o espacios
         const normalize = (str) =>
-          str
-            ?.toLowerCase()
-            .replace(/&/g, "and")
-            .replace(/\s+/g, "-")
-            .trim();
+          str?.toLowerCase().replace(/&/g, "and").replace(/\s+/g, "-").trim();
 
-        // ✅ Filtra los videos que pertenecen a esta categoría
         const filtered = data.filter((v) =>
           (v.categories || [])
             .map((c) => normalize(c))
             .includes(normalize(slug))
         );
 
-        // ✅ Agrupa los videos por subcategoría o categoría
+        const searchFiltered = query
+          ? filtered.filter((v) => {
+              const text = [
+                v.name,
+                v.object,
+                v.subcategory,
+                v.category,
+                ...(v.tags || []),
+              ]
+                .join(" ")
+                .toLowerCase();
+              return text.includes(query);
+            })
+          : filtered;
+
         const grouped = {};
-        for (const v of filtered) {
+        for (const v of searchFiltered) {
           const sub =
             (v.subcategory && v.subcategory.trim()) ||
             (v.category && v.category.trim()) ||
             "General";
-
-          const clean = sub
-            .replace(/_/g, " ")
-            .replace(/\b\w/g, (c) => c.toUpperCase());
-
+          const clean = sub.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
           if (!grouped[clean]) grouped[clean] = [];
           grouped[clean].push(v);
         }
@@ -54,26 +61,21 @@ export default function CategoryPage() {
         setLoading(false);
       }
     }
-
     loadVideos();
-  }, [slug]);
+  }, [slug, query]);
 
   const subcategories = Object.keys(groups);
   const activeVideos = activeSub ? groups[activeSub] || [] : [];
 
-  if (loading) {
+  if (loading)
     return (
       <main className="flex flex-col items-center justify-center min-h-screen bg-[#fff5f8] text-gray-600">
-        <p className="animate-pulse text-lg">
-          Loading {slug.replace("-", " ")} ✨
-        </p>
+        <p className="animate-pulse text-lg">Loading {slug.replace("-", " ")} ✨</p>
       </main>
     );
-  }
 
   return (
     <main className="min-h-screen bg-[#fff5f8] text-gray-800 flex flex-col items-center py-10 px-4">
-      {/* 🔙 Back */}
       <button
         onClick={() => router.push("/categories")}
         className="text-pink-500 hover:text-pink-600 font-semibold mb-6"
@@ -81,15 +83,15 @@ export default function CategoryPage() {
         ← Back to Main Categories
       </button>
 
-      {/* 🏷️ Title */}
       <h1 className="text-4xl font-extrabold text-pink-600 mb-3 capitalize text-center">
         {slug.replace("-", " ")}
       </h1>
       <p className="text-gray-600 mb-10 text-center max-w-lg">
-        Explore the celebrations and moments in this category 🎉
+        {query
+          ? <>Showing results for "<b>{query}</b>" in this category 🎯</>
+          : <>Explore all subcategories and cards in this category 🎉</>}
       </p>
 
-      {/* 🌸 Subcategories */}
       {subcategories.length > 0 ? (
         <div className="flex flex-wrap justify-center gap-4 max-w-5xl">
           {subcategories.map((sub, i) => (
@@ -106,14 +108,14 @@ export default function CategoryPage() {
           ))}
         </div>
       ) : (
-        <p className="text-gray-500 text-center">No subcategories found.</p>
+        <p className="text-gray-500 text-center">
+          No matching subcategories found for "{query}".
+        </p>
       )}
 
-      {/* 💫 Modal */}
       <AnimatePresence>
         {activeSub && (
           <>
-            {/* Fondo con blur 70% */}
             <motion.div
               className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
               initial={{ opacity: 0 }}
@@ -121,7 +123,6 @@ export default function CategoryPage() {
               exit={{ opacity: 0 }}
               onClick={() => setActiveSub(null)}
             />
-            {/* Ventana del modal */}
             <motion.div
               className="fixed inset-0 z-50 flex items-center justify-center p-4"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -130,7 +131,6 @@ export default function CategoryPage() {
               transition={{ duration: 0.3 }}
             >
               <div className="relative bg-white rounded-3xl shadow-xl w-[90%] max-w-5xl h-[70vh] overflow-y-auto border border-pink-100 p-6">
-                {/* ✖ Close */}
                 <button
                   onClick={() => setActiveSub(null)}
                   className="absolute top-3 right-5 text-gray-400 hover:text-pink-500 text-2xl font-bold"
@@ -138,12 +138,10 @@ export default function CategoryPage() {
                   ×
                 </button>
 
-                {/* Título */}
                 <h2 className="text-2xl font-bold text-pink-600 mb-4 capitalize">
                   {getEmojiForSubcategory(activeSub)} {activeSub}
                 </h2>
 
-                {/* Tarjetas */}
                 {activeVideos.length === 0 ? (
                   <p className="text-gray-500 text-center mt-10">
                     No cards found for this subcategory.
@@ -181,7 +179,6 @@ export default function CategoryPage() {
   );
 }
 
-// 🧁 Emojis para subcategorías
 function getEmojiForSubcategory(name) {
   const map = {
     halloween: "🎃",
@@ -190,6 +187,9 @@ function getEmojiForSubcategory(name) {
     "4th of july": "🦅",
     easter: "🐰",
     newyear: "🎆",
+    birthday: "🎂",
+    pets: "🐾",
+    love: "💖",
   };
   const key = name?.toLowerCase() || "";
   return map[key] || "✨";
