@@ -8,8 +8,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import "swiper/css";
 
-// ⚠️ Usa tus categorías reales; NO cambio tus nombres/slug.
-// (Puedes extender esta lista si lo deseas)
+// 💫 Tus categorías principales
 const allCategories = [
   { name: "Seasonal & Holidays", emoji: "🎉", slug: "seasonal-holidays", color: "#FFE0E9" },
   { name: "Birthday", emoji: "🎂", slug: "birthday", color: "#FFDDEE" },
@@ -21,42 +20,44 @@ const allCategories = [
   { name: "Just Because & Everyday", emoji: "💌", slug: "just-because", color: "#FDE6E6" },
 ];
 
-const norm = (s = "") =>
-  s.toString().toLowerCase().replace(/&/g, "and").replace(/[^\p{L}\p{N}]+/gu, "-").trim();
+// 🔧 Normalizador de texto para comparar sin errores
+function normalize(text = "") {
+  return text.toString().toLowerCase().replace(/&/g, "and").replace(/[^\p{L}\p{N}]+/gu, "-").trim();
+}
 
 export default function Categories() {
   const router = useRouter();
   const params = useSearchParams();
 
-  // toma /categories?search=...
-  const initial = params.get("search") || "";
-  const [search, setSearch] = useState(initial);
+  const initialSearch = params.get("search") || "";
+  const [search, setSearch] = useState(initialSearch);
   const [filtered, setFiltered] = useState(allCategories);
   const [videos, setVideos] = useState([]);
 
-  // Carga el índice real (tu script de 1400 líneas ya genera esto)
+  // 🔄 Cargar el JSON real (el tuyo de 1400 líneas)
   useEffect(() => {
-    (async () => {
+    async function loadVideos() {
       try {
         const res = await fetch("/videos/index.json", { cache: "no-store" });
         const data = await res.json();
         setVideos(Array.isArray(data) ? data : []);
-      } catch (e) {
-        console.error("Error cargando /videos/index.json", e);
+      } catch (err) {
+        console.error("Error cargando /videos/index.json:", err);
       }
-    })();
+    }
+    loadVideos();
   }, []);
 
-  // Refleja el término en la URL (sin navegar de página ni romper nada)
+  // 🕓 Reflejar búsqueda en la URL (suavemente)
   useEffect(() => {
-    const t = setTimeout(() => {
+    const timeout = setTimeout(() => {
       const q = encodeURIComponent(search || "");
       router.replace(`/categories${q ? `?search=${q}` : ""}`);
-    }, 300); // debounce suave
-    return () => clearTimeout(t);
+    }, 300);
+    return () => clearTimeout(timeout);
   }, [search, router]);
 
-  // Filtra categorías principales cuando hay término
+  // 🔍 Filtro principal de categorías
   useEffect(() => {
     const q = (search || "").toLowerCase().trim();
     if (!q) {
@@ -64,11 +65,10 @@ export default function Categories() {
       return;
     }
 
-    // Coincidimos por: name, slug, y TODO el texto de los videos (name, tags, object, category, subcategory, categories)
-    const matchedCatSlugs = new Set();
+    const found = new Set();
 
-    for (const v of videos) {
-      const hayTexto = [
+    videos.forEach((v) => {
+      const text = [
         v.name,
         v.object,
         v.category,
@@ -78,36 +78,35 @@ export default function Categories() {
       ]
         .filter(Boolean)
         .join(" ")
-        .toLowerCase()
-        .includes(q);
+        .toLowerCase();
 
-      if (!hayTexto) continue;
-
-      // Preferimos categories[] si existe; si no, usamos category
-      if (Array.isArray(v.categories) && v.categories.length) {
-        for (const c of v.categories) matchedCatSlugs.add(norm(c));
-      } else if (v.category) {
-        matchedCatSlugs.add(norm(v.category));
+      if (text.includes(q)) {
+        if (Array.isArray(v.categories) && v.categories.length) {
+          v.categories.forEach((c) => found.add(normalize(c)));
+        } else if (v.category) {
+          found.add(normalize(v.category));
+        }
       }
-    }
+    });
 
-    // Si no hubo match en videos, también permitimos match directo por nombre/slug de la categoría
-    const result = allCategories.filter(
-      (c) =>
-        matchedCatSlugs.has(norm(c.name)) ||
-        matchedCatSlugs.has(norm(c.slug)) ||
-        c.name.toLowerCase().includes(q) ||
-        norm(c.slug).includes(norm(q))
+    const results = allCategories.filter(
+      (cat) =>
+        found.has(normalize(cat.name)) ||
+        found.has(normalize(cat.slug)) ||
+        cat.name.toLowerCase().includes(q) ||
+        normalize(cat.slug).includes(normalize(q))
     );
 
-    setFiltered(result.length ? result : []);
+    setFiltered(results.length ? results : []);
   }, [search, videos]);
 
   return (
     <section id="categories" className="text-center py-10 px-3 overflow-hidden">
-      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">Categories</h2>
+      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
+        Categories
+      </h2>
 
-      {/* 🔎 Barra de búsqueda (sin autofill del navegador) */}
+      {/* 🔎 Barra sin autofill */}
       <div className="flex justify-center mb-10">
         <input
           type="search"
@@ -123,6 +122,7 @@ export default function Categories() {
         />
       </div>
 
+      {/* 🎠 Carrusel */}
       {filtered.length > 0 ? (
         <Swiper
           slidesPerView={3.2}
@@ -142,7 +142,10 @@ export default function Categories() {
           {filtered.map((cat) => (
             <SwiperSlide key={cat.slug}>
               <Link href={`/category/${cat.slug}`}>
-                <motion.div className="flex flex-col items-center justify-center cursor-pointer" whileHover={{ scale: 1.07 }}>
+                <motion.div
+                  className="flex flex-col items-center justify-center cursor-pointer"
+                  whileHover={{ scale: 1.07 }}
+                >
                   <motion.div
                     className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md"
                     style={{ backgroundColor: cat.color }}
@@ -155,7 +158,9 @@ export default function Categories() {
                       {cat.emoji}
                     </motion.span>
                   </motion.div>
-                  <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">{cat.name}</p>
+                  <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
+                    {cat.name}
+                  </p>
                 </motion.div>
               </Link>
             </SwiperSlide>
@@ -163,7 +168,7 @@ export default function Categories() {
         </Swiper>
       ) : (
         <p className="text-gray-500 text-sm mt-8">
-          No matching categories for “{search || " " }”
+          No matching categories for “{search || ""}”
         </p>
       )}
     </section>
