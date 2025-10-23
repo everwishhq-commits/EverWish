@@ -3,28 +3,35 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function CategoryModalPage() {
+export default function CategoryPage() {
   const { slug } = useParams();
   const router = useRouter();
-
   const [groups, setGroups] = useState({});
   const [activeSub, setActiveSub] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadData() {
+    async function loadVideos() {
       try {
         const res = await fetch("/videos/index.json", { cache: "no-store" });
         const data = await res.json();
 
-        // 🔹 Filtra todos los videos que pertenezcan a esta categoría principal
+        // ✅ Normaliza cadenas para evitar fallos por guiones, &, o espacios
+        const normalize = (str) =>
+          str
+            ?.toLowerCase()
+            .replace(/&/g, "and")
+            .replace(/\s+/g, "-")
+            .trim();
+
+        // ✅ Filtra los videos que pertenecen a esta categoría
         const filtered = data.filter((v) =>
-          (v.categories || []).some(
-            (c) => c.toLowerCase().replace(/\s+/g, "-") === slug
-          )
+          (v.categories || [])
+            .map((c) => normalize(c))
+            .includes(normalize(slug))
         );
 
-        // 🔹 Agrupa por subcategoría o categoría (corrige mayúsculas, guiones, etc.)
+        // ✅ Agrupa los videos por subcategoría o categoría
         const grouped = {};
         for (const v of filtered) {
           const sub =
@@ -48,7 +55,7 @@ export default function CategoryModalPage() {
       }
     }
 
-    loadData();
+    loadVideos();
   }, [slug]);
 
   const subcategories = Object.keys(groups);
@@ -56,9 +63,9 @@ export default function CategoryModalPage() {
 
   if (loading) {
     return (
-      <main className="flex items-center justify-center min-h-screen bg-[#fff5f8] text-gray-600">
+      <main className="flex flex-col items-center justify-center min-h-screen bg-[#fff5f8] text-gray-600">
         <p className="animate-pulse text-lg">
-          Loading {slug.replace("-", " ")} celebrations ✨
+          Loading {slug.replace("-", " ")} ✨
         </p>
       </main>
     );
@@ -66,7 +73,7 @@ export default function CategoryModalPage() {
 
   return (
     <main className="min-h-screen bg-[#fff5f8] text-gray-800 flex flex-col items-center py-10 px-4">
-      {/* 🔙 Volver */}
+      {/* 🔙 Back */}
       <button
         onClick={() => router.push("/categories")}
         className="text-pink-500 hover:text-pink-600 font-semibold mb-6"
@@ -74,12 +81,15 @@ export default function CategoryModalPage() {
         ← Back to Main Categories
       </button>
 
-      {/* 🏷️ Título principal */}
-      <h1 className="text-4xl font-extrabold text-pink-600 mb-8 capitalize text-center">
+      {/* 🏷️ Title */}
+      <h1 className="text-4xl font-extrabold text-pink-600 mb-3 capitalize text-center">
         {slug.replace("-", " ")}
       </h1>
+      <p className="text-gray-600 mb-10 text-center max-w-lg">
+        Explore the celebrations and moments in this category 🎉
+      </p>
 
-      {/* 🌸 Subcategorías */}
+      {/* 🌸 Subcategories */}
       {subcategories.length > 0 ? (
         <div className="flex flex-wrap justify-center gap-4 max-w-5xl">
           {subcategories.map((sub, i) => (
@@ -99,28 +109,28 @@ export default function CategoryModalPage() {
         <p className="text-gray-500 text-center">No subcategories found.</p>
       )}
 
-      {/* 💫 Modal elegante */}
+      {/* 💫 Modal */}
       <AnimatePresence>
         {activeSub && (
           <>
-            {/* Fondo con blur */}
+            {/* Fondo con blur 70% */}
             <motion.div
               className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setActiveSub(null)} // 👈 cerrar al tocar fuera
+              onClick={() => setActiveSub(null)}
             />
-            {/* Contenedor modal */}
+            {/* Ventana del modal */}
             <motion.div
-              className="fixed z-50 inset-0 flex items-center justify-center p-4"
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
             >
               <div className="relative bg-white rounded-3xl shadow-xl w-[90%] max-w-5xl h-[70vh] overflow-y-auto border border-pink-100 p-6">
-                {/* ✖ Cerrar */}
+                {/* ✖ Close */}
                 <button
                   onClick={() => setActiveSub(null)}
                   className="absolute top-3 right-5 text-gray-400 hover:text-pink-500 text-2xl font-bold"
@@ -128,12 +138,12 @@ export default function CategoryModalPage() {
                   ×
                 </button>
 
-                {/* Título subcategoría */}
+                {/* Título */}
                 <h2 className="text-2xl font-bold text-pink-600 mb-4 capitalize">
                   {getEmojiForSubcategory(activeSub)} {activeSub}
                 </h2>
 
-                {/* Tarjetas dentro del modal */}
+                {/* Tarjetas */}
                 {activeVideos.length === 0 ? (
                   <p className="text-gray-500 text-center mt-10">
                     No cards found for this subcategory.
@@ -150,7 +160,7 @@ export default function CategoryModalPage() {
                       >
                         <video
                           src={video.file}
-                          className="object-cover w-full h-auto aspect-[4/5]"
+                          className="object-cover w-full aspect-[4/5]"
                           playsInline
                           loop
                           muted
@@ -171,7 +181,7 @@ export default function CategoryModalPage() {
   );
 }
 
-// 🌸 Emojis decorativos
+// 🧁 Emojis para subcategorías
 function getEmojiForSubcategory(name) {
   const map = {
     halloween: "🎃",
@@ -183,4 +193,4 @@ function getEmojiForSubcategory(name) {
   };
   const key = name?.toLowerCase() || "";
   return map[key] || "✨";
-          }
+        }
