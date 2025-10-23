@@ -8,42 +8,135 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import "swiper/css";
 
-// 🎨 Lista de categorías principales
+// 🌸 CATEGORÍAS LIMPIAS Y UNIFICADAS
 const allCategories = [
-  { name: "Seasonal & Holidays", emoji: "🎉", slug: "seasonal-holidays", color: "#FFE0E9" },
-  { name: "Birthday", emoji: "🎂", slug: "birthday", color: "#FFDDEE" },
-  { name: "Love & Romance", emoji: "💘", slug: "love-romance", color: "#FFECEC" },
-  { name: "Family & Relationships", emoji: "👨‍👩‍👧‍👦", slug: "family-relationships", color: "#E5EDFF" },
-  { name: "Babies & Parenting", emoji: "👶", slug: "babies-parenting", color: "#DFF7FF" },
-  { name: "Weddings & Anniversaries", emoji: "💍", slug: "weddings-anniversaries", color: "#F3E5FF" },
-  { name: "Congratulations & Milestones", emoji: "🏆", slug: "congrats-milestones", color: "#FFF3C4" },
-  { name: "School & Graduation", emoji: "🎓", slug: "school-graduation", color: "#E2FFD7" },
-  { name: "Work & Professional", emoji: "💼", slug: "work-professional", color: "#D9F3FF" },
-  { name: "House & Moving", emoji: "🏡", slug: "house-moving", color: "#E8FFF3" },
-  { name: "Health & Support", emoji: "🩺", slug: "health-support", color: "#DFFAFF" },
-  { name: "Sympathy & Remembrance", emoji: "🕊️", slug: "sympathy-remembrance", color: "#F3F3F3" },
-  { name: "Encouragement & Motivation", emoji: "🌟", slug: "encouragement-motivation", color: "#FFF5D9" },
-  { name: "Thank You & Appreciation", emoji: "🙏", slug: "thank-you-appreciation", color: "#FFF0E5" },
-  { name: "Invitations & Events", emoji: "✉️", slug: "invitations-events", color: "#FFD9E8" },
-  { name: "Art & Cultural", emoji: "🎨", slug: "art-cultural", color: "#FFEDDF" },
-  { name: "Kids & Teens", emoji: "🧸", slug: "kids-teens", color: "#FFE6FA" },
-  { name: "Humor & Memes", emoji: "😄", slug: "humor-memes", color: "#E7F7FF" },
-  { name: "Pets & Animal Lovers", emoji: "🐾", slug: "pets-animal-lovers", color: "#FFF3E0" },
-  { name: "Adventure", emoji: "🗺️", slug: "adventure", color: "#E8ECFF" },
-  { name: "Celebrations", emoji: "🎊", slug: "celebrations", color: "#FFF0C7" },
-  { name: "Just Because & Everyday", emoji: "💌", slug: "just-because", color: "#FDE6E6" },
-  { name: "Gifts & Surprises", emoji: "🎁", slug: "gifts-surprises", color: "#E7E9FF" },
-  { name: "Inspirations & Quotes", emoji: "📝", slug: "inspirations-quotes", color: "#E8F6FF" },
-  { name: "Custom & AI Creations", emoji: "🤖", slug: "custom-ai-creations", color: "#E5FFE2" },
-  { name: "Festivals", emoji: "🎭", slug: "festivals", color: "#FEEAFF" },
-  { name: "Holidays", emoji: "🏖️", slug: "holidays", color: "#E4FFF7" },
+  {
+    name: "Seasonal & Holidays",
+    emoji: "🎉",
+    slug: "seasonal-holidays",
+    color: "#FFE0E9",
+  },
+  {
+    name: "Professions & Appreciation",
+    emoji: "👩‍🏫",
+    slug: "professions-appreciation",
+    color: "#E8FFF3",
+  },
+  {
+    name: "Birthday",
+    emoji: "🎂",
+    slug: "birthday",
+    color: "#FFDDEE",
+  },
+  {
+    name: "Love & Romance",
+    emoji: "💘",
+    slug: "love-romance",
+    color: "#FFECEC",
+  },
+  {
+    name: "Family & Relationships",
+    emoji: "👨‍👩‍👧‍👦",
+    slug: "family-relationships",
+    color: "#E5EDFF",
+  },
+  {
+    name: "Babies & Parenting",
+    emoji: "👶",
+    slug: "babies-parenting",
+    color: "#DFF7FF",
+  },
+  {
+    name: "Weddings & Anniversaries",
+    emoji: "💍",
+    slug: "weddings-anniversaries",
+    color: "#F3E5FF",
+  },
+  {
+    name: "School & Graduation",
+    emoji: "🎓",
+    slug: "school-graduation",
+    color: "#E2FFD7",
+  },
+  {
+    name: "Congratulations & Milestones",
+    emoji: "🏆",
+    slug: "congrats-milestones",
+    color: "#FFF3C4",
+  },
+  {
+    name: "Home & Life Changes",
+    emoji: "🏡",
+    slug: "home-life-changes",
+    color: "#E8FFF3",
+  },
+  {
+    name: "Health & Support",
+    emoji: "🩺",
+    slug: "health-support",
+    color: "#DFFAFF",
+  },
+  {
+    name: "Sympathy & Remembrance",
+    emoji: "🕊️",
+    slug: "sympathy-remembrance",
+    color: "#F3F3F3",
+  },
+  {
+    name: "Gifts & Surprises",
+    emoji: "🎁",
+    slug: "gifts-surprises",
+    color: "#E7E9FF",
+  },
+  {
+    name: "Humor & Memes",
+    emoji: "😄",
+    slug: "humor-memes",
+    color: "#E7F7FF",
+  },
+  {
+    name: "Adventure & Nature",
+    emoji: "🗺️",
+    slug: "adventure-nature",
+    color: "#E8ECFF",
+  },
+  {
+    name: "Kids & Teens",
+    emoji: "🧸",
+    slug: "kids-teens",
+    color: "#FFE6FA",
+  },
+  {
+    name: "Just Because & Everyday",
+    emoji: "💌",
+    slug: "just-because",
+    color: "#FDE6E6",
+  },
+  {
+    name: "Invitations & Events",
+    emoji: "✉️",
+    slug: "invitations-events",
+    color: "#FFD9E8",
+  },
+  {
+    name: "Inspirations & Quotes",
+    emoji: "📝",
+    slug: "inspirations-quotes",
+    color: "#E8F6FF",
+  },
+  {
+    name: "Custom & AI Creations",
+    emoji: "🤖",
+    slug: "custom-ai-creations",
+    color: "#E5FFE2",
+  },
 ];
 
 export default function Categories() {
   const [search, setSearch] = useState("");
   const [filtered, setFiltered] = useState(allCategories);
   const [videos, setVideos] = useState([]);
-  const pathname = usePathname(); // Detecta si estamos en / o en /category
+  const pathname = usePathname();
 
   // 📥 Cargar todos los videos
   useEffect(() => {
@@ -102,12 +195,13 @@ export default function Categories() {
     setFiltered(matches.length > 0 ? matches : []);
   }, [search, videos]);
 
-  // 🧠 Detectar si estamos en Home
   const isHome = pathname === "/";
 
   return (
     <section id="categories" className="text-center py-10 px-3 overflow-hidden">
-      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">Categories</h2>
+      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
+        Categories
+      </h2>
 
       {/* 🔎 Barra de búsqueda */}
       <div className="flex justify-center mb-10">
@@ -117,7 +211,7 @@ export default function Categories() {
           autoCorrect="off"
           autoCapitalize="none"
           inputMode="search"
-          placeholder="Search any theme — e.g. yeti, turtle, love..."
+          placeholder="Search any theme — e.g. turtle, mountain, love..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-80 md:w-96 px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700"
@@ -188,4 +282,4 @@ export default function Categories() {
       </Swiper>
     </section>
   );
-                   }
+        }
