@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import "swiper/css";
 
@@ -47,13 +46,13 @@ export default function Categories() {
   const [filtered, setFiltered] = useState(allCategories);
   const [videos, setVideos] = useState([]);
 
-  // ✅ Si hay ?q= en la URL, rellenar el campo
+  // ✅ Mantiene la palabra si se vuelve desde otra página
   useEffect(() => {
     const q = searchParams.get("q");
     if (q) setSearch(q);
   }, [searchParams]);
 
-  // 📥 Cargar videos
+  // 📥 Cargar los videos desde /videos/index.json
   useEffect(() => {
     async function loadVideos() {
       try {
@@ -61,13 +60,13 @@ export default function Categories() {
         const data = await res.json();
         setVideos(data);
       } catch (err) {
-        console.error("❌ Error cargando /videos/index.json:", err);
+        console.error("❌ Error cargando index.json:", err);
       }
     }
     loadVideos();
   }, []);
 
-  // 🔍 Filtrar por palabra
+  // 🔍 Filtro inteligente
   useEffect(() => {
     const q = search.toLowerCase().trim();
     if (!q) {
@@ -106,7 +105,7 @@ export default function Categories() {
     setFiltered(results.length > 0 ? results : []);
   }, [search, videos]);
 
-  // ✨ Mantener la URL actualizada sin recargar
+  // ✨ Mantiene la URL ?q=
   const handleSearchChange = (val) => {
     setSearch(val);
     clearTimeout(window._searchTimeout);
@@ -124,9 +123,11 @@ export default function Categories() {
 
   return (
     <section id="categories" className="text-center py-10 px-3 overflow-hidden">
-      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">Categories</h2>
+      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
+        Categories
+      </h2>
 
-      {/* 🔍 Buscador */}
+      {/* 🔍 Barra de búsqueda */}
       <div className="relative flex justify-center mb-10">
         <input
           type="text"
@@ -168,32 +169,38 @@ export default function Categories() {
         {filtered.length > 0 ? (
           filtered.map((cat, i) => (
             <SwiperSlide key={i}>
-              <Link href={`/category/${cat.slug}${search ? `?q=${encodeURIComponent(search)}` : ""}`}>
+              {/* ✅ Navegación corregida — sin doble toque */}
+              <motion.div
+                className="flex flex-col items-center justify-center cursor-pointer"
+                whileHover={{ scale: 1.07 }}
+                onClick={() => {
+                  setTimeout(() => {
+                    window.location.href = `/category/${cat.slug}${
+                      search ? `?q=${encodeURIComponent(search)}` : ""
+                    }`;
+                  }, 100);
+                }}
+              >
                 <motion.div
-                  className="flex flex-col items-center justify-center cursor-pointer"
-                  whileHover={{ scale: 1.07 }}
+                  className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md"
+                  style={{ backgroundColor: cat.color }}
                 >
-                  <motion.div
-                    className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md"
-                    style={{ backgroundColor: cat.color }}
+                  <motion.span
+                    className="text-4xl sm:text-5xl"
+                    animate={{ y: [0, -5, 0] }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
                   >
-                    <motion.span
-                      className="text-4xl sm:text-5xl"
-                      animate={{ y: [0, -5, 0] }}
-                      transition={{
-                        duration: 3,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }}
-                    >
-                      {cat.emoji}
-                    </motion.span>
-                  </motion.div>
-                  <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
-                    {cat.name}
-                  </p>
+                    {cat.emoji}
+                  </motion.span>
                 </motion.div>
-              </Link>
+                <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
+                  {cat.name}
+                </p>
+              </motion.div>
             </SwiperSlide>
           ))
         ) : (
