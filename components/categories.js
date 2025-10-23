@@ -7,37 +7,25 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import "swiper/css";
 
+// 🩷 Lista única de categorías sin duplicados
 const allCategories = [
   { name: "Seasonal & Holidays", emoji: "🎉", slug: "seasonal-holidays", color: "#FFE0E9" },
+  { name: "Christmas", emoji: "🎄", slug: "christmas", color: "#EAF4FF" },
   { name: "Birthday", emoji: "🎂", slug: "birthday", color: "#FFDDEE" },
   { name: "Love & Romance", emoji: "💘", slug: "love-romance", color: "#FFECEC" },
   { name: "Family & Relationships", emoji: "👨‍👩‍👧‍👦", slug: "family-relationships", color: "#E5EDFF" },
   { name: "Babies & Parenting", emoji: "👶", slug: "babies-parenting", color: "#DFF7FF" },
+  { name: "Pets & Animal Lovers", emoji: "🐾", slug: "pets-animal-lovers", color: "#FFF3E0" },
+  { name: "Humor & Memes", emoji: "😄", slug: "humor-memes", color: "#E7F7FF" },
   { name: "Weddings & Anniversaries", emoji: "💍", slug: "weddings-anniversaries", color: "#F3E5FF" },
   { name: "Congratulations & Milestones", emoji: "🏆", slug: "congrats-milestones", color: "#FFF3C4" },
-  { name: "School & Graduation", emoji: "🎓", slug: "school-graduation", color: "#E2FFD7" },
-  { name: "Work & Professional", emoji: "💼", slug: "work-professional", color: "#D9F3FF" },
-  { name: "House & Moving", emoji: "🏡", slug: "house-moving", color: "#E8FFF3" },
-  { name: "Health & Support", emoji: "🩺", slug: "health-support", color: "#DFFAFF" },
-  { name: "Sympathy & Remembrance", emoji: "🕊️", slug: "sympathy-remembrance", color: "#F3F3F3" },
-  { name: "Encouragement & Motivation", emoji: "🌟", slug: "encouragement-motivation", color: "#FFF5D9" },
   { name: "Thank You & Appreciation", emoji: "🙏", slug: "thank-you-appreciation", color: "#FFF0E5" },
-  { name: "Invitations & Events", emoji: "✉️", slug: "invitations-events", color: "#FFD9E8" },
-  { name: "Spiritual & Mindfulness", emoji: "🕯️", slug: "spiritual-mindfulness", color: "#EDEAFF" },
-  { name: "Art & Cultural", emoji: "🎨", slug: "art-cultural", color: "#FFEDDF" },
-  { name: "Kids & Teens", emoji: "🧸", slug: "kids-teens", color: "#FFE6FA" },
-  { name: "Humor & Memes", emoji: "😄", slug: "humor-memes", color: "#E7F7FF" },
-  { name: "Pets & Animal Lovers", emoji: "🐾", slug: "pets-animal-lovers", color: "#FFF3E0" },
-  { name: "Just Because & Everyday", emoji: "💌", slug: "just-because", color: "#FDE6E6" },
-  { name: "Gifts & Surprises", emoji: "🎁", slug: "gifts-surprises", color: "#E7E9FF" },
   { name: "Inspirations & Quotes", emoji: "📝", slug: "inspirations-quotes", color: "#E8F6FF" },
-  { name: "Custom & AI Creations", emoji: "🤖", slug: "custom-ai-creations", color: "#E5FFE2" },
-  { name: "Celebrations", emoji: "🎊", slug: "celebrations", color: "#FFF0C7" },
-  { name: "Holidays", emoji: "🏖️", slug: "holidays", color: "#E4FFF7" },
   { name: "Adventure", emoji: "🗺️", slug: "adventure", color: "#E8ECFF" },
   { name: "Friendship", emoji: "🤝", slug: "friendship", color: "#FFEAF5" },
-  { name: "Festivals", emoji: "🎭", slug: "festivals", color: "#FEEAFF" },
-  { name: "Season Greetings", emoji: "❄️", slug: "season-greetings", color: "#EAF4FF" }
+  { name: "Just Because & Everyday", emoji: "💌", slug: "just-because", color: "#FDE6E6" },
+  { name: "Gifts & Surprises", emoji: "🎁", slug: "gifts-surprises", color: "#E7E9FF" },
+  { name: "Season Greetings", emoji: "❄️", slug: "season-greetings", color: "#EAF4FF" },
 ];
 
 export default function Categories() {
@@ -45,7 +33,7 @@ export default function Categories() {
   const [filtered, setFiltered] = useState(allCategories);
   const [videos, setVideos] = useState([]);
 
-  // 📥 Cargar todos los videos del JSON real
+  // 📦 Cargar index.json (fuente de palabras)
   useEffect(() => {
     async function loadVideos() {
       try {
@@ -53,13 +41,13 @@ export default function Categories() {
         const data = await res.json();
         setVideos(data);
       } catch (err) {
-        console.error("❌ Error loading /videos/index.json:", err);
+        console.warn("⚠️ No se pudo cargar /videos/index.json (modo local activo)");
       }
     }
     loadVideos();
   }, []);
 
-  // 🔍 Buscar coincidencias en videos → mostrar solo categoría principal
+  // 🔍 Buscar coincidencias entre nombres, categorías o tags
   useEffect(() => {
     const q = search.toLowerCase().trim();
     if (!q) {
@@ -69,43 +57,45 @@ export default function Categories() {
 
     const foundCategories = new Set();
 
-    videos.forEach((item) => {
-      const searchableText = [
-        item.name,
-        item.object,
-        item.subcategory,
-        item.category,
-        ...(item.tags || [])
+    videos.forEach((v) => {
+      const text = [
+        v.name,
+        v.object,
+        v.category,
+        v.subcategory,
+        ...(v.categories || []),
+        ...(v.tags || []),
       ]
         .join(" ")
         .toLowerCase();
 
-      if (searchableText.includes(q)) {
-        if (item.category) {
-          foundCategories.add(item.category.trim());
-        }
+      if (text.includes(q)) {
+        // Añade el nombre de categoría real
+        if (v.categories?.length) v.categories.forEach((c) => foundCategories.add(c));
+        else if (v.category) foundCategories.add(v.category);
       }
     });
 
-    const matches = allCategories.filter((cat) =>
-      [...foundCategories].some(
-        (f) => f.toLowerCase().replace("&", "and").includes(cat.name.toLowerCase().split("&")[0].trim())
+    const matched = allCategories.filter((cat) =>
+      [...foundCategories].some((c) =>
+        cat.name.toLowerCase().includes(c.toLowerCase().split("&")[0].trim())
       )
     );
 
-    setFiltered(matches.length > 0 ? matches : []);
+    setFiltered(matched.length > 0 ? matched : []);
   }, [search, videos]);
 
   return (
     <section id="categories" className="text-center py-10 px-3 overflow-hidden">
-      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
-        Categories
-      </h2>
+      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">Categories</h2>
 
-      {/* 🔎 Barra de búsqueda */}
+      {/* 🔎 Barra de búsqueda limpia sin autofill */}
       <div className="flex justify-center mb-10">
         <input
           type="text"
+          name="search"
+          autoComplete="off"
+          spellCheck="false"
           placeholder="Search any theme — e.g. yeti, turtle, love, halloween..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -117,16 +107,13 @@ export default function Categories() {
       <Swiper
         slidesPerView={3.2}
         spaceBetween={16}
-        centeredSlides={true}
-        loop={true}
-        autoplay={{
-          delay: 2500,
-          disableOnInteraction: false,
-        }}
+        centeredSlides
+        loop
+        autoplay={{ delay: 2500, disableOnInteraction: false }}
         speed={1000}
         breakpoints={{
-          0: { slidesPerView: 2.4, spaceBetween: 10 },
-          640: { slidesPerView: 3.4, spaceBetween: 14 },
+          0: { slidesPerView: 2.2, spaceBetween: 8 },
+          640: { slidesPerView: 3.5, spaceBetween: 14 },
           1024: { slidesPerView: 5, spaceBetween: 18 },
         }}
         modules={[Autoplay]}
@@ -171,4 +158,4 @@ export default function Categories() {
       </Swiper>
     </section>
   );
-                        }
+        }
