@@ -1,104 +1,19 @@
 [
-  {
-    "name": "Seasonal & Holidays",
-    "slug": "seasonal-holidays",
-    "emoji": "🎉",
-    "color": "#FFE0E9"
-  },
-  {
-    "name": "Birthday",
-    "slug": "birthday",
-    "emoji": "🎂",
-    "color": "#FFDDEE"
-  },
-  {
-    "name": "Love & Romance",
-    "slug": "love-romance",
-    "emoji": "💘",
-    "color": "#FFECEC"
-  },
-  {
-    "name": "Family & Relationships",
-    "slug": "family-relationships",
-    "emoji": "👨‍👩‍👧‍👦",
-    "color": "#E5EDFF"
-  },
-  {
-    "name": "Pets & Animal Lovers",
-    "slug": "pets-animal-lovers",
-    "emoji": "🐾",
-    "color": "#E9FFF4"
-  },
-  {
-    "name": "School & Graduation",
-    "slug": "school-graduation",
-    "emoji": "🎓",
-    "color": "#E2FFD7"
-  },
-  {
-    "name": "Work & Professional",
-    "slug": "work-professional",
-    "emoji": "👩‍💼",
-    "color": "#E8FFF3"
-  },
-  {
-    "name": "Health & Support",
-    "slug": "health-support",
-    "emoji": "🩺",
-    "color": "#DFFAFF"
-  },
-  {
-    "name": "Sympathy & Remembrance",
-    "slug": "sympathy-remembrance",
-    "emoji": "🕊️",
-    "color": "#F3F3F3"
-  },
-  {
-    "name": "Congratulations & Milestones",
-    "slug": "congrats-milestones",
-    "emoji": "🏆",
-    "color": "#FFF3C4"
-  },
-  {
-    "name": "Weddings & Anniversaries",
-    "slug": "weddings-anniversaries",
-    "emoji": "💍",
-    "color": "#F3E5FF"
-  },
-  {
-    "name": "Adventure & Nature",
-    "slug": "adventure-nature",
-    "emoji": "🗺️",
-    "color": "#E8ECFF"
-  },
-  {
-    "name": "Humor & Memes",
-    "slug": "humor-memes",
-    "emoji": "😄",
-    "color": "#E7F7FF"
-  },
-  {
-    "name": "Thank You & Appreciation",
-    "slug": "thank-you-appreciation",
-    "emoji": "🙏",
-    "color": "#E7E9FF"
-  },
-  {
-    "name": "House & Moving",
-    "slug": "house-moving",
-    "emoji": "🏡",
-    "color": "#FFD9E8"
-  },
-  {
-    "name": "Babies & Parenting",
-    "slug": "babies-parenting",
-    "emoji": "🍼",
-    "color": "#FDE6E6"
-  },
-  {
-    "name": "Universal",
-    "slug": "universal",
-    "emoji": "✨",
-    "color": "#E5FFE2"
-  }
+  { "name": "Seasonal & Holidays", "slug": "seasonal-and-holidays", "emoji": "🎉", "color": "#FFE0E9" },
+  { "name": "Birthday", "slug": "birthday", "emoji": "🎂", "color": "#FFDDEE" },
+  { "name": "Love & Romance", "slug": "love-and-romance", "emoji": "💘", "color": "#FFECEC" },
+  { "name": "Family & Relationships", "slug": "family-and-relationships", "emoji": "👨‍👩‍👧‍👦", "color": "#E5EDFF" },
+  { "name": "Pets & Animal Lovers", "slug": "pets-and-animals", "emoji": "🐾", "color": "#E9FFF4" },
+  { "name": "School & Graduation", "slug": "school-and-graduation", "emoji": "🎓", "color": "#E2FFD7" },
+  { "name": "Work & Professional", "slug": "work-and-professional", "emoji": "👩‍💼", "color": "#E8FFF3" },
+  { "name": "Health & Support", "slug": "health-and-support", "emoji": "🩺", "color": "#DFFAFF" },
+  { "name": "Sympathy & Remembrance", "slug": "sympathy-and-remembrance", "emoji": "🕊️", "color": "#F3F3F3" },
+  { "name": "Congratulations & Milestones", "slug": "congratulations-and-milestones", "emoji": "🏆", "color": "#FFF3C4" },
+  { "name": "Weddings & Anniversaries", "slug": "weddings-and-anniversaries", "emoji": "💍", "color": "#F3E5FF" },
+  { "name": "Adventure & Nature", "slug": "adventure-and-nature", "emoji": "🗺️", "color": "#E8ECFF" },
+  { "name": "Humor & Memes", "slug": "humor-and-memes", "emoji": "😄", "color": "#E7F7FF" },
+  { "name": "Thank You & Appreciation", "slug": "thank-you-and-appreciation", "emoji": "🙏", "color": "#E7E9FF" },
+  { "name": "House & Moving", "slug": "house-and-moving", "emoji": "🏡", "color": "#FFD9E8" },
+  { "name": "Babies & Parenting", "slug": "babies-and-parenting", "emoji": "🍼", "color": "#FDE6E6" },
+  { "name": "Universal", "slug": "universal", "emoji": "✨", "color": "#E5FFE2" }
 ]
