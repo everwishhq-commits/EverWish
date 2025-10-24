@@ -38,22 +38,32 @@ export default function Categories() {
   const [search, setSearch] = useState("");
   const [filtered, setFiltered] = useState(allCategories);
   const [videos, setVideos] = useState([]);
+  const [glossary, setGlossary] = useState({});
 
-  // 📥 Cargar todos los videos del índice
+  // 📥 Cargar videos + glosario
   useEffect(() => {
-    async function loadVideos() {
+    async function loadData() {
       try {
-        const res = await fetch("/videos/index.json", { cache: "no-store" });
-        const data = await res.json();
-        setVideos(Array.isArray(data) ? data : []);
+        const [videosRes, glossaryRes] = await Promise.all([
+          fetch("/videos/index.json", { cache: "no-store" }),
+          fetch("/data/glossary.json", { cache: "no-store" })
+        ]);
+
+        const [videosData, glossaryData] = await Promise.all([
+          videosRes.json(),
+          glossaryRes.json()
+        ]);
+
+        setVideos(Array.isArray(videosData) ? videosData : []);
+        setGlossary(glossaryData || {});
       } catch (err) {
-        console.error("❌ Error loading /videos/index.json:", err);
+        console.error("❌ Error loading data:", err);
       }
     }
-    loadVideos();
+    loadData();
   }, []);
 
-  // 🔍 Filtrar categorías según búsqueda
+  // 🔍 Filtrar según búsqueda (usa glosario + videos)
   useEffect(() => {
     const q = search.toLowerCase().trim();
     if (!q) {
@@ -63,6 +73,7 @@ export default function Categories() {
 
     const foundCategories = new Set();
 
+    // Buscar en los nombres / tags de videos
     videos.forEach((item) => {
       const text = [
         item.name,
@@ -77,7 +88,7 @@ export default function Categories() {
         .toLowerCase();
 
       if (text.includes(q)) {
-        if (item.categories && item.categories.length > 0) {
+        if (item.categories?.length > 0) {
           item.categories.forEach((c) => foundCategories.add(c));
         } else if (item.category) {
           foundCategories.add(item.category.trim());
@@ -85,6 +96,14 @@ export default function Categories() {
       }
     });
 
+    // Buscar también en el glosario
+    for (const [catName, info] of Object.entries(glossary)) {
+      if (info.keywords.some((word) => word.toLowerCase().includes(q))) {
+        foundCategories.add(catName);
+      }
+    }
+
+    // Cruzar con las categorías visibles
     const matches = allCategories.filter((cat) =>
       [...foundCategories].some(
         (f) =>
@@ -94,9 +113,9 @@ export default function Categories() {
     );
 
     setFiltered(matches.length > 0 ? matches : []);
-  }, [search, videos]);
+  }, [search, videos, glossary]);
 
-  // 🧭 Navegación automática si hay una búsqueda válida y se presiona Enter
+  // 🧭 Enter para buscar
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && search.trim()) {
       router.push(`/categories?search=${encodeURIComponent(search.trim())}`);
@@ -107,7 +126,9 @@ export default function Categories() {
 
   return (
     <section id="categories" className="text-center py-10 px-3 overflow-hidden">
-      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">Categories</h2>
+      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
+        Categories
+      </h2>
 
       {/* 🔎 Barra de búsqueda */}
       <div className="flex justify-center mb-10">
@@ -178,4 +199,4 @@ export default function Categories() {
       </Swiper>
     </section>
   );
-            }
+   }
