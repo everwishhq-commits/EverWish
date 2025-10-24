@@ -9,7 +9,7 @@ export default function Carousel() {
   const autoplayRef = useRef(null);
   const pauseRef = useRef(false);
 
-  // 🧭 Variables de control de gesto
+  // 🧭 Control de gestos
   const startX = useRef(0);
   const startY = useRef(0);
   const moved = useRef(false);
@@ -18,7 +18,7 @@ export default function Carousel() {
   const TAP_THRESHOLD = 10;
   const SWIPE_THRESHOLD = 40;
 
-  // 🕒 Autoplay
+  // 🔁 Autoplay
   const startAutoplay = () => {
     clearInterval(autoplayRef.current);
     if (!pauseRef.current && videos.length > 0) {
@@ -28,17 +28,38 @@ export default function Carousel() {
     }
   };
 
-  // 🎥 Cargar videos desde API
+  // 🎥 Cargar videos desde /public/videos/index.json
   useEffect(() => {
     async function fetchVideos() {
       try {
-        const res = await fetch("/api/videos");
-        const data = await res.json();
-        setVideos(data);
+        const res = await fetch("/videos/index.json", { cache: "no-store" });
+        let data = await res.json();
+
+        // 🧹 Limpiar y normalizar
+        data = data.map((v) => ({
+          ...v,
+          src: v.file || `/videos/${v.name}`,
+          object: v.object || "untitled",
+          category: v.category || "general",
+          subcategory: v.subcategory || "general",
+        }));
+
+        // 🗓️ Rotación diaria: selecciona 10 según día actual
+        const daySeed = new Date().getDate(); // 1-31
+        const sorted = [...data].sort((a, b) =>
+          a.object.localeCompare(b.object)
+        );
+        const dailyStart = (daySeed * 10) % sorted.length;
+        const dailyVideos = sorted
+          .slice(dailyStart, dailyStart + 10)
+          .concat(sorted.slice(0, Math.max(0, 10 - (sorted.length - dailyStart))));
+
+        setVideos(dailyVideos);
       } catch (err) {
         console.error("❌ Error cargando videos:", err);
       }
     }
+
     fetchVideos();
   }, []);
 
@@ -67,21 +88,16 @@ export default function Carousel() {
       moved.current = true;
       direction.current =
         Math.abs(deltaX) > Math.abs(deltaY) ? "horizontal" : "vertical";
-
-      // 🚫 Bloquea propagación si hay movimiento
       e.stopPropagation();
     }
   };
 
   const handleTouchEnd = (e) => {
-    e.stopPropagation(); // 🚫 Evita que suba a la página
-
+    e.stopPropagation();
     if (!moved.current) {
-      // TAP real → abrir fullscreen
       const tapped = videos[index];
-      if (tapped?.slug) handleClick(tapped.slug);
+      if (tapped?.object) handleClick(tapped.name);
     } else if (direction.current === "horizontal") {
-      // Swipe horizontal → cambia tarjeta
       const diffX = startX.current - e.changedTouches[0].clientX;
       if (Math.abs(diffX) > SWIPE_THRESHOLD) {
         setIndex((prev) =>
@@ -90,10 +106,7 @@ export default function Carousel() {
             : (prev - 1 + videos.length) % videos.length
         );
       }
-    } else if (direction.current === "vertical") {
-      // Swipe vertical → ignora (solo scroll)
     }
-
     setTimeout(() => {
       pauseRef.current = false;
       startAutoplay();
@@ -108,17 +121,18 @@ export default function Carousel() {
       else if (elem.webkitRequestFullscreen)
         await elem.webkitRequestFullscreen();
       await new Promise((r) => setTimeout(r, 150));
-      router.push(`/edit/${slug}`);
+      router.push(`/edit/${slug.replace(".mp4", "")}`);
     } catch {
-      router.push(`/edit/${slug}`);
+      router.push(`/edit/${slug.replace(".mp4", "")}`);
     }
   };
 
   return (
     <div
       className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none"
-      style={{ touchAction: "pan-y" }} // ✅ permite scroll vertical global
+      style={{ touchAction: "pan-y" }}
     >
+      {/* 🎠 Carrusel principal */}
       <div
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -157,7 +171,7 @@ export default function Carousel() {
         })}
       </div>
 
-      {/* 🔘 Dots */}
+      {/* 🔘 Indicadores */}
       <div className="flex mt-5 gap-2">
         {videos.map((_, i) => (
           <span
@@ -179,4 +193,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-  }
+}
