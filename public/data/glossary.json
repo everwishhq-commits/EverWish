@@ -1,0 +1,57 @@
+{
+  "seasonal-holidays": {
+    "keywords": [
+      "halloween", "pumpkin", "ghost", "witch", "monster", "bat", "candy", "spooky",
+      "navidad", "christmas", "santa", "tree", "snow", "reindeer", "gift", "lights",
+      "new year", "año nuevo", "fireworks", "celebration", "2025", "party", "cheers",
+      "thanksgiving", "turkey", "harvest", "gracias", "family dinner", "cornucopia",
+      "spring", "flowers", "bloom", "easter", "rabbit", "egg", "blossom",
+      "summer", "beach", "sun", "vacation", "swim", "surf", "ice cream",
+      "autumn", "fall", "leaves", "orange", "wind", "scarf", "pumpkin spice",
+      "winter", "snowman", "frost", "cold", "cozy", "fireplace", "sweater",
+      "independence", "4th of july", "usa", "flag", "fireworks", "red white blue"
+    ],
+    "priority": 9
+  },
+
+  "professions-appreciation": {
+    "keywords": [
+      "teacher", "maestro", "professor", "student", "coach", "doctor", "nurse",
+      "police", "firefighter", "paramedic", "mechanic", "chef", "cook", "waiter",
+      "engineer", "architect", "lawyer", "farmer", "artist", "musician", "driver",
+      "worker", "trabajador", "empleado", "boss", "manager", "team", "colleague",
+      "thank you", "appreciation", "gratitude", "respect", "honor", "dedication"
+    ],
+    "priority": 8
+  },
+
+  "birthday": {
+    "keywords": [
+      "birthday", "cumpleaños", "cake", "pastel", "party", "fiesta", "candles",
+      "celebration", "surprise", "gift", "regalo", "balloon", "friends", "amigos",
+      "age", "years", "wish", "deseo", "happy", "feliz", "song", "música", "cheer"
+    ],
+    "priority": 5
+  },
+
+  "love-romance": {
+    "keywords": [
+      "love", "amor", "heart", "corazón", "romance", "kiss", "beso", "hug", "abrazo",
+      "couple", "pareja", "valentine", "rosas", "roses", "cupid", "flirt", "passion",
+      "marriage", "proposal", "relationship", "connection", "together", "forever",
+      "you and me", "te amo", "i love you", "darling", "sweetheart", "amor eterno"
+    ],
+    "priority": 9
+  },
+
+  "family-relationships": {
+    "keywords": [
+      "family", "familia", "parents", "padres", "mom", "mother", "mamá", "dad", "father", "papá",
+      "brother", "hermano", "sister", "hermana", "son", "hijo", "daughter", "hija",
+      "grandparents", "abuelos", "cousins", "primos", "aunt", "uncle", "tío", "tía",
+      "home", "hogar", "love", "bond", "care", "support", "unity", "baby arrival",
+      "family dinner", "family trip", "photo", "memories"
+    ],
+    "priority": 10
+  }
+}
