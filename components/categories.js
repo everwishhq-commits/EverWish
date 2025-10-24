@@ -8,28 +8,25 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import "swiper/css";
 
-// 🌸 CATEGORÍAS LIMPIAS Y UNIFICADAS
+// 🌸 CATEGORÍAS FINALES — Limpias, coherentes y sincronizadas con glossary.json
 const allCategories = [
   { name: "Seasonal & Holidays", emoji: "🎉", slug: "seasonal-holidays", color: "#FFE0E9" },
-  { name: "Professions & Appreciation", emoji: "👩‍🏫", slug: "professions-appreciation", color: "#E8FFF3" },
   { name: "Birthday", emoji: "🎂", slug: "birthday", color: "#FFDDEE" },
   { name: "Love & Romance", emoji: "💘", slug: "love-romance", color: "#FFECEC" },
-  { name: "Family & Relationships", emoji: "👨‍👩‍👧‍👦", slug: "family-relationships", color: "#E5EDFF" },
-  { name: "Babies & Parenting", emoji: "👶", slug: "babies-parenting", color: "#DFF7FF" },
-  { name: "Weddings & Anniversaries", emoji: "💍", slug: "weddings-anniversaries", color: "#F3E5FF" },
+  { name: "Family & Parenting", emoji: "👨‍👩‍👧‍👦", slug: "family-parenting", color: "#E5EDFF" },
+  { name: "Pets & Animals", emoji: "🐾", slug: "pets-animals", color: "#E9FFF4" },
   { name: "School & Graduation", emoji: "🎓", slug: "school-graduation", color: "#E2FFD7" },
-  { name: "Congratulations & Milestones", emoji: "🏆", slug: "congrats-milestones", color: "#FFF3C4" },
-  { name: "Home & Life Changes", emoji: "🏡", slug: "home-life-changes", color: "#E8FFF3" },
-  { name: "Health & Support", emoji: "🩺", slug: "health-support", color: "#DFFAFF" },
-  { name: "Sympathy & Remembrance", emoji: "🕊️", slug: "sympathy-remembrance", color: "#F3F3F3" },
-  { name: "Gifts & Surprises", emoji: "🎁", slug: "gifts-surprises", color: "#E7E9FF" },
-  { name: "Humor & Memes", emoji: "😄", slug: "humor-memes", color: "#E7F7FF" },
+  { name: "Work & Professions", emoji: "👩‍💼", slug: "work-professions", color: "#E8FFF3" },
+  { name: "Health & Wellness", emoji: "🩺", slug: "health-wellness", color: "#DFFAFF" },
+  { name: "Sympathy & Support", emoji: "🕊️", slug: "sympathy-support", color: "#F3F3F3" },
+  { name: "Congratulations", emoji: "🏆", slug: "congratulations", color: "#FFF3C4" },
+  { name: "Weddings & Anniversaries", emoji: "💍", slug: "weddings-anniversaries", color: "#F3E5FF" },
   { name: "Adventure & Nature", emoji: "🗺️", slug: "adventure-nature", color: "#E8ECFF" },
-  { name: "Kids & Teens", emoji: "🧸", slug: "kids-teens", color: "#FFE6FA" },
-  { name: "Just Because & Everyday", emoji: "💌", slug: "just-because", color: "#FDE6E6" },
+  { name: "Humor & Fun", emoji: "😄", slug: "humor-fun", color: "#E7F7FF" },
+  { name: "Gifts & Surprises", emoji: "🎁", slug: "gifts-surprises", color: "#E7E9FF" },
+  { name: "Just Because", emoji: "💌", slug: "just-because", color: "#FDE6E6" },
   { name: "Invitations & Events", emoji: "✉️", slug: "invitations-events", color: "#FFD9E8" },
-  { name: "Inspirations & Quotes", emoji: "📝", slug: "inspirations-quotes", color: "#E8F6FF" },
-  { name: "Custom & AI Creations", emoji: "🤖", slug: "custom-ai-creations", color: "#E5FFE2" },
+  { name: "Custom & AI Creations", emoji: "🤖", slug: "custom-ai", color: "#E5FFE2" },
 ];
 
 export default function Categories() {
@@ -67,13 +64,14 @@ export default function Categories() {
   useEffect(() => {
     const q = search.toLowerCase().trim();
     if (!q) {
+      // mostrar todas aunque no tengan videos
       setFiltered(allCategories);
       return;
     }
 
     const foundCategories = new Set();
 
-    // Buscar en los nombres / tags de videos
+    // Buscar coincidencias en videos
     videos.forEach((item) => {
       const text = [
         item.name,
@@ -96,14 +94,14 @@ export default function Categories() {
       }
     });
 
-    // Buscar también en el glosario
+    // Buscar coincidencias en glossary.json
     for (const [catName, info] of Object.entries(glossary)) {
       if (info.keywords.some((word) => word.toLowerCase().includes(q))) {
         foundCategories.add(catName);
       }
     }
 
-    // Cruzar con las categorías visibles
+    // Cruzar con categorías visibles (aunque estén vacías)
     const matches = allCategories.filter((cat) =>
       [...foundCategories].some(
         (f) =>
@@ -112,7 +110,8 @@ export default function Categories() {
       )
     );
 
-    setFiltered(matches.length > 0 ? matches : []);
+    // ✅ Mostrar todas si no hay match exacto, pero mantener orden
+    setFiltered(matches.length > 0 ? matches : allCategories);
   }, [search, videos, glossary]);
 
   // 🧭 Enter para buscar
@@ -162,41 +161,35 @@ export default function Categories() {
         modules={[Autoplay]}
         className="overflow-visible"
       >
-        {filtered.length > 0 ? (
-          filtered.map((cat, i) => (
-            <SwiperSlide key={i}>
-              <Link
-                href={`/category/${cat.slug}${search ? `?search=${encodeURIComponent(search)}` : ""}`}
+        {filtered.map((cat, i) => (
+          <SwiperSlide key={i}>
+            <Link
+              href={`/category/${cat.slug}${search ? `?search=${encodeURIComponent(search)}` : ""}`}
+            >
+              <motion.div
+                className="flex flex-col items-center justify-center cursor-pointer"
+                whileHover={{ scale: 1.07 }}
               >
                 <motion.div
-                  className="flex flex-col items-center justify-center cursor-pointer"
-                  whileHover={{ scale: 1.07 }}
+                  className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md"
+                  style={{ backgroundColor: cat.color }}
                 >
-                  <motion.div
-                    className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md"
-                    style={{ backgroundColor: cat.color }}
+                  <motion.span
+                    className="text-4xl sm:text-5xl"
+                    animate={{ y: [0, -5, 0] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                   >
-                    <motion.span
-                      className="text-4xl sm:text-5xl"
-                      animate={{ y: [0, -5, 0] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                    >
-                      {cat.emoji}
-                    </motion.span>
-                  </motion.div>
-                  <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
-                    {cat.name}
-                  </p>
+                    {cat.emoji}
+                  </motion.span>
                 </motion.div>
-              </Link>
-            </SwiperSlide>
-          ))
-        ) : (
-          <p className="text-gray-500 text-sm mt-8">
-            No matching categories for “{search}”
-          </p>
-        )}
+                <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
+                  {cat.name}
+                </p>
+              </motion.div>
+            </Link>
+          </SwiperSlide>
+        ))}
       </Swiper>
     </section>
   );
-   }
+            }
