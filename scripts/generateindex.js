@@ -1,11 +1,11 @@
 /**
- * 📁 Everwish – Video Index Generator (v2.0)
+ * 📁 Everwish – Video Index Generator (v2.1)
  * ------------------------------------------------------------
  * ✅ Lee todos los videos en /public/videos/
  * ✅ Soporta múltiples categorías con "+"
  * ✅ Nombres como: objeto_categoria(+cat2)_subcategoria_variante.mp4
  * ✅ Genera /public/videos/index.json automáticamente
- * ✅ Compatible con categorías y subcategorías del sistema
+ * ✅ Compatible con categorías y subcategorías del sistema actualizado (con “and”)
  */
 
 import fs from "fs";
@@ -17,13 +17,15 @@ const videosDir = path.join(__dirname, "../public/videos");
 const outputFile = path.join(videosDir, "index.json");
 
 /**
- * 🔤 Limpia texto (minusculas, sin guiones ni dobles espacios)
+ * 🔤 Limpia texto (minúsculas, sin guiones ni dobles espacios)
+ * También reemplaza "&" por "and" para coincidir con los slugs actuales.
  */
 function clean(str) {
   return str
     ? str
         .replace(/[_-]+/g, " ")
         .replace(/\s+/g, " ")
+        .replace(/&/g, "and")
         .trim()
         .toLowerCase()
     : "";
