@@ -1,1 +1,99 @@
+{
+  "home-life-changes": {
+    "keywords_en": [
+      "home", "house", "moving", "apartment", "new place", "living room", "kitchen",
+      "bedroom", "neighbors", "renovation", "decor", "garden", "balcony", "welcome",
+      "new memories", "comfort", "housewarming", "sweet home", "dream home", "relocation",
+      "design", "interior", "family", "love", "plants", "new start"
+    ],
+    "keywords_es": [
+      "hogar", "casa", "mudanza", "apartamento", "nuevo lugar", "sala", "cocina",
+      "habitación", "vecinos", "renovación", "decoración", "jardín", "balcón", "bienvenida",
+      "nuevos recuerdos", "comodidad", "dulce hogar", "casa soñada", "reubicación",
+      "diseño", "interior", "familia", "amor", "plantas", "nuevo comienzo"
+    ],
+    "related_subcategories": [
+      "new-apartment", "housewarming-party", "moving-day", "dream-home",
+      "garden-setup", "interior-design", "first-night", "new-neighbors",
+      "home-sweet-home", "renovation-time", "decor-inspiration", "balcony-moments",
+      "pets-in-home", "kitchen-setup", "new-memories"
+    ]
+  },
 
+  "health-support": {
+    "keywords_en": [
+      "health", "wellness", "recovery", "get well", "support", "care", "doctor", "nurse",
+      "hospital", "clinic", "mental health", "therapy", "healing", "strength", "hope",
+      "positivity", "encouragement", "help", "medicine", "calm", "relax", "peace",
+      "motivation", "healthy", "lifestyle", "well-being"
+    ],
+    "keywords_es": [
+      "salud", "bienestar", "recuperación", "mejórate", "apoyo", "cuidado", "doctor",
+      "enfermera", "hospital", "clínica", "salud mental", "terapia", "sanación",
+      "fuerza", "esperanza", "ánimo", "ayuda", "medicina", "calma", "relajación",
+      "paz", "motivación", "saludable", "estilo de vida", "bienestar"
+    ],
+    "related_subcategories": [
+      "get-well-soon", "mental-health", "recovery-journey", "doctor-visit", "hospital-care",
+      "stay-strong", "sending-hugs", "health-check", "calm-mind", "support-message",
+      "hope-healing", "healthy-lifestyle", "emotional-care", "rest-recovery", "wellness-day"
+    ]
+  },
+
+  "sympathy-remembrance": {
+    "keywords_en": [
+      "memory", "condolences", "loss", "tribute", "peace", "comfort", "support", "prayers",
+      "remembrance", "life", "afterlife", "angel", "light", "flowers", "goodbye",
+      "strength", "hope", "honor", "love", "peaceful", "funeral", "miss you", "rest", "soul"
+    ],
+    "keywords_es": [
+      "memoria", "condolencias", "pérdida", "tributo", "paz", "consuelo", "apoyo",
+      "oraciones", "recuerdo", "vida", "más allá", "ángel", "luz", "flores", "despedida",
+      "fuerza", "esperanza", "honor", "amor", "tranquilo", "funeral", "te extrañamos", "descanso", "alma"
+    ],
+    "related_subcategories": [
+      "in-loving-memory", "condolences", "tribute", "forever-remembered",
+      "peaceful-thoughts", "celebration-of-life", "cherished-memories",
+      "light-a-candle", "comfort-strength", "hugs-support", "always-in-our-hearts",
+      "pet-remembrance", "calm-reflections", "quiet-moments", "grateful-memory"
+    ]
+  },
+
+  "thank-you-appreciation": {
+    "keywords_en": [
+      "thank you", "gratitude", "appreciation", "thanks", "support", "help", "teacher",
+      "friend", "team", "coworker", "mentor", "family", "care", "generosity", "respect",
+      "recognition", "acknowledge", "message", "thankfulness", "positive", "happy",
+      "warm", "smile", "friendly", "giving", "gesture"
+    ],
+    "keywords_es": [
+      "gracias", "agradecimiento", "aprecio", "apoyo", "ayuda", "maestro", "amigo",
+      "equipo", "compañero", "mentor", "familia", "cuidado", "generosidad", "reconocimiento",
+      "mensaje", "amabilidad", "positivo", "felicidad", "sonrisa", "gesto", "solidaridad"
+    ],
+    "related_subcategories": [
+      "thank-you-note", "teacher-thanks", "friendship-thanks", "coworker-thanks",
+      "mentor-appreciation", "family-gratitude", "simple-thanks", "gift-of-thanks",
+      "community-support", "heartfelt-thanks", "kindness-day", "appreciation-post",
+      "helping-hand", "customer-thanks", "support-note"
+    ]
+  },
+
+  "gifts-surprises": {
+    "keywords_en": [
+      "gift", "present", "surprise", "party", "box", "ribbon", "celebration", "love",
+      "unexpected", "joy", "happiness", "wrapped", "giveaway", "sharing", "special moment",
+      "kindness", "friendship", "family", "fun", "mystery", "gift card", "delight"
+    ],
+    "keywords_es": [
+      "regalo", "presente", "sorpresa", "caja", "lazo", "celebración", "amor",
+      "inesperado", "alegría", "felicidad", "envuelto", "compartir", "momento especial",
+      "amistad", "familia", "diversión", "misterio", "tarjeta de regalo", "detalle"
+    ],
+    "related_subcategories": [
+      "birthday-gift", "holiday-gift", "surprise-box", "romantic-surprise", "gift-for-him",
+      "gift-for-her", "gift-for-friend", "thank-you-gift", "celebration-surprise",
+      "mystery-box", "gift-opening", "surprise-delivery", "special-gift", "gift-card", "tiny-surprise"
+    ]
+  }
+}
