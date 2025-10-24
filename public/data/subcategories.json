@@ -1,496 +1,129 @@
 {
   "seasonal-holidays": [
-    {
-      "slug": "christmas",
-      "name": "Christmas",
-      "emoji": "🎄"
-    },
-    {
-      "slug": "new-year",
-      "name": "New Year",
-      "emoji": "🎆"
-    },
-    {
-      "slug": "halloween",
-      "name": "Halloween",
-      "emoji": "🎃"
-    },
-    {
-      "slug": "thanksgiving",
-      "name": "Thanksgiving",
-      "emoji": "🦃"
-    },
-    {
-      "slug": "easter",
-      "name": "Easter",
-      "emoji": "🐰"
-    },
-    {
-      "slug": "valentines-day",
-      "name": "Valentine’s Day",
-      "emoji": "💘"
-    },
-    {
-      "slug": "st-patricks-day",
-      "name": "St. Patrick’s Day",
-      "emoji": "☘️"
-    },
-    {
-      "slug": "independence-day",
-      "name": "Independence Day",
-      "emoji": "🇺🇸"
-    },
-    {
-      "slug": "summer-festival",
-      "name": "Summer Festival",
-      "emoji": "☀️"
-    },
-    {
-      "slug": "autumn-vibes",
-      "name": "Autumn Vibes",
-      "emoji": "🍂"
-    },
-    {
-      "slug": "winter-joy",
-      "name": "Winter Joy",
-      "emoji": "❄️"
-    },
-    {
-      "slug": "spring-bloom",
-      "name": "Spring Bloom",
-      "emoji": "🌸"
-    },
-    {
-      "slug": "beach-holiday",
-      "name": "Beach Holiday",
-      "emoji": "🏖️"
-    },
-    {
-      "slug": "carnival",
-      "name": "Carnival",
-      "emoji": "🎭"
-    },
-    {
-      "slug": "fireworks-night",
-      "name": "Fireworks Night",
-      "emoji": "🎇"
-    }
+    { "slug": "christmas", "name": "Christmas", "emoji": "🎄" },
+    { "slug": "new-year", "name": "New Year", "emoji": "🎆" },
+    { "slug": "halloween", "name": "Halloween", "emoji": "🎃" },
+    { "slug": "thanksgiving", "name": "Thanksgiving", "emoji": "🦃" },
+    { "slug": "easter", "name": "Easter", "emoji": "🐰" },
+    { "slug": "valentines-day", "name": "Valentine’s Day", "emoji": "💘" },
+    { "slug": "st-patricks-day", "name": "St. Patrick’s Day", "emoji": "☘️" },
+    { "slug": "independence-day", "name": "Independence Day", "emoji": "🇺🇸" },
+    { "slug": "summer-festival", "name": "Summer Festival", "emoji": "☀️" },
+    { "slug": "autumn-vibes", "name": "Autumn Vibes", "emoji": "🍂" },
+    { "slug": "winter-joy", "name": "Winter Joy", "emoji": "❄️" },
+    { "slug": "spring-bloom", "name": "Spring Bloom", "emoji": "🌸" },
+    { "slug": "beach-holiday", "name": "Beach Holiday", "emoji": "🏖️" },
+    { "slug": "carnival", "name": "Carnival", "emoji": "🎭" },
+    { "slug": "fireworks-night", "name": "Fireworks Night", "emoji": "🎇" }
   ],
   "birthday": [
-    {
-      "slug": "birthday-party",
-      "name": "Birthday Party",
-      "emoji": "🎂"
-    },
-    {
-      "slug": "pet-birthday",
-      "name": "Pet Birthday",
-      "emoji": "🐾"
-    },
-    {
-      "slug": "family-birthday",
-      "name": "Family Birthday",
-      "emoji": "👨‍👩‍👧‍👦"
-    },
-    {
-      "slug": "friend-birthday",
-      "name": "Friend Birthday",
-      "emoji": "🤝"
-    },
-    {
-      "slug": "surprise-birthday",
-      "name": "Surprise Birthday",
-      "emoji": "🎉"
-    },
-    {
-      "slug": "milestone-birthday",
-      "name": "Milestone Birthday",
-      "emoji": "🏆"
-    },
-    {
-      "slug": "garden-party",
-      "name": "Garden Party",
-      "emoji": "🌷"
-    },
-    {
-      "slug": "birthday-toast",
-      "name": "Birthday Toast",
-      "emoji": "🥂"
-    }
+    { "slug": "birthday-party", "name": "Birthday Party", "emoji": "🎂" },
+    { "slug": "pet-birthday", "name": "Pet Birthday", "emoji": "🐾" },
+    { "slug": "family-birthday", "name": "Family Birthday", "emoji": "👨‍👩‍👧‍👦" },
+    { "slug": "friend-birthday", "name": "Friend Birthday", "emoji": "🤝" },
+    { "slug": "surprise-birthday", "name": "Surprise Birthday", "emoji": "🎉" },
+    { "slug": "milestone-birthday", "name": "Milestone Birthday", "emoji": "🏆" },
+    { "slug": "garden-party", "name": "Garden Party", "emoji": "🌷" },
+    { "slug": "birthday-toast", "name": "Birthday Toast", "emoji": "🥂" }
   ],
   "love-romance": [
-    {
-      "slug": "anniversary",
-      "name": "Anniversary",
-      "emoji": "💍"
-    },
-    {
-      "slug": "wedding-love",
-      "name": "Wedding Love",
-      "emoji": "💐"
-    },
-    {
-      "slug": "proposal",
-      "name": "Proposal",
-      "emoji": "💎"
-    },
-    {
-      "slug": "first-date",
-      "name": "First Date",
-      "emoji": "🌹"
-    },
-    {
-      "slug": "long-distance-love",
-      "name": "Long Distance Love",
-      "emoji": "🌍"
-    },
-    {
-      "slug": "couple-trip",
-      "name": "Couple Trip",
-      "emoji": "✈️"
-    },
-    {
-      "slug": "love-letters",
-      "name": "Love Letters",
-      "emoji": "💌"
-    },
-    {
-      "slug": "self-love",
-      "name": "Self Love",
-      "emoji": "🌸"
-    }
+    { "slug": "anniversary", "name": "Anniversary", "emoji": "💍" },
+    { "slug": "wedding-love", "name": "Wedding Love", "emoji": "💐" },
+    { "slug": "proposal", "name": "Proposal", "emoji": "💎" },
+    { "slug": "first-date", "name": "First Date", "emoji": "🌹" },
+    { "slug": "long-distance-love", "name": "Long Distance Love", "emoji": "🌍" },
+    { "slug": "couple-trip", "name": "Couple Trip", "emoji": "✈️" },
+    { "slug": "love-letters", "name": "Love Letters", "emoji": "💌" },
+    { "slug": "self-love", "name": "Self Love", "emoji": "🌸" }
   ],
   "family-relationships": [
-    {
-      "slug": "mothers-day",
-      "name": "Mother’s Day",
-      "emoji": "🌷"
-    },
-    {
-      "slug": "fathers-day",
-      "name": "Father’s Day",
-      "emoji": "👔"
-    },
-    {
-      "slug": "grandparents-day",
-      "name": "Grandparents Day",
-      "emoji": "👵"
-    },
-    {
-      "slug": "family-reunion",
-      "name": "Family Reunion",
-      "emoji": "🏠"
-    },
-    {
-      "slug": "parenting",
-      "name": "Parenting",
-      "emoji": "👶"
-    },
-    {
-      "slug": "siblings-love",
-      "name": "Siblings Love",
-      "emoji": "👫"
-    },
-    {
-      "slug": "family-support",
-      "name": "Family Support",
-      "emoji": "❤️"
-    },
-    {
-      "slug": "new-home",
-      "name": "New Home",
-      "emoji": "🏡"
-    }
+    { "slug": "mothers-day", "name": "Mother’s Day", "emoji": "🌷" },
+    { "slug": "fathers-day", "name": "Father’s Day", "emoji": "👔" },
+    { "slug": "grandparents-day", "name": "Grandparents Day", "emoji": "👵" },
+    { "slug": "family-reunion", "name": "Family Reunion", "emoji": "🏠" },
+    { "slug": "parenting", "name": "Parenting", "emoji": "👶" },
+    { "slug": "siblings-love", "name": "Siblings Love", "emoji": "👫" },
+    { "slug": "family-support", "name": "Family Support", "emoji": "❤️" },
+    { "slug": "new-home", "name": "New Home", "emoji": "🏡" }
   ],
   "babies-parenting": [
-    {
-      "slug": "baby-shower",
-      "name": "Baby Shower",
-      "emoji": "🍼"
-    },
-    {
-      "slug": "gender-reveal",
-      "name": "Gender Reveal",
-      "emoji": "🎈"
-    },
-    {
-      "slug": "first-steps",
-      "name": "First Steps",
-      "emoji": "👣"
-    },
-    {
-      "slug": "nap-time",
-      "name": "Nap Time",
-      "emoji": "😴"
-    },
-    {
-      "slug": "playtime",
-      "name": "Playtime",
-      "emoji": "🧸"
-    },
-    {
-      "slug": "moments",
-      "name": "Mom Moments",
-      "emoji": "🤱"
-    },
-    {
-      "slug": "dad-moments",
-      "name": "Dad Moments",
-      "emoji": "👨‍🍼"
-    },
-    {
-      "slug": "family-walk",
-      "name": "Family Walk",
-      "emoji": "🚼"
-    }
+    { "slug": "baby-shower", "name": "Baby Shower", "emoji": "🍼" },
+    { "slug": "gender-reveal", "name": "Gender Reveal", "emoji": "🎈" },
+    { "slug": "first-steps", "name": "First Steps", "emoji": "👣" },
+    { "slug": "nap-time", "name": "Nap Time", "emoji": "😴" },
+    { "slug": "playtime", "name": "Playtime", "emoji": "🧸" },
+    { "slug": "mom-moments", "name": "Mom Moments", "emoji": "🤱" },
+    { "slug": "dad-moments", "name": "Dad Moments", "emoji": "👨‍🍼" },
+    { "slug": "family-walk", "name": "Family Walk", "emoji": "🚼" }
   ],
   "weddings-anniversaries": [
-    {
-      "slug": "wedding-day",
-      "name": "Wedding Day",
-      "emoji": "💍"
-    },
-    {
-      "slug": "engagement",
-      "name": "Engagement",
-      "emoji": "💎"
-    },
-    {
-      "slug": "honeymoon",
-      "name": "Honeymoon",
-      "emoji": "🌴"
-    },
-    {
-      "slug": "bridal-shower",
-      "name": "Bridal Shower",
-      "emoji": "👰"
-    },
-    {
-      "slug": "just-married",
-      "name": "Just Married",
-      "emoji": "🚗"
-    },
-    {
-      "slug": "wedding-anniversary",
-      "name": "Wedding Anniversary",
-      "emoji": "🎊"
-    }
+    { "slug": "wedding-day", "name": "Wedding Day", "emoji": "💍" },
+    { "slug": "engagement", "name": "Engagement", "emoji": "💎" },
+    { "slug": "honeymoon", "name": "Honeymoon", "emoji": "🌴" },
+    { "slug": "bridal-shower", "name": "Bridal Shower", "emoji": "👰" },
+    { "slug": "just-married", "name": "Just Married", "emoji": "🚗" },
+    { "slug": "wedding-anniversary", "name": "Wedding Anniversary", "emoji": "🎊" }
   ],
   "school-graduation": [
-    {
-      "slug": "back-to-school",
-      "name": "Back to School",
-      "emoji": "🏫"
-    },
-    {
-      "slug": "graduation-day",
-      "name": "Graduation Day",
-      "emoji": "🎓"
-    },
-    {
-      "slug": "teacher-appreciation",
-      "name": "Teacher Appreciation",
-      "emoji": "🍎"
-    },
-    {
-      "slug": "school-friends",
-      "name": "School Friends",
-      "emoji": "👫"
-    }
+    { "slug": "back-to-school", "name": "Back to School", "emoji": "🏫" },
+    { "slug": "graduation-day", "name": "Graduation Day", "emoji": "🎓" },
+    { "slug": "teacher-appreciation", "name": "Teacher Appreciation", "emoji": "🍎" },
+    { "slug": "school-friends", "name": "School Friends", "emoji": "👫" }
   ],
   "congrats-milestones": [
-    {
-      "slug": "graduation",
-      "name": "Graduation",
-      "emoji": "🎓"
-    },
-    {
-      "slug": "new-job",
-      "name": "New Job",
-      "emoji": "💼"
-    },
-    {
-      "slug": "promotion",
-      "name": "Promotion",
-      "emoji": "📈"
-    },
-    {
-      "slug": "new-house",
-      "name": "New House",
-      "emoji": "🏡"
-    }
+    { "slug": "graduation", "name": "Graduation", "emoji": "🎓" },
+    { "slug": "new-job", "name": "New Job", "emoji": "💼" },
+    { "slug": "promotion", "name": "Promotion", "emoji": "📈" },
+    { "slug": "new-house", "name": "New House", "emoji": "🏡" }
   ],
   "work-professional": [
-    {
-      "slug": "team-success",
-      "name": "Team Success",
-      "emoji": "🏆"
-    },
-    {
-      "slug": "work-anniversary",
-      "name": "Work Anniversary",
-      "emoji": "🎉"
-    },
-    {
-      "slug": "remote-work",
-      "name": "Remote Work",
-      "emoji": "🏠"
-    },
-    {
-      "slug": "goal-achievement",
-      "name": "Goal Achievement",
-      "emoji": "🌟"
-    }
+    { "slug": "team-success", "name": "Team Success", "emoji": "🏆" },
+    { "slug": "work-anniversary", "name": "Work Anniversary", "emoji": "🎉" },
+    { "slug": "remote-work", "name": "Remote Work", "emoji": "🏠" },
+    { "slug": "goal-achievement", "name": "Goal Achievement", "emoji": "🌟" }
   ],
   "house-moving": [
-    {
-      "slug": "new-apartment",
-      "name": "New Apartment",
-      "emoji": "🏙️"
-    },
-    {
-      "slug": "housewarming-party",
-      "name": "Housewarming Party",
-      "emoji": "🎊"
-    },
-    {
-      "slug": "moving-day",
-      "name": "Moving Day",
-      "emoji": "📦"
-    }
+    { "slug": "new-apartment", "name": "New Apartment", "emoji": "🏙️" },
+    { "slug": "housewarming-party", "name": "Housewarming Party", "emoji": "🎊" },
+    { "slug": "moving-day", "name": "Moving Day", "emoji": "📦" }
   ],
   "health-support": [
-    {
-      "slug": "get-well-soon",
-      "name": "Get Well Soon",
-      "emoji": "🌼"
-    },
-    {
-      "slug": "stay-strong",
-      "name": "Stay Strong",
-      "emoji": "💪"
-    },
-    {
-      "slug": "calm-mind",
-      "name": "Calm Mind",
-      "emoji": "🧘‍♀️"
-    }
+    { "slug": "get-well-soon", "name": "Get Well Soon", "emoji": "🌼" },
+    { "slug": "stay-strong", "name": "Stay Strong", "emoji": "💪" },
+    { "slug": "calm-mind", "name": "Calm Mind", "emoji": "🧘‍♀️" }
   ],
   "sympathy-remembrance": [
-    {
-      "slug": "in-memory",
-      "name": "In Memory",
-      "emoji": "🕊️"
-    },
-    {
-      "slug": "condolences",
-      "name": "Condolences",
-      "emoji": "💐"
-    },
-    {
-      "slug": "tribute",
-      "name": "Tribute",
-      "emoji": "🌹"
-    }
+    { "slug": "in-memory", "name": "In Memory", "emoji": "🕊️" },
+    { "slug": "condolences", "name": "Condolences", "emoji": "💐" },
+    { "slug": "tribute", "name": "Tribute", "emoji": "🌹" }
   ],
   "thank-you-appreciation": [
-    {
-      "slug": "thank-you",
-      "name": "Thank You",
-      "emoji": "🙏"
-    },
-    {
-      "slug": "teacher-thanks",
-      "name": "Teacher Thanks",
-      "emoji": "🍎"
-    },
-    {
-      "slug": "team-appreciation",
-      "name": "Team Appreciation",
-      "emoji": "🏆"
-    }
+    { "slug": "thank-you", "name": "Thank You", "emoji": "🙏" },
+    { "slug": "teacher-thanks", "name": "Teacher Thanks", "emoji": "🍎" },
+    { "slug": "team-appreciation", "name": "Team Appreciation", "emoji": "🏆" }
   ],
   "humor-memes": [
-    {
-      "slug": "funny-animals",
-      "name": "Funny Animals",
-      "emoji": "🐒"
-    },
-    {
-      "slug": "sarcastic-humor",
-      "name": "Sarcastic Humor",
-      "emoji": "😏"
-    },
-    {
-      "slug": "office-jokes",
-      "name": "Office Jokes",
-      "emoji": "💼"
-    }
+    { "slug": "funny-animals", "name": "Funny Animals", "emoji": "🐒" },
+    { "slug": "sarcastic-humor", "name": "Sarcastic Humor", "emoji": "😏" },
+    { "slug": "office-jokes", "name": "Office Jokes", "emoji": "💼" }
   ],
   "pets-animal-lovers": [
-    {
-      "slug": "cute-puppies",
-      "name": "Cute Puppies",
-      "emoji": "🐶"
-    },
-    {
-      "slug": "cat-lovers",
-      "name": "Cat Lovers",
-      "emoji": "🐱"
-    },
-    {
-      "slug": "pet-adoption",
-      "name": "Pet Adoption",
-      "emoji": "🏠"
-    }
+    { "slug": "cute-puppies", "name": "Cute Puppies", "emoji": "🐶" },
+    { "slug": "cat-lovers", "name": "Cat Lovers", "emoji": "🐱" },
+    { "slug": "pet-adoption", "name": "Pet Adoption", "emoji": "🏠" },
+    { "slug": "wildlife", "name": "Wildlife", "emoji": "🦜" }
   ],
   "adventure-nature": [
-    {
-      "slug": "mountain-adventure",
-      "name": "Mountain Adventure",
-      "emoji": "⛰️"
-    },
-    {
-      "slug": "beach-sunset",
-      "name": "Beach Sunset",
-      "emoji": "🌅"
-    },
-    {
-      "slug": "forest-camping",
-      "name": "Forest Camping",
-      "emoji": "🏕️"
-    },
-    {
-      "slug": "underwater-life",
-      "name": "Underwater Life",
-      "emoji": "🐠"
-    }
+    { "slug": "mountain-adventure", "name": "Mountain Adventure", "emoji": "⛰️" },
+    { "slug": "beach-sunset", "name": "Beach Sunset", "emoji": "🌅" },
+    { "slug": "forest-camping", "name": "Forest Camping", "emoji": "🏕️" },
+    { "slug": "underwater-life", "name": "Underwater Life", "emoji": "🐠" }
   ],
   "universal": [
-    {
-      "slug": "general",
-      "name": "General",
-      "emoji": "✨"
-    },
-    {
-      "slug": "celebration",
-      "name": "Celebration",
-      "emoji": "🎉"
-    },
-    {
-      "slug": "friendship",
-      "name": "Friendship",
-      "emoji": "🤝"
-    },
-    {
-      "slug": "gratitude",
-      "name": "Gratitude",
-      "emoji": "💖"
-    },
-    {
-      "slug": "good-vibes",
-      "name": "Good Vibes",
-      "emoji": "🌈"
-    }
+    { "slug": "general", "name": "General", "emoji": "✨" },
+    { "slug": "celebration", "name": "Celebration", "emoji": "🎉" },
+    { "slug": "friendship", "name": "Friendship", "emoji": "🤝" },
+    { "slug": "gratitude", "name": "Gratitude", "emoji": "💖" },
+    { "slug": "good-vibes", "name": "Good Vibes", "emoji": "🌈" }
   ]
 }
