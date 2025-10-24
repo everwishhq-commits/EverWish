@@ -11,24 +11,37 @@ export default function CategoryPage() {
   const [groups, setGroups] = useState({});
   const [activeSub, setActiveSub] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [subcategories, setSubcategories] = useState([]);
 
   const searchQuery = searchParams.get("search")?.toLowerCase().trim() || "";
 
   useEffect(() => {
-    async function loadVideos() {
+    async function loadData() {
       try {
-        const res = await fetch("/videos/index.json", { cache: "no-store" });
-        const data = await res.json();
+        const [videosRes, subsRes] = await Promise.all([
+          fetch("/videos/index.json", { cache: "no-store" }),
+          fetch("/data/subcategories.json", { cache: "no-store" })
+        ]);
 
+        const [videos, subsData] = await Promise.all([
+          videosRes.json(),
+          subsRes.json()
+        ]);
+
+        // 🗂️ Cargar subcategorías del archivo JSON
+        const subList = subsData[slug] || [];
+        setSubcategories(subList.map(s => s.name_en || s.name || "General"));
+
+        // 🧹 Normalizar texto
         const normalize = (str) =>
           str?.toLowerCase().replace(/&/g, "and").replace(/\s+/g, "-").trim();
 
-        let filtered = data.filter((v) =>
-          (v.categories || [])
-            .map((c) => normalize(c))
-            .includes(normalize(slug))
+        // 🎯 Filtrar videos de esta categoría
+        let filtered = videos.filter((v) =>
+          (v.categories || []).map((c) => normalize(c)).includes(normalize(slug))
         );
 
+        // 🔍 Aplicar búsqueda si existe
         if (searchQuery) {
           filtered = filtered.filter((v) => {
             const text = [
@@ -46,6 +59,7 @@ export default function CategoryPage() {
           });
         }
 
+        // 🧩 Agrupar por subcategoría
         const grouped = {};
         for (const v of filtered) {
           const sub =
@@ -53,34 +67,34 @@ export default function CategoryPage() {
             (v.category && v.category.trim()) ||
             "General";
 
-          const clean = sub
-            .replace(/_/g, " ")
-            .replace(/\b\w/g, (c) => c.toUpperCase());
-
+          const clean = sub.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
           if (!grouped[clean]) grouped[clean] = [];
           grouped[clean].push(v);
         }
 
+        // ✅ Agregar subcategorías vacías si no tienen videos
+        subList.forEach((sub) => {
+          const subName = sub.name_en || sub.name || "General";
+          if (!grouped[subName]) grouped[subName] = [];
+        });
+
         setGroups(grouped);
       } catch (err) {
-        console.error("❌ Error loading videos:", err);
+        console.error("❌ Error loading category:", err);
       } finally {
         setLoading(false);
       }
     }
 
-    loadVideos();
+    loadData();
   }, [slug, searchQuery]);
 
-  const subcategories = Object.keys(groups);
   const activeVideos = activeSub ? groups[activeSub] || [] : [];
 
   if (loading) {
     return (
       <main className="flex flex-col items-center justify-center min-h-screen bg-[#fff5f8] text-gray-600">
-        <p className="animate-pulse text-lg">
-          Loading {slug.replace("-", " ")} ✨
-        </p>
+        <p className="animate-pulse text-lg">Loading {slug.replace("-", " ")} ✨</p>
       </main>
     );
   }
@@ -95,22 +109,22 @@ export default function CategoryPage() {
         ← Back to Main Categories
       </button>
 
-      {/* 🏷️ Título */}
+      {/* 🏷️ Title */}
       <h1 className="text-4xl font-extrabold text-pink-600 mb-3 capitalize text-center">
         {slug.replace("-", " ")}
       </h1>
 
-      {/* 🔍 Mostrar palabra buscada si existe */}
+      {/* 🔍 Search info */}
       {searchQuery && (
         <p className="text-gray-500 italic text-center mb-6">
           Showing results for “{searchQuery}”
         </p>
       )}
 
-      {/* 🌸 Subcategorías */}
-      {subcategories.length > 0 ? (
+      {/* 🌸 Subcategories */}
+      {Object.keys(groups).length > 0 ? (
         <div className="flex flex-wrap justify-center gap-4 max-w-5xl">
-          {subcategories.map((sub, i) => (
+          {Object.keys(groups).map((sub, i) => (
             <motion.button
               key={i}
               onClick={() => setActiveSub(sub)}
@@ -128,25 +142,13 @@ export default function CategoryPage() {
           ))}
         </div>
       ) : (
-        <div className="text-center mt-12">
-          <p className="text-gray-500 text-lg mb-3">
-            No matches found in this category 😕
-          </p>
-          {/* 💡 Sugerencias inteligentes */}
-          <p className="text-gray-400 text-sm italic">
-            Try searching for <span className="text-pink-500">“love”</span>,{" "}
-            <span className="text-pink-500">“birthday”</span>,{" "}
-            <span className="text-pink-500">“mountain”</span>, or{" "}
-            <span className="text-pink-500">“family”</span> ✨
-          </p>
-        </div>
+        <p className="text-gray-500 mt-10">No subcategories available yet.</p>
       )}
 
       {/* 💫 Modal */}
       <AnimatePresence>
         {activeSub && (
           <>
-            {/* Fondo difuminado */}
             <motion.div
               className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
               initial={{ opacity: 0 }}
@@ -154,7 +156,6 @@ export default function CategoryPage() {
               exit={{ opacity: 0 }}
               onClick={() => setActiveSub(null)}
             />
-            {/* Ventana del modal */}
             <motion.div
               className="fixed inset-0 z-50 flex items-center justify-center p-4"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -163,7 +164,6 @@ export default function CategoryPage() {
               transition={{ duration: 0.3 }}
             >
               <div className="relative bg-white rounded-3xl shadow-xl w-[90%] max-w-5xl h-[70vh] overflow-y-auto border border-pink-100 p-6">
-                {/* ✖ Close */}
                 <button
                   onClick={() => setActiveSub(null)}
                   className="absolute top-3 right-5 text-gray-400 hover:text-pink-500 text-2xl font-bold"
@@ -171,12 +171,10 @@ export default function CategoryPage() {
                   ×
                 </button>
 
-                {/* Título */}
                 <h2 className="text-2xl font-bold text-pink-600 mb-4 capitalize">
                   {getEmojiForSubcategory(activeSub)} {activeSub}
                 </h2>
 
-                {/* Tarjetas */}
                 {activeVideos.length === 0 ? (
                   <p className="text-gray-500 text-center mt-10">
                     No cards found for this subcategory.
@@ -214,7 +212,7 @@ export default function CategoryPage() {
   );
 }
 
-// 🧁 Emojis para subcategorías
+// 🧁 Emojis por subcategoría
 function getEmojiForSubcategory(name) {
   const map = {
     halloween: "🎃",
@@ -235,7 +233,9 @@ function getEmojiForSubcategory(name) {
     gift: "🎁",
     humor: "😄",
     adventure: "🗺️",
+    pet: "🐾",
+    ocean: "🐙",
   };
   const key = name?.toLowerCase() || "";
   return map[key] || "✨";
-                      }
+                                     }
