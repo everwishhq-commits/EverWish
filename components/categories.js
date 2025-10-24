@@ -1,14 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
-import Link from "next/link";
 import "swiper/css";
 
-// 🌸 CATEGORÍAS FINALES — Limpias, coherentes y sincronizadas con subcategories.json y glossary.json
 const allCategories = [
   { name: "Seasonal & Holidays", emoji: "🎉", slug: "seasonal-holidays", color: "#FFE0E9" },
   { name: "Birthday", emoji: "🎂", slug: "birthday", color: "#FFDDEE" },
@@ -29,100 +27,108 @@ const allCategories = [
   { name: "Universal", emoji: "✨", slug: "universal", color: "#E5FFE2" },
 ];
 
+// 🧹 Limpieza avanzada para coincidencias
+function normalizeText(str) {
+  return str
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/&/g, "and")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export default function Categories() {
   const router = useRouter();
-  const pathname = usePathname();
   const [search, setSearch] = useState("");
   const [filtered, setFiltered] = useState(allCategories);
   const [videos, setVideos] = useState([]);
-  const [glossary, setGlossary] = useState({});
 
-  // 📥 Cargar videos + glosario
+  // 📥 Cargar index.json
   useEffect(() => {
-    async function loadData() {
+    async function loadVideos() {
       try {
-        const [videosRes, glossaryRes] = await Promise.all([
-          fetch("/videos/index.json", { cache: "no-store" }),
-          fetch("/data/glossary.json", { cache: "no-store" })
-        ]);
-
-        const [videosData, glossaryData] = await Promise.all([
-          videosRes.json(),
-          glossaryRes.json()
-        ]);
-
-        setVideos(Array.isArray(videosData) ? videosData : []);
-        setGlossary(glossaryData || {});
+        const res = await fetch("/videos/index.json", { cache: "no-store" });
+        const data = await res.json();
+        setVideos(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error("❌ Error loading data:", err);
+        console.error("❌ Error loading videos:", err);
       }
     }
-    loadData();
+    loadVideos();
   }, []);
 
-  // 🔍 Filtrar según búsqueda (usa glosario + videos)
+  // 🔍 Filtrar solo categorías principales (no subcategorías ni tarjetas)
   useEffect(() => {
-    const q = search.toLowerCase().trim();
+    const q = normalizeText(search);
     if (!q) {
       setFiltered(allCategories);
       return;
     }
 
-    const foundCategories = new Set();
+    const foundMainCats = new Set();
 
-    // Buscar coincidencias en videos
-    videos.forEach((item) => {
+    videos.forEach((v) => {
       const text = [
-        item.name,
-        item.object,
-        item.subcategory,
-        item.category,
-        ...(item.tags || []),
-        ...(item.categories || []),
+        v.object,
+        v.subcategory,
+        v.variant,
+        ...(v.tags || []),
+        ...(v.categories || []),
       ]
-        .filter(Boolean)
         .join(" ")
         .toLowerCase();
 
+      // 🎯 Si coincide, busca a qué categoría principal pertenece
       if (text.includes(q)) {
-        if (item.categories?.length > 0) {
-          item.categories.forEach((c) => foundCategories.add(c));
-        } else if (item.category) {
-          foundCategories.add(item.category.trim());
+        const mainCats = (v.categories || [])
+          .map(normalizeText)
+          .filter((c) =>
+            allCategories.some((cat) => normalizeText(cat.slug) === c || normalizeText(cat.name).includes(c))
+          );
+
+        // Si no hay categoría válida detectada, intenta inferir por palabras clave
+        if (mainCats.length === 0) {
+          if (text.includes("easter") || text.includes("halloween") || text.includes("christmas"))
+            foundMainCats.add("seasonal-holidays");
+          else if (text.includes("birthday")) foundMainCats.add("birthday");
+          else if (text.includes("love") || text.includes("romance")) foundMainCats.add("love-romance");
+          else if (text.includes("pet") || text.includes("dog") || text.includes("cat"))
+            foundMainCats.add("pets-animal-lovers");
+        } else {
+          mainCats.forEach((c) => foundMainCats.add(c));
         }
       }
     });
 
-    // Buscar coincidencias en glossary.json
-    for (const [catName, info] of Object.entries(glossary)) {
-      if (info.keywords.some((word) => word.toLowerCase().includes(q))) {
-        foundCategories.add(catName);
-      }
-    }
-
-    // Cruzar con categorías visibles
+    // 🔸 Si hay coincidencias, mostrar solo esas categorías
     const matches = allCategories.filter((cat) =>
-      [...foundCategories].some(
-        (f) =>
-          f.toLowerCase().replace("&", "and").includes(cat.name.toLowerCase().split("&")[0].trim()) ||
-          f.toLowerCase().includes(cat.slug)
-      )
+      foundMainCats.has(normalizeText(cat.slug))
     );
 
     setFiltered(matches.length > 0 ? matches : allCategories);
-  }, [search, videos, glossary]);
+  }, [search, videos]);
 
+  // 🧭 Si presiona Enter → abre la primera categoría encontrada
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && search.trim()) {
-      router.push(`/categories?search=${encodeURIComponent(search.trim())}`);
+      const first = filtered[0];
+      if (first) {
+        router.push(`/category/${first.slug}`);
+        setTimeout(() => setSearch(""), 400);
+      }
     }
+  };
+
+  // 🖱️ Click directo → navegar al slug
+  const handleCategoryClick = (slug) => {
+    router.push(`/category/${slug}`);
+    setTimeout(() => setSearch(""), 400);
   };
 
   return (
     <section id="categories" className="text-center py-10 px-3 overflow-hidden">
-      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
-        Categories
-      </h2>
+      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">Categories</h2>
 
       {/* 🔎 Barra de búsqueda */}
       <div className="flex justify-center mb-10">
@@ -132,7 +138,7 @@ export default function Categories() {
           autoCorrect="off"
           autoCapitalize="none"
           inputMode="search"
-          placeholder="Search any theme — e.g. turtle, mountain, love..."
+          placeholder="Search any theme — e.g. bunny, pumpkin, love..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={handleKeyPress}
@@ -140,7 +146,7 @@ export default function Categories() {
         />
       </div>
 
-      {/* 🎠 Carrusel de categorías */}
+      {/* 🎠 Carrusel de categorías principales */}
       <Swiper
         slidesPerView={3.2}
         spaceBetween={16}
@@ -158,33 +164,30 @@ export default function Categories() {
       >
         {filtered.map((cat, i) => (
           <SwiperSlide key={i}>
-            <Link
-              href={`/category/${cat.slug}${search ? `?search=${encodeURIComponent(search)}` : ""}`}
+            <motion.div
+              className="flex flex-col items-center justify-center cursor-pointer"
+              whileHover={{ scale: 1.07 }}
+              onClick={() => handleCategoryClick(cat.slug)}
             >
               <motion.div
-                className="flex flex-col items-center justify-center cursor-pointer"
-                whileHover={{ scale: 1.07 }}
+                className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md"
+                style={{ backgroundColor: cat.color }}
               >
-                <motion.div
-                  className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md"
-                  style={{ backgroundColor: cat.color }}
+                <motion.span
+                  className="text-4xl sm:text-5xl"
+                  animate={{ y: [0, -5, 0] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                 >
-                  <motion.span
-                    className="text-4xl sm:text-5xl"
-                    animate={{ y: [0, -5, 0] }}
-                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                  >
-                    {cat.emoji}
-                  </motion.span>
-                </motion.div>
-                <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
-                  {cat.name}
-                </p>
+                  {cat.emoji}
+                </motion.span>
               </motion.div>
-            </Link>
+              <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
+                {cat.name}
+              </p>
+            </motion.div>
           </SwiperSlide>
         ))}
       </Swiper>
     </section>
   );
-                                     }
+            }
