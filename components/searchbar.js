@@ -1,49 +1,103 @@
 "use client";
 import { useState, useEffect } from "react";
-import { searchCards } from "../utils/cardsmanager";
-import { getAutocompleteSuggestions } from "../lib/autocomplete_engine";
 import ResultsGrid from "./resultsgrid";
+import { getAutocompleteSuggestions } from "../lib/autocomplete_engine";
 
 export default function SearchBar() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [indexData, setIndexData] = useState([]);
+
+  // 📥 Cargar el index.json una sola vez
+  useEffect(() => {
+    async function loadIndex() {
+      try {
+        const res = await fetch("/videos/index.json", { cache: "no-store" });
+        const data = await res.json();
+        setIndexData(data);
+      } catch (err) {
+        console.error("❌ Error cargando index.json:", err);
+      }
+    }
+    loadIndex();
+  }, []);
 
   // 🔍 Maneja búsqueda principal
   async function handleSearch(e) {
     const value = e.target.value;
     setQuery(value);
 
-    // Si hay menos de 2 caracteres, limpiar todo
+    // Si hay menos de 2 letras, limpiar resultados
     if (value.trim().length < 2) {
       setResults([]);
       setSuggestions([]);
       return;
     }
 
-    // 🪄 Generar sugerencias instantáneas
+    // 🪄 Generar sugerencias predictivas
     const sugg = getAutocompleteSuggestions(value);
     setSuggestions(sugg);
 
-    // ⚙️ Buscar resultados completos
+    // ⚙️ Búsqueda en index.json
     setLoading(true);
-    const found = await searchCards(value);
-    setResults(found);
+    const searchTerm = value.toLowerCase();
+
+    const found = indexData.filter((item) => {
+      const text = [
+        item.object,
+        ...(item.categories || []),
+        item.category,
+        item.subcategory,
+        item.variant,
+        ...(item.tags || []),
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return text.includes(searchTerm);
+    });
+
+    // Ordenar relevancia (coincidencia exacta primero)
+    const sorted = found.sort((a, b) => {
+      const aExact = a.object === searchTerm;
+      const bExact = b.object === searchTerm;
+      if (aExact && !bExact) return -1;
+      if (!aExact && bExact) return 1;
+      return a.object.localeCompare(b.object);
+    });
+
+    setResults(sorted);
     setLoading(false);
   }
 
-  // 🔁 Cuando seleccionas una sugerencia, la aplica directamente
+  // 🪄 Seleccionar sugerencia directa
   async function handleSuggestionClick(s) {
     setQuery(s);
     setSuggestions([]);
     setLoading(true);
-    const found = await searchCards(s);
+
+    const found = indexData.filter((item) => {
+      const text = [
+        item.object,
+        ...(item.categories || []),
+        item.category,
+        item.subcategory,
+        item.variant,
+        ...(item.tags || []),
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return text.includes(s.toLowerCase());
+    });
+
     setResults(found);
     setLoading(false);
   }
 
-  // 🔧 Permite limpiar resultados cuando se borra la búsqueda
+  // 🔧 Limpieza cuando no hay texto
   useEffect(() => {
     if (!query.trim()) {
       setResults([]);
@@ -87,7 +141,7 @@ export default function SearchBar() {
       {/* 📦 Resultados */}
       {!loading && results.length > 0 && (
         <div className="mt-6">
-          <ResultsGrid cards={results} />
+          <ResultsGrid cards={results.slice(0, 20)} /> {/* Limita a 20 resultados */}
         </div>
       )}
 
@@ -97,4 +151,4 @@ export default function SearchBar() {
       )}
     </div>
   );
-}
+        }
