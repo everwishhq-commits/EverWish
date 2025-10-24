@@ -1,1 +1,108 @@
+{
+  "babies-parenting": {
+    "keywords_en": [
+      "baby", "newborn", "parenting", "mother", "father", "mom", "dad", "family",
+      "nursery", "crib", "feeding", "diaper", "stroller", "cute", "adorable",
+      "milestone", "growth", "first steps", "lullaby", "baby shower", "gender reveal",
+      "sleep", "bath", "nap", "giggle", "smile", "blanket", "toy", "baby clothes",
+      "hug", "kiss", "love", "sweet", "innocent"
+    ],
+    "keywords_es": [
+      "bebé", "recién nacido", "paternidad", "maternidad", "madre", "padre", "familia",
+      "cuna", "biberón", "pañal", "carriola", "tierno", "adorable", "crecimiento",
+      "primeros pasos", "canción de cuna", "ducha de bebé", "revelación de género",
+      "sueño", "baño", "siesta", "risa", "sonrisa", "manta", "juguete", "ropa de bebé",
+      "abrazo", "beso", "amor", "dulzura", "inocente"
+    ],
+    "related_subcategories": [
+      "baby-shower", "gender-reveal", "first-steps", "sleep-time", "bath-time",
+      "babys-first-word", "playtime", "teething", "nap-time", "mom-moments",
+      "dad-moments", "first-birthday", "family-walk", "cuddle-time"
+    ]
+  },
 
+  "weddings-anniversaries": {
+    "keywords_en": [
+      "wedding", "marriage", "anniversary", "love", "romance", "engagement", "proposal",
+      "ring", "bride", "groom", "couple", "ceremony", "reception", "honeymoon", "vows",
+      "celebration", "together", "forever", "union", "commitment", "toast", "party",
+      "flowers", "dress", "suit", "memories", "happiness", "journey", "romantic", "kiss"
+    ],
+    "keywords_es": [
+      "boda", "matrimonio", "aniversario", "amor", "romance", "compromiso", "propuesta",
+      "anillo", "novia", "novio", "pareja", "ceremonia", "recepción", "luna de miel",
+      "votos", "celebración", "juntos", "por siempre", "unión", "brindis", "fiesta",
+      "flores", "vestido", "recuerdos", "felicidad", "viaje", "beso", "romántico"
+    ],
+    "related_subcategories": [
+      "wedding-day", "engagement", "vows-renewal", "honeymoon", "bridal-shower",
+      "wedding-anniversary", "destination-wedding", "just-married", "romantic-sunset",
+      "golden-anniversary", "silver-anniversary", "wedding-memories", "love-toast",
+      "forever-together"
+    ]
+  },
+
+  "congrats-milestones": {
+    "keywords_en": [
+      "congratulations", "achievement", "success", "milestone", "goal", "victory",
+      "graduation", "promotion", "retirement", "new job", "baby born", "house",
+      "license", "driving test", "celebration", "good news", "cheers", "bravo",
+      "achievement unlocked", "well done", "certificate", "new chapter", "hard work",
+      "effort", "trophy", "award", "recognition", "team win", "great job"
+    ],
+    "keywords_es": [
+      "felicitaciones", "logro", "éxito", "meta", "victoria", "graduación", "ascenso",
+      "jubilación", "nuevo trabajo", "bebé", "casa nueva", "licencia", "examen aprobado",
+      "celebración", "buenas noticias", "bravo", "premio", "reconocimiento", "equipo",
+      "gran trabajo", "orgullo", "felicidad"
+    ],
+    "related_subcategories": [
+      "graduation", "new-job", "promotion", "retirement", "new-house", "baby-born",
+      "passed-exam", "new-car", "engagement-congrats", "first-job", "new-business",
+      "team-win", "license-achieved", "big-achievement"
+    ]
+  },
+
+  "school-graduation": {
+    "keywords_en": [
+      "school", "student", "teacher", "education", "class", "study", "homework",
+      "graduation", "learning", "college", "university", "achievement", "exam",
+      "friends", "back to school", "first day", "classroom", "books", "library",
+      "science", "art", "sports", "team", "teacher appreciation", "knowledge",
+      "success", "celebration", "end of year", "report card"
+    ],
+    "keywords_es": [
+      "escuela", "estudiante", "maestro", "educación", "clase", "estudio", "tarea",
+      "graduación", "aprendizaje", "universidad", "colegio", "amigos", "regreso a clases",
+      "primer día", "aula", "libros", "biblioteca", "ciencia", "arte", "deporte",
+      "equipo", "agradecimiento a maestros", "conocimiento", "éxito", "fin de curso"
+    ],
+    "related_subcategories": [
+      "back-to-school", "first-day", "end-of-year", "graduation-day", "teacher-appreciation",
+      "school-spirit", "class-reunion", "science-fair", "art-class", "sports-day",
+      "library-moments", "homework-heroes", "school-friends", "online-learning",
+      "graduation-party"
+    ]
+  },
+
+  "work-professional": {
+    "keywords_en": [
+      "work", "career", "job", "office", "business", "coworker", "boss", "team", "meeting",
+      "success", "promotion", "project", "deadline", "motivation", "workplace", "remote work",
+      "productivity", "leadership", "collaboration", "hard work", "coffee", "presentation",
+      "growth", "achievement", "goals", "strategy", "communication", "organization"
+    ],
+    "keywords_es": [
+      "trabajo", "carrera", "empleo", "oficina", "negocio", "compañero", "jefe", "equipo",
+      "reunión", "éxito", "ascenso", "proyecto", "motivación", "lugar de trabajo",
+      "trabajo remoto", "productividad", "liderazgo", "colaboración", "esfuerzo",
+      "café", "presentación", "crecimiento", "meta", "estrategia", "organización"
+    ],
+    "related_subcategories": [
+      "new-job", "team-building", "promotion-day", "office-fun", "boss-day",
+      "work-anniversary", "remote-work", "project-launch", "team-success",
+      "work-motivation", "coffee-break", "goal-achievement", "work-travel",
+      "new-office", "coworkers-party"
+    ]
+  }
+}
