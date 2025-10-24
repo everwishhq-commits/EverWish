@@ -7,23 +7,24 @@ import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
 import "swiper/css";
 
+// ✅ Slugs corregidos y normalizados (todos coinciden con los de /data/categories.json)
 const allCategories = [
-  { name: "Seasonal & Holidays", emoji: "🎉", slug: "seasonal-holidays", color: "#FFE0E9" },
+  { name: "Seasonal & Holidays", emoji: "🎉", slug: "seasonal-and-holidays", color: "#FFE0E9" },
   { name: "Birthday", emoji: "🎂", slug: "birthday", color: "#FFDDEE" },
-  { name: "Love & Romance", emoji: "💘", slug: "love-romance", color: "#FFECEC" },
-  { name: "Family & Relationships", emoji: "👨‍👩‍👧‍👦", slug: "family-relationships", color: "#E5EDFF" },
-  { name: "Pets & Animal Lovers", emoji: "🐾", slug: "pets-animal-lovers", color: "#E9FFF4" },
-  { name: "School & Graduation", emoji: "🎓", slug: "school-graduation", color: "#E2FFD7" },
-  { name: "Work & Professional", emoji: "👩‍💼", slug: "work-professional", color: "#E8FFF3" },
-  { name: "Health & Support", emoji: "🩺", slug: "health-support", color: "#DFFAFF" },
-  { name: "Sympathy & Remembrance", emoji: "🕊️", slug: "sympathy-remembrance", color: "#F3F3F3" },
-  { name: "Congratulations", emoji: "🏆", slug: "congrats-milestones", color: "#FFF3C4" },
-  { name: "Weddings & Anniversaries", emoji: "💍", slug: "weddings-anniversaries", color: "#F3E5FF" },
-  { name: "Adventure & Nature", emoji: "🗺️", slug: "adventure-nature", color: "#E8ECFF" },
-  { name: "Humor & Memes", emoji: "😄", slug: "humor-memes", color: "#E7F7FF" },
-  { name: "Thank You & Appreciation", emoji: "🙏", slug: "thank-you-appreciation", color: "#E7E9FF" },
-  { name: "House & Moving", emoji: "🏡", slug: "house-moving", color: "#FFD9E8" },
-  { name: "Babies & Parenting", emoji: "🍼", slug: "babies-parenting", color: "#FDE6E6" },
+  { name: "Love & Romance", emoji: "💘", slug: "love-and-romance", color: "#FFECEC" },
+  { name: "Family & Relationships", emoji: "👨‍👩‍👧‍👦", slug: "family-and-relationships", color: "#E5EDFF" },
+  { name: "Pets & Animal Lovers", emoji: "🐾", slug: "pets-and-animals", color: "#E9FFF4" },
+  { name: "School & Graduation", emoji: "🎓", slug: "school-and-graduation", color: "#E2FFD7" },
+  { name: "Work & Professional", emoji: "👩‍💼", slug: "work-and-professional", color: "#E8FFF3" },
+  { name: "Health & Support", emoji: "🩺", slug: "health-and-support", color: "#DFFAFF" },
+  { name: "Sympathy & Remembrance", emoji: "🕊️", slug: "sympathy-and-remembrance", color: "#F3F3F3" },
+  { name: "Congratulations", emoji: "🏆", slug: "congratulations-and-milestones", color: "#FFF3C4" },
+  { name: "Weddings & Anniversaries", emoji: "💍", slug: "weddings-and-anniversaries", color: "#F3E5FF" },
+  { name: "Adventure & Nature", emoji: "🗺️", slug: "adventure-and-nature", color: "#E8ECFF" },
+  { name: "Humor & Memes", emoji: "😄", slug: "humor-and-memes", color: "#E7F7FF" },
+  { name: "Thank You & Appreciation", emoji: "🙏", slug: "thank-you-and-appreciation", color: "#E7E9FF" },
+  { name: "House & Moving", emoji: "🏡", slug: "house-and-moving", color: "#FFD9E8" },
+  { name: "Babies & Parenting", emoji: "🍼", slug: "babies-and-parenting", color: "#FDE6E6" },
   { name: "Universal", emoji: "✨", slug: "universal", color: "#E5FFE2" },
 ];
 
@@ -58,7 +59,7 @@ export default function Categories() {
     loadVideos();
   }, []);
 
-  // 🔍 Filtrar solo categorías principales (no subcategorías ni tarjetas)
+  // 🔍 Filtrar solo categorías principales
   useEffect(() => {
     const q = normalizeText(search);
     if (!q) {
@@ -79,7 +80,6 @@ export default function Categories() {
         .join(" ")
         .toLowerCase();
 
-      // 🎯 Si coincide, busca a qué categoría principal pertenece
       if (text.includes(q)) {
         const mainCats = (v.categories || [])
           .map(normalizeText)
@@ -87,21 +87,19 @@ export default function Categories() {
             allCategories.some((cat) => normalizeText(cat.slug) === c || normalizeText(cat.name).includes(c))
           );
 
-        // Si no hay categoría válida detectada, intenta inferir por palabras clave
         if (mainCats.length === 0) {
           if (text.includes("easter") || text.includes("halloween") || text.includes("christmas"))
-            foundMainCats.add("seasonal-holidays");
+            foundMainCats.add("seasonal-and-holidays");
           else if (text.includes("birthday")) foundMainCats.add("birthday");
-          else if (text.includes("love") || text.includes("romance")) foundMainCats.add("love-romance");
+          else if (text.includes("love") || text.includes("romance")) foundMainCats.add("love-and-romance");
           else if (text.includes("pet") || text.includes("dog") || text.includes("cat"))
-            foundMainCats.add("pets-animal-lovers");
+            foundMainCats.add("pets-and-animals");
         } else {
           mainCats.forEach((c) => foundMainCats.add(c));
         }
       }
     });
 
-    // 🔸 Si hay coincidencias, mostrar solo esas categorías
     const matches = allCategories.filter((cat) =>
       foundMainCats.has(normalizeText(cat.slug))
     );
@@ -109,7 +107,6 @@ export default function Categories() {
     setFiltered(matches.length > 0 ? matches : allCategories);
   }, [search, videos]);
 
-  // 🧭 Si presiona Enter → abre la primera categoría encontrada
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && search.trim()) {
       const first = filtered[0];
@@ -120,7 +117,6 @@ export default function Categories() {
     }
   };
 
-  // 🖱️ Click directo → navegar al slug
   const handleCategoryClick = (slug) => {
     router.push(`/category/${slug}`);
     setTimeout(() => setSearch(""), 400);
@@ -146,7 +142,7 @@ export default function Categories() {
         />
       </div>
 
-      {/* 🎠 Carrusel de categorías principales */}
+      {/* 🎠 Carrusel */}
       <Swiper
         slidesPerView={3.2}
         spaceBetween={16}
@@ -190,4 +186,4 @@ export default function Categories() {
       </Swiper>
     </section>
   );
-            }
+    }
