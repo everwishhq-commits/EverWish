@@ -1,106 +1,101 @@
 /**
- * 🔮 Everwish Smart Index Generator (v3)
- * Lee todos los archivos .mp4 dentro de /public/videos/** recursivamente.
- * Interpreta nombres en formato:
- *   objeto_categoria_subcategoria_variante.mp4
- * Genera /public/videos/index.json con datos limpios y consistentes.
+ * 📁 Everwish – Video Index Generator (lowercase + multi-category support)
+ * ----------------------------------------------------------------------
+ * ✅ Lee /public/videos/
+ * ✅ Soporta nombres como:
+ *    objeto_categoria(+categoria2)_subcategoria_variante.mp4
+ * ✅ Crea /public/videos/index.json
+ * ✅ Todo en minúsculas
  */
 
 import fs from "fs";
 import path from "path";
 
-// 📂 Rutas principales
-const videosRoot = path.join(process.cwd(), "public/videos");
-const indexFile = path.join(videosRoot, "index.json");
-
-/* -------------------------------------------------------------------------- */
-/* 🧠 UTILIDADES                                                              */
-/* -------------------------------------------------------------------------- */
-
-// 🔹 Recorre todas las carpetas y devuelve paths de .mp4
-function getAllMp4Files(dir) {
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
-  return entries.flatMap((entry) => {
-    const fullPath = path.join(dir, entry.name);
-    return entry.isDirectory()
-      ? getAllMp4Files(fullPath)
-      : entry.name.toLowerCase().endsWith(".mp4")
-      ? [fullPath]
-      : [];
-  });
-}
-
-// 🔹 Convierte texto en formato legible (“familyandrelationships” → “Family And Relationships”)
-function formatWord(str = "") {
-  return str
-    .replace(/[-_]+/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase())
-    .trim();
-}
-
-/* -------------------------------------------------------------------------- */
-/* 🧭 DETECCIÓN DIRECTA SEGÚN NOMBRE                                          */
-/* -------------------------------------------------------------------------- */
+const videosDir = path.join(process.cwd(), "public/videos");
+const outputFile = path.join(videosDir, "index.json");
 
 /**
- * parts = ["dog", "petsandanimals", "birthday", "1A"]
- * Devuelve [categoria, subcategoria]
+ * 🔤 Limpia y convierte todo a minúsculas
  */
-function detectCategory(parts) {
-  const object = parts[0] || "Unknown";
-  const categoryRaw = parts[1] || "general";
-  const subcategoryRaw = parts[2] || "General";
-
-  const category = formatWord(categoryRaw);
-  const subcategory = formatWord(subcategoryRaw);
-
-  return [category, subcategory];
+function clean(str) {
+  return str
+    ? str
+        .replace(/[_-]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toLowerCase()
+    : "";
 }
 
-/* -------------------------------------------------------------------------- */
-/* ⚙️ GENERADOR PRINCIPAL                                                     */
-/* -------------------------------------------------------------------------- */
+/**
+ * 🧠 Interpreta nombre de archivo
+ */
+function parseFilename(filename) {
+  const name = filename.replace(/\.[^/.]+$/, "");
+  const parts = name.split("_");
 
+  let object = "";
+  let categoryPart = "";
+  let subcategory = "general";
+  let variant = "";
+
+  if (parts.length >= 2) {
+    object = clean(parts[0]);
+    categoryPart = clean(parts[1]);
+  }
+
+  if (parts.length >= 3) subcategory = clean(parts[2]);
+  if (parts.length >= 4) variant = clean(parts[3]);
+
+  // Soporte para múltiples categorías con "+"
+  const categories = categoryPart
+    .split("+")
+    .map((c) => c.trim().toLowerCase())
+    .filter(Boolean);
+
+  return { object, categories, subcategory, variant };
+}
+
+/**
+ * 🧾 Genera index.json
+ */
 function generateIndex() {
-  console.log("🪄 Generando index.json...");
-  const files = getAllMp4Files(videosRoot);
+  const allFiles = fs.readdirSync(videosDir);
+  const videoFiles = allFiles.filter(
+    (file) =>
+      file.endsWith(".mp4") ||
+      file.endsWith(".webm") ||
+      file.endsWith(".mov")
+  );
 
-  const index = files.map((filePath) => {
-    const relative = path.relative(videosRoot, filePath).replace(/\\/g, "/");
-    const name = path.basename(filePath, ".mp4");
+  const videos = videoFiles.map((file) => {
+    const { object, categories, subcategory, variant } = parseFilename(file);
 
-    const parts = name.split("_");
-    const [category, subcategory] = detectCategory(parts);
-    const object = formatWord(parts[0]);
-    const variant = parts[parts.length - 1]?.toUpperCase() || "";
-
-    // 🔖 Etiquetas únicas
     const tags = Array.from(
-      new Set(
-        [object, category, subcategory, variant, ...parts]
-          .filter(Boolean)
-          .map((t) => t.toLowerCase())
-      )
-    );
+      new Set([
+        object,
+        ...categories,
+        subcategory,
+        variant,
+        ...object.split(" "),
+        ...subcategory.split(" "),
+      ])
+    ).filter(Boolean);
 
     return {
-      name,
-      file: `/videos/${relative}`,
+      name: file,
+      file: `/videos/${file}`,
       object,
-      category,
+      categories,
+      category: categories[0] || "general",
       subcategory,
       variant,
-      categories: [category],
       tags,
     };
   });
 
-  fs.writeFileSync(indexFile, JSON.stringify(index, null, 2), "utf-8");
-  console.log(`✅ Index actualizado con ${index.length} archivos.`);
+  fs.writeFileSync(outputFile, JSON.stringify(videos, null, 2));
+  console.log(`✅ index.json generado con ${videos.length} archivos.`);
 }
-
-/* -------------------------------------------------------------------------- */
-/* 🚀 EJECUCIÓN                                                               */
-/* -------------------------------------------------------------------------- */
 
 generateIndex();
