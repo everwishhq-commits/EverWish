@@ -20,28 +20,33 @@ export default function CategoryPage() {
       try {
         const [videosRes, subsRes] = await Promise.all([
           fetch("/videos/index.json", { cache: "no-store" }),
-          fetch("/data/subcategories.json", { cache: "no-store" })
+          fetch("/data/subcategories.json", { cache: "no-store" }),
         ]);
 
         const [videos, subsData] = await Promise.all([
           videosRes.json(),
-          subsRes.json()
+          subsRes.json(),
         ]);
 
-        // 🗂️ Cargar subcategorías del archivo JSON
+        // 🗂️ Subcategorías del archivo
         const subList = subsData[slug] || [];
-        setSubcategories(subList.map(s => s.name_en || s.name || "General"));
+        setSubcategories(subList.map((s) => s.name_en || s.name || "General"));
 
-        // 🧹 Normalizar texto
+        // 🧹 Normalizador universal
         const normalize = (str) =>
           str?.toLowerCase().replace(/&/g, "and").replace(/\s+/g, "-").trim();
 
-        // 🎯 Filtrar videos de esta categoría
-        let filtered = videos.filter((v) =>
-          (v.categories || []).map((c) => normalize(c)).includes(normalize(slug))
-        );
+        // 🎯 Filtrar videos de esta categoría (también los que tienen "+")
+        let filtered = videos.filter((v) => {
+          const categories = (v.categories || [])
+            .join("+")
+            .toLowerCase()
+            .split("+")
+            .map((c) => normalize(c));
+          return categories.includes(normalize(slug));
+        });
 
-        // 🔍 Aplicar búsqueda si existe
+        // 🔍 Buscar dentro de texto y tags
         if (searchQuery) {
           filtered = filtered.filter((v) => {
             const text = [
@@ -66,13 +71,14 @@ export default function CategoryPage() {
             (v.subcategory && v.subcategory.trim()) ||
             (v.category && v.category.trim()) ||
             "General";
-
-          const clean = sub.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+          const clean = sub
+            .replace(/_/g, " ")
+            .replace(/\b\w/g, (c) => c.toUpperCase());
           if (!grouped[clean]) grouped[clean] = [];
           grouped[clean].push(v);
         }
 
-        // ✅ Agregar subcategorías vacías si no tienen videos
+        // ✅ Agregar subcategorías vacías
         subList.forEach((sub) => {
           const subName = sub.name_en || sub.name || "General";
           if (!grouped[subName]) grouped[subName] = [];
@@ -94,7 +100,9 @@ export default function CategoryPage() {
   if (loading) {
     return (
       <main className="flex flex-col items-center justify-center min-h-screen bg-[#fff5f8] text-gray-600">
-        <p className="animate-pulse text-lg">Loading {slug.replace("-", " ")} ✨</p>
+        <p className="animate-pulse text-lg">
+          Loading {slug.replace("-", " ")} ✨
+        </p>
       </main>
     );
   }
@@ -111,7 +119,7 @@ export default function CategoryPage() {
 
       {/* 🏷️ Title */}
       <h1 className="text-4xl font-extrabold text-pink-600 mb-3 capitalize text-center">
-        {slug.replace("-", " ")}
+        {getEmojiForSubcategory(slug)} {slug.replaceAll("-", " ")}
       </h1>
 
       {/* 🔍 Search info */}
@@ -212,30 +220,42 @@ export default function CategoryPage() {
   );
 }
 
-// 🧁 Emojis por subcategoría
+// 🧁 Emojis actualizados por subcategoría / tema
 function getEmojiForSubcategory(name) {
   const map = {
     halloween: "🎃",
     christmas: "🎄",
     thanksgiving: "🦃",
-    "4th of july": "🦅",
+    independence: "🦅",
+    valentine: "💘",
     easter: "🐰",
     newyear: "🎆",
-    love: "💘",
+    love: "💖",
+    romance: "💞",
     family: "👨‍👩‍👧‍👦",
+    parenting: "🍼",
     birthday: "🎂",
     wedding: "💍",
+    anniversary: "💐",
     baby: "👶",
     school: "🎓",
+    graduation: "📜",
     home: "🏡",
     sympathy: "🕊️",
+    support: "💗",
     health: "🩺",
+    wellness: "🌿",
     gift: "🎁",
+    surprise: "🎉",
     humor: "😄",
+    meme: "🤣",
     adventure: "🗺️",
+    nature: "🌲",
     pet: "🐾",
+    animals: "🐕",
     ocean: "🐙",
+    travel: "✈️",
   };
   const key = name?.toLowerCase() || "";
   return map[key] || "✨";
-                                     }
+          }
