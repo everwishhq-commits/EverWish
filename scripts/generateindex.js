@@ -1,21 +1,23 @@
 /**
- * 📁 Everwish – Video Index Generator (lowercase + multi-category support)
- * ----------------------------------------------------------------------
- * ✅ Lee /public/videos/
- * ✅ Soporta nombres como:
- *    objeto_categoria(+categoria2)_subcategoria_variante.mp4
- * ✅ Crea /public/videos/index.json
- * ✅ Todo en minúsculas
+ * 📁 Everwish – Video Index Generator (v2.0)
+ * ------------------------------------------------------------
+ * ✅ Lee todos los videos en /public/videos/
+ * ✅ Soporta múltiples categorías con "+"
+ * ✅ Nombres como: objeto_categoria(+cat2)_subcategoria_variante.mp4
+ * ✅ Genera /public/videos/index.json automáticamente
+ * ✅ Compatible con categorías y subcategorías del sistema
  */
 
 import fs from "fs";
 import path from "path";
+import url from "url";
 
-const videosDir = path.join(process.cwd(), "public/videos");
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+const videosDir = path.join(__dirname, "../public/videos");
 const outputFile = path.join(videosDir, "index.json");
 
 /**
- * 🔤 Limpia y convierte todo a minúsculas
+ * 🔤 Limpia texto (minusculas, sin guiones ni dobles espacios)
  */
 function clean(str) {
   return str
@@ -28,7 +30,8 @@ function clean(str) {
 }
 
 /**
- * 🧠 Interpreta nombre de archivo
+ * 🧠 Interpreta nombre del archivo
+ * Formato esperado: objeto_categoria(+categoria2)_subcategoria_variante.mp4
  */
 function parseFilename(filename) {
   const name = filename.replace(/\.[^/.]+$/, "");
@@ -43,11 +46,10 @@ function parseFilename(filename) {
     object = clean(parts[0]);
     categoryPart = clean(parts[1]);
   }
-
   if (parts.length >= 3) subcategory = clean(parts[2]);
   if (parts.length >= 4) variant = clean(parts[3]);
 
-  // Soporte para múltiples categorías con "+"
+  // Múltiples categorías (separadas con "+")
   const categories = categoryPart
     .split("+")
     .map((c) => c.trim().toLowerCase())
@@ -57,15 +59,17 @@ function parseFilename(filename) {
 }
 
 /**
- * 🧾 Genera index.json
+ * 🧾 Genera el archivo index.json
  */
 function generateIndex() {
+  if (!fs.existsSync(videosDir)) {
+    console.error("❌ La carpeta /public/videos no existe.");
+    process.exit(1);
+  }
+
   const allFiles = fs.readdirSync(videosDir);
-  const videoFiles = allFiles.filter(
-    (file) =>
-      file.endsWith(".mp4") ||
-      file.endsWith(".webm") ||
-      file.endsWith(".mov")
+  const videoFiles = allFiles.filter((file) =>
+    [".mp4", ".webm", ".mov"].some((ext) => file.endsWith(ext))
   );
 
   const videos = videoFiles.map((file) => {
@@ -98,4 +102,7 @@ function generateIndex() {
   console.log(`✅ index.json generado con ${videos.length} archivos.`);
 }
 
+/**
+ * 🚀 Ejecutar
+ */
 generateIndex();
