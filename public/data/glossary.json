@@ -1,5 +1,5 @@
 {
-  "Seasonal & Holidays": {
+  "seasonal-holidays": {
     "keywords": [
       "halloween", "navidad", "christmas", "new year", "año nuevo", "thanksgiving",
       "día de acción de gracias", "spring", "primavera", "summer", "verano", "autumn",
@@ -12,7 +12,7 @@
     "priority": 1
   },
 
-  "Birthday": {
+  "birthday": {
     "keywords": [
       "birthday", "cumpleaños", "party", "fiesta", "cake", "pastel", "gift", "regalo",
       "celebration", "celebración", "friends", "amigos", "surprise", "sorpresa",
@@ -22,7 +22,7 @@
     "priority": 1
   },
 
-  "Love & Romance": {
+  "love-romance": {
     "keywords": [
       "love", "amor", "romance", "romántico", "heart", "corazón", "couple", "pareja",
       "kiss", "beso", "hug", "abrazo", "valentine", "san valentín", "proposal", "propuesta",
@@ -32,7 +32,7 @@
     "priority": 1
   },
 
-  "Family & Relationships": {
+  "family-relationships": {
     "keywords": [
       "family", "familia", "mom", "mamá", "dad", "papá", "parents", "padres",
       "siblings", "hermanos", "brother", "hermano", "sister", "hermana", "love", "amor",
@@ -42,7 +42,7 @@
     "priority": 1
   },
 
-  "Work & Professional": {
+  "work-professional": {
     "keywords": [
       "job", "trabajo", "promotion", "ascenso", "success", "éxito", "achievement",
       "logro", "boss", "jefe", "office", "oficina", "coworker", "compañero",
@@ -52,7 +52,7 @@
     "priority": 1
   },
 
-  "Health & Support": {
+  "health-support": {
     "keywords": [
       "health", "salud", "get well", "recupérate", "strong", "fuerte", "recovery",
       "recuperación", "hope", "esperanza", "peace", "paz", "calm", "calma",
@@ -62,7 +62,7 @@
     "priority": 1
   },
 
-  "Babies & Parenting": {
+  "babies-parenting": {
     "keywords": [
       "baby", "bebé", "mom", "mamá", "dad", "papá", "parents", "padres", "love",
       "amor", "family", "familia", "first steps", "primeros pasos", "baby shower",
@@ -72,7 +72,7 @@
     "priority": 1
   },
 
-  "Sympathy & Remembrance": {
+  "sympathy-remembrance": {
     "keywords": [
       "condolences", "condolencias", "memory", "memoria", "peace", "paz", "flower",
       "flor", "light", "luz", "candle", "vela", "support", "apoyo", "loss", "pérdida",
@@ -81,7 +81,7 @@
     "priority": 1
   },
 
-  "Adventure & Nature": {
+  "adventure-nature": {
     "keywords": [
       "nature", "naturaleza", "mountain", "montaña", "beach", "playa", "lake", "lago",
       "forest", "bosque", "adventure", "aventura", "travel", "viaje", "explore", "explorar",
@@ -91,7 +91,7 @@
     "priority": 1
   },
 
-  "Gifts & Surprises": {
+  "gifts-surprises": {
     "keywords": [
       "gift", "regalo", "surprise", "sorpresa", "present", "presente", "love", "amor",
       "celebration", "celebración", "box", "caja", "happy", "feliz", "details", "detalles",
@@ -100,7 +100,7 @@
     "priority": 1
   },
 
-  "Universal": {
+  "universal": {
     "keywords": [
       "happy", "feliz", "joy", "alegría", "smile", "sonrisa", "fun", "diversión",
       "cute", "tierno", "adorable", "sweet", "dulce", "kind", "amable", "lovely", "encantador",
