@@ -9,7 +9,7 @@ export async function GET() {
     // 📜 Leer los archivos que terminan en .mp4
     const files = fs.readdirSync(videosDir).filter((f) => f.endsWith(".mp4"));
 
-    // 📁 Mapa de detección rápida para categorías base
+    // 🧭 Diccionario base para clasificar automáticamente
     const categoryMap = {
       halloween: "Seasonal & Holidays",
       christmas: "Seasonal & Holidays",
@@ -17,6 +17,7 @@ export async function GET() {
       easter: "Seasonal & Holidays",
       independence: "Seasonal & Holidays",
       newyear: "Seasonal & Holidays",
+      july4th: "Seasonal & Holidays",
 
       birthday: "Birthday",
       anniversary: "Weddings & Anniversaries",
@@ -24,7 +25,6 @@ export async function GET() {
 
       love: "Love & Romance",
       valentine: "Love & Romance",
-      valentines: "Love & Romance",
 
       mother: "Family & Relationships",
       mothersday: "Family & Relationships",
@@ -38,51 +38,57 @@ export async function GET() {
       dog: "Pets & Animal Lovers",
       cat: "Pets & Animal Lovers",
       animal: "Pets & Animal Lovers",
+      octopus: "Pets & Animal Lovers",
+      turtle: "Pets & Animal Lovers",
 
       condolence: "Sympathy & Remembrance",
       sympathy: "Sympathy & Remembrance",
 
-      general: "Everyday",
+      general: "Everyday"
     };
 
     // 🧠 Generar lista de videos automáticamente
     const videos = files.map((file) => {
-      const name = file.replace(".mp4", "");
+      const slug = file.replace(".mp4", "");
+      const parts = slug
+        .replace(/_/g, "+")
+        .split("+")
+        .map((p) => p.trim().toLowerCase())
+        .filter(Boolean);
 
-      // 🧩 Separar partes por "+"
-      const parts = name.split("+").map((p) => p.trim().toLowerCase());
-      const [object, ...categories] = parts;
-
-      // 🧭 Detección de categoría principal y subcategoría
-      const categorySlug = categories[0] || "general";
-      const subcategorySlug = categories[1] || null;
-      const extra = categories[2] || null;
-
-      // 🧩 Variante (por ejemplo: bunny_2A)
+      const [object, ...cats] = parts;
       const variantMatch = object.match(/(\d+[a-z]*)$/i);
       const variant = variantMatch ? variantMatch[1] : null;
 
-      // 🧭 Buscar nombre visible
+      // Buscar categoría principal
       const foundCategory =
-        Object.entries(categoryMap).find(([key]) => name.includes(key))?.[1] ||
-        categoryMap[categorySlug] ||
+        Object.entries(categoryMap).find(([key]) => slug.includes(key))?.[1] ||
         "Other";
 
-      // 📦 Crear el objeto
+      // Subcategoría (si hay)
+      const subcategory = cats.find(
+        (c) => !["general", "1a", "2a", "v1", "v2"].includes(c)
+      );
+
+      // Lista completa de categorías
+      const categories = cats.map((c) =>
+        c.replace(/-/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase())
+      );
+
       return {
-        name: object,
+        object: object.replace(/\b\w/g, (ch) => ch.toUpperCase()),
         file: `/videos/${file}`,
-        object: object.charAt(0).toUpperCase() + object.slice(1),
+        slug,
         category: foundCategory,
-        categorySlug,
-        subcategory: subcategorySlug,
-        categories: categories.filter(Boolean),
+        categories,
+        subcategory:
+          subcategory?.replace(/\b\w/g, (ch) => ch.toUpperCase()) || "General",
         variant,
-        tags: parts,
+        tags: [object, ...cats],
       };
     });
 
-    // ✅ Devolver respuesta JSON
+    // ✅ Respuesta final JSON
     return new Response(JSON.stringify(videos, null, 2), {
       headers: { "Content-Type": "application/json" },
     });
@@ -93,4 +99,4 @@ export async function GET() {
       headers: { "Content-Type": "application/json" },
     });
   }
-}
+                             }
