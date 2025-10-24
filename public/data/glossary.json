@@ -2,8 +2,8 @@
   "seasonal-holidays": {
     "keywords": [
       "halloween", "pumpkin", "ghost", "witch", "monster", "bat", "candy", "spooky",
-      "navidad", "christmas", "santa", "tree", "snow", "reindeer", "gift", "lights",
-      "new year", "año nuevo", "fireworks", "celebration", "2025", "party", "cheers",
+      "christmas", "navidad", "santa", "tree", "snow", "reindeer", "gift", "lights",
+      "new year", "año nuevo", "fireworks", "celebration", "party", "cheers",
       "thanksgiving", "turkey", "harvest", "gracias", "family dinner", "cornucopia",
       "spring", "flowers", "bloom", "easter", "rabbit", "egg", "blossom",
       "summer", "beach", "sun", "vacation", "swim", "surf", "ice cream",
@@ -20,7 +20,8 @@
       "police", "firefighter", "paramedic", "mechanic", "chef", "cook", "waiter",
       "engineer", "architect", "lawyer", "farmer", "artist", "musician", "driver",
       "worker", "trabajador", "empleado", "boss", "manager", "team", "colleague",
-      "thank you", "appreciation", "gratitude", "respect", "honor", "dedication"
+      "thank you", "appreciation", "gratitude", "respect", "honor", "dedication",
+      "service", "community", "support", "volunteer", "teacher day", "día del maestro"
     ],
     "priority": 8
   },
@@ -29,9 +30,10 @@
     "keywords": [
       "birthday", "cumpleaños", "cake", "pastel", "party", "fiesta", "candles",
       "celebration", "surprise", "gift", "regalo", "balloon", "friends", "amigos",
-      "age", "years", "wish", "deseo", "happy", "feliz", "song", "música", "cheer"
+      "wish", "deseo", "happy", "feliz", "song", "música", "cheer", "anniversary",
+      "pet birthday", "mascota", "family birthday", "kids", "adults", "toast"
     ],
-    "priority": 5
+    "priority": 6
   },
 
   "love-romance": {
@@ -39,7 +41,8 @@
       "love", "amor", "heart", "corazón", "romance", "kiss", "beso", "hug", "abrazo",
       "couple", "pareja", "valentine", "rosas", "roses", "cupid", "flirt", "passion",
       "marriage", "proposal", "relationship", "connection", "together", "forever",
-      "you and me", "te amo", "i love you", "darling", "sweetheart", "amor eterno"
+      "you and me", "te amo", "i love you", "darling", "sweetheart", "amor eterno",
+      "romantic dinner", "wedding love", "love letters"
     ],
     "priority": 9
   },
@@ -50,8 +53,156 @@
       "brother", "hermano", "sister", "hermana", "son", "hijo", "daughter", "hija",
       "grandparents", "abuelos", "cousins", "primos", "aunt", "uncle", "tío", "tía",
       "home", "hogar", "love", "bond", "care", "support", "unity", "baby arrival",
-      "family dinner", "family trip", "photo", "memories"
+      "family dinner", "family trip", "photo", "memories", "mother’s day", "father’s day"
     ],
     "priority": 10
+  },
+
+  "babies-parenting": {
+    "keywords": [
+      "baby", "bebé", "infant", "niño", "niña", "mom", "mamá", "mother", "padre", "father", "papá",
+      "parents", "padres", "diapers", "pañales", "feeding", "biberón", "milk", "leche",
+      "nap time", "siesta", "first steps", "primeros pasos", "smile", "sonrisa", "cute", "tierno",
+      "newborn", "recién nacido", "sleep", "dormir", "bath", "baño", "cry", "llorar", "pacifier",
+      "cuna", "crib", "baby shower", "gender reveal", "revelación de género", "playtime", "jugar",
+      "toy", "juguete", "lullaby", "canción de cuna", "love", "amor", "adorable"
+    ],
+    "priority": 10
+  },
+
+  "weddings-anniversaries": {
+    "keywords": [
+      "wedding", "boda", "marriage", "matrimonio", "couple", "pareja", "love", "amor",
+      "anniversary", "aniversario", "proposal", "propuesta", "ring", "anillo",
+      "bride", "novia", "groom", "novio", "honeymoon", "luna de miel", "celebration",
+      "reception", "recepción", "vows", "votos", "union", "unión", "forever", "para siempre",
+      "romantic", "romántico", "ceremony", "ceremonia", "wedding cake", "bouquet", "flores",
+      "toast", "brindis", "photo", "memories"
+    ],
+    "priority": 9
+  },
+
+  "school-graduation": {
+    "keywords": [
+      "school", "escuela", "class", "clase", "study", "estudio", "student", "estudiante",
+      "teacher", "maestro", "graduation", "graduación", "exam", "examen", "degree", "diploma",
+      "university", "universidad", "college", "colegio", "success", "éxito", "learning",
+      "achievement", "logro", "books", "libros", "classmates", "compañeros", "friends", "amigos",
+      "teacher day", "día del maestro", "graduation party", "fiesta de graduación", "cap", "toga"
+    ],
+    "priority": 8
+  },
+
+  "congrats-milestones": {
+    "keywords": [
+      "congratulations", "felicitaciones", "achievement", "logro", "milestone", "meta",
+      "graduation", "graduación", "promotion", "ascenso", "new job", "nuevo trabajo",
+      "success", "éxito", "celebration", "celebración", "win", "ganar", "trophy", "trofeo",
+      "goal", "meta", "proud", "orgullo", "baby born", "nacimiento", "new home", "nueva casa",
+      "new business", "nuevo negocio", "first job", "primer empleo", "retirement", "jubilación",
+      "passed", "aprobado", "achievement unlocked"
+    ],
+    "priority": 9
+  },
+
+  "home-life-changes": {
+    "keywords": [
+      "home", "hogar", "house", "casa", "apartment", "apartamento", "move", "mudanza",
+      "new home", "nueva casa", "neighbors", "vecinos", "kitchen", "cocina", "bedroom", "habitación",
+      "living room", "sala", "renovation", "renovación", "garden", "jardín", "balcony", "balcón",
+      "decor", "decoración", "interior design", "diseño interior", "home sweet home", "family"
+    ],
+    "priority": 8
+  },
+
+  "health-support": {
+    "keywords": [
+      "health", "salud", "wellness", "bienestar", "doctor", "médico", "nurse", "enfermera",
+      "get well", "recupérate", "hope", "esperanza", "recovery", "recuperación", "strength", "fuerza",
+      "mental health", "salud mental", "support", "apoyo", "care", "cuidado", "healing", "sanación",
+      "love", "amor", "encouragement", "ánimo", "stay strong", "mantente fuerte", "calm", "tranquilidad"
+    ],
+    "priority": 9
+  },
+
+  "sympathy-remembrance": {
+    "keywords": [
+      "memory", "memoria", "loss", "pérdida", "condolence", "condolencia", "peace", "paz",
+      "tribute", "tributo", "forever remembered", "siempre recordado", "love", "amor", "hug", "abrazo",
+      "comfort", "consuelo", "strength", "fortaleza", "heaven", "cielo", "pet remembrance", "mascota",
+      "light candle", "vela", "rest", "descanso", "calm", "tranquilo", "angel", "ángel"
+    ],
+    "priority": 8
+  },
+
+  "gifts-surprises": {
+    "keywords": [
+      "gift", "regalo", "surprise", "sorpresa", "present", "obsequio", "box", "caja",
+      "ribbon", "moño", "celebration", "party", "fiesta", "friends", "amigos", "love", "amor",
+      "unexpected", "inesperado", "fun", "diversión", "treat", "detalle", "wish", "deseo"
+    ],
+    "priority": 7
+  },
+
+  "humor-memes": {
+    "keywords": [
+      "funny", "gracioso", "joke", "broma", "meme", "sarcasm", "humor", "laugh", "risa",
+      "smile", "sonrisa", "happy", "feliz", "haha", "lol", "divertido", "comic", "parody", "ridículo"
+    ],
+    "priority": 6
+  },
+
+  "adventure-nature": {
+    "keywords": [
+      "adventure", "aventura", "nature", "naturaleza", "mountain", "montaña", "beach", "playa",
+      "forest", "bosque", "sunset", "atardecer", "camping", "campamento", "hike", "senderismo",
+      "travel", "viaje", "sky", "cielo", "river", "río", "road", "carretera", "explore", "explorar"
+    ],
+    "priority": 8
+  },
+
+  "kids-teens": {
+    "keywords": [
+      "kids", "niños", "niñas", "teens", "adolescentes", "school", "escuela", "play", "jugar",
+      "fun", "diversión", "cartoon", "caricatura", "game", "juego", "study", "estudio",
+      "friends", "amigos", "birthday", "cumpleaños", "learning", "aprender", "color", "colorido"
+    ],
+    "priority": 7
+  },
+
+  "just-because": {
+    "keywords": [
+      "hello", "hola", "thinking of you", "pensando en ti", "good morning", "buenos días",
+      "good night", "buenas noches", "just because", "solo porque", "random", "alegría",
+      "friendly", "amistoso", "kindness", "amabilidad", "smile", "sonrisa", "warm", "cariño"
+    ],
+    "priority": 6
+  },
+
+  "invitations-events": {
+    "keywords": [
+      "invitation", "invitación", "event", "evento", "party", "fiesta", "celebration", "celebración",
+      "wedding", "boda", "birthday", "cumpleaños", "graduation", "graduación", "meeting", "reunión",
+      "save the date", "confirmación", "invite", "invitar", "rsvp", "bautizo", "shower"
+    ],
+    "priority": 8
+  },
+
+  "inspirations-quotes": {
+    "keywords": [
+      "inspiration", "inspiración", "quote", "frase", "motivation", "motivación", "hope", "esperanza",
+      "success", "éxito", "dream", "sueño", "faith", "fe", "believe", "creer", "focus", "enfoque",
+      "goal", "meta", "mindset", "mentalidad", "life", "vida", "purpose", "propósito", "courage", "valor"
+    ],
+    "priority": 8
+  },
+  
+  "custom-ai-creations": {
+    "keywords": [
+      "ai", "artificial intelligence", "inteligencia artificial", "creación", "custom", "personalizado",
+      "design", "diseño", "generate", "crear", "robot", "digital", "virtual", "unique", "único",
+      "custom art", "personal creation", "style", "estilo", "modern", "moderno"
+    ],
+    "priority": 7
   }
-}
+      }
