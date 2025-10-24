@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
@@ -10,135 +10,36 @@ import "swiper/css";
 
 // 🌸 CATEGORÍAS LIMPIAS Y UNIFICADAS
 const allCategories = [
-  {
-    name: "Seasonal & Holidays",
-    emoji: "🎉",
-    slug: "seasonal-holidays",
-    color: "#FFE0E9",
-  },
-  {
-    name: "Professions & Appreciation",
-    emoji: "👩‍🏫",
-    slug: "professions-appreciation",
-    color: "#E8FFF3",
-  },
-  {
-    name: "Birthday",
-    emoji: "🎂",
-    slug: "birthday",
-    color: "#FFDDEE",
-  },
-  {
-    name: "Love & Romance",
-    emoji: "💘",
-    slug: "love-romance",
-    color: "#FFECEC",
-  },
-  {
-    name: "Family & Relationships",
-    emoji: "👨‍👩‍👧‍👦",
-    slug: "family-relationships",
-    color: "#E5EDFF",
-  },
-  {
-    name: "Babies & Parenting",
-    emoji: "👶",
-    slug: "babies-parenting",
-    color: "#DFF7FF",
-  },
-  {
-    name: "Weddings & Anniversaries",
-    emoji: "💍",
-    slug: "weddings-anniversaries",
-    color: "#F3E5FF",
-  },
-  {
-    name: "School & Graduation",
-    emoji: "🎓",
-    slug: "school-graduation",
-    color: "#E2FFD7",
-  },
-  {
-    name: "Congratulations & Milestones",
-    emoji: "🏆",
-    slug: "congrats-milestones",
-    color: "#FFF3C4",
-  },
-  {
-    name: "Home & Life Changes",
-    emoji: "🏡",
-    slug: "home-life-changes",
-    color: "#E8FFF3",
-  },
-  {
-    name: "Health & Support",
-    emoji: "🩺",
-    slug: "health-support",
-    color: "#DFFAFF",
-  },
-  {
-    name: "Sympathy & Remembrance",
-    emoji: "🕊️",
-    slug: "sympathy-remembrance",
-    color: "#F3F3F3",
-  },
-  {
-    name: "Gifts & Surprises",
-    emoji: "🎁",
-    slug: "gifts-surprises",
-    color: "#E7E9FF",
-  },
-  {
-    name: "Humor & Memes",
-    emoji: "😄",
-    slug: "humor-memes",
-    color: "#E7F7FF",
-  },
-  {
-    name: "Adventure & Nature",
-    emoji: "🗺️",
-    slug: "adventure-nature",
-    color: "#E8ECFF",
-  },
-  {
-    name: "Kids & Teens",
-    emoji: "🧸",
-    slug: "kids-teens",
-    color: "#FFE6FA",
-  },
-  {
-    name: "Just Because & Everyday",
-    emoji: "💌",
-    slug: "just-because",
-    color: "#FDE6E6",
-  },
-  {
-    name: "Invitations & Events",
-    emoji: "✉️",
-    slug: "invitations-events",
-    color: "#FFD9E8",
-  },
-  {
-    name: "Inspirations & Quotes",
-    emoji: "📝",
-    slug: "inspirations-quotes",
-    color: "#E8F6FF",
-  },
-  {
-    name: "Custom & AI Creations",
-    emoji: "🤖",
-    slug: "custom-ai-creations",
-    color: "#E5FFE2",
-  },
+  { name: "Seasonal & Holidays", emoji: "🎉", slug: "seasonal-holidays", color: "#FFE0E9" },
+  { name: "Professions & Appreciation", emoji: "👩‍🏫", slug: "professions-appreciation", color: "#E8FFF3" },
+  { name: "Birthday", emoji: "🎂", slug: "birthday", color: "#FFDDEE" },
+  { name: "Love & Romance", emoji: "💘", slug: "love-romance", color: "#FFECEC" },
+  { name: "Family & Relationships", emoji: "👨‍👩‍👧‍👦", slug: "family-relationships", color: "#E5EDFF" },
+  { name: "Babies & Parenting", emoji: "👶", slug: "babies-parenting", color: "#DFF7FF" },
+  { name: "Weddings & Anniversaries", emoji: "💍", slug: "weddings-anniversaries", color: "#F3E5FF" },
+  { name: "School & Graduation", emoji: "🎓", slug: "school-graduation", color: "#E2FFD7" },
+  { name: "Congratulations & Milestones", emoji: "🏆", slug: "congrats-milestones", color: "#FFF3C4" },
+  { name: "Home & Life Changes", emoji: "🏡", slug: "home-life-changes", color: "#E8FFF3" },
+  { name: "Health & Support", emoji: "🩺", slug: "health-support", color: "#DFFAFF" },
+  { name: "Sympathy & Remembrance", emoji: "🕊️", slug: "sympathy-remembrance", color: "#F3F3F3" },
+  { name: "Gifts & Surprises", emoji: "🎁", slug: "gifts-surprises", color: "#E7E9FF" },
+  { name: "Humor & Memes", emoji: "😄", slug: "humor-memes", color: "#E7F7FF" },
+  { name: "Adventure & Nature", emoji: "🗺️", slug: "adventure-nature", color: "#E8ECFF" },
+  { name: "Kids & Teens", emoji: "🧸", slug: "kids-teens", color: "#FFE6FA" },
+  { name: "Just Because & Everyday", emoji: "💌", slug: "just-because", color: "#FDE6E6" },
+  { name: "Invitations & Events", emoji: "✉️", slug: "invitations-events", color: "#FFD9E8" },
+  { name: "Inspirations & Quotes", emoji: "📝", slug: "inspirations-quotes", color: "#E8F6FF" },
+  { name: "Custom & AI Creations", emoji: "🤖", slug: "custom-ai-creations", color: "#E5FFE2" },
 ];
 
 export default function Categories() {
+  const router = useRouter();
+  const pathname = usePathname();
   const [search, setSearch] = useState("");
   const [filtered, setFiltered] = useState(allCategories);
   const [videos, setVideos] = useState([]);
-  const pathname = usePathname();
 
-  // 📥 Cargar todos los videos
+  // 📥 Cargar todos los videos del índice
   useEffect(() => {
     async function loadVideos() {
       try {
@@ -152,7 +53,7 @@ export default function Categories() {
     loadVideos();
   }, []);
 
-  // 🔍 Filtrar según búsqueda
+  // 🔍 Filtrar categorías según búsqueda
   useEffect(() => {
     const q = search.toLowerCase().trim();
     if (!q) {
@@ -195,13 +96,18 @@ export default function Categories() {
     setFiltered(matches.length > 0 ? matches : []);
   }, [search, videos]);
 
+  // 🧭 Navegación automática si hay una búsqueda válida y se presiona Enter
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter" && search.trim()) {
+      router.push(`/categories?search=${encodeURIComponent(search.trim())}`);
+    }
+  };
+
   const isHome = pathname === "/";
 
   return (
     <section id="categories" className="text-center py-10 px-3 overflow-hidden">
-      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
-        Categories
-      </h2>
+      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">Categories</h2>
 
       {/* 🔎 Barra de búsqueda */}
       <div className="flex justify-center mb-10">
@@ -214,20 +120,18 @@ export default function Categories() {
           placeholder="Search any theme — e.g. turtle, mountain, love..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={handleKeyPress}
           className="w-80 md:w-96 px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700"
         />
       </div>
 
-      {/* 🎠 Carrusel */}
+      {/* 🎠 Carrusel de categorías */}
       <Swiper
         slidesPerView={3.2}
         spaceBetween={16}
-        centeredSlides={true}
-        loop={true}
-        autoplay={{
-          delay: 2500,
-          disableOnInteraction: false,
-        }}
+        centeredSlides
+        loop
+        autoplay={{ delay: 2500, disableOnInteraction: false }}
         speed={1000}
         breakpoints={{
           0: { slidesPerView: 2.4, spaceBetween: 10 },
@@ -241,11 +145,7 @@ export default function Categories() {
           filtered.map((cat, i) => (
             <SwiperSlide key={i}>
               <Link
-                href={
-                  isHome
-                    ? `/category/${cat.slug}?search=${encodeURIComponent(search)}`
-                    : `/category/${cat.slug}`
-                }
+                href={`/category/${cat.slug}${search ? `?search=${encodeURIComponent(search)}` : ""}`}
               >
                 <motion.div
                   className="flex flex-col items-center justify-center cursor-pointer"
@@ -258,11 +158,7 @@ export default function Categories() {
                     <motion.span
                       className="text-4xl sm:text-5xl"
                       animate={{ y: [0, -5, 0] }}
-                      transition={{
-                        duration: 3,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }}
+                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                     >
                       {cat.emoji}
                     </motion.span>
@@ -282,4 +178,4 @@ export default function Categories() {
       </Swiper>
     </section>
   );
-        }
+            }
