@@ -8,25 +8,25 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import "swiper/css";
 
-// 🌸 CATEGORÍAS FINALES — Limpias, coherentes y sincronizadas con glossary.json
+// 🌸 CATEGORÍAS FINALES — Limpias, coherentes y sincronizadas con subcategories.json y glossary.json
 const allCategories = [
   { name: "Seasonal & Holidays", emoji: "🎉", slug: "seasonal-holidays", color: "#FFE0E9" },
   { name: "Birthday", emoji: "🎂", slug: "birthday", color: "#FFDDEE" },
   { name: "Love & Romance", emoji: "💘", slug: "love-romance", color: "#FFECEC" },
-  { name: "Family & Parenting", emoji: "👨‍👩‍👧‍👦", slug: "family-parenting", color: "#E5EDFF" },
-  { name: "Pets & Animals", emoji: "🐾", slug: "pets-animals", color: "#E9FFF4" },
+  { name: "Family & Relationships", emoji: "👨‍👩‍👧‍👦", slug: "family-relationships", color: "#E5EDFF" },
+  { name: "Pets & Animal Lovers", emoji: "🐾", slug: "pets-animal-lovers", color: "#E9FFF4" },
   { name: "School & Graduation", emoji: "🎓", slug: "school-graduation", color: "#E2FFD7" },
-  { name: "Work & Professions", emoji: "👩‍💼", slug: "work-professions", color: "#E8FFF3" },
-  { name: "Health & Wellness", emoji: "🩺", slug: "health-wellness", color: "#DFFAFF" },
-  { name: "Sympathy & Support", emoji: "🕊️", slug: "sympathy-support", color: "#F3F3F3" },
-  { name: "Congratulations", emoji: "🏆", slug: "congratulations", color: "#FFF3C4" },
+  { name: "Work & Professional", emoji: "👩‍💼", slug: "work-professional", color: "#E8FFF3" },
+  { name: "Health & Support", emoji: "🩺", slug: "health-support", color: "#DFFAFF" },
+  { name: "Sympathy & Remembrance", emoji: "🕊️", slug: "sympathy-remembrance", color: "#F3F3F3" },
+  { name: "Congratulations", emoji: "🏆", slug: "congrats-milestones", color: "#FFF3C4" },
   { name: "Weddings & Anniversaries", emoji: "💍", slug: "weddings-anniversaries", color: "#F3E5FF" },
   { name: "Adventure & Nature", emoji: "🗺️", slug: "adventure-nature", color: "#E8ECFF" },
-  { name: "Humor & Fun", emoji: "😄", slug: "humor-fun", color: "#E7F7FF" },
-  { name: "Gifts & Surprises", emoji: "🎁", slug: "gifts-surprises", color: "#E7E9FF" },
-  { name: "Just Because", emoji: "💌", slug: "just-because", color: "#FDE6E6" },
-  { name: "Invitations & Events", emoji: "✉️", slug: "invitations-events", color: "#FFD9E8" },
-  { name: "Custom & AI Creations", emoji: "🤖", slug: "custom-ai", color: "#E5FFE2" },
+  { name: "Humor & Memes", emoji: "😄", slug: "humor-memes", color: "#E7F7FF" },
+  { name: "Thank You & Appreciation", emoji: "🙏", slug: "thank-you-appreciation", color: "#E7E9FF" },
+  { name: "House & Moving", emoji: "🏡", slug: "house-moving", color: "#FFD9E8" },
+  { name: "Babies & Parenting", emoji: "🍼", slug: "babies-parenting", color: "#FDE6E6" },
+  { name: "Universal", emoji: "✨", slug: "universal", color: "#E5FFE2" },
 ];
 
 export default function Categories() {
@@ -64,7 +64,6 @@ export default function Categories() {
   useEffect(() => {
     const q = search.toLowerCase().trim();
     if (!q) {
-      // mostrar todas aunque no tengan videos
       setFiltered(allCategories);
       return;
     }
@@ -101,7 +100,7 @@ export default function Categories() {
       }
     }
 
-    // Cruzar con categorías visibles (aunque estén vacías)
+    // Cruzar con categorías visibles
     const matches = allCategories.filter((cat) =>
       [...foundCategories].some(
         (f) =>
@@ -110,18 +109,14 @@ export default function Categories() {
       )
     );
 
-    // ✅ Mostrar todas si no hay match exacto, pero mantener orden
     setFiltered(matches.length > 0 ? matches : allCategories);
   }, [search, videos, glossary]);
 
-  // 🧭 Enter para buscar
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && search.trim()) {
       router.push(`/categories?search=${encodeURIComponent(search.trim())}`);
     }
   };
-
-  const isHome = pathname === "/";
 
   return (
     <section id="categories" className="text-center py-10 px-3 overflow-hidden">
@@ -192,4 +187,4 @@ export default function Categories() {
       </Swiper>
     </section>
   );
-            }
+                                     }
