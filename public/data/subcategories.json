@@ -1,1 +1,496 @@
-{"adventure-nature":[{"name_en":"Beach Holiday","name_es":"Vacaciones en la Playa","slug":"beach-holiday","emoji":"🏖️"},{"name_en":"Camping Fun","name_es":"Diversión en el Campamento","slug":"camping-fun","emoji":"🏕️"},{"name_en":"Forest Walk","name_es":"Paseo por el Bosque","slug":"forest-walk","emoji":"🌲"},{"name_en":"Mountain Escape","name_es":"Escapada a la Montaña","slug":"mountain-escape","emoji":"🏔️"},{"name_en":"Ocean Breeze","name_es":"Brisa del Océano","slug":"ocean-breeze","emoji":"🌊"},{"name_en":"Starlight Camping","name_es":"Campamento bajo las Estrellas","slug":"starlight-camping","emoji":"✨"}],"babies-parenting":[{"name_en":"Baby Shower","name_es":"Fiesta de Bebé","slug":"baby-shower","emoji":"🍼"},{"name_en":"Cuddle Time","name_es":"Momento de Mimos","slug":"cuddle-time","emoji":"🧸"},{"name_en":"First Birthday","name_es":"Primer Cumpleaños","slug":"first-birthday","emoji":"🎂"},{"name_en":"Gender Reveal","name_es":"Revelación de Género","slug":"gender-reveal","emoji":"🎈"},{"name_en":"Mom Moments","name_es":"Momentos de Mamá","slug":"mom-moments","emoji":"🤱"}],"birthday":[{"name_en":"Adult Birthday","name_es":"Cumpleaños de Adultos","slug":"adult-birthday","emoji":"🎂"},{"name_en":"Cake Party","name_es":"Fiesta del Pastel","slug":"cake-party","emoji":"🍰"},{"name_en":"Funny Birthday","name_es":"Cumpleaños Divertido","slug":"funny-birthday","emoji":"😂"},{"name_en":"Kids Birthday","name_es":"Cumpleaños Infantil","slug":"kids-birthday","emoji":"🧁"},{"name_en":"Pet Birthday","name_es":"Cumpleaños de Mascota","slug":"pet-birthday","emoji":"🐾"}],"christmas-holidays":[{"name_en":"Christmas Eve","name_es":"Nochebuena","slug":"christmas-eve","emoji":"🎄"},{"name_en":"New Year Celebration","name_es":"Año Nuevo","slug":"new-year-celebration","emoji":"🎆"},{"name_en":"Thanksgiving","name_es":"Acción de Gracias","slug":"thanksgiving","emoji":"🦃"},{"name_en":"Valentine’s Day","name_es":"San Valentín","slug":"valentines-day","emoji":"💘"},{"name_en":"Winter Joy","name_es":"Alegría Invernal","slug":"winter-joy","emoji":"❄️"}],"family-relationships":[{"name_en":"Baby Arrival","name_es":"Llegada del Bebé","slug":"baby-arrival","emoji":"🍼"},{"name_en":"Family Dinner","name_es":"Cena Familiar","slug":"family-dinner","emoji":"🍽️"},{"name_en":"Family Pets","name_es":"Mascotas Familiares","slug":"family-pets","emoji":"🐕"},{"name_en":"Mother’s Day","name_es":"Día de la Madre","slug":"mothers-day","emoji":"🌷"},{"name_en":"Parenting Moments","name_es":"Momentos de Crianza","slug":"parenting-moments","emoji":"👶"}],"health-support":[{"name_en":"Get Well Soon","name_es":"Pronta Recuperación","slug":"get-well-soon","emoji":"🌼"},{"name_en":"Mental Health","name_es":"Salud Mental","slug":"mental-health","emoji":"🧠"},{"name_en":"Recovery Journey","name_es":"Camino de Recuperación","slug":"recovery-journey","emoji":"🚶‍♀️"},{"name_en":"Stay Strong","name_es":"Mantente Fuerte","slug":"stay-strong","emoji":"💪"},{"name_en":"Support Message","name_es":"Mensaje de Apoyo","slug":"support-message","emoji":"💬"}],"love-romance":[{"name_en":"Anniversary Love","name_es":"Aniversario de Amor","slug":"anniversary-love","emoji":"💍"},{"name_en":"Couple Trip","name_es":"Viaje en Pareja","slug":"couple-trip","emoji":"✈️"},{"name_en":"Love Letters","name_es":"Cartas de Amor","slug":"love-letters","emoji":"📜"},{"name_en":"Romantic Dinner","name_es":"Cena Romántica","slug":"romantic-dinner","emoji":"🍷"},{"name_en":"Self Love","name_es":"Amor Propio","slug":"self-love","emoji":"🌸"}],"pets-animal-lovers":[{"name_en":"Adopt Don’t Shop","name_es":"Adopta No Compres","slug":"adopt-dont-shop","emoji":"🐾"},{"name_en":"Cat Lovers","name_es":"Amantes de los Gatos","slug":"cat-lovers","emoji":"🐱"},{"name_en":"Cute Puppies","name_es":"Cachorros Tiernos","slug":"cute-puppies","emoji":"🐶"},{"name_en":"Pet Adoption","name_es":"Adopción de Mascota","slug":"pet-adoption","emoji":"🏠"},{"name_en":"Pet Friendship","name_es":"Amistad Animal","slug":"pet-friendship","emoji":"🤍"}],"sympathy-remembrance":[{"name_en":"Condolences","name_es":"Condolencias","slug":"condolences","emoji":"💐"},{"name_en":"Forever Remembered","name_es":"Siempre Recordado","slug":"forever-remembered","emoji":"🕯️"},{"name_en":"In Loving Memory","name_es":"En Memoria","slug":"in-loving-memory","emoji":"🕊️"},{"name_en":"Light a Candle","name_es":"Encender una Vela","slug":"light-a-candle","emoji":"🕯️"},{"name_en":"Peaceful Thoughts","name_es":"Pensamientos de Paz","slug":"peaceful-thoughts","emoji":"☁️"}],"thank-you-appreciation":[{"name_en":"Everyday Thanks","name_es":"Gracias Cotidianas","slug":"everyday-thanks","emoji":"🌞"},{"name_en":"Heartfelt Thanks","name_es":"Gracias de Corazón","slug":"heartfelt-thanks","emoji":"❤️"},{"name_en":"Simple Thanks","name_es":"Agradecimiento Simple","slug":"simple-thanks","emoji":"💐"},{"name_en":"Team Appreciation","name_es":"Agradecimiento al Equipo","slug":"team-appreciation","emoji":"🏆"},{"name_en":"Thank You Message","name_es":"Mensaje de Gracias","slug":"thank-you-message","emoji":"💬"}]}
+{
+  "seasonal-holidays": [
+    {
+      "slug": "christmas",
+      "name": "Christmas",
+      "emoji": "🎄"
+    },
+    {
+      "slug": "new-year",
+      "name": "New Year",
+      "emoji": "🎆"
+    },
+    {
+      "slug": "halloween",
+      "name": "Halloween",
+      "emoji": "🎃"
+    },
+    {
+      "slug": "thanksgiving",
+      "name": "Thanksgiving",
+      "emoji": "🦃"
+    },
+    {
+      "slug": "easter",
+      "name": "Easter",
+      "emoji": "🐰"
+    },
+    {
+      "slug": "valentines-day",
+      "name": "Valentine’s Day",
+      "emoji": "💘"
+    },
+    {
+      "slug": "st-patricks-day",
+      "name": "St. Patrick’s Day",
+      "emoji": "☘️"
+    },
+    {
+      "slug": "independence-day",
+      "name": "Independence Day",
+      "emoji": "🇺🇸"
+    },
+    {
+      "slug": "summer-festival",
+      "name": "Summer Festival",
+      "emoji": "☀️"
+    },
+    {
+      "slug": "autumn-vibes",
+      "name": "Autumn Vibes",
+      "emoji": "🍂"
+    },
+    {
+      "slug": "winter-joy",
+      "name": "Winter Joy",
+      "emoji": "❄️"
+    },
+    {
+      "slug": "spring-bloom",
+      "name": "Spring Bloom",
+      "emoji": "🌸"
+    },
+    {
+      "slug": "beach-holiday",
+      "name": "Beach Holiday",
+      "emoji": "🏖️"
+    },
+    {
+      "slug": "carnival",
+      "name": "Carnival",
+      "emoji": "🎭"
+    },
+    {
+      "slug": "fireworks-night",
+      "name": "Fireworks Night",
+      "emoji": "🎇"
+    }
+  ],
+  "birthday": [
+    {
+      "slug": "birthday-party",
+      "name": "Birthday Party",
+      "emoji": "🎂"
+    },
+    {
+      "slug": "pet-birthday",
+      "name": "Pet Birthday",
+      "emoji": "🐾"
+    },
+    {
+      "slug": "family-birthday",
+      "name": "Family Birthday",
+      "emoji": "👨‍👩‍👧‍👦"
+    },
+    {
+      "slug": "friend-birthday",
+      "name": "Friend Birthday",
+      "emoji": "🤝"
+    },
+    {
+      "slug": "surprise-birthday",
+      "name": "Surprise Birthday",
+      "emoji": "🎉"
+    },
+    {
+      "slug": "milestone-birthday",
+      "name": "Milestone Birthday",
+      "emoji": "🏆"
+    },
+    {
+      "slug": "garden-party",
+      "name": "Garden Party",
+      "emoji": "🌷"
+    },
+    {
+      "slug": "birthday-toast",
+      "name": "Birthday Toast",
+      "emoji": "🥂"
+    }
+  ],
+  "love-romance": [
+    {
+      "slug": "anniversary",
+      "name": "Anniversary",
+      "emoji": "💍"
+    },
+    {
+      "slug": "wedding-love",
+      "name": "Wedding Love",
+      "emoji": "💐"
+    },
+    {
+      "slug": "proposal",
+      "name": "Proposal",
+      "emoji": "💎"
+    },
+    {
+      "slug": "first-date",
+      "name": "First Date",
+      "emoji": "🌹"
+    },
+    {
+      "slug": "long-distance-love",
+      "name": "Long Distance Love",
+      "emoji": "🌍"
+    },
+    {
+      "slug": "couple-trip",
+      "name": "Couple Trip",
+      "emoji": "✈️"
+    },
+    {
+      "slug": "love-letters",
+      "name": "Love Letters",
+      "emoji": "💌"
+    },
+    {
+      "slug": "self-love",
+      "name": "Self Love",
+      "emoji": "🌸"
+    }
+  ],
+  "family-relationships": [
+    {
+      "slug": "mothers-day",
+      "name": "Mother’s Day",
+      "emoji": "🌷"
+    },
+    {
+      "slug": "fathers-day",
+      "name": "Father’s Day",
+      "emoji": "👔"
+    },
+    {
+      "slug": "grandparents-day",
+      "name": "Grandparents Day",
+      "emoji": "👵"
+    },
+    {
+      "slug": "family-reunion",
+      "name": "Family Reunion",
+      "emoji": "🏠"
+    },
+    {
+      "slug": "parenting",
+      "name": "Parenting",
+      "emoji": "👶"
+    },
+    {
+      "slug": "siblings-love",
+      "name": "Siblings Love",
+      "emoji": "👫"
+    },
+    {
+      "slug": "family-support",
+      "name": "Family Support",
+      "emoji": "❤️"
+    },
+    {
+      "slug": "new-home",
+      "name": "New Home",
+      "emoji": "🏡"
+    }
+  ],
+  "babies-parenting": [
+    {
+      "slug": "baby-shower",
+      "name": "Baby Shower",
+      "emoji": "🍼"
+    },
+    {
+      "slug": "gender-reveal",
+      "name": "Gender Reveal",
+      "emoji": "🎈"
+    },
+    {
+      "slug": "first-steps",
+      "name": "First Steps",
+      "emoji": "👣"
+    },
+    {
+      "slug": "nap-time",
+      "name": "Nap Time",
+      "emoji": "😴"
+    },
+    {
+      "slug": "playtime",
+      "name": "Playtime",
+      "emoji": "🧸"
+    },
+    {
+      "slug": "moments",
+      "name": "Mom Moments",
+      "emoji": "🤱"
+    },
+    {
+      "slug": "dad-moments",
+      "name": "Dad Moments",
+      "emoji": "👨‍🍼"
+    },
+    {
+      "slug": "family-walk",
+      "name": "Family Walk",
+      "emoji": "🚼"
+    }
+  ],
+  "weddings-anniversaries": [
+    {
+      "slug": "wedding-day",
+      "name": "Wedding Day",
+      "emoji": "💍"
+    },
+    {
+      "slug": "engagement",
+      "name": "Engagement",
+      "emoji": "💎"
+    },
+    {
+      "slug": "honeymoon",
+      "name": "Honeymoon",
+      "emoji": "🌴"
+    },
+    {
+      "slug": "bridal-shower",
+      "name": "Bridal Shower",
+      "emoji": "👰"
+    },
+    {
+      "slug": "just-married",
+      "name": "Just Married",
+      "emoji": "🚗"
+    },
+    {
+      "slug": "wedding-anniversary",
+      "name": "Wedding Anniversary",
+      "emoji": "🎊"
+    }
+  ],
+  "school-graduation": [
+    {
+      "slug": "back-to-school",
+      "name": "Back to School",
+      "emoji": "🏫"
+    },
+    {
+      "slug": "graduation-day",
+      "name": "Graduation Day",
+      "emoji": "🎓"
+    },
+    {
+      "slug": "teacher-appreciation",
+      "name": "Teacher Appreciation",
+      "emoji": "🍎"
+    },
+    {
+      "slug": "school-friends",
+      "name": "School Friends",
+      "emoji": "👫"
+    }
+  ],
+  "congrats-milestones": [
+    {
+      "slug": "graduation",
+      "name": "Graduation",
+      "emoji": "🎓"
+    },
+    {
+      "slug": "new-job",
+      "name": "New Job",
+      "emoji": "💼"
+    },
+    {
+      "slug": "promotion",
+      "name": "Promotion",
+      "emoji": "📈"
+    },
+    {
+      "slug": "new-house",
+      "name": "New House",
+      "emoji": "🏡"
+    }
+  ],
+  "work-professional": [
+    {
+      "slug": "team-success",
+      "name": "Team Success",
+      "emoji": "🏆"
+    },
+    {
+      "slug": "work-anniversary",
+      "name": "Work Anniversary",
+      "emoji": "🎉"
+    },
+    {
+      "slug": "remote-work",
+      "name": "Remote Work",
+      "emoji": "🏠"
+    },
+    {
+      "slug": "goal-achievement",
+      "name": "Goal Achievement",
+      "emoji": "🌟"
+    }
+  ],
+  "house-moving": [
+    {
+      "slug": "new-apartment",
+      "name": "New Apartment",
+      "emoji": "🏙️"
+    },
+    {
+      "slug": "housewarming-party",
+      "name": "Housewarming Party",
+      "emoji": "🎊"
+    },
+    {
+      "slug": "moving-day",
+      "name": "Moving Day",
+      "emoji": "📦"
+    }
+  ],
+  "health-support": [
+    {
+      "slug": "get-well-soon",
+      "name": "Get Well Soon",
+      "emoji": "🌼"
+    },
+    {
+      "slug": "stay-strong",
+      "name": "Stay Strong",
+      "emoji": "💪"
+    },
+    {
+      "slug": "calm-mind",
+      "name": "Calm Mind",
+      "emoji": "🧘‍♀️"
+    }
+  ],
+  "sympathy-remembrance": [
+    {
+      "slug": "in-memory",
+      "name": "In Memory",
+      "emoji": "🕊️"
+    },
+    {
+      "slug": "condolences",
+      "name": "Condolences",
+      "emoji": "💐"
+    },
+    {
+      "slug": "tribute",
+      "name": "Tribute",
+      "emoji": "🌹"
+    }
+  ],
+  "thank-you-appreciation": [
+    {
+      "slug": "thank-you",
+      "name": "Thank You",
+      "emoji": "🙏"
+    },
+    {
+      "slug": "teacher-thanks",
+      "name": "Teacher Thanks",
+      "emoji": "🍎"
+    },
+    {
+      "slug": "team-appreciation",
+      "name": "Team Appreciation",
+      "emoji": "🏆"
+    }
+  ],
+  "humor-memes": [
+    {
+      "slug": "funny-animals",
+      "name": "Funny Animals",
+      "emoji": "🐒"
+    },
+    {
+      "slug": "sarcastic-humor",
+      "name": "Sarcastic Humor",
+      "emoji": "😏"
+    },
+    {
+      "slug": "office-jokes",
+      "name": "Office Jokes",
+      "emoji": "💼"
+    }
+  ],
+  "pets-animal-lovers": [
+    {
+      "slug": "cute-puppies",
+      "name": "Cute Puppies",
+      "emoji": "🐶"
+    },
+    {
+      "slug": "cat-lovers",
+      "name": "Cat Lovers",
+      "emoji": "🐱"
+    },
+    {
+      "slug": "pet-adoption",
+      "name": "Pet Adoption",
+      "emoji": "🏠"
+    }
+  ],
+  "adventure-nature": [
+    {
+      "slug": "mountain-adventure",
+      "name": "Mountain Adventure",
+      "emoji": "⛰️"
+    },
+    {
+      "slug": "beach-sunset",
+      "name": "Beach Sunset",
+      "emoji": "🌅"
+    },
+    {
+      "slug": "forest-camping",
+      "name": "Forest Camping",
+      "emoji": "🏕️"
+    },
+    {
+      "slug": "underwater-life",
+      "name": "Underwater Life",
+      "emoji": "🐠"
+    }
+  ],
+  "universal": [
+    {
+      "slug": "general",
+      "name": "General",
+      "emoji": "✨"
+    },
+    {
+      "slug": "celebration",
+      "name": "Celebration",
+      "emoji": "🎉"
+    },
+    {
+      "slug": "friendship",
+      "name": "Friendship",
+      "emoji": "🤝"
+    },
+    {
+      "slug": "gratitude",
+      "name": "Gratitude",
+      "emoji": "💖"
+    },
+    {
+      "slug": "good-vibes",
+      "name": "Good Vibes",
+      "emoji": "🌈"
+    }
+  ]
+}
