@@ -2,12 +2,10 @@
   "name": "everwish-app",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
   "scripts": {
-    "dev": "npm run index:videos && next dev",
-    "build": "npm run index:videos && next build",
-    "start": "next start",
-    "index:videos": "node scripts/generateVideoIndex.js"
+    "dev": "node scripts/generateindex.js && next dev",
+    "build": "node scripts/generateindex.js && next build",
+    "start": "next start"
   },
   "dependencies": {
     "next": "13.5.6",
