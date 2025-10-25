@@ -55,7 +55,7 @@ export default function Categories() {
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && filtered.length > 0) {
-      router.push(`/category/${filtered[0].slug}`);
+      router.push(`/categories/${filtered[0].slug}`);
     }
   };
 
@@ -99,7 +99,7 @@ export default function Categories() {
             <motion.div
               className="flex flex-col items-center justify-center cursor-pointer"
               whileHover={{ scale: 1.07 }}
-              onClick={() => router.push(`/category/${cat.slug}`)}
+              onClick={() => router.push(`/categories/${cat.slug}`)} // ✅ ruta plural
             >
               <motion.div
                 className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md"
@@ -122,4 +122,4 @@ export default function Categories() {
       </Swiper>
     </section>
   );
-                  }
+          }
