@@ -1,399 +1,197 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
-import {
-  getAnimationsForSlug,
-  getAnimationOptionsForSlug,
-  AnimationOverlay,
-} from "@/lib/animations";
-import { getMessageForSlug } from "@/lib/messages";
-import GiftCardPopup from "@/components/giftcard";
-import CheckoutModal from "@/components/checkout";
-import CropperModal from "@/components/croppermodal";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
-export default function EditPage({ params }) {
-  const slug = params.slug;
-  const [stage, setStage] = useState("expanded");
-  const [progress, setProgress] = useState(0);
-  const [message, setMessage] = useState("");
-  const [animation, setAnimation] = useState("");
-  const [animationOptions, setAnimationOptions] = useState([]);
-  const [videoSrc, setVideoSrc] = useState("");
+export default function Carousel() {
+  const router = useRouter();
+  const [videos, setVideos] = useState([]);
+  const [index, setIndex] = useState(0);
+  const autoplayRef = useRef(null);
+  const pauseRef = useRef(false);
 
-  const [gift, setGift] = useState(null);
-  const [showGift, setShowGift] = useState(false);
-  const [showCheckout, setShowCheckout] = useState(false);
-  const [showCrop, setShowCrop] = useState(false);
-  const [showDownload, setShowDownload] = useState(false);
-  const [total, setTotal] = useState(5);
-  const [userImage, setUserImage] = useState(null);
+  // 🧭 Control de gestos táctiles
+  const startX = useRef(0);
+  const startY = useRef(0);
+  const moved = useRef(false);
+  const direction = useRef(null);
 
-  // 🎨 Estados de animación
-  const [intensity, setIntensity] = useState("normal");
-  const [opacityLevel, setOpacityLevel] = useState(0.9);
-  const [emojiCount, setEmojiCount] = useState(20);
-  const [isPurchased, setIsPurchased] = useState(false);
-  const [isViewed, setIsViewed] = useState(false);
+  const TAP_THRESHOLD = 10;
+  const SWIPE_THRESHOLD = 40;
 
-  // 🎬 Cargar información del video desde index.json
+  // 🔁 Autoplay
+  const startAutoplay = () => {
+    clearInterval(autoplayRef.current);
+    if (!pauseRef.current && videos.length > 0) {
+      autoplayRef.current = setInterval(() => {
+        setIndex((prev) => (prev + 1) % videos.length);
+      }, 5000);
+    }
+  };
+
+  // 🎥 Cargar videos desde /videos/index.json
   useEffect(() => {
-    async function loadVideo() {
+    async function fetchVideos() {
       try {
+        console.log("📂 Cargando /videos/index.json...");
         const res = await fetch("/videos/index.json", { cache: "no-store" });
-        if (!res.ok) throw new Error("No se pudo cargar index.json");
 
-        const allVideos = await res.json();
-        const found = allVideos.find((v) =>
-          v.name.replace(/\.[^/.]+$/, "") === slug
-        );
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
 
-        if (found) {
-          console.log(`🎥 Video encontrado: ${found.name}`);
-          setVideoSrc(found.file || `/videos/${found.name}`);
-        } else {
-          console.warn(`⚠️ No se encontró el video ${slug} en index.json`);
-          setVideoSrc(`/videos/${slug}.mp4`);
-        }
+        // 🧹 Normalizar estructura
+        const normalized = data.map((v) => ({
+          src: v.file || `/videos/${v.name}`,
+          slug: v.name?.replace(".mp4", "") || "",
+        }));
+
+        console.log(`✅ ${normalized.length} videos cargados`);
+        setVideos(normalized);
       } catch (err) {
-        console.error("❌ Error al cargar video:", err);
-        setVideoSrc(`/videos/${slug}.mp4`);
+        console.error("❌ Error cargando /videos/index.json:", err);
+      }
+    }
+    fetchVideos();
+  }, []);
+
+  useEffect(() => {
+    startAutoplay();
+    return () => clearInterval(autoplayRef.current);
+  }, [videos]);
+
+  // 🖐️ Gestos táctiles
+  const handleTouchStart = (e) => {
+    const t = e.touches[0];
+    startX.current = t.clientX;
+    startY.current = t.clientY;
+    moved.current = false;
+    direction.current = null;
+    pauseRef.current = true;
+    clearInterval(autoplayRef.current);
+  };
+
+  const handleTouchMove = (e) => {
+    const t = e.touches[0];
+    const deltaX = t.clientX - startX.current;
+    const deltaY = t.clientY - startY.current;
+
+    if (Math.abs(deltaX) > TAP_THRESHOLD || Math.abs(deltaY) > TAP_THRESHOLD) {
+      moved.current = true;
+      direction.current =
+        Math.abs(deltaX) > Math.abs(deltaY) ? "horizontal" : "vertical";
+      e.stopPropagation();
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    e.stopPropagation();
+
+    if (!moved.current) {
+      const tapped = videos[index];
+      if (tapped?.slug) handleClick(tapped.slug);
+    } else if (direction.current === "horizontal") {
+      const diffX = startX.current - e.changedTouches[0].clientX;
+      if (Math.abs(diffX) > SWIPE_THRESHOLD) {
+        setIndex((prev) =>
+          diffX > 0
+            ? (prev + 1) % videos.length
+            : (prev - 1 + videos.length) % videos.length
+        );
       }
     }
 
-    loadVideo();
-  }, [slug]);
-
-  // Inicializa mensaje y animaciones
-  useEffect(() => {
-    setMessage(getMessageForSlug(slug));
-    const opts = getAnimationOptionsForSlug(slug);
-    setAnimationOptions(opts);
-    setAnimation(opts.find((a) => !a.includes("None")) || opts[0]);
-  }, [slug]);
-
-  // ⏳ Pantalla de carga inicial
-  useEffect(() => {
-    let v = 0;
-    const id = setInterval(() => {
-      v += 1;
-      setProgress(v);
-      if (v >= 100) {
-        clearInterval(id);
-        setStage("editor");
-      }
-    }, 30);
-    return () => clearInterval(id);
-  }, []);
-
-  // 🎁 Gift Card
-  const updateGift = (data) => {
-    setGift(data);
-    setShowGift(false);
-    setTotal(5 + (data?.amount || 0));
-  };
-  const removeGift = () => {
-    setGift(null);
-    setTotal(5);
+    setTimeout(() => {
+      pauseRef.current = false;
+      startAutoplay();
+    }, 3000);
   };
 
-  // 💾 Descarga
-  const handleCardClick = () => {
-    setShowDownload(true);
-    setTimeout(() => setShowDownload(false), 3500);
-  };
-  const handleDownload = () => {
-    const link = document.createElement("a");
-    link.href = videoSrc;
-    link.download = `${slug}.mp4`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+  // 🎬 Abrir en página de edición
+  const handleClick = async (slug) => {
+    try {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) await elem.requestFullscreen();
+      else if (elem.webkitRequestFullscreen)
+        await elem.webkitRequestFullscreen();
+      await new Promise((r) => setTimeout(r, 150));
+      router.push(`/edit/${slug}`);
+    } catch {
+      router.push(`/edit/${slug}`);
+    }
   };
 
-  const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
-  const [animKey, setAnimKey] = useState(0);
-  useEffect(
-    () => setAnimKey(Date.now()),
-    [animation, category, intensity, opacityLevel, emojiCount]
-  );
+  // 🕓 Estado de carga
+  if (videos.length === 0) {
+    return (
+      <div className="w-full text-center py-10 text-gray-400">
+        ⏳ Loading videos...
+      </div>
+    );
+  }
 
   return (
     <div
-      className="relative min-h-[100dvh] bg-[#fff7f5] flex flex-col items-center overflow-hidden"
-      style={{ overscrollBehavior: "contain" }}
+      className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none"
+      style={{ touchAction: "pan-y" }}
     >
-      {/* ⏳ Pantalla de carga */}
-      {stage === "expanded" && (
-        <motion.div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-[#fff7f5]"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4 }}
-        >
-          {videoSrc ? (
-            <video
-              src={videoSrc}
-              className="absolute inset-0 w-full h-full object-cover"
-              autoPlay
-              loop
-              muted
-              playsInline
-            />
-          ) : (
-            <div className="text-gray-400">Cargando video...</div>
-          )}
-          <div className="absolute bottom-8 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-pink-500"
-              initial={{ width: "0%" }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.03, ease: "linear" }}
-            />
-          </div>
-        </motion.div>
-      )}
+      {/* 🎠 Carrusel */}
+      <div
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        className="relative w-full max-w-5xl flex justify-center items-center h-[440px]"
+      >
+        {videos.map((video, i) => {
+          const offset = (i - index + videos.length) % videos.length;
+          const positionClass =
+            offset === 0
+              ? "translate-x-0 scale-100 z-20 opacity-100"
+              : offset === 1
+              ? "translate-x-full scale-90 z-10 opacity-50"
+              : offset === videos.length - 1
+              ? "-translate-x-full scale-90 z-10 opacity-50"
+              : "opacity-0 z-0";
 
-      {/* 🎨 Editor principal */}
-      {stage === "editor" && (
-        <>
-          <AnimationOverlay
-            key={animKey}
-            slug={slug}
-            animation={animation}
-            intensity={intensity}
-            opacityLevel={opacityLevel}
-            emojiCount={emojiCount}
-          />
-
-          <motion.div
-            key="editor"
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45 }}
-            className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-6 mb-10"
-          >
-            {/* 🖼 Tarjeta principal */}
+          return (
             <div
-              className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50"
-              onClick={handleCardClick}
+              key={i}
+              className={`absolute transition-all duration-500 ease-in-out ${positionClass}`}
             >
               <video
-                src={videoSrc}
-                className="w-full object-cover"
+                src={video.src}
                 autoPlay
                 loop
                 muted
                 playsInline
+                controlsList="nodownload noplaybackrate"
+                draggable="false"
+                onContextMenu={(e) => e.preventDefault()}
+                className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover object-center bg-white overflow-hidden"
               />
             </div>
+          );
+        })}
+      </div>
 
-            {/* 📝 Mensaje */}
-            <h3 className="mb-2 text-center text-lg font-semibold text-gray-700">
-              ✨ Customize your message ✨
-            </h3>
-            <textarea
-              className="w-full rounded-2xl border p-3 text-center text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
-              rows={2}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-            />
-
-            {/* 📸 Imagen aprobada */}
-            {userImage && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.4 }}
-                className="my-3 cursor-pointer hover:scale-[1.02] transition-transform flex justify-center"
-                onClick={() => setShowCrop(true)}
-              >
-                <img
-                  src={userImage}
-                  alt="User upload"
-                  className="rounded-2xl border border-gray-200 shadow-sm"
-                  style={{
-                    width: "100%",
-                    height: "auto",
-                    objectFit: "cover",
-                    aspectRatio: "4 / 3",
-                    backgroundColor: "#fff7f5",
-                    maxWidth: "100%",
-                  }}
-                />
-              </motion.div>
-            )}
-
-            {!userImage && (
-              <div className="mt-4 flex justify-center">
-                <button
-                  onClick={() => setShowCrop(true)}
-                  className="flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-3 font-semibold text-[#3b2b1f] hover:bg-yellow-300 transition-all shadow-sm"
-                >
-                  📸 Add Image
-                </button>
-              </div>
-            )}
-
-            {/* ✨ Panel de animación */}
-            <div className="my-4">
-              <div
-                className={`flex items-center justify-between w-full rounded-xl transition-all duration-300 ${
-                  animation && !animation.startsWith("✨ None")
-                    ? "bg-gradient-to-r from-pink-100 via-purple-100 to-yellow-100 text-gray-800 shadow-sm"
-                    : "bg-gray-100 text-gray-400"
-                }`}
-                style={{
-                  height: "46px",
-                  padding: "0 8px 0 8px",
-                  border: "1px solid rgba(0,0,0,0.05)",
-                }}
-              >
-                {/* 🔹 Selector de animaciones */}
-                <select
-                  value={animation}
-                  onChange={(e) => setAnimation(e.target.value)}
-                  className={`flex-1 text-sm font-medium focus:outline-none cursor-pointer truncate transition-colors ${
-                    animation.startsWith("✨ None")
-                      ? "text-pink-500 font-semibold"
-                      : "text-gray-700"
-                  }`}
-                  style={{
-                    maxWidth: "43%",
-                    backgroundColor: "transparent",
-                    appearance: "auto",
-                  }}
-                >
-                  {animationOptions
-                    .filter((a) => !a.includes("None"))
-                    .map((a) => (
-                      <option key={a} value={a}>
-                        {a}
-                      </option>
-                    ))}
-                </select>
-
-                {/* 🔸 Controles visibles solo antes de compra o vista */}
-                {!isPurchased && !isViewed && (
-                  <div className="flex items-center gap-2 ml-1">
-                    <div className="flex items-center rounded-md border border-gray-300 overflow-hidden">
-                      <button
-                        className="px-2 text-lg hover:bg-gray-200 transition"
-                        onClick={() =>
-                          setEmojiCount((prev) => Math.max(5, prev - 5))
-                        }
-                      >
-                        –
-                      </button>
-                      <span className="px-2 text-sm font-medium text-gray-700">
-                        {emojiCount}
-                      </span>
-                      <button
-                        className="px-2 text-lg hover:bg-gray-200 transition"
-                        onClick={() =>
-                          setEmojiCount((prev) => Math.min(60, prev + 5))
-                        }
-                      >
-                        +
-                      </button>
-                    </div>
-
-                    <select
-                      value={intensity}
-                      onChange={(e) => setIntensity(e.target.value)}
-                      className="px-2 text-sm bg-transparent font-medium focus:outline-none cursor-pointer"
-                    >
-                      <option value="soft">Soft</option>
-                      <option value="normal">Normal</option>
-                      <option value="vivid">Vivid</option>
-                    </select>
-
-                    <button
-                      className={`ml-1 px-2 text-lg font-bold transition ${
-                        animation && !animation.startsWith("✨ None")
-                          ? "text-red-500 hover:text-red-600"
-                          : "text-gray-400"
-                      }`}
-                      onClick={() => setAnimation("✨ None (No Animation)")}
-                      title="Remove animation"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* 🛍 Botones principales */}
-            <div className="mt-4 flex flex-wrap justify-center gap-3">
-              <button
-                onClick={() => setShowGift(true)}
-                className="flex items-center gap-2 rounded-full bg-pink-200 px-5 py-3 font-semibold text-pink-700 hover:bg-pink-300 transition-all shadow-sm"
-              >
-                🎁 Gift Card
-              </button>
-              <button
-                onClick={() => setShowCheckout(true)}
-                className="flex items-center gap-2 rounded-full bg-purple-500 px-6 py-3 font-semibold text-white hover:bg-purple-600 transition-all shadow-sm"
-              >
-                💳 Checkout
-              </button>
-            </div>
-
-            {showDownload && (
-              <motion.button
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                onClick={handleDownload}
-                className="fixed bottom-10 right-6 z-[400] rounded-full bg-[#ff7b00] px-6 py-3 text-white font-semibold shadow-lg hover:bg-[#ff9f33]"
-              >
-                ⬇️ Download
-              </motion.button>
-            )}
-          </motion.div>
-        </>
-      )}
-
-      {/* 🔧 Modales */}
-      <div className="fixed inset-0 pointer-events-none z-[10050]">
-        {showGift && (
-          <div className="pointer-events-auto relative">
-            <GiftCardPopup
-              initial={gift}
-              onSelect={updateGift}
-              onClose={() => setShowGift(false)}
-            />
-          </div>
-        )}
-        {showCheckout && (
-          <div className="pointer-events-auto relative">
-            <CheckoutModal
-              total={total}
-              gift={gift}
-              onGiftChange={() => setShowGift(true)}
-              onGiftRemove={removeGift}
-              onClose={() => setShowCheckout(false)}
-            />
-          </div>
-        )}
-        {showCrop && (
-          <div className="pointer-events-auto relative">
-            <CropperModal
-              open={showCrop}
-              existingImage={userImage}
-              onClose={() => setShowCrop(false)}
-              onDelete={() => {
-                setUserImage(null);
-                setShowCrop(false);
-              }}
-              onDone={(img) => {
-                setUserImage(img);
-                setShowCrop(false);
-              }}
-            />
-          </div>
-        )}
+      {/* 🔘 Dots */}
+      <div className="flex mt-5 gap-2">
+        {videos.map((_, i) => (
+          <span
+            key={i}
+            onClick={() => {
+              setIndex(i);
+              pauseRef.current = true;
+              clearInterval(autoplayRef.current);
+              setTimeout(() => {
+                pauseRef.current = false;
+                startAutoplay();
+              }, 3000);
+            }}
+            className={`w-3 h-3 rounded-full cursor-pointer transition-all ${
+              i === index ? "bg-pink-500 scale-125" : "bg-gray-300"
+            }`}
+          ></span>
+        ))}
       </div>
     </div>
   );
-      }
+        }
