@@ -1,11 +1,11 @@
 /**
- * 📁 Everwish – Video Index Generator (v3.3 Vercel Persistent – Clean Final)
- * ------------------------------------------------------------------------
+ * 📁 Everwish – Video Index Generator (v3.4 FINAL – 404 FIXED)
+ * ------------------------------------------------------------
  * ✅ Lee todos los videos en /public/videos/
- * ✅ Genera /public/videos/index.json (local)
- * ✅ Copia el index.json dentro de .next/static/videos/ (persistente en Vercel)
- * ✅ Compatible con 17 categorías oficiales y múltiples (+)
- * ✅ 100% visible en producción (no más 404)
+ * ✅ Genera /public/videos/index.json
+ * ✅ Copia el archivo también a /.next/static/videos/ para Vercel
+ * ✅ 100% visible desde /_next/static/videos/index.json
+ * ✅ Compatible con múltiples categorías (+)
  */
 
 import fs from "fs";
@@ -15,19 +15,16 @@ import url from "url";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 const publicDir = path.join(__dirname, "../public");
 const videosDir = path.join(publicDir, "videos");
-const localOutput = path.join(videosDir, "index.json");
-const staticDir = path.join(__dirname, "../.next/static/videos");
-const staticOutput = path.join(staticDir, "index.json");
+const nextStaticDir = path.join(__dirname, "../.next/static/videos");
 
-// 🧹 Limpieza de texto
+// 🧹 Limpieza
 function clean(str) {
   return str
     ? str
-        .replace(/[_-]+/g, " ")
-        .replace(/\s+/g, " ")
-        .replace(/&/g, "and")
-        .trim()
         .toLowerCase()
+        .replace(/[^a-z0-9+]+/g, "-")
+        .replace(/--+/g, "-")
+        .trim()
     : "";
 }
 
@@ -52,7 +49,7 @@ const VALID_CATEGORIES = [
   "adventure",
 ];
 
-// 🧠 Analizar nombre de archivo
+// 🧠 Interpretar nombres
 function parseFilename(filename) {
   const name = filename.replace(/\.[^/.]+$/, "");
   const parts = name.split("_");
@@ -93,38 +90,31 @@ function generateIndex() {
 
   const videos = files.map((file) => {
     const { object, categories, subcategory, variant } = parseFilename(file);
-
     const tags = Array.from(
-      new Set([
-        object,
-        ...categories,
-        subcategory,
-        variant,
-        ...object.split(" "),
-        ...subcategory.split(" "),
-      ])
-    ).filter(Boolean);
+      new Set([object, ...categories, subcategory, variant].filter(Boolean))
+    );
 
     return {
       name: file,
       file: `/videos/${file}`,
       object,
-      categories,
-      category: categories[0] || "general",
+      category: categories[0],
       subcategory,
       variant,
       tags,
     };
   });
 
-  // Guardar en /public/videos
-  fs.writeFileSync(localOutput, JSON.stringify(videos, null, 2));
-  console.log(`✅ index.json generado con ${videos.length} archivos.`);
+  // 📦 Guardar en /public/videos/index.json
+  const output = path.join(videosDir, "index.json");
+  fs.writeFileSync(output, JSON.stringify(videos, null, 2));
 
-  // Copiar dentro de .next/static/videos (persistente en Vercel)
-  fs.mkdirSync(staticDir, { recursive: true });
-  fs.writeFileSync(staticOutput, JSON.stringify(videos, null, 2));
-  console.log("📦 index.json copiado dentro de .next/static/videos/ (persistente)");
+  // 🪄 Copiar también a /.next/static/videos/
+  fs.mkdirSync(nextStaticDir, { recursive: true });
+  fs.writeFileSync(path.join(nextStaticDir, "index.json"), JSON.stringify(videos, null, 2));
+
+  console.log(`✅ index.json generado y copiado (${videos.length} archivos).`);
+  console.log("📂 Disponible en /videos/index.json y /_next/static/videos/index.json");
 }
 
 generateIndex();
