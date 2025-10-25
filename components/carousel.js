@@ -6,11 +6,10 @@ export default function Carousel() {
   const router = useRouter();
   const [videos, setVideos] = useState([]);
   const [index, setIndex] = useState(0);
-  const [search, setSearch] = useState("");
   const autoplayRef = useRef(null);
   const pauseRef = useRef(false);
 
-  // Autoplay control
+  // 🕒 Autoplay
   const startAutoplay = () => {
     clearInterval(autoplayRef.current);
     if (!pauseRef.current && videos.length > 0) {
@@ -20,7 +19,7 @@ export default function Carousel() {
     }
   };
 
-  // Load videos
+  // 🎥 Cargar videos desde API
   useEffect(() => {
     async function fetchVideos() {
       try {
@@ -28,7 +27,7 @@ export default function Carousel() {
         const data = await res.json();
         setVideos(data);
       } catch (err) {
-        console.error("❌ Error loading videos:", err);
+        console.error("❌ Error cargando videos:", err);
       }
     }
     fetchVideos();
@@ -39,13 +38,14 @@ export default function Carousel() {
     return () => clearInterval(autoplayRef.current);
   }, [videos]);
 
-  // Touch controls
+  // 🖐️ Control táctil
   const startX = useRef(0);
   const handleTouchStart = (e) => {
     startX.current = e.touches[0].clientX;
     pauseRef.current = true;
     clearInterval(autoplayRef.current);
   };
+
   const handleTouchEnd = (e) => {
     const diff = startX.current - e.changedTouches[0].clientX;
     if (Math.abs(diff) > 40) {
@@ -61,49 +61,35 @@ export default function Carousel() {
     }, 3000);
   };
 
-  // Click → fullscreen + navigate
+  // 🎬 Pantalla completa al tocar
   const handleClick = async (slug) => {
     try {
       const elem = document.documentElement;
       if (elem.requestFullscreen) await elem.requestFullscreen();
+      else if (elem.webkitRequestFullscreen)
+        await elem.webkitRequestFullscreen();
       router.push(`/edit/${slug}`);
     } catch {
       router.push(`/edit/${slug}`);
     }
   };
 
-  // Filter by search
-  const filtered = videos.filter((v) =>
-    (v.slug || "").toLowerCase().includes(search.toLowerCase())
-  );
-
   return (
-    <div className="w-full flex flex-col items-center overflow-hidden bg-[#fff7f5] select-none pb-10">
-      {/* 🔍 Search bar */}
-      <div className="w-full max-w-lg px-4 mt-6 mb-4">
-        <input
-          type="text"
-          placeholder="Search cards..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-full border border-gray-200 px-5 py-3 text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 bg-white placeholder-gray-400"
-        />
-      </div>
-
-      {/* 🎠 Carousel */}
+    <div className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none bg-[#fff7f5]">
+      {/* 🎠 Carrusel principal */}
       <div
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         className="relative w-full max-w-5xl flex justify-center items-center h-[440px]"
       >
-        {filtered.map((video, i) => {
-          const offset = (i - index + filtered.length) % filtered.length;
+        {videos.map((video, i) => {
+          const offset = (i - index + videos.length) % videos.length;
           const positionClass =
             offset === 0
               ? "translate-x-0 scale-100 z-20 opacity-100"
               : offset === 1
               ? "translate-x-full scale-90 z-10 opacity-50"
-              : offset === filtered.length - 1
+              : offset === videos.length - 1
               ? "-translate-x-full scale-90 z-10 opacity-50"
               : "opacity-0 z-0";
 
@@ -128,9 +114,9 @@ export default function Carousel() {
         })}
       </div>
 
-      {/* 🔘 Dots */}
+      {/* 🔘 Indicadores */}
       <div className="flex mt-5 gap-2">
-        {filtered.map((_, i) => (
+        {videos.map((_, i) => (
           <span
             key={i}
             onClick={() => {
