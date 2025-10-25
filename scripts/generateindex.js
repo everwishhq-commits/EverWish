@@ -1,11 +1,11 @@
 /**
- * 📁 Everwish – Video Index Generator (v2.1)
+ * 📁 Everwish – Video Index Generator (v3.0 Final)
  * ------------------------------------------------------------
- * ✅ Lee todos los videos en /public/videos/
+ * ✅ Lee todos los videos desde /public/videos/
  * ✅ Soporta múltiples categorías con "+"
- * ✅ Nombres como: objeto_categoria(+cat2)_subcategoria_variante.mp4
+ * ✅ Formato: objeto_categoria(+cat2)_subcategoria_variante.mp4
  * ✅ Genera /public/videos/index.json automáticamente
- * ✅ Compatible con categorías y subcategorías del sistema actualizado (con “and”)
+ * ✅ Compatible con las 17 categorías aprobadas
  */
 
 import fs from "fs";
@@ -18,7 +18,6 @@ const outputFile = path.join(videosDir, "index.json");
 
 /**
  * 🔤 Limpia texto (minúsculas, sin guiones ni dobles espacios)
- * También reemplaza "&" por "and" para coincidir con los slugs actuales.
  */
 function clean(str) {
   return str
@@ -32,32 +31,52 @@ function clean(str) {
 }
 
 /**
+ * 🎯 Categorías oficiales aprobadas
+ */
+const VALID_CATEGORIES = [
+  "seasonal-holidays",
+  "love-romance",
+  "family-relationships",
+  "birthday",
+  "pets-animal-lovers",
+  "friendship",
+  "thank-you",
+  "get-well",
+  "sympathy",
+  "congratulations",
+  "new-baby",
+  "wedding",
+  "graduation",
+  "retirement",
+  "motivation",
+  "spiritual",
+  "adventure"
+];
+
+/**
  * 🧠 Interpreta nombre del archivo
- * Formato esperado: objeto_categoria(+categoria2)_subcategoria_variante.mp4
+ * Ejemplo: objeto_categoria(+cat2)_subcategoria_variante.mp4
  */
 function parseFilename(filename) {
   const name = filename.replace(/\.[^/.]+$/, "");
   const parts = name.split("_");
 
-  let object = "";
-  let categoryPart = "";
-  let subcategory = "general";
-  let variant = "";
+  let object = clean(parts[0] || "");
+  let categoryPart = clean(parts[1] || "general");
+  let subcategory = clean(parts[2] || "general");
+  let variant = clean(parts[3] || "");
 
-  if (parts.length >= 2) {
-    object = clean(parts[0]);
-    categoryPart = clean(parts[1]);
-  }
-  if (parts.length >= 3) subcategory = clean(parts[2]);
-  if (parts.length >= 4) variant = clean(parts[3]);
-
-  // Múltiples categorías (separadas con "+")
+  // Permitir múltiples categorías separadas por "+"
   const categories = categoryPart
     .split("+")
     .map((c) => c.trim().toLowerCase())
-    .filter(Boolean);
+    .filter(Boolean)
+    .filter((c) => VALID_CATEGORIES.includes(c)); // Solo las aprobadas
 
-  return { object, categories, subcategory, variant };
+  // Si ninguna categoría válida, marcar como "general"
+  const finalCategories = categories.length > 0 ? categories : ["general"];
+
+  return { object, categories: finalCategories, subcategory, variant };
 }
 
 /**
@@ -84,7 +103,7 @@ function generateIndex() {
         subcategory,
         variant,
         ...object.split(" "),
-        ...subcategory.split(" "),
+        ...subcategory.split(" ")
       ])
     ).filter(Boolean);
 
@@ -96,7 +115,7 @@ function generateIndex() {
       category: categories[0] || "general",
       subcategory,
       variant,
-      tags,
+      tags
     };
   });
 
