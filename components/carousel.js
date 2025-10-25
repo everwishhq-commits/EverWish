@@ -6,20 +6,11 @@ export default function Carousel() {
   const router = useRouter();
   const [videos, setVideos] = useState([]);
   const [index, setIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
   const autoplayRef = useRef(null);
   const pauseRef = useRef(false);
 
-  // 🧭 Control de gestos
-  const startX = useRef(0);
-  const startY = useRef(0);
-  const moved = useRef(false);
-  const direction = useRef(null);
-
-  const TAP_THRESHOLD = 10;
-  const SWIPE_THRESHOLD = 40;
-
-  // 🕒 Autoplay
+  // Autoplay control
   const startAutoplay = () => {
     clearInterval(autoplayRef.current);
     if (!pauseRef.current && videos.length > 0) {
@@ -29,29 +20,15 @@ export default function Carousel() {
     }
   };
 
-  // 🎥 Cargar videos desde /api/videos
+  // Load videos
   useEffect(() => {
     async function fetchVideos() {
       try {
-        console.log("📂 Cargando videos desde /api/videos...");
         const res = await fetch("/api/videos", { cache: "no-store" });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-
-        // 🧹 Validación y fallback
-        const validVideos = data
-          .filter((v) => v?.file?.endsWith(".mp4"))
-          .map((v) => ({
-            ...v,
-            src: v.file,
-          }));
-
-        setVideos(validVideos);
-        setLoading(false);
-        console.log(`✅ ${validVideos.length} videos cargados correctamente.`);
+        setVideos(data);
       } catch (err) {
-        console.error("❌ Error cargando videos:", err);
-        setLoading(false);
+        console.error("❌ Error loading videos:", err);
       }
     }
     fetchVideos();
@@ -62,104 +39,71 @@ export default function Carousel() {
     return () => clearInterval(autoplayRef.current);
   }, [videos]);
 
-  // 🖐️ Control táctil
+  // Touch controls
+  const startX = useRef(0);
   const handleTouchStart = (e) => {
-    const t = e.touches[0];
-    startX.current = t.clientX;
-    startY.current = t.clientY;
-    moved.current = false;
-    direction.current = null;
+    startX.current = e.touches[0].clientX;
     pauseRef.current = true;
     clearInterval(autoplayRef.current);
   };
-
-  const handleTouchMove = (e) => {
-    const t = e.touches[0];
-    const deltaX = t.clientX - startX.current;
-    const deltaY = t.clientY - startY.current;
-
-    if (Math.abs(deltaX) > TAP_THRESHOLD || Math.abs(deltaY) > TAP_THRESHOLD) {
-      moved.current = true;
-      direction.current =
-        Math.abs(deltaX) > Math.abs(deltaY) ? "horizontal" : "vertical";
-      e.stopPropagation();
-    }
-  };
-
   const handleTouchEnd = (e) => {
-    e.stopPropagation();
-
-    if (!moved.current) {
-      const tapped = videos[index];
-      if (tapped?.slug) handleClick(tapped.slug);
-    } else if (direction.current === "horizontal") {
-      const diffX = startX.current - e.changedTouches[0].clientX;
-      if (Math.abs(diffX) > SWIPE_THRESHOLD) {
-        setIndex((prev) =>
-          diffX > 0
-            ? (prev + 1) % videos.length
-            : (prev - 1 + videos.length) % videos.length
-        );
-      }
+    const diff = startX.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 40) {
+      setIndex((prev) =>
+        diff > 0
+          ? (prev + 1) % videos.length
+          : (prev - 1 + videos.length) % videos.length
+      );
     }
-
     setTimeout(() => {
       pauseRef.current = false;
       startAutoplay();
     }, 3000);
   };
 
-  // 🎬 Abrir tarjeta en pantalla completa
+  // Click → fullscreen + navigate
   const handleClick = async (slug) => {
     try {
       const elem = document.documentElement;
       if (elem.requestFullscreen) await elem.requestFullscreen();
-      else if (elem.webkitRequestFullscreen)
-        await elem.webkitRequestFullscreen();
-      await new Promise((r) => setTimeout(r, 150));
       router.push(`/edit/${slug}`);
     } catch {
       router.push(`/edit/${slug}`);
     }
   };
 
-  // 💬 Estado de carga
-  if (loading) {
-    return (
-      <div className="w-full text-center py-10 text-gray-400">
-        ⏳ Loading videos...
-      </div>
-    );
-  }
+  // Filter by search
+  const filtered = videos.filter((v) =>
+    (v.slug || "").toLowerCase().includes(search.toLowerCase())
+  );
 
-  if (videos.length === 0) {
-    return (
-      <div className="w-full text-center py-10 text-red-400">
-        ⚠️ No videos found in /api/videos
-      </div>
-    );
-  }
-
-  // 🎠 Carrusel
   return (
-    <div
-      className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none"
-      style={{ touchAction: "pan-y" }}
-    >
+    <div className="w-full flex flex-col items-center overflow-hidden bg-[#fff7f5] select-none pb-10">
+      {/* 🔍 Search bar */}
+      <div className="w-full max-w-lg px-4 mt-6 mb-4">
+        <input
+          type="text"
+          placeholder="Search cards..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full rounded-full border border-gray-200 px-5 py-3 text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 bg-white placeholder-gray-400"
+        />
+      </div>
+
+      {/* 🎠 Carousel */}
       <div
         onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         className="relative w-full max-w-5xl flex justify-center items-center h-[440px]"
       >
-        {videos.map((video, i) => {
-          const offset = (i - index + videos.length) % videos.length;
+        {filtered.map((video, i) => {
+          const offset = (i - index + filtered.length) % filtered.length;
           const positionClass =
             offset === 0
               ? "translate-x-0 scale-100 z-20 opacity-100"
               : offset === 1
               ? "translate-x-full scale-90 z-10 opacity-50"
-              : offset === videos.length - 1
+              : offset === filtered.length - 1
               ? "-translate-x-full scale-90 z-10 opacity-50"
               : "opacity-0 z-0";
 
@@ -169,14 +113,14 @@ export default function Carousel() {
               className={`absolute transition-all duration-500 ease-in-out ${positionClass}`}
             >
               <video
-                src={video.src}
+                src={video.file}
                 autoPlay
                 loop
                 muted
                 playsInline
                 controlsList="nodownload noplaybackrate"
                 draggable="false"
-                onContextMenu={(e) => e.preventDefault()}
+                onClick={() => handleClick(video.slug)}
                 className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover object-center bg-white overflow-hidden"
               />
             </div>
@@ -184,9 +128,9 @@ export default function Carousel() {
         })}
       </div>
 
-      {/* 🔘 Indicadores */}
+      {/* 🔘 Dots */}
       <div className="flex mt-5 gap-2">
-        {videos.map((_, i) => (
+        {filtered.map((_, i) => (
           <span
             key={i}
             onClick={() => {
@@ -206,4 +150,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-               }
+            }
