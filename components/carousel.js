@@ -9,7 +9,7 @@ export default function Carousel() {
   const autoplayRef = useRef(null);
   const pauseRef = useRef(false);
 
-  // 🧭 Control de gestos
+  // 🎯 Control de gestos táctiles
   const startX = useRef(0);
   const startY = useRef(0);
   const moved = useRef(false);
@@ -28,47 +28,32 @@ export default function Carousel() {
     }
   };
 
-  // 🎥 Cargar videos desde _next/static/videos/index.json (con fallback)
+  // 🎥 Cargar videos desde el nuevo index.json universal
   useEffect(() => {
     async function fetchVideos() {
       try {
-        console.log("📂 Intentando cargar _next/static/videos/index.json...");
-        let res = await fetch("/_next/static/videos/index.json", {
-          cache: "no-store",
-        });
+        console.log("📂 Buscando /videos/index.json...");
+        let res = await fetch("/videos/index.json", { cache: "no-store" });
 
-        // 🔄 Si no se encuentra, probar la copia local
-        if (!res.ok) {
-          console.warn(
-            "⚠️ No encontrado en _next/static/videos, intentando /videos/index.json..."
-          );
-          res = await fetch("/videos/index.json", { cache: "no-store" });
-        }
-
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status} - ${res.statusText}`);
-        }
-
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         let data = await res.json();
-        console.log(`✅ Cargado ${data.length} videos desde index.json`);
 
-        // 🧹 Normalizar estructura con soporte para "+" y caracteres especiales
-        data = data.map((v) => {
-          const safeFile = v.file
-            ? encodeURI(v.file)
-            : `/videos/${encodeURIComponent(v.name)}`;
-          return {
-            ...v,
-            src: safeFile,
-            object: v.object || "untitled",
-            category: v.category || "general",
-            subcategory: v.subcategory || "general",
-          };
-        });
+        console.log(`✅ Cargado ${data.length} videos`);
 
-        // 🗓️ Seleccionar 10 videos según el día
+        // 🧹 Normalizar estructura para compatibilidad
+        data = data.map((v) => ({
+          src: v.file,
+          object: v.object || "untitled",
+          category: v.category || "General",
+          subcategory: v.subcategory || "General",
+          name: v.name,
+        }));
+
+        // 🎯 Seleccionar un set de 10 según el día
         const daySeed = new Date().getDate();
-        const sorted = [...data].sort((a, b) => a.object.localeCompare(b.object));
+        const sorted = [...data].sort((a, b) =>
+          a.object.localeCompare(b.object)
+        );
         const dailyStart = (daySeed * 10) % sorted.length;
         const dailyVideos = sorted
           .slice(dailyStart, dailyStart + 10)
@@ -76,8 +61,7 @@ export default function Carousel() {
 
         setVideos(dailyVideos);
       } catch (err) {
-        console.error("❌ No se pudo cargar ningún index.json:", err);
-        setVideos([]); // evita fallos
+        console.error("❌ No se pudo cargar /videos/index.json:", err);
       }
     }
 
@@ -89,7 +73,7 @@ export default function Carousel() {
     return () => clearInterval(autoplayRef.current);
   }, [videos]);
 
-  // 🖐️ Control táctil con bloqueo vertical
+  // 🖐️ Gestos táctiles
   const handleTouchStart = (e) => {
     const t = e.touches[0];
     startX.current = t.clientX;
@@ -134,7 +118,7 @@ export default function Carousel() {
     }, 3000);
   };
 
-  // 🎬 Pantalla extendida + navegación
+  // 🎬 Ir a página de edición
   const handleClick = async (slug) => {
     try {
       const elem = document.documentElement;
@@ -196,6 +180,10 @@ export default function Carousel() {
                 onContextMenu={(e) => e.preventDefault()}
                 className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover object-center bg-white overflow-hidden"
               />
+              <div className="text-center mt-3 text-gray-600 text-sm font-medium">
+                {video.object} <span className="text-gray-400">·</span>{" "}
+                {video.category}
+              </div>
             </div>
           );
         })}
@@ -223,4 +211,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-    }
+        }
