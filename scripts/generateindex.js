@@ -1,12 +1,10 @@
 /**
- * 📁 Everwish – Video Index Generator (v3.0 Final)
+ * 📁 Everwish – Video Index Generator (v3.1 Stable)
  * ------------------------------------------------------------
- * ✅ Lee todos los videos desde /public/videos/
- * ✅ Soporta múltiples categorías con "+"
- * ✅ Nombres como: objeto_categoria(+cat2)_subcategoria_variante.mp4
- * ✅ Genera /public/videos/index.json automáticamente
- * ✅ Compatible con categorías y subcategorías del sistema actualizado (con “and”)
- * ✅ Compatible con las 17 categorías aprobadas
+ * ✅ Lee todos los videos en /public/videos/
+ * ✅ Genera /public/videos/index.json ANTES del build
+ * ✅ Garantiza que la carpeta /public/videos exista
+ * ✅ Compatible con categorías oficiales y múltiples (+)
  */
 
 import fs from "fs";
@@ -17,10 +15,7 @@ const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 const videosDir = path.join(__dirname, "../public/videos");
 const outputFile = path.join(videosDir, "index.json");
 
-/**
- * 🔤 Limpia texto (minúsculas, sin guiones ni dobles espacios)
- * También reemplaza "&" por "and" para coincidir con los slugs actuales.
- */
+// 🔤 Limpieza de texto
 function clean(str) {
   return str
     ? str
@@ -32,9 +27,7 @@ function clean(str) {
     : "";
 }
 
-/**
- * 🎯 Categorías oficiales aprobadas
- */
+// 🎯 Categorías válidas
 const VALID_CATEGORIES = [
   "seasonal-holidays",
   "love-romance",
@@ -52,13 +45,10 @@ const VALID_CATEGORIES = [
   "retirement",
   "motivation",
   "spiritual",
-  "adventure"
+  "adventure",
 ];
 
-/**
- * 🧠 Interpreta nombre del archivo
- * Formato esperado: objeto_categoria(+categoria2)_subcategoria_variante.mp4
- */
+// 🧠 Interpretar nombre de archivo
 function parseFilename(filename) {
   const name = filename.replace(/\.[^/.]+$/, "");
   const parts = name.split("_");
@@ -68,32 +58,35 @@ function parseFilename(filename) {
   const subcategory = clean(parts[2] || "general");
   const variant = clean(parts[3] || "");
 
-  // Permitir múltiples categorías separadas por "+"
   const categories = categoryPart
     .split("+")
     .map((c) => c.trim().toLowerCase())
-    .filter(Boolean)
-    .filter((c) => VALID_CATEGORIES.includes(c)); // Solo las aprobadas
+    .filter((c) => VALID_CATEGORIES.includes(c));
 
-  // Si ninguna categoría válida, marcar como "general"
-  const finalCategories = categories.length > 0 ? categories : ["general"];
-
-  return { object, categories: finalCategories, subcategory, variant };
+  return {
+    object,
+    categories: categories.length ? categories : ["general"],
+    subcategory,
+    variant,
+  };
 }
 
-/**
- * 🧾 Genera el archivo index.json
- */
+// 🧾 Generar index.json
 function generateIndex() {
   if (!fs.existsSync(videosDir)) {
-    console.error("❌ La carpeta /public/videos no existe.");
-    process.exit(1);
+    fs.mkdirSync(videosDir, { recursive: true });
+    console.warn("📂 Carpeta /public/videos creada automáticamente.");
   }
 
   const allFiles = fs.readdirSync(videosDir);
   const videoFiles = allFiles.filter((file) =>
     [".mp4", ".webm", ".mov"].some((ext) => file.endsWith(ext))
   );
+
+  if (videoFiles.length === 0) {
+    console.warn("⚠️ No se encontraron videos en /public/videos/");
+    return;
+  }
 
   const videos = videoFiles.map((file) => {
     const { object, categories, subcategory, variant } = parseFilename(file);
@@ -105,7 +98,7 @@ function generateIndex() {
         subcategory,
         variant,
         ...object.split(" "),
-        ...subcategory.split(" ")
+        ...subcategory.split(" "),
       ])
     ).filter(Boolean);
 
@@ -117,7 +110,7 @@ function generateIndex() {
       category: categories[0] || "general",
       subcategory,
       variant,
-      tags
+      tags,
     };
   });
 
@@ -125,7 +118,4 @@ function generateIndex() {
   console.log(`✅ index.json generado con ${videos.length} archivos.`);
 }
 
-/**
- * 🚀 Ejecutar
- */
 generateIndex();
