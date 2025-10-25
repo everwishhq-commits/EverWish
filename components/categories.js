@@ -98,7 +98,7 @@ export default function Categories() {
       transition={{ duration: 0.8, ease: "easeOut" }}
     >
       <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
-        
+        Explore Categories 💌
       </h2>
 
       {/* 🔎 Barra de búsqueda */}
