@@ -1,9 +1,10 @@
 /**
- * 📁 Everwish – Video Index Generator (ESM Adaptado)
+ * 📁 Everwish – Video Index Generator (Vercel Permanent Fix)
  * ------------------------------------------------------------
- * ✅ Soporta nombres con "+" y "_"
- * ✅ Compatible con Vercel y Next.js 13+
+ * ✅ Lee todos los .mp4 de /public/videos/
  * ✅ Genera /public/videos/index.json y /public/index.json
+ * ✅ Compatible con nombres con "+" o "_"
+ * ✅ 100% compatible con "type": "module" o sin él
  */
 
 import fs from "fs";
@@ -11,73 +12,56 @@ import path from "path";
 import url from "url";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
-const publicDir = path.join(__dirname, "../public");
-const videosDir = path.join(publicDir, "videos");
+const videosDir = path.join(__dirname, "../public/videos");
 const outputFile = path.join(videosDir, "index.json");
-const backupFile = path.join(publicDir, "index.json");
+const backupFile = path.join(__dirname, "../public/index.json");
 
-// 🧹 Limpieza
 function clean(str) {
-  return str
-    ? str.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-+]/g, "")
-    : "";
+  return str ? str.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9+._-]/g, "") : "";
 }
 
-// 🧠 Interpretar nombres tipo "dog+pets-animal-lovers_thanksgiving_general_1A.mp4"
 function parseFilename(filename) {
   const name = filename.replace(/\.[^/.]+$/, "");
-  const [objectAndCategory, subcategoryPart, variantPart] = name.split("_");
-
-  // Ejemplo: "dog+pets-animal-lovers"
-  const [objectPart, categoryPart] = (objectAndCategory || "").split("+");
-  const object = clean(objectPart || "unknown");
-  const rawCategory = clean(categoryPart || "general");
-  const subcategory = clean(subcategoryPart || "general");
-  const variant = clean(variantPart || "");
-
-  // Categoría legible
-  const readableCategory =
-    rawCategory.includes("family")
-      ? "Family & Relationships"
-      : rawCategory.includes("pets") || rawCategory.includes("animal")
-      ? "Pets & Animal Lovers"
-      : rawCategory.includes("seasonal") ||
-        subcategory.includes("halloween") ||
-        subcategory.includes("christmas") ||
-        subcategory.includes("thanksgiving")
-      ? "Seasonal & Holidays"
-      : "Everyday";
-
-  const slug = name;
-  const tags = [object, rawCategory, subcategory, variant].filter(Boolean);
-
-  return {
-    object: object.charAt(0).toUpperCase() + object.slice(1),
-    file: `/videos/${filename}`,
-    slug,
-    category: readableCategory,
-    subcategory: subcategory.charAt(0).toUpperCase() + subcategory.slice(1),
-    variant,
-    tags,
-  };
+  const parts = name.split(/[+_]/).filter(Boolean);
+  const object = parts[0] || "unknown";
+  const categories = parts.slice(1, -1);
+  const variant = parts[parts.length - 1] || "";
+  return { object, categories, variant };
 }
 
-// 🏗️ Generar el index.json
 function generateIndex() {
-  if (!fs.existsSync(videosDir)) fs.mkdirSync(videosDir, { recursive: true });
+  if (!fs.existsSync(videosDir)) {
+    console.error("❌ No se encontró la carpeta /public/videos/");
+    return;
+  }
 
   const files = fs
     .readdirSync(videosDir)
-    .filter((f) => [".mp4", ".webm", ".mov"].some((ext) => f.endsWith(ext)));
+    .filter((f) => /\.(mp4|webm|mov)$/i.test(f));
 
-  const videos = files.map(parseFilename);
+  if (files.length === 0) {
+    console.warn("⚠️ No hay videos en /public/videos/");
+  }
+
+  const videos = files.map((file) => {
+    const { object, categories, variant } = parseFilename(file);
+    return {
+      title: `${object} ${categories.join(" ")}`.trim(),
+      src: `/videos/${file}`,
+      slug: file.replace(/\.[^/.]+$/, ""),
+      category:
+        categories.length > 0
+          ? categories.join(" ").replace(/\+/g, " ")
+          : "General",
+      variant,
+    };
+  });
 
   fs.writeFileSync(outputFile, JSON.stringify(videos, null, 2));
   fs.writeFileSync(backupFile, JSON.stringify(videos, null, 2));
 
-  console.log(`✅ index.json generado con ${videos.length} archivos.`);
-  console.log(`📦 Guardado en /public/videos/index.json y /public/index.json`);
-  console.log(videos.map((v) => `🎬 ${v.file} (${v.category})`).join("\n"));
+  console.log(`✅ index.json generado correctamente con ${videos.length} archivos.`);
+  console.log(`📂 Ruta: ${outputFile}`);
 }
 
 generateIndex();
