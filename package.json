@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "prebuild": "node scripts/generateindex.js",
+    "build": "next build",
     "dev": "node scripts/generateindex.js && next dev",
-    "build": "node scripts/generateindex.js && next build",
     "start": "next start"
   },
   "dependencies": {
@@ -13,18 +14,6 @@
     "react-dom": "18.2.0",
     "tailwindcss": "^3.4.1",
     "postcss": "^8.4.31",
-    "autoprefixer": "^10.4.15",
-    "swiper": "^11.1.3",
-    "framer-motion": "^11.0.0",
-    "stripe": "^14.0.0",
-    "@stripe/stripe-js": "^2.1.1",
-    "@stripe/react-stripe-js": "^2.2.0",
-    "react-easy-crop": "^5.1.5",
-    "classnames": "^2.5.1",
-    "axios": "^1.7.0",
-    "debug": "^4.3.4"
-  },
-  "devDependencies": {
-    "supports-color": "^8.1.1"
+    "autoprefixer": "^10.4.15"
   }
 }
