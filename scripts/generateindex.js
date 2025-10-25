@@ -3,8 +3,9 @@
  * ------------------------------------------------------------
  * ✅ Lee todos los videos desde /public/videos/
  * ✅ Soporta múltiples categorías con "+"
- * ✅ Formato: objeto_categoria(+cat2)_subcategoria_variante.mp4
+ * ✅ Nombres como: objeto_categoria(+cat2)_subcategoria_variante.mp4
  * ✅ Genera /public/videos/index.json automáticamente
+ * ✅ Compatible con categorías y subcategorías del sistema actualizado (con “and”)
  * ✅ Compatible con las 17 categorías aprobadas
  */
 
@@ -18,6 +19,7 @@ const outputFile = path.join(videosDir, "index.json");
 
 /**
  * 🔤 Limpia texto (minúsculas, sin guiones ni dobles espacios)
+ * También reemplaza "&" por "and" para coincidir con los slugs actuales.
  */
 function clean(str) {
   return str
@@ -55,16 +57,16 @@ const VALID_CATEGORIES = [
 
 /**
  * 🧠 Interpreta nombre del archivo
- * Ejemplo: objeto_categoria(+cat2)_subcategoria_variante.mp4
+ * Formato esperado: objeto_categoria(+categoria2)_subcategoria_variante.mp4
  */
 function parseFilename(filename) {
   const name = filename.replace(/\.[^/.]+$/, "");
   const parts = name.split("_");
 
-  let object = clean(parts[0] || "");
-  let categoryPart = clean(parts[1] || "general");
-  let subcategory = clean(parts[2] || "general");
-  let variant = clean(parts[3] || "");
+  const object = clean(parts[0] || "");
+  const categoryPart = clean(parts[1] || "general");
+  const subcategory = clean(parts[2] || "general");
+  const variant = clean(parts[3] || "");
 
   // Permitir múltiples categorías separadas por "+"
   const categories = categoryPart
@@ -103,7 +105,7 @@ function generateIndex() {
         subcategory,
         variant,
         ...object.split(" "),
-        ...subcategory.split(" ")
+        ...subcategory.split(" "),
       ])
     ).filter(Boolean);
 
@@ -115,7 +117,7 @@ function generateIndex() {
       category: categories[0] || "general",
       subcategory,
       variant,
-      tags
+      tags,
     };
   });
 
