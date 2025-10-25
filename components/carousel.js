@@ -28,12 +28,18 @@ export default function Carousel() {
     }
   };
 
-  // 🎥 Cargar videos desde /public/videos/index.json
+  // 🎥 Cargar videos desde _next/static/videos/index.json (con fallback)
   useEffect(() => {
     async function fetchVideos() {
       try {
-        console.log("📂 Intentando cargar /videos/index.json...");
-        const res = await fetch("/videos/index.json", { cache: "no-store" });
+        console.log("📂 Intentando cargar _next/static/videos/index.json...");
+        let res = await fetch("/_next/static/videos/index.json", { cache: "no-store" });
+
+        // 🔄 Si no se encuentra, probar la copia local
+        if (!res.ok) {
+          console.warn("⚠️ No encontrado en _next/static/videos, intentando /videos/index.json...");
+          res = await fetch("/videos/index.json", { cache: "no-store" });
+        }
 
         if (!res.ok) {
           throw new Error(`HTTP ${res.status} - ${res.statusText}`);
@@ -53,9 +59,7 @@ export default function Carousel() {
 
         // 🗓️ Seleccionar 10 videos según el día
         const daySeed = new Date().getDate();
-        const sorted = [...data].sort((a, b) =>
-          a.object.localeCompare(b.object)
-        );
+        const sorted = [...data].sort((a, b) => a.object.localeCompare(b.object));
         const dailyStart = (daySeed * 10) % sorted.length;
         const dailyVideos = sorted
           .slice(dailyStart, dailyStart + 10)
@@ -63,7 +67,7 @@ export default function Carousel() {
 
         setVideos(dailyVideos);
       } catch (err) {
-        console.error("❌ No se pudo cargar videos:", err);
+        console.error("❌ No se pudo cargar ningún index.json:", err);
         setVideos([]); // evita fallos
       }
     }
@@ -210,4 +214,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-                  }
+                 }
