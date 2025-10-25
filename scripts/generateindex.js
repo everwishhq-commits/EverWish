@@ -1,10 +1,11 @@
 /**
- * 📁 Everwish – Video Index Generator (v3.3 Vercel Persistent)
- * ------------------------------------------------------------
+ * 📁 Everwish – Video Index Generator (v3.3 Vercel Persistent – Clean Final)
+ * ------------------------------------------------------------------------
  * ✅ Lee todos los videos en /public/videos/
- * ✅ Genera y copia el index.json dentro de .next/static/videos/
+ * ✅ Genera /public/videos/index.json (local)
+ * ✅ Copia el index.json dentro de .next/static/videos/ (persistente en Vercel)
  * ✅ Compatible con 17 categorías oficiales y múltiples (+)
- * ✅ 100% visible en producción (no más 404 en Vercel)
+ * ✅ 100% visible en producción (no más 404)
  */
 
 import fs from "fs";
@@ -18,7 +19,7 @@ const localOutput = path.join(videosDir, "index.json");
 const staticDir = path.join(__dirname, "../.next/static/videos");
 const staticOutput = path.join(staticDir, "index.json");
 
-// 🧹 Limpieza
+// 🧹 Limpieza de texto
 function clean(str) {
   return str
     ? str
@@ -51,7 +52,7 @@ const VALID_CATEGORIES = [
   "adventure",
 ];
 
-// 🧠 Interpretar nombres
+// 🧠 Analizar nombre de archivo
 function parseFilename(filename) {
   const name = filename.replace(/\.[^/.]+$/, "");
   const parts = name.split("_");
@@ -92,6 +93,7 @@ function generateIndex() {
 
   const videos = files.map((file) => {
     const { object, categories, subcategory, variant } = parseFilename(file);
+
     const tags = Array.from(
       new Set([
         object,
@@ -115,11 +117,11 @@ function generateIndex() {
     };
   });
 
-  // Guardar index en /public/videos (local)
+  // Guardar en /public/videos
   fs.writeFileSync(localOutput, JSON.stringify(videos, null, 2));
   console.log(`✅ index.json generado con ${videos.length} archivos.`);
 
-  // Crear .next/static/videos/ y copiar allí (Vercel build persistente)
+  // Copiar dentro de .next/static/videos (persistente en Vercel)
   fs.mkdirSync(staticDir, { recursive: true });
   fs.writeFileSync(staticOutput, JSON.stringify(videos, null, 2));
   console.log("📦 index.json copiado dentro de .next/static/videos/ (persistente)");
