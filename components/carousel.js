@@ -6,10 +6,11 @@ export default function Carousel() {
   const router = useRouter();
   const [videos, setVideos] = useState([]);
   const [index, setIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
   const autoplayRef = useRef(null);
   const pauseRef = useRef(false);
 
-  // 🎯 Variables de control de gesto
+  // 🧭 Control de gestos
   const startX = useRef(0);
   const startY = useRef(0);
   const moved = useRef(false);
@@ -18,7 +19,7 @@ export default function Carousel() {
   const TAP_THRESHOLD = 10;
   const SWIPE_THRESHOLD = 40;
 
-  // 🔁 Autoplay
+  // 🕒 Autoplay
   const startAutoplay = () => {
     clearInterval(autoplayRef.current);
     if (!pauseRef.current && videos.length > 0) {
@@ -28,28 +29,29 @@ export default function Carousel() {
     }
   };
 
-  // 🎥 Cargar videos desde /videos/index.json (no API)
+  // 🎥 Cargar videos desde /api/videos
   useEffect(() => {
     async function fetchVideos() {
       try {
-        console.log("📂 Cargando /videos/index.json...");
-        const res = await fetch("/videos/index.json", { cache: "no-store" });
-
+        console.log("📂 Cargando videos desde /api/videos...");
+        const res = await fetch("/api/videos", { cache: "no-store" });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
 
-        // 🧹 Normalizar estructura
-        const normalized = data.map((v) => ({
-          src: v.file || `/videos/${v.name}`,
-          slug: v.name?.replace(".mp4", "") || "",
-          object: v.object || "Untitled",
-          category: v.category || "General",
-        }));
+        // 🧹 Validación y fallback
+        const validVideos = data
+          .filter((v) => v?.file?.endsWith(".mp4"))
+          .map((v) => ({
+            ...v,
+            src: v.file,
+          }));
 
-        console.log(`✅ ${normalized.length} videos cargados`);
-        setVideos(normalized);
+        setVideos(validVideos);
+        setLoading(false);
+        console.log(`✅ ${validVideos.length} videos cargados correctamente.`);
       } catch (err) {
-        console.error("❌ Error cargando /videos/index.json:", err);
+        console.error("❌ Error cargando videos:", err);
+        setLoading(false);
       }
     }
     fetchVideos();
@@ -60,7 +62,7 @@ export default function Carousel() {
     return () => clearInterval(autoplayRef.current);
   }, [videos]);
 
-  // 🖐️ Control táctil con bloqueo vertical
+  // 🖐️ Control táctil
   const handleTouchStart = (e) => {
     const t = e.touches[0];
     startX.current = t.clientX;
@@ -80,12 +82,13 @@ export default function Carousel() {
       moved.current = true;
       direction.current =
         Math.abs(deltaX) > Math.abs(deltaY) ? "horizontal" : "vertical";
-      e.stopPropagation(); // evita que el scroll de la página interfiera
+      e.stopPropagation();
     }
   };
 
   const handleTouchEnd = (e) => {
     e.stopPropagation();
+
     if (!moved.current) {
       const tapped = videos[index];
       if (tapped?.slug) handleClick(tapped.slug);
@@ -99,13 +102,14 @@ export default function Carousel() {
         );
       }
     }
+
     setTimeout(() => {
       pauseRef.current = false;
       startAutoplay();
     }, 3000);
   };
 
-  // 🎬 Abrir en /edit/[slug]
+  // 🎬 Abrir tarjeta en pantalla completa
   const handleClick = async (slug) => {
     try {
       const elem = document.documentElement;
@@ -120,20 +124,28 @@ export default function Carousel() {
   };
 
   // 💬 Estado de carga
-  if (videos.length === 0) {
+  if (loading) {
     return (
       <div className="w-full text-center py-10 text-gray-400">
-        ⏳ Cargando videos del día...
+        ⏳ Loading videos...
       </div>
     );
   }
 
+  if (videos.length === 0) {
+    return (
+      <div className="w-full text-center py-10 text-red-400">
+        ⚠️ No videos found in /api/videos
+      </div>
+    );
+  }
+
+  // 🎠 Carrusel
   return (
     <div
       className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none"
       style={{ touchAction: "pan-y" }}
     >
-      {/* 🎠 Carrusel */}
       <div
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -167,10 +179,6 @@ export default function Carousel() {
                 onContextMenu={(e) => e.preventDefault()}
                 className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover object-center bg-white overflow-hidden"
               />
-              <div className="text-center mt-3 text-gray-600 text-sm font-medium">
-                {video.object}{" "}
-                <span className="text-gray-400">·</span> {video.category}
-              </div>
             </div>
           );
         })}
@@ -198,4 +206,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-  }
+               }
