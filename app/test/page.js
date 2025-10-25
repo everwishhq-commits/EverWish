@@ -33,7 +33,9 @@ export default function TestVideos() {
 
       {videos.length > 0 && (
         <div className="max-w-lg w-full border p-4 rounded-xl shadow bg-gray-50">
-          <h2 className="font-semibold mb-2 text-pink-600">🎥 Videos detectados:</h2>
+          <h2 className="font-semibold mb-2 text-pink-600">
+            🎥 Videos detectados:
+          </h2>
           <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
             {videos.map((v, i) => (
               <li key={i}>{v.title || v.name}</li>
@@ -43,4 +45,4 @@ export default function TestVideos() {
       )}
     </div>
   );
-}
+    }
