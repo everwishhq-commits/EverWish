@@ -1,11 +1,10 @@
 /**
- * 📁 Everwish – Video Index Generator (v3.2 FINAL – Vercel Compatible)
- * ------------------------------------------------------------------
+ * 📁 Everwish – Video Index Generator (v3.3 Vercel Persistent)
+ * ------------------------------------------------------------
  * ✅ Lee todos los videos en /public/videos/
- * ✅ Genera /public/videos/index.json y copia de seguridad en /public/
- * ✅ Garantiza existencia de carpeta /public/videos/
+ * ✅ Genera y copia el index.json dentro de .next/static/videos/
  * ✅ Compatible con 17 categorías oficiales y múltiples (+)
- * ✅ 100% funcional en entorno Vercel (no más 404)
+ * ✅ 100% visible en producción (no más 404 en Vercel)
  */
 
 import fs from "fs";
@@ -13,11 +12,13 @@ import path from "path";
 import url from "url";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
-const videosDir = path.join(__dirname, "../public/videos");
-const outputFile = path.join(videosDir, "index.json");
-const outputBackup = path.join(__dirname, "../public/index.json");
+const publicDir = path.join(__dirname, "../public");
+const videosDir = path.join(publicDir, "videos");
+const localOutput = path.join(videosDir, "index.json");
+const staticDir = path.join(__dirname, "../.next/static/videos");
+const staticOutput = path.join(staticDir, "index.json");
 
-// 🧹 Limpieza de texto
+// 🧹 Limpieza
 function clean(str) {
   return str
     ? str
@@ -50,7 +51,7 @@ const VALID_CATEGORIES = [
   "adventure",
 ];
 
-// 🧠 Analizar nombre de archivo
+// 🧠 Interpretar nombres
 function parseFilename(filename) {
   const name = filename.replace(/\.[^/.]+$/, "");
   const parts = name.split("_");
@@ -91,7 +92,6 @@ function generateIndex() {
 
   const videos = files.map((file) => {
     const { object, categories, subcategory, variant } = parseFilename(file);
-
     const tags = Array.from(
       new Set([
         object,
@@ -115,13 +115,14 @@ function generateIndex() {
     };
   });
 
-  // ✏️ Guardar index principal
-  fs.writeFileSync(outputFile, JSON.stringify(videos, null, 2));
+  // Guardar index en /public/videos (local)
+  fs.writeFileSync(localOutput, JSON.stringify(videos, null, 2));
   console.log(`✅ index.json generado con ${videos.length} archivos.`);
 
-  // 🪄 Guardar copia en la raíz pública
-  fs.writeFileSync(outputBackup, JSON.stringify(videos, null, 2));
-  console.log("📁 Copia de index.json guardada en /public/");
+  // Crear .next/static/videos/ y copiar allí (Vercel build persistente)
+  fs.mkdirSync(staticDir, { recursive: true });
+  fs.writeFileSync(staticOutput, JSON.stringify(videos, null, 2));
+  console.log("📦 index.json copiado dentro de .next/static/videos/ (persistente)");
 }
 
 generateIndex();
