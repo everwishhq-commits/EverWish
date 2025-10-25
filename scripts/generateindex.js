@@ -105,7 +105,7 @@ function generateIndex() {
         subcategory,
         variant,
         ...object.split(" "),
-        ...subcategory.split(" "),
+        ...subcategory.split(" ")
       ])
     ).filter(Boolean);
 
@@ -117,7 +117,7 @@ function generateIndex() {
       category: categories[0] || "general",
       subcategory,
       variant,
-      tags,
+      tags
     };
   });
 
