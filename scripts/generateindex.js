@@ -1,10 +1,9 @@
 /**
- * 📁 Everwish – Video Index Generator (Vercel Permanent Fix)
- * ------------------------------------------------------------
- * ✅ Lee todos los .mp4 de /public/videos/
+ * 📁 Everwish – Universal Video Index Generator
+ * ---------------------------------------------
+ * ✅ Compatible con Node y Vercel
+ * ✅ Usa nombres estandarizados con categorías automáticas
  * ✅ Genera /public/videos/index.json y /public/index.json
- * ✅ Compatible con nombres con "+" o "_"
- * ✅ 100% compatible con "type": "module" o sin él
  */
 
 import fs from "fs";
@@ -17,51 +16,85 @@ const outputFile = path.join(videosDir, "index.json");
 const backupFile = path.join(__dirname, "../public/index.json");
 
 function clean(str) {
-  return str ? str.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9+._-]/g, "") : "";
+  return str
+    ? str.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")
+    : "";
 }
 
 function parseFilename(filename) {
   const name = filename.replace(/\.[^/.]+$/, "");
-  const parts = name.split(/[+_]/).filter(Boolean);
-  const object = parts[0] || "unknown";
-  const categories = parts.slice(1, -1);
-  const variant = parts[parts.length - 1] || "";
-  return { object, categories, variant };
+  const parts = name.split("_");
+  const object = clean(parts[0] || "");
+  const categoryPart = clean(parts[1] || "general");
+  const subcategory = clean(parts[2] || "general");
+  const variant = clean(parts[3] || "");
+
+  const categoryMap = {
+    halloween: "Seasonal & Holidays",
+    christmas: "Seasonal & Holidays",
+    thanksgiving: "Seasonal & Holidays",
+    easter: "Seasonal & Holidays",
+    independence: "Seasonal & Holidays",
+    newyear: "Seasonal & Holidays",
+    july4th: "Seasonal & Holidays",
+    birthday: "Birthday",
+    anniversary: "Weddings & Anniversaries",
+    wedding: "Weddings & Anniversaries",
+    love: "Love & Romance",
+    valentine: "Love & Romance",
+    mother: "Family & Relationships",
+    mothersday: "Family & Relationships",
+    father: "Family & Relationships",
+    fathersday: "Family & Relationships",
+    baby: "Babies & Parenting",
+    newborn: "Babies & Parenting",
+    pet: "Pets & Animal Lovers",
+    dog: "Pets & Animal Lovers",
+    cat: "Pets & Animal Lovers",
+    animal: "Pets & Animal Lovers",
+    condolence: "Sympathy & Remembrance",
+    sympathy: "Sympathy & Remembrance",
+    general: "Everyday",
+  };
+
+  const foundCategory = Object.entries(categoryMap).find(([key]) =>
+    name.includes(key)
+  )?.[1] || "Other";
+
+  return {
+    object,
+    category: foundCategory,
+    subcategory:
+      subcategory.charAt(0).toUpperCase() + subcategory.slice(1).toLowerCase(),
+    variant,
+  };
 }
 
 function generateIndex() {
-  if (!fs.existsSync(videosDir)) {
-    console.error("❌ No se encontró la carpeta /public/videos/");
-    return;
-  }
+  if (!fs.existsSync(videosDir)) fs.mkdirSync(videosDir, { recursive: true });
 
   const files = fs
     .readdirSync(videosDir)
-    .filter((f) => /\.(mp4|webm|mov)$/i.test(f));
-
-  if (files.length === 0) {
-    console.warn("⚠️ No hay videos en /public/videos/");
-  }
+    .filter((f) => [".mp4", ".webm", ".mov"].some((ext) => f.endsWith(ext)));
 
   const videos = files.map((file) => {
-    const { object, categories, variant } = parseFilename(file);
+    const { object, category, subcategory, variant } = parseFilename(file);
+    const tags = [object, category, subcategory, variant].filter(Boolean);
+
     return {
-      title: `${object} ${categories.join(" ")}`.trim(),
-      src: `/videos/${file}`,
-      slug: file.replace(/\.[^/.]+$/, ""),
-      category:
-        categories.length > 0
-          ? categories.join(" ").replace(/\+/g, " ")
-          : "General",
+      name: file,
+      file: `/videos/${file}`,
+      object,
+      category,
+      subcategory,
       variant,
+      tags,
     };
   });
 
   fs.writeFileSync(outputFile, JSON.stringify(videos, null, 2));
   fs.writeFileSync(backupFile, JSON.stringify(videos, null, 2));
-
-  console.log(`✅ index.json generado correctamente con ${videos.length} archivos.`);
-  console.log(`📂 Ruta: ${outputFile}`);
+  console.log(`✅ index.json generado con ${videos.length} archivos.`);
 }
 
 generateIndex();
