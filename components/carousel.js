@@ -9,7 +9,7 @@ export default function Carousel() {
   const autoplayRef = useRef(null);
   const pauseRef = useRef(false);
 
-  // 🎯 Control de gestos táctiles
+  // 🎯 Variables de control de gesto
   const startX = useRef(0);
   const startY = useRef(0);
   const moved = useRef(false);
@@ -28,43 +28,30 @@ export default function Carousel() {
     }
   };
 
-  // 🎥 Cargar videos desde el nuevo index.json universal
+  // 🎥 Cargar videos desde /videos/index.json (no API)
   useEffect(() => {
     async function fetchVideos() {
       try {
-        console.log("📂 Buscando /videos/index.json...");
-        let res = await fetch("/videos/index.json", { cache: "no-store" });
+        console.log("📂 Cargando /videos/index.json...");
+        const res = await fetch("/videos/index.json", { cache: "no-store" });
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        let data = await res.json();
+        const data = await res.json();
 
-        console.log(`✅ Cargado ${data.length} videos`);
-
-        // 🧹 Normalizar estructura para compatibilidad
-        data = data.map((v) => ({
-          src: v.file,
-          object: v.object || "untitled",
+        // 🧹 Normalizar estructura
+        const normalized = data.map((v) => ({
+          src: v.file || `/videos/${v.name}`,
+          slug: v.name?.replace(".mp4", "") || "",
+          object: v.object || "Untitled",
           category: v.category || "General",
-          subcategory: v.subcategory || "General",
-          name: v.name,
         }));
 
-        // 🎯 Seleccionar un set de 10 según el día
-        const daySeed = new Date().getDate();
-        const sorted = [...data].sort((a, b) =>
-          a.object.localeCompare(b.object)
-        );
-        const dailyStart = (daySeed * 10) % sorted.length;
-        const dailyVideos = sorted
-          .slice(dailyStart, dailyStart + 10)
-          .concat(sorted.slice(0, Math.max(0, 10 - (sorted.length - dailyStart))));
-
-        setVideos(dailyVideos);
+        console.log(`✅ ${normalized.length} videos cargados`);
+        setVideos(normalized);
       } catch (err) {
-        console.error("❌ No se pudo cargar /videos/index.json:", err);
+        console.error("❌ Error cargando /videos/index.json:", err);
       }
     }
-
     fetchVideos();
   }, []);
 
@@ -73,7 +60,7 @@ export default function Carousel() {
     return () => clearInterval(autoplayRef.current);
   }, [videos]);
 
-  // 🖐️ Gestos táctiles
+  // 🖐️ Control táctil con bloqueo vertical
   const handleTouchStart = (e) => {
     const t = e.touches[0];
     startX.current = t.clientX;
@@ -93,7 +80,7 @@ export default function Carousel() {
       moved.current = true;
       direction.current =
         Math.abs(deltaX) > Math.abs(deltaY) ? "horizontal" : "vertical";
-      e.stopPropagation();
+      e.stopPropagation(); // evita que el scroll de la página interfiera
     }
   };
 
@@ -101,7 +88,7 @@ export default function Carousel() {
     e.stopPropagation();
     if (!moved.current) {
       const tapped = videos[index];
-      if (tapped?.object) handleClick(tapped.name);
+      if (tapped?.slug) handleClick(tapped.slug);
     } else if (direction.current === "horizontal") {
       const diffX = startX.current - e.changedTouches[0].clientX;
       if (Math.abs(diffX) > SWIPE_THRESHOLD) {
@@ -118,7 +105,7 @@ export default function Carousel() {
     }, 3000);
   };
 
-  // 🎬 Ir a página de edición
+  // 🎬 Abrir en /edit/[slug]
   const handleClick = async (slug) => {
     try {
       const elem = document.documentElement;
@@ -126,9 +113,9 @@ export default function Carousel() {
       else if (elem.webkitRequestFullscreen)
         await elem.webkitRequestFullscreen();
       await new Promise((r) => setTimeout(r, 150));
-      router.push(`/edit/${slug.replace(".mp4", "")}`);
+      router.push(`/edit/${slug}`);
     } catch {
-      router.push(`/edit/${slug.replace(".mp4", "")}`);
+      router.push(`/edit/${slug}`);
     }
   };
 
@@ -146,7 +133,7 @@ export default function Carousel() {
       className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none"
       style={{ touchAction: "pan-y" }}
     >
-      {/* 🎠 Carrusel principal */}
+      {/* 🎠 Carrusel */}
       <div
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -181,8 +168,8 @@ export default function Carousel() {
                 className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover object-center bg-white overflow-hidden"
               />
               <div className="text-center mt-3 text-gray-600 text-sm font-medium">
-                {video.object} <span className="text-gray-400">·</span>{" "}
-                {video.category}
+                {video.object}{" "}
+                <span className="text-gray-400">·</span> {video.category}
               </div>
             </div>
           );
@@ -211,4 +198,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-        }
+  }
