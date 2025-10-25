@@ -1,1 +1,38 @@
-
+[
+  {
+    "title": "Pumpkin Halloween General 1A",
+    "src": "/videos/pumpkin+seasonal-holidays_general_1A.mp4",
+    "slug": "pumpkin+seasonal-holidays_general_1A",
+    "category": "Seasonal & Holidays"
+  },
+  {
+    "title": "Ghost Halloween Love 1A",
+    "src": "/videos/ghost+seasonal-holidays+halloween_love_1A.mp4",
+    "slug": "ghost+seasonal-holidays+halloween_love_1A",
+    "category": "Seasonal & Holidays"
+  },
+  {
+    "title": "Mother Family Relationships General 1A",
+    "src": "/videos/mother+family-relationships_general_1A.mp4",
+    "slug": "mother+family-relationships_general_1A",
+    "category": "Family & Relationships"
+  },
+  {
+    "title": "Yeti Christmas General 1A",
+    "src": "/videos/yeti+seasonal-holidays_christmas_general_1A.mp4",
+    "slug": "yeti+seasonal-holidays_christmas_general_1A",
+    "category": "Seasonal & Holidays"
+  },
+  {
+    "title": "Bunny Easter General 1A",
+    "src": "/videos/bunny+seasonal-holidays_easter_general_1A.mp4",
+    "slug": "bunny+seasonal-holidays_easter_general_1A",
+    "category": "Seasonal & Holidays"
+  },
+  {
+    "title": "Octopus Pets & Animals General 1A",
+    "src": "/videos/octopus+pets-animal-lovers_general_1A.mp4",
+    "slug": "octopus+pets-animal-lovers_general_1A",
+    "category": "Pets & Animal Lovers"
+  }
+]
