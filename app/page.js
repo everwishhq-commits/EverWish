@@ -18,7 +18,7 @@ export default function Page() {
         <>
           <Header />
 
-          {/* 🌸 Fondo rosado → blanco extendido hasta el footer */}
+          {/* 🌸 Fondo rosado degradado hacia blanco */}
           <main
             className="flex flex-col items-center justify-start min-h-screen text-gray-700 pt-20 px-4"
             style={{
@@ -34,15 +34,15 @@ export default function Page() {
               With <b>Everwish</b>, every card becomes a memory you can relive.
             </p>
 
-            {/* 🎞️ Carrusel */}
+            {/* 🎞️ Carrusel principal */}
             <div className="w-full max-w-4xl mb-12">
               <Carousel />
             </div>
 
-            {/* 📦 Contenedor blanco con sombra */}
+            {/* 📦 Contenedor de categorías */}
             <div className="w-full bg-white rounded-3xl shadow-lg px-2 py-4 mb-10 border border-pink-100">
               <h2 className="text-2xl font-semibold mb-4 text-gray-800 text-center">
-                
+                Explore Categories 💌
               </h2>
               <Categories />
             </div>
@@ -53,4 +53,4 @@ export default function Page() {
       )}
     </>
   );
-}
+              }
