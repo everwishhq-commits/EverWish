@@ -7,134 +7,70 @@ import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
 import "swiper/css";
 
-// ✅ Slugs corregidos y normalizados (todos coinciden con los de /data/categories.json)
+// ✅ Lista fija de categorías principales
 const allCategories = [
-  { name: "Seasonal & Holidays", emoji: "🎉", slug: "seasonal-and-holidays", color: "#FFE0E9" },
+  { name: "Seasonal & Holidays", emoji: "🎉", slug: "seasonal-holidays", color: "#FFE0E9" },
   { name: "Birthday", emoji: "🎂", slug: "birthday", color: "#FFDDEE" },
-  { name: "Love & Romance", emoji: "💘", slug: "love-and-romance", color: "#FFECEC" },
-  { name: "Family & Relationships", emoji: "👨‍👩‍👧‍👦", slug: "family-and-relationships", color: "#E5EDFF" },
-  { name: "Pets & Animal Lovers", emoji: "🐾", slug: "pets-and-animals", color: "#E9FFF4" },
-  { name: "School & Graduation", emoji: "🎓", slug: "school-and-graduation", color: "#E2FFD7" },
-  { name: "Work & Professional", emoji: "👩‍💼", slug: "work-and-professional", color: "#E8FFF3" },
-  { name: "Health & Support", emoji: "🩺", slug: "health-and-support", color: "#DFFAFF" },
-  { name: "Sympathy & Remembrance", emoji: "🕊️", slug: "sympathy-and-remembrance", color: "#F3F3F3" },
-  { name: "Congratulations", emoji: "🏆", slug: "congratulations-and-milestones", color: "#FFF3C4" },
-  { name: "Weddings & Anniversaries", emoji: "💍", slug: "weddings-and-anniversaries", color: "#F3E5FF" },
-  { name: "Adventure & Nature", emoji: "🗺️", slug: "adventure-and-nature", color: "#E8ECFF" },
-  { name: "Humor & Memes", emoji: "😄", slug: "humor-and-memes", color: "#E7F7FF" },
-  { name: "Thank You & Appreciation", emoji: "🙏", slug: "thank-you-and-appreciation", color: "#E7E9FF" },
-  { name: "House & Moving", emoji: "🏡", slug: "house-and-moving", color: "#FFD9E8" },
-  { name: "Babies & Parenting", emoji: "🍼", slug: "babies-and-parenting", color: "#FDE6E6" },
+  { name: "Love & Romance", emoji: "💘", slug: "love-romance", color: "#FFECEC" },
+  { name: "Family & Relationships", emoji: "👨‍👩‍👧‍👦", slug: "family-relationships", color: "#E5EDFF" },
+  { name: "Pets & Animal Lovers", emoji: "🐾", slug: "pets-animal-lovers", color: "#E9FFF4" },
+  { name: "School & Graduation", emoji: "🎓", slug: "school-graduation", color: "#E2FFD7" },
+  { name: "Work & Professional", emoji: "👩‍💼", slug: "work-professional", color: "#E8FFF3" },
+  { name: "Health & Support", emoji: "🩺", slug: "health-support", color: "#DFFAFF" },
+  { name: "Sympathy & Remembrance", emoji: "🕊️", slug: "sympathy-remembrance", color: "#F3F3F3" },
+  { name: "Congratulations & Milestones", emoji: "🏆", slug: "congrats-milestones", color: "#FFF3C4" },
+  { name: "Weddings & Anniversaries", emoji: "💍", slug: "weddings-anniversaries", color: "#F3E5FF" },
+  { name: "Adventure & Nature", emoji: "🗺️", slug: "adventure-nature", color: "#E8ECFF" },
+  { name: "Humor & Memes", emoji: "😄", slug: "humor-memes", color: "#E7F7FF" },
+  { name: "Thank You & Appreciation", emoji: "🙏", slug: "thank-you-appreciation", color: "#E7E9FF" },
+  { name: "House & Moving", emoji: "🏡", slug: "house-moving", color: "#FFD9E8" },
+  { name: "Babies & Parenting", emoji: "🍼", slug: "babies-parenting", color: "#FDE6E6" },
   { name: "Universal", emoji: "✨", slug: "universal", color: "#E5FFE2" },
 ];
 
-// 🧹 Limpieza avanzada para coincidencias
+// 🧹 Limpieza de texto
 function normalizeText(str) {
-  return str
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/&/g, "and")
-    .replace(/\s+/g, " ")
-    .trim();
+  return str.toLowerCase().replace(/&/g, "and").replace(/\s+/g, " ").trim();
 }
 
 export default function Categories() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [filtered, setFiltered] = useState(allCategories);
-  const [videos, setVideos] = useState([]);
 
-  // 📥 Cargar index.json
-  useEffect(() => {
-    async function loadVideos() {
-      try {
-        const res = await fetch("/videos/index.json", { cache: "no-store" });
-        const data = await res.json();
-        setVideos(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error("❌ Error loading videos:", err);
-      }
-    }
-    loadVideos();
-  }, []);
-
-  // 🔍 Filtrar solo categorías principales
+  // 🔍 Búsqueda directa solo en categorías principales
   useEffect(() => {
     const q = normalizeText(search);
     if (!q) {
       setFiltered(allCategories);
-      return;
+    } else {
+      const matches = allCategories.filter(
+        (cat) =>
+          normalizeText(cat.name).includes(q) ||
+          normalizeText(cat.slug).includes(q)
+      );
+      setFiltered(matches);
     }
-
-    const foundMainCats = new Set();
-
-    videos.forEach((v) => {
-      const text = [
-        v.object,
-        v.subcategory,
-        v.variant,
-        ...(v.tags || []),
-        ...(v.categories || []),
-      ]
-        .join(" ")
-        .toLowerCase();
-
-      if (text.includes(q)) {
-        const mainCats = (v.categories || [])
-          .map(normalizeText)
-          .filter((c) =>
-            allCategories.some((cat) => normalizeText(cat.slug) === c || normalizeText(cat.name).includes(c))
-          );
-
-        if (mainCats.length === 0) {
-          if (text.includes("easter") || text.includes("halloween") || text.includes("christmas"))
-            foundMainCats.add("seasonal-and-holidays");
-          else if (text.includes("birthday")) foundMainCats.add("birthday");
-          else if (text.includes("love") || text.includes("romance")) foundMainCats.add("love-and-romance");
-          else if (text.includes("pet") || text.includes("dog") || text.includes("cat"))
-            foundMainCats.add("pets-and-animals");
-        } else {
-          mainCats.forEach((c) => foundMainCats.add(c));
-        }
-      }
-    });
-
-    const matches = allCategories.filter((cat) =>
-      foundMainCats.has(normalizeText(cat.slug))
-    );
-
-    setFiltered(matches.length > 0 ? matches : allCategories);
-  }, [search, videos]);
+  }, [search]);
 
   const handleKeyPress = (e) => {
-    if (e.key === "Enter" && search.trim()) {
-      const first = filtered[0];
-      if (first) {
-        router.push(`/category/${first.slug}`);
-        setTimeout(() => setSearch(""), 400);
-      }
+    if (e.key === "Enter" && filtered.length > 0) {
+      router.push(`/category/${filtered[0].slug}`);
     }
-  };
-
-  const handleCategoryClick = (slug) => {
-    router.push(`/category/${slug}`);
-    setTimeout(() => setSearch(""), 400);
   };
 
   return (
     <section id="categories" className="text-center py-10 px-3 overflow-hidden">
-      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">Categories</h2>
+      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
+        Explore Categories 💌
+      </h2>
 
       {/* 🔎 Barra de búsqueda */}
       <div className="flex justify-center mb-10">
         <input
           type="text"
           autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="none"
-          inputMode="search"
-          placeholder="Search any theme — e.g. bunny, pumpkin, love..."
+          placeholder="Search a category — e.g. birthday, love, halloween..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={handleKeyPress}
@@ -142,7 +78,7 @@ export default function Categories() {
         />
       </div>
 
-      {/* 🎠 Carrusel */}
+      {/* 🎠 Carrusel de categorías */}
       <Swiper
         slidesPerView={3.2}
         spaceBetween={16}
@@ -163,7 +99,7 @@ export default function Categories() {
             <motion.div
               className="flex flex-col items-center justify-center cursor-pointer"
               whileHover={{ scale: 1.07 }}
-              onClick={() => handleCategoryClick(cat.slug)}
+              onClick={() => router.push(`/category/${cat.slug}`)}
             >
               <motion.div
                 className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md"
@@ -186,4 +122,4 @@ export default function Categories() {
       </Swiper>
     </section>
   );
-    }
+                  }
