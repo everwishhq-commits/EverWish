@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
-// 🗂️ CATEGORÍAS PRINCIPALES (versión aprobada)
+// ✅ CATEGORÍAS PRINCIPALES ACTUALIZADAS
 const allCategories = [
   { name: "Seasonal & Holidays", emoji: "🎉", slug: "seasonal-holidays", color: "#FFE0E9" },
   { name: "Birthday", emoji: "🎂", slug: "birthday", color: "#FFDDEE" },
@@ -21,16 +21,13 @@ const allCategories = [
   { name: "Adventure & Nature", emoji: "🗺️", slug: "adventure-nature", color: "#E8ECFF" },
   { name: "Humor & Memes", emoji: "😄", slug: "humor-memes", color: "#E7F7FF" },
   { name: "House & Moving", emoji: "🏡", slug: "house-moving", color: "#FFD9E8" },
-  { name: "Gifts & Surprises", emoji: "🎁", slug: "gifts-surprises", color: "#E7E9FF" },
-  { name: "Custom & AI Creations", emoji: "🤖", slug: "custom-ai-creations", color: "#E5FFE2" },
-  { name: "Universal", emoji: "✨", slug: "universal", color: "#E4FFF7" }
+  { name: "Universal", emoji: "✨", slug: "universal", color: "#E5FFE2" }
 ];
 
 export default function CategoriesGridPage() {
   const router = useRouter();
   const [search, setSearch] = useState("");
 
-  // 🔍 Filtro de búsqueda en tiempo real
   const filtered = allCategories.filter((cat) =>
     cat.name.toLowerCase().includes(search.toLowerCase().trim())
   );
@@ -48,7 +45,6 @@ export default function CategoriesGridPage() {
         › <span className="text-gray-700">Categories</span>
       </nav>
 
-      {/* 🏷️ Título */}
       <h1 className="text-4xl font-extrabold text-pink-600 mb-3 text-center">
         Explore Main Categories 💌
       </h1>
@@ -60,7 +56,7 @@ export default function CategoriesGridPage() {
       <div className="flex justify-center mb-12 w-full">
         <input
           type="text"
-          placeholder="Search any theme — e.g. bunny, pumpkin, love..."
+          placeholder="Search any theme — e.g. pumpkin, love, graduation..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-80 md:w-96 px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700 bg-white/80"
@@ -78,8 +74,7 @@ export default function CategoriesGridPage() {
                 boxShadow: "0 8px 20px rgba(255,182,193,0.35)",
               }}
               transition={{ type: "spring", stiffness: 300 }}
-              // ✅ Ruta corregida a plural
-              onClick={() => router.push(`/categories/${cat.slug}`)}
+              onClick={() => router.push(`/categories/${cat.slug}`)} // ✅ RUTA ACTUALIZADA
               className="cursor-pointer flex flex-col items-center justify-center rounded-3xl shadow-md border border-pink-100 text-gray-800 font-semibold p-6 hover:border-pink-200 hover:bg-pink-50"
               style={{ backgroundColor: cat.color }}
             >
@@ -95,4 +90,4 @@ export default function CategoriesGridPage() {
       </div>
     </main>
   );
-              }
+                }
