@@ -1,10 +1,11 @@
 /**
- * 📁 Everwish – Video Index Generator (v3.1 Stable)
- * ------------------------------------------------------------
+ * 📁 Everwish – Video Index Generator (v3.2 FINAL – Vercel Compatible)
+ * ------------------------------------------------------------------
  * ✅ Lee todos los videos en /public/videos/
- * ✅ Genera /public/videos/index.json ANTES del build
- * ✅ Garantiza que la carpeta /public/videos exista
- * ✅ Compatible con categorías oficiales y múltiples (+)
+ * ✅ Genera /public/videos/index.json y copia de seguridad en /public/
+ * ✅ Garantiza existencia de carpeta /public/videos/
+ * ✅ Compatible con 17 categorías oficiales y múltiples (+)
+ * ✅ 100% funcional en entorno Vercel (no más 404)
  */
 
 import fs from "fs";
@@ -14,8 +15,9 @@ import url from "url";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 const videosDir = path.join(__dirname, "../public/videos");
 const outputFile = path.join(videosDir, "index.json");
+const outputBackup = path.join(__dirname, "../public/index.json");
 
-// 🔤 Limpieza de texto
+// 🧹 Limpieza de texto
 function clean(str) {
   return str
     ? str
@@ -48,7 +50,7 @@ const VALID_CATEGORIES = [
   "adventure",
 ];
 
-// 🧠 Interpretar nombre de archivo
+// 🧠 Analizar nombre de archivo
 function parseFilename(filename) {
   const name = filename.replace(/\.[^/.]+$/, "");
   const parts = name.split("_");
@@ -78,17 +80,16 @@ function generateIndex() {
     console.warn("📂 Carpeta /public/videos creada automáticamente.");
   }
 
-  const allFiles = fs.readdirSync(videosDir);
-  const videoFiles = allFiles.filter((file) =>
-    [".mp4", ".webm", ".mov"].some((ext) => file.endsWith(ext))
-  );
+  const files = fs
+    .readdirSync(videosDir)
+    .filter((f) => [".mp4", ".webm", ".mov"].some((ext) => f.endsWith(ext)));
 
-  if (videoFiles.length === 0) {
+  if (files.length === 0) {
     console.warn("⚠️ No se encontraron videos en /public/videos/");
     return;
   }
 
-  const videos = videoFiles.map((file) => {
+  const videos = files.map((file) => {
     const { object, categories, subcategory, variant } = parseFilename(file);
 
     const tags = Array.from(
@@ -114,8 +115,13 @@ function generateIndex() {
     };
   });
 
+  // ✏️ Guardar index principal
   fs.writeFileSync(outputFile, JSON.stringify(videos, null, 2));
   console.log(`✅ index.json generado con ${videos.length} archivos.`);
+
+  // 🪄 Guardar copia en la raíz pública
+  fs.writeFileSync(outputBackup, JSON.stringify(videos, null, 2));
+  console.log("📁 Copia de index.json guardada en /public/");
 }
 
 generateIndex();
