@@ -9,7 +9,7 @@ export default function Carousel() {
   const autoplayRef = useRef(null);
   const pauseRef = useRef(false);
 
-  // Gestos táctiles
+  // 🧭 Control de gestos
   const startX = useRef(0);
   const startY = useRef(0);
   const moved = useRef(false);
@@ -28,42 +28,45 @@ export default function Carousel() {
     }
   };
 
-  // 🎥 Cargar videos desde /videos/index.json (nuevo formato)
+  // 🎥 Cargar videos desde _next/static/videos/index.json (con fallback)
   useEffect(() => {
     async function fetchVideos() {
       try {
-        console.log("📂 Intentando cargar /videos/index.json...");
-        let res = await fetch("/videos/index.json", { cache: "no-store" });
+        console.log("📂 Intentando cargar _next/static/videos/index.json...");
+        let res = await fetch("/_next/static/videos/index.json", {
+          cache: "no-store",
+        });
 
-        // Si falla, probar en _next/static/videos/
+        // 🔄 Si no se encuentra, probar la copia local
         if (!res.ok) {
-          console.warn("⚠️ No encontrado en /videos, probando _next/static/videos/");
-          res = await fetch("/_next/static/videos/index.json", { cache: "no-store" });
+          console.warn(
+            "⚠️ No encontrado en _next/static/videos, intentando /videos/index.json..."
+          );
+          res = await fetch("/videos/index.json", { cache: "no-store" });
         }
 
-        if (!res.ok) throw new Error(`HTTP ${res.status} - ${res.statusText}`);
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status} - ${res.statusText}`);
+        }
 
         let data = await res.json();
         console.log(`✅ Cargado ${data.length} videos desde index.json`);
 
-        // 🧹 Normalizar datos para asegurar compatibilidad
+        // 🧹 Normalizar estructura con soporte para "+" y caracteres especiales
         data = data.map((v) => {
-          const filePath = v.file || `/videos/${v.name}`;
-          const cleanSlug = (v.slug || v.name || "")
-            .replace(/^\/+/, "")
-            .replace(/\.[^/.]+$/, ""); // sin extensión
-
+          const safeFile = v.file
+            ? encodeURI(v.file)
+            : `/videos/${encodeURIComponent(v.name)}`;
           return {
             ...v,
-            src: filePath,
-            slug: cleanSlug,
+            src: safeFile,
             object: v.object || "untitled",
             category: v.category || "general",
             subcategory: v.subcategory || "general",
           };
         });
 
-        // 🗓️ Seleccionar 10 videos distintos cada día
+        // 🗓️ Seleccionar 10 videos según el día
         const daySeed = new Date().getDate();
         const sorted = [...data].sort((a, b) => a.object.localeCompare(b.object));
         const dailyStart = (daySeed * 10) % sorted.length;
@@ -73,8 +76,8 @@ export default function Carousel() {
 
         setVideos(dailyVideos);
       } catch (err) {
-        console.error("❌ Error cargando videos:", err);
-        setVideos([]);
+        console.error("❌ No se pudo cargar ningún index.json:", err);
+        setVideos([]); // evita fallos
       }
     }
 
@@ -86,7 +89,7 @@ export default function Carousel() {
     return () => clearInterval(autoplayRef.current);
   }, [videos]);
 
-  // 🖐️ Control táctil
+  // 🖐️ Control táctil con bloqueo vertical
   const handleTouchStart = (e) => {
     const t = e.touches[0];
     startX.current = t.clientX;
@@ -114,7 +117,7 @@ export default function Carousel() {
     e.stopPropagation();
     if (!moved.current) {
       const tapped = videos[index];
-      if (tapped?.slug) handleClick(tapped.slug);
+      if (tapped?.object) handleClick(tapped.name);
     } else if (direction.current === "horizontal") {
       const diffX = startX.current - e.changedTouches[0].clientX;
       if (Math.abs(diffX) > SWIPE_THRESHOLD) {
@@ -131,7 +134,7 @@ export default function Carousel() {
     }, 3000);
   };
 
-  // 🎬 Pantalla completa + navegación
+  // 🎬 Pantalla extendida + navegación
   const handleClick = async (slug) => {
     try {
       const elem = document.documentElement;
@@ -139,9 +142,9 @@ export default function Carousel() {
       else if (elem.webkitRequestFullscreen)
         await elem.webkitRequestFullscreen();
       await new Promise((r) => setTimeout(r, 150));
-      router.push(`/edit/${encodeURIComponent(slug)}`);
+      router.push(`/edit/${slug.replace(".mp4", "")}`);
     } catch {
-      router.push(`/edit/${encodeURIComponent(slug)}`);
+      router.push(`/edit/${slug.replace(".mp4", "")}`);
     }
   };
 
