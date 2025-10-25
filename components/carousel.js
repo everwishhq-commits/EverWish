@@ -32,10 +32,17 @@ export default function Carousel() {
   useEffect(() => {
     async function fetchVideos() {
       try {
+        console.log("📂 Intentando cargar /videos/index.json...");
         const res = await fetch("/videos/index.json", { cache: "no-store" });
-        let data = await res.json();
 
-        // 🧹 Limpiar y normalizar
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status} - ${res.statusText}`);
+        }
+
+        let data = await res.json();
+        console.log(`✅ Cargado ${data.length} videos desde index.json`);
+
+        // 🧹 Normalizar estructura
         data = data.map((v) => ({
           ...v,
           src: v.file || `/videos/${v.name}`,
@@ -44,8 +51,8 @@ export default function Carousel() {
           subcategory: v.subcategory || "general",
         }));
 
-        // 🗓️ Rotación diaria: selecciona 10 según día actual
-        const daySeed = new Date().getDate(); // 1-31
+        // 🗓️ Seleccionar 10 videos según el día
+        const daySeed = new Date().getDate();
         const sorted = [...data].sort((a, b) =>
           a.object.localeCompare(b.object)
         );
@@ -56,7 +63,8 @@ export default function Carousel() {
 
         setVideos(dailyVideos);
       } catch (err) {
-        console.error("❌ Error cargando videos:", err);
+        console.error("❌ No se pudo cargar videos:", err);
+        setVideos([]); // evita fallos
       }
     }
 
@@ -113,7 +121,7 @@ export default function Carousel() {
     }, 3000);
   };
 
-  // 🎬 Pantalla extendida
+  // 🎬 Pantalla extendida + navegación
   const handleClick = async (slug) => {
     try {
       const elem = document.documentElement;
@@ -126,6 +134,15 @@ export default function Carousel() {
       router.push(`/edit/${slug.replace(".mp4", "")}`);
     }
   };
+
+  // 💬 Estado de carga
+  if (videos.length === 0) {
+    return (
+      <div className="w-full text-center py-10 text-gray-400">
+        ⏳ Cargando videos del día...
+      </div>
+    );
+  }
 
   return (
     <div
@@ -193,4 +210,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-}
+                  }
