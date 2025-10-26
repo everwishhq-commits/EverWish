@@ -1,15 +1,17 @@
+export const runtime = "nodejs"; // 👈 Fuerza Node runtime para Vercel
+
 import fs from "fs";
 import path from "path";
 
 export async function GET() {
   try {
     // 📂 Carpeta donde están los videos
-    const videosDir = path.join(process.cwd(), "public/videos");
+    const videosDir = path.join(process.cwd(), "public", "videos");
 
     // 📜 Leer los archivos que terminan en .mp4
     const files = fs
       .readdirSync(videosDir)
-      .filter((file) => file.endsWith(".mp4"));
+      .filter((file) => file.toLowerCase().endsWith(".mp4"));
 
     // 📁 Mapa de categorías automáticas por palabra clave
     const categoryMap = {
@@ -60,21 +62,27 @@ export async function GET() {
 
       return {
         title,
-        src: `/videos/${file}`,
         slug,
         category: foundCategory,
+        src: `/videos/${file}`,
       };
     });
 
-    // ✅ Devolver respuesta JSON
-    return new Response(JSON.stringify(videos, null, 2), {
+    // ✅ Devolver respuesta JSON ordenada alfabéticamente
+    const sorted = videos.sort((a, b) => a.title.localeCompare(b.title));
+
+    return new Response(JSON.stringify(sorted, null, 2), {
       headers: { "Content-Type": "application/json" },
+      status: 200,
     });
   } catch (error) {
     console.error("❌ Error reading videos:", error);
-    return new Response(JSON.stringify({ error: "Failed to load videos" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ error: "Failed to load videos", details: error.message }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
   }
-        }
+}
