@@ -9,9 +9,7 @@ export async function GET() {
     const videosDir = path.join(process.cwd(), "public", "videos");
 
     // 📜 Leer los archivos que terminan en .mp4
-    const files = fs
-      .readdirSync(videosDir)
-      .filter((file) => file.toLowerCase().endsWith(".mp4"));
+    const files = fs.readdirSync(videosDir).filter((file) => file.toLowerCase().endsWith(".mp4"));
 
     // 📁 Mapa de categorías automáticas por palabra clave
     const categoryMap = {
@@ -50,15 +48,12 @@ export async function GET() {
     // 🧠 Generar lista de videos automáticamente
     const videos = files.map((file) => {
       const slug = file.replace(".mp4", "");
-      const title = slug
-        .replace(/_/g, " ")
-        .replace(/\b\w/g, (c) => c.toUpperCase());
+      const title = slug.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+      const lower = slug.toLowerCase();
 
       // 🔍 Detectar categoría automáticamente
-      const lower = slug.toLowerCase();
       const foundCategory =
-        Object.entries(categoryMap).find(([key]) => lower.includes(key))?.[1] ||
-        "Other";
+        Object.entries(categoryMap).find(([key]) => lower.includes(key))?.[1] || "Other";
 
       return {
         title,
@@ -85,4 +80,4 @@ export async function GET() {
       }
     );
   }
-}
+      }
