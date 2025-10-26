@@ -9,9 +9,9 @@ export async function GET() {
     const videosDir = path.join(process.cwd(), "public", "videos");
 
     // 📜 Leer solo archivos .mp4
-    const files = fs.readdirSync(videosDir).filter((file) =>
-      file.toLowerCase().endsWith(".mp4")
-    );
+    const files = fs
+      .readdirSync(videosDir)
+      .filter((file) => file.toLowerCase().endsWith(".mp4"));
 
     // 📁 Categorías automáticas
     const categoryMap = {
@@ -53,8 +53,8 @@ export async function GET() {
       const title = slug
         .replace(/_/g, " ")
         .replace(/\b\w/g, (c) => c.toUpperCase());
-
       const lower = slug.toLowerCase();
+
       const foundCategory =
         Object.entries(categoryMap).find(([key]) => lower.includes(key))?.[1] ||
         "Other";
@@ -62,12 +62,12 @@ export async function GET() {
       return {
         title,
         slug,
-        category: foundCategory,
         src: `/videos/${file}`,
+        category: foundCategory,
       };
     });
 
-    // ✅ Devolver JSON ordenado
+    // ✅ Devolver JSON ordenado alfabéticamente
     const sorted = videos.sort((a, b) => a.title.localeCompare(b.title));
 
     return new Response(JSON.stringify(sorted, null, 2), {
@@ -77,7 +77,10 @@ export async function GET() {
   } catch (error) {
     console.error("❌ Error leyendo videos:", error);
     return new Response(
-      JSON.stringify({ error: "Failed to load videos", details: error.message }),
+      JSON.stringify({
+        error: "Failed to load videos",
+        details: error.message,
+      }),
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
