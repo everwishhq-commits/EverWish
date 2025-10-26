@@ -1,4 +1,4 @@
-export const runtime = "nodejs"; // 👈 Fuerza Node runtime para Vercel
+export const runtime = "nodejs"; // Fuerza Node.js en Vercel
 
 import fs from "fs";
 import path from "path";
@@ -8,10 +8,12 @@ export async function GET() {
     // 📂 Carpeta donde están los videos
     const videosDir = path.join(process.cwd(), "public", "videos");
 
-    // 📜 Leer los archivos que terminan en .mp4
-    const files = fs.readdirSync(videosDir).filter((file) => file.toLowerCase().endsWith(".mp4"));
+    // 📜 Leer solo archivos .mp4
+    const files = fs.readdirSync(videosDir).filter((file) =>
+      file.toLowerCase().endsWith(".mp4")
+    );
 
-    // 📁 Mapa de categorías automáticas por palabra clave
+    // 📁 Categorías automáticas
     const categoryMap = {
       halloween: "Seasonal & Holidays",
       christmas: "Seasonal & Holidays",
@@ -45,15 +47,17 @@ export async function GET() {
       general: "Everyday",
     };
 
-    // 🧠 Generar lista de videos automáticamente
+    // 🧠 Generar lista de videos
     const videos = files.map((file) => {
       const slug = file.replace(".mp4", "");
-      const title = slug.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-      const lower = slug.toLowerCase();
+      const title = slug
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase());
 
-      // 🔍 Detectar categoría automáticamente
+      const lower = slug.toLowerCase();
       const foundCategory =
-        Object.entries(categoryMap).find(([key]) => lower.includes(key))?.[1] || "Other";
+        Object.entries(categoryMap).find(([key]) => lower.includes(key))?.[1] ||
+        "Other";
 
       return {
         title,
@@ -63,7 +67,7 @@ export async function GET() {
       };
     });
 
-    // ✅ Devolver respuesta JSON ordenada alfabéticamente
+    // ✅ Devolver JSON ordenado
     const sorted = videos.sort((a, b) => a.title.localeCompare(b.title));
 
     return new Response(JSON.stringify(sorted, null, 2), {
@@ -71,7 +75,7 @@ export async function GET() {
       status: 200,
     });
   } catch (error) {
-    console.error("❌ Error reading videos:", error);
+    console.error("❌ Error leyendo videos:", error);
     return new Response(
       JSON.stringify({ error: "Failed to load videos", details: error.message }),
       {
@@ -80,4 +84,4 @@ export async function GET() {
       }
     );
   }
-      }
+}
