@@ -1,134 +1,59 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useRef, useEffect } from "react";
 
 export default function Carousel() {
-  const router = useRouter();
-  const [videos, setVideos] = useState([]);
   const [index, setIndex] = useState(0);
   const autoplayRef = useRef(null);
   const pauseRef = useRef(false);
 
-  // 🧭 Variables de control de gesto
-  const startX = useRef(0);
-  const startY = useRef(0);
-  const moved = useRef(false);
-  const direction = useRef(null);
+  // 🧠 Lista de videos actuales en /public/videos/
+  const videos = [
+    { src: "/videos/bunny_easter_general_1a.mp4", slug: "bunny_easter_general_1a" },
+    { src: "/videos/dog_pets_thanksgiving_1a.mp4", slug: "dog_pets_thanksgiving_1a" },
+    { src: "/videos/eagle_independence_general_1a.mp4", slug: "eagle_independence_general_1a" },
+    { src: "/videos/ghost_halloween_love_1a.mp4", slug: "ghost_halloween_love_1a" },
+    { src: "/videos/hugs_love_anniversary_1a.mp4", slug: "hugs_love_anniversary_1a" },
+    { src: "/videos/mother_mothersday_celebration_1a.mp4", slug: "mother_mothersday_celebration_1a" },
+    { src: "/videos/octopus_pets_general_1a.mp4", slug: "octopus_pets_general_1a" },
+    { src: "/videos/pumpkin_halloween_general_1a.mp4", slug: "pumpkin_halloween_general_1a" },
+    { src: "/videos/turkey_thanksgiving_general_1a.mp4", slug: "turkey_thanksgiving_general_1a" },
+    { src: "/videos/turtle_christmas_general_1a.mp4", slug: "turtle_christmas_general_1a" },
+    { src: "/videos/yeti_christmas_general_1a.mp4", slug: "yeti_christmas_general_1a" },
+    { src: "/videos/zombie_halloween_birthday_1a.mp4", slug: "zombie_halloween_birthday_1a" },
+  ];
 
-  const TAP_THRESHOLD = 10;
-  const SWIPE_THRESHOLD = 40;
-
-  // 🕒 Autoplay
-  const startAutoplay = () => {
-    clearInterval(autoplayRef.current);
-    if (!pauseRef.current && videos.length > 0) {
+  // 🎞 Autoplay
+  useEffect(() => {
+    const start = () => {
+      clearInterval(autoplayRef.current);
       autoplayRef.current = setInterval(() => {
         setIndex((prev) => (prev + 1) % videos.length);
       }, 5000);
-    }
-  };
-
-  // 🎥 Cargar videos desde API
-  useEffect(() => {
-    async function fetchVideos() {
-      try {
-        const res = await fetch("/api/videos");
-        const data = await res.json();
-
-        // 🔧 Normaliza para usar tanto "file" como "src"
-        const normalized = data.map((v) => ({
-          ...v,
-          src: v.file || v.src || "",
-        }));
-
-        setVideos(normalized);
-        console.log("✅ Videos cargados:", normalized.length);
-      } catch (err) {
-        console.error("❌ Error cargando videos:", err);
-      }
-    }
-
-    fetchVideos();
-  }, []);
-
-  // ▶️ Inicia autoplay
-  useEffect(() => {
-    startAutoplay();
+    };
+    start();
     return () => clearInterval(autoplayRef.current);
   }, [videos]);
 
-  // 🖐️ Control táctil con bloqueo vertical
-  const handleTouchStart = (e) => {
-    const t = e.touches[0];
-    startX.current = t.clientX;
-    startY.current = t.clientY;
-    moved.current = false;
-    direction.current = null;
-    pauseRef.current = true;
-    clearInterval(autoplayRef.current);
-  };
-
-  const handleTouchMove = (e) => {
-    const t = e.touches[0];
-    const deltaX = t.clientX - startX.current;
-    const deltaY = t.clientY - startY.current;
-
-    if (Math.abs(deltaX) > TAP_THRESHOLD || Math.abs(deltaY) > TAP_THRESHOLD) {
-      moved.current = true;
-      direction.current =
-        Math.abs(deltaX) > Math.abs(deltaY) ? "horizontal" : "vertical";
-      e.stopPropagation();
-    }
-  };
-
+  // 🖐 Swipe lateral
+  const startX = useRef(0);
+  const handleTouchStart = (e) => (startX.current = e.touches[0].clientX);
   const handleTouchEnd = (e) => {
-    e.stopPropagation();
-
-    if (!moved.current) {
-      // TAP real → abrir fullscreen
-      const tapped = videos[index];
-      if (tapped?.slug) handleClick(tapped.slug);
-    } else if (direction.current === "horizontal") {
-      const diffX = startX.current - e.changedTouches[0].clientX;
-      if (Math.abs(diffX) > SWIPE_THRESHOLD) {
-        setIndex((prev) =>
-          diffX > 0
-            ? (prev + 1) % videos.length
-            : (prev - 1 + videos.length) % videos.length
-        );
-      }
-    }
-
-    setTimeout(() => {
-      pauseRef.current = false;
-      startAutoplay();
-    }, 3000);
-  };
-
-  // 🎬 Pantalla extendida
-  const handleClick = async (slug) => {
-    try {
-      const elem = document.documentElement;
-      if (elem.requestFullscreen) await elem.requestFullscreen();
-      else if (elem.webkitRequestFullscreen)
-        await elem.webkitRequestFullscreen();
-      await new Promise((r) => setTimeout(r, 150));
-      router.push(`/edit/${slug}`);
-    } catch {
-      router.push(`/edit/${slug}`);
+    const diff = startX.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) {
+      setIndex((prev) =>
+        diff > 0
+          ? (prev + 1) % videos.length
+          : (prev - 1 + videos.length) % videos.length
+      );
     }
   };
 
   return (
-    <div
-      className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none"
-      style={{ touchAction: "pan-y" }}
-    >
+    <div className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none">
       <div
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
         className="relative w-full max-w-5xl flex justify-center items-center h-[440px]"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
       >
         {videos.map((video, i) => {
           const offset = (i - index + videos.length) % videos.length;
@@ -147,15 +72,12 @@ export default function Carousel() {
               className={`absolute transition-all duration-500 ease-in-out ${positionClass}`}
             >
               <video
-                src={video.file || video.src}
+                src={video.src}
                 autoPlay
                 loop
                 muted
                 playsInline
-                controlsList="nodownload noplaybackrate"
-                draggable="false"
-                onContextMenu={(e) => e.preventDefault()}
-                className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover object-center bg-white overflow-hidden"
+                className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] rounded-2xl shadow-lg object-cover object-center bg-white overflow-hidden"
               />
             </div>
           );
@@ -167,15 +89,7 @@ export default function Carousel() {
         {videos.map((_, i) => (
           <span
             key={i}
-            onClick={() => {
-              setIndex(i);
-              pauseRef.current = true;
-              clearInterval(autoplayRef.current);
-              setTimeout(() => {
-                pauseRef.current = false;
-                startAutoplay();
-              }, 3000);
-            }}
+            onClick={() => setIndex(i)}
             className={`w-3 h-3 rounded-full cursor-pointer transition-all ${
               i === index ? "bg-pink-500 scale-125" : "bg-gray-300"
             }`}
@@ -184,4 +98,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-                  }
+                }
