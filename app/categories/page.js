@@ -6,30 +6,27 @@ import { motion } from "framer-motion";
 const allCategories = [
   { name: "Seasonal & Holidays", emoji: "🎉", slug: "seasonal-holidays", color: "#FFE0E9" },
   { name: "Birthday", emoji: "🎂", slug: "birthday", color: "#FFDDEE" },
+  { name: "Weddings & Anniversaries", emoji: "💍", slug: "weddings-anniversaries", color: "#F3E5FF" },
   { name: "Love & Romance", emoji: "💘", slug: "love-romance", color: "#FFECEC" },
   { name: "Family & Relationships", emoji: "👨‍👩‍👧‍👦", slug: "family-relationships", color: "#E5EDFF" },
   { name: "Babies & Parenting", emoji: "👶", slug: "babies-parenting", color: "#DFF7FF" },
-  { name: "Weddings & Anniversaries", emoji: "💍", slug: "weddings-anniversaries", color: "#F3E5FF" },
-  { name: "Congratulations & Milestones", emoji: "🏆", slug: "congrats-milestones", color: "#FFF3C4" },
-  { name: "School & Graduation", emoji: "🎓", slug: "school-graduation", color: "#E2FFD7" },
-  { name: "Work & Professional", emoji: "💼", slug: "work-professional", color: "#D9F3FF" },
-  { name: "House & Moving", emoji: "🏡", slug: "house-moving", color: "#E8FFF3" },
-  { name: "Health & Support", emoji: "🩺", slug: "health-support", color: "#DFFAFF" },
+  { name: "Pets & Animal Lovers", emoji: "🐾", slug: "pets-animal-lovers", color: "#FFF3E0" },
   { name: "Sympathy & Remembrance", emoji: "🕊️", slug: "sympathy-remembrance", color: "#F3F3F3" },
+  { name: "Everyday", emoji: "💌", slug: "everyday", color: "#FDE6E6" },
+  { name: "Art & Cultural", emoji: "🎨", slug: "art-cultural", color: "#FFEDDF" },
+  { name: "Spiritual & Mindfulness", emoji: "🕯️", slug: "spiritual-mindfulness", color: "#EDEAFF" },
+  { name: "Kids & Teens", emoji: "🧸", slug: "kids-teens", color: "#FFE6FA" },
   { name: "Encouragement & Motivation", emoji: "🌟", slug: "encouragement-motivation", color: "#FFF5D9" },
   { name: "Thank You & Appreciation", emoji: "🙏", slug: "thank-you-appreciation", color: "#FFF0E5" },
+  { name: "Health & Support", emoji: "🩺", slug: "health-support", color: "#DFFAFF" },
+  { name: "Work & Professional", emoji: "💼", slug: "work-professional", color: "#D9F3FF" },
+  { name: "School & Graduation", emoji: "🎓", slug: "school-graduation", color: "#E2FFD7" },
+  { name: "House & Moving", emoji: "🏡", slug: "house-moving", color: "#E8FFF3" },
+  { name: "Congratulations & Milestones", emoji: "🏆", slug: "congratulations-milestones", color: "#FFF3C4" },
   { name: "Invitations & Events", emoji: "✉️", slug: "invitations-events", color: "#FFD9E8" },
-  { name: "Spiritual & Mindfulness", emoji: "🕯️", slug: "spiritual-mindfulness", color: "#EDEAFF" },
-  { name: "Art & Cultural", emoji: "🎨", slug: "art-cultural", color: "#FFEDDF" },
-  { name: "Kids & Teens", emoji: "🧸", slug: "kids-teens", color: "#FFE6FA" },
-  { name: "Humor & Memes", emoji: "😄", slug: "humor-memes", color: "#E7F7FF" },
-  { name: "Pets & Animal Lovers", emoji: "🐾", slug: "pets-animal-lovers", color: "#FFF3E0" },
-  { name: "Just Because & Everyday", emoji: "💌", slug: "just-because", color: "#FDE6E6" },
   { name: "Gifts & Surprises", emoji: "🎁", slug: "gifts-surprises", color: "#E7E9FF" },
   { name: "Inspirations & Quotes", emoji: "📝", slug: "inspirations-quotes", color: "#E8F6FF" },
-  { name: "Custom & AI Creations", emoji: "🤖", slug: "custom-ai-creations", color: "#E5FFE2" },
-  { name: "Celebrations", emoji: "🎊", slug: "celebrations", color: "#FFF0C7" },
-  { name: "Holidays", emoji: "🏖️", slug: "holidays", color: "#E4FFF7" },
+  { name: "Humor & Memes", emoji: "😄", slug: "humor-memes", color: "#E7F7FF" },
   { name: "Adventure", emoji: "🗺️", slug: "adventure", color: "#E8ECFF" },
   { name: "Friendship", emoji: "🤝", slug: "friendship", color: "#FFEAF5" },
   { name: "Festivals", emoji: "🎭", slug: "festivals", color: "#FEEAFF" },
@@ -68,7 +65,7 @@ export default function CategoriesGridPage() {
       <div className="flex justify-center mb-12 w-full">
         <input
           type="text"
-          placeholder="Search any theme — e.g. yeti, turtle, love, holidays..."
+          placeholder="Search any theme — e.g. turtle, love, halloween..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-80 md:w-96 px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700 bg-white/80"
@@ -86,7 +83,7 @@ export default function CategoriesGridPage() {
                 boxShadow: "0 8px 20px rgba(255,182,193,0.35)",
               }}
               transition={{ type: "spring", stiffness: 300 }}
-              onClick={() => router.push(`/category/${cat.slug}`)} // ✅ ENLACE A SUBCATEGORÍAS
+              onClick={() => router.push(`/category/${cat.slug}`)}
               className="cursor-pointer flex flex-col items-center justify-center rounded-3xl shadow-md border border-pink-100 text-gray-800 font-semibold p-6 hover:border-pink-200 hover:bg-pink-50"
               style={{ backgroundColor: cat.color }}
             >
