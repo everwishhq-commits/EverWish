@@ -7,12 +7,13 @@ export async function GET() {
   try {
     // 📂 Carpeta donde están los videos (.mp4)
     const videosDir = path.join(process.cwd(), "public", "videos");
-    const indexFile = path.join(videosDir, "index.json");
 
-    // 📜 Leer solo archivos .mp4
-    const files = fs.readdirSync(videosDir).filter((f) => f.endsWith(".mp4"));
+    // 📜 Leer todos los archivos de video
+    const files = fs
+      .readdirSync(videosDir)
+      .filter((file) => file.toLowerCase().endsWith(".mp4"));
 
-    // 🌎 Árbol oficial de categorías y subcategorías (canónico)
+    // 🌎 Árbol oficial de categorías y subcategorías
     const categoryTree = {
       "Seasonal & Global Celebrations": [
         "Halloween",
@@ -51,7 +52,7 @@ export async function GET() {
         "Proposal",
         "Romantic",
         "Togetherness",
-        "Inclusive Love", // 🧩 sin mencionar Pride
+        "Inclusive Love", // 🏳️‍🌈 sin mencionar Pride
       ],
       "Family & Friendship": [
         "Parents",
@@ -137,7 +138,7 @@ export async function GET() {
       ],
     };
 
-    // 🧩 Crear mapa inverso para búsqueda rápida
+    // 🧩 Generar mapa inverso subcategoría → categoría
     const categoryMap = {};
     Object.entries(categoryTree).forEach(([cat, subs]) => {
       subs.forEach((sub) => {
@@ -145,71 +146,61 @@ export async function GET() {
       });
     });
 
-    // 📄 Leer index.json si existe (para conservar títulos personalizados)
-    let existingData = [];
-    if (fs.existsSync(indexFile)) {
-      try {
-        existingData = JSON.parse(fs.readFileSync(indexFile, "utf8"));
-      } catch {
-        existingData = [];
-      }
-    }
-
-    // 🧠 Procesar todos los videos
-    const allVideos = files.map((file) => {
+    // 🧠 Leer todos los videos con datos enriquecidos
+    const videos = files.map((file) => {
       const slug = file.replace(".mp4", "");
       const lower = slug.toLowerCase();
-      const title = slug
+
+      // 🏷️ Crear nombre legible (objeto base)
+      const object = slug
         .replace(/_/g, " ")
         .replace(/\b\w/g, (c) => c.toUpperCase());
 
-      // 🔍 Detectar subcategoría por nombre del archivo
+      // 🔎 Detectar subcategoría
       const subcategory =
-        Object.keys(categoryMap).find((k) => lower.includes(k)) || "General";
+        Object.keys(categoryMap).find((k) => lower.includes(k)) ||
+        "General";
+
+      // 🧭 Buscar categoría principal
       const category = categoryMap[subcategory] || "Everyday & Appreciation";
 
-      // 🧩 Base del slug (para agrupar versiones)
+      // 🔢 Detectar base (para grupos tipo _1A, _2A, etc.)
       const baseSlug = slug.replace(/_\d+[A-Z]?$/i, "");
+
+      // 📅 Fecha de actualización
       const updatedAt = fs.statSync(path.join(videosDir, file)).mtimeMs;
 
-      // 🔁 Si ya existe en el index, mantener el título y mensaje
-      const existing = existingData.find((v) => v.slug === slug);
-
       return {
+        object,
         slug,
-        title: existing?.title || title,
-        message: existing?.message || "",
-        src: `/videos/${file}`,
         baseSlug,
+        src: `/videos/${file}`,
         category,
         subcategory,
         updatedAt,
       };
     });
 
-    // 🧮 Agrupar por baseSlug (mantener el más reciente)
+    // 🧮 Agrupar por baseSlug → mantener solo el más reciente
     const grouped = {};
-    for (const v of allVideos) {
+    for (const v of videos) {
       if (!grouped[v.baseSlug] || grouped[v.baseSlug].updatedAt < v.updatedAt) {
         grouped[v.baseSlug] = v;
       }
     }
 
-    // 🕒 Ordenar por fecha (más recientes primero)
-    const finalList = Object.values(grouped).sort(
-      (a, b) => b.updatedAt - a.updatedAt
+    // 🗂️ Resultado ordenado
+    const sorted = Object.values(grouped).sort((a, b) =>
+      a.object.localeCompare(b.object)
     );
 
-    // 💾 Guardar/actualizar el index.json
-    fs.writeFileSync(indexFile, JSON.stringify(finalList, null, 2), "utf8");
-
-    // ✅ Respuesta final
+    // ✅ Responder JSON con todos los campos solicitados
     return new Response(
       JSON.stringify(
         {
           updatedAt: new Date().toISOString(),
-          total: finalList.length,
-          videos: finalList,
+          total: sorted.length,
+          videos: sorted,
           categories: categoryTree,
         },
         null,
@@ -224,7 +215,7 @@ export async function GET() {
     console.error("❌ Error leyendo videos:", error);
     return new Response(
       JSON.stringify({
-        error: "Failed to load or save videos",
+        error: "Failed to load videos",
         details: error.message,
       }),
       {
@@ -233,4 +224,4 @@ export async function GET() {
       }
     );
   }
-                                       }
+      }
