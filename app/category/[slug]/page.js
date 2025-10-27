@@ -9,6 +9,7 @@ export default function CategoryPage() {
 
   const [groups, setGroups] = useState({});
   const [activeSub, setActiveSub] = useState(null);
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -17,15 +18,31 @@ export default function CategoryPage() {
         const res = await fetch("/videos/index.json", { cache: "no-store" });
         const data = await res.json();
 
-        // ✅ filtrar los videos que pertenecen a esta categoría
-        const filtered = (data.videos || []).filter((v) =>
-          v.category.toLowerCase().replace(/\s+/g, "-") === slug
+        const normalize = (str) =>
+          str?.toLowerCase().replace(/\s+/g, "-").trim();
+
+        const currentCategory = normalize(slug);
+
+        // ✅ Filtrar videos pertenecientes a esta categoría
+        let filtered = (data.videos || []).filter(
+          (v) => normalize(v.category) === currentCategory
         );
 
-        // ✅ agrupar por subcategoría
+        // 🔍 Si hay búsqueda, mantener solo los que incluyan la palabra
+        if (search.trim() !== "") {
+          const q = search.toLowerCase();
+          filtered = filtered.filter(
+            (v) =>
+              v.name.toLowerCase().includes(q) ||
+              v.object.toLowerCase().includes(q) ||
+              v.subcategory.toLowerCase().includes(q)
+          );
+        }
+
+        // ✅ Agrupar por subcategoría
         const grouped = {};
         for (const v of filtered) {
-          const sub = v.subcategory || "general";
+          const sub = v.subcategory || "General";
           const clean = sub.replace(/_/g, " ").trim();
           if (!grouped[clean]) grouped[clean] = [];
           grouped[clean].push(v);
@@ -33,14 +50,14 @@ export default function CategoryPage() {
 
         setGroups(grouped);
       } catch (err) {
-        console.error("❌ error cargando videos:", err);
+        console.error("❌ Error cargando videos:", err);
       } finally {
         setLoading(false);
       }
     }
 
     loadVideos();
-  }, [slug]);
+  }, [slug, search]);
 
   const subcategories = Object.keys(groups);
   const activeVideos = activeSub ? groups[activeSub] || [] : [];
@@ -49,7 +66,7 @@ export default function CategoryPage() {
     return (
       <main className="flex flex-col items-center justify-center min-h-screen bg-[#fff5f8] text-gray-600">
         <p className="animate-pulse text-lg">
-          loading {slug.replace("-", " ")} ✨
+          Loading {slug.replace("-", " ")} ✨
         </p>
       </main>
     );
@@ -57,23 +74,32 @@ export default function CategoryPage() {
 
   return (
     <main className="min-h-screen bg-[#fff5f8] text-gray-800 flex flex-col items-center py-10 px-4">
-      {/* 🔙 volver */}
+      {/* 🔙 Volver */}
       <button
         onClick={() => router.push("/categories")}
         className="text-pink-500 hover:text-pink-600 font-semibold mb-6"
       >
-        ← back to main categories
+        ← Back to Main Categories
       </button>
 
-      {/* 🏷️ título */}
+      {/* 🏷️ Título */}
       <h1 className="text-4xl font-extrabold text-pink-600 mb-3 capitalize text-center">
         {slug.replace(/-/g, " ")}
       </h1>
       <p className="text-gray-600 mb-10 text-center max-w-lg">
-        explore the celebrations and life moments in this category ✨
+        Explore the celebrations and life moments in this category ✨
       </p>
 
-      {/* 🌸 subcategorías */}
+      {/* 🔍 Buscador */}
+      <input
+        type="text"
+        placeholder="Search within this category — e.g. yeti, zombie, pumpkin..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="w-full max-w-md mb-10 rounded-full border border-pink-200 bg-white/70 px-4 py-3 text-center shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300"
+      />
+
+      {/* 🌸 Subcategorías */}
       {subcategories.length > 0 ? (
         <div className="flex flex-wrap justify-center gap-4 max-w-5xl">
           {subcategories.map((sub, i) => (
@@ -90,14 +116,16 @@ export default function CategoryPage() {
           ))}
         </div>
       ) : (
-        <p className="text-gray-500 text-center">no subcategories found.</p>
+        <p className="text-gray-500 text-center">
+          No matching subcategories found.
+        </p>
       )}
 
-      {/* 💫 modal de videos */}
+      {/* 💫 Modal con videos */}
       <AnimatePresence>
         {activeSub && (
           <>
-            {/* fondo */}
+            {/* Fondo */}
             <motion.div
               className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
               initial={{ opacity: 0 }}
@@ -106,7 +134,7 @@ export default function CategoryPage() {
               onClick={() => setActiveSub(null)}
             />
 
-            {/* ventana */}
+            {/* Ventana */}
             <motion.div
               className="fixed inset-0 z-50 flex items-center justify-center p-4"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -115,7 +143,7 @@ export default function CategoryPage() {
               transition={{ duration: 0.3 }}
             >
               <div className="relative bg-white rounded-3xl shadow-xl w-[90%] max-w-5xl h-[70vh] overflow-y-auto border border-pink-100 p-6">
-                {/* ✖ cerrar */}
+                {/* ✖ Cerrar */}
                 <button
                   onClick={() => setActiveSub(null)}
                   className="absolute top-3 right-5 text-gray-400 hover:text-pink-500 text-2xl font-bold"
@@ -123,15 +151,15 @@ export default function CategoryPage() {
                   ×
                 </button>
 
-                {/* título del modal */}
+                {/* Título del modal */}
                 <h2 className="text-2xl font-bold text-pink-600 mb-4 capitalize">
                   {getEmojiForSubcategory(activeSub)} {activeSub}
                 </h2>
 
-                {/* tarjetas */}
+                {/* Tarjetas */}
                 {activeVideos.length === 0 ? (
                   <p className="text-gray-500 text-center mt-10">
-                    no cards found for this subcategory.
+                    No cards found for this subcategory.
                   </p>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 justify-items-center">
@@ -166,7 +194,7 @@ export default function CategoryPage() {
   );
 }
 
-// 🧁 emojis por subcategoría
+// 🧁 Emojis por subcategoría
 function getEmojiForSubcategory(name) {
   const map = {
     halloween: "🎃",
@@ -185,8 +213,8 @@ function getEmojiForSubcategory(name) {
     sympathy: "🕊️",
     art: "🎨",
     wellness: "🕯️",
-    diversity: "🧩"
+    diversity: "🧩",
   };
   const key = name?.toLowerCase() || "";
   return map[key] || "✨";
-  }
+      }
