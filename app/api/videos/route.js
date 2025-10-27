@@ -5,11 +5,15 @@ import path from "path";
 
 export async function GET() {
   try {
-    // 📂 Carpeta donde están los videos (.mp4)
+    // 📂 Carpeta donde están los videos
     const videosDir = path.join(process.cwd(), "public", "videos");
-    const files = fs.readdirSync(videosDir).filter(f => f.endsWith(".mp4"));
 
-    // 🌎 Árbol oficial de categorías y subcategorías (canónico)
+    // 📜 Leer solo archivos .mp4
+    const files = fs
+      .readdirSync(videosDir)
+      .filter((file) => file.toLowerCase().endsWith(".mp4"));
+
+    // 🌎 Árbol oficial de categorías y subcategorías
     const categoryTree = {
       "Seasonal & Global Celebrations": [
         "Halloween",
@@ -48,7 +52,7 @@ export async function GET() {
         "Proposal",
         "Romantic",
         "Togetherness",
-        "Inclusive Love", // 🏳️‍🌈 sin mencionar Pride
+        "Inclusive Love", // 🌈 sin mencionar Pride directamente
       ],
       "Family & Friendship": [
         "Parents",
@@ -134,29 +138,28 @@ export async function GET() {
       ],
     };
 
-    // 🧩 Mapa automático (detección rápida por palabras clave en nombre del archivo)
+    // 🧩 Mapa inverso para detectar categoría a partir del nombre del archivo
     const categoryMap = {};
     Object.entries(categoryTree).forEach(([cat, subs]) => {
-      subs.forEach(sub => {
+      subs.forEach((sub) => {
         categoryMap[sub.toLowerCase().replace(/[^a-z0-9]/g, "")] = cat;
       });
     });
 
     // 🧠 Procesar todos los videos
-    const allVideos = files.map(file => {
+    const allVideos = files.map((file) => {
       const slug = file.replace(".mp4", "");
-      const lower = slug.toLowerCase();
       const title = slug
         .replace(/_/g, " ")
-        .replace(/\b\w/g, c => c.toUpperCase());
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+      const lower = slug.toLowerCase();
 
-      // Detectar subcategoría por coincidencia de palabras
+      // 🧩 Detectar subcategoría por coincidencia
       const subcategory =
-        Object.keys(categoryMap).find(k => lower.includes(k)) || "general";
-
+        Object.keys(categoryMap).find((k) => lower.includes(k)) || "General";
       const category = categoryMap[subcategory] || "Everyday & Appreciation";
 
-      // Extraer base (para agrupar variantes tipo _1A, _2A, etc.)
+      // Agrupar variantes tipo “1A”, “2A”
       const baseSlug = slug.replace(/_\d+[A-Z]?$/i, "");
 
       return {
@@ -170,7 +173,7 @@ export async function GET() {
       };
     });
 
-    // 🧩 Agrupar por baseSlug y dejar solo 1 por grupo (más reciente)
+    // 🧮 Agrupar por baseSlug → mantener solo la versión más reciente
     const grouped = {};
     for (const v of allVideos) {
       const key = v.baseSlug;
@@ -179,16 +182,16 @@ export async function GET() {
       }
     }
 
-    // 🎯 Tomar los 10 más recientes o relevantes
-    const sorted = Object.values(grouped)
+    // 🎯 Seleccionar las 10 más recientes / actualizadas
+    const top10 = Object.values(grouped)
       .sort((a, b) => b.updatedAt - a.updatedAt)
       .slice(0, 10);
 
-    // ✅ Respuesta completa
+    // ✅ Respuesta final
     return new Response(
       JSON.stringify(
         {
-          videos: sorted,
+          videos: top10,
           categories: categoryTree,
           updatedAt: new Date().toISOString(),
         },
@@ -200,16 +203,20 @@ export async function GET() {
           "Content-Type": "application/json",
           "Cache-Control": "no-store",
         },
+        status: 200,
       }
     );
   } catch (error) {
     console.error("❌ Error leyendo videos:", error);
     return new Response(
       JSON.stringify({
-        error: "Error loading videos",
+        error: "Failed to load videos",
         details: error.message,
       }),
-      { status: 500 }
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
     );
   }
         }
