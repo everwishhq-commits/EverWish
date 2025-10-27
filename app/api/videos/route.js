@@ -1,227 +1,125 @@
-export const runtime = "nodejs"; // 🚀 Ejecutar en Node.js en Vercel
+/**
+ * 📡 Everwish Dynamic Video Index API
+ * Lee y devuelve /public/videos/index.json.
+ * Si no existe, lo genera automáticamente desde /public/data/subcategories.json
+ * y los videos en /public/videos/**.
+ */
 
 import fs from "fs";
 import path from "path";
 
-export async function GET() {
-  try {
-    // 📂 Carpeta donde están los videos (.mp4)
-    const videosDir = path.join(process.cwd(), "public", "videos");
+// 📍 Rutas base
+const videosRoot = path.join(process.cwd(), "public/videos");
+const indexFile = path.join(videosRoot, "index.json");
+const subcategoryMapPath = path.join(process.cwd(), "public/data/subcategories.json");
 
-    // 📜 Leer todos los archivos de video
-    const files = fs
-      .readdirSync(videosDir)
-      .filter((file) => file.toLowerCase().endsWith(".mp4"));
+// 🧩 Función auxiliar
+function formatWord(word) {
+  return word
+    ? word.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+    : "";
+}
 
-    // 🌎 Árbol oficial de categorías y subcategorías
-    const categoryTree = {
-      "Seasonal & Global Celebrations": [
-        "Halloween",
-        "Christmas",
-        "Thanksgiving",
-        "Easter",
-        "New Year",
-        "Independence Day",
-        "July 4th",
-        "Valentine’s Day",
-        "St. Patrick’s Day",
-        "Hanukkah",
-        "Diwali",
-        "Chinese New Year",
-        "Mother’s Day",
-        "Father’s Day",
-        "Veterans Day",
-        "Memorial Day",
-        "Labor Day",
-        "Earth Day",
-        "Women’s Day",
-        "Cultural Heritage",
-      ],
-      "Birthdays & Celebrations": [
-        "Adult Birthday",
-        "Kids Birthday",
-        "Milestone Birthday",
-        "Funny Birthday",
-        "General Birthday",
-      ],
-      "Love, Weddings & Anniversaries": [
-        "Wedding",
-        "Engagement",
-        "Anniversary",
-        "Renewal of Vows",
-        "Proposal",
-        "Romantic",
-        "Togetherness",
-        "Inclusive Love", // 🏳️‍🌈 sin mencionar Pride
-      ],
-      "Family & Friendship": [
-        "Parents",
-        "Siblings",
-        "Grandparents",
-        "Friendship",
-        "Community",
-        "Reunion",
-        "General Family",
-      ],
-      "Babies & Parenting": [
-        "Baby Shower",
-        "Newborn",
-        "Pregnancy",
-        "Gender Reveal",
-        "Adoption",
-        "First Birthday",
-      ],
-      "Pets & Animal Lovers": [
-        "Dogs",
-        "Cats",
-        "Birds",
-        "Turtles",
-        "Fish",
-        "Farm Animals",
-        "Wildlife",
-      ],
-      "Support, Healing & Care": [
-        "Condolence",
-        "Memorial",
-        "Loss of Pet",
-        "Get Well Soon",
-        "Emotional Support",
-        "Caregiver",
-      ],
-      "Everyday & Appreciation": [
-        "General",
-        "Encouragement",
-        "Thank You",
-        "Congratulations",
-        "Thinking of You",
-        "Just Because",
-        "Good Luck",
-        "Motivational",
-      ],
-      "Creativity & Expression": [
-        "Artistic",
-        "Design",
-        "Cultural Festivity",
-        "Crafts",
-        "Visual Arts",
-        "Music",
-      ],
-      "Diversity & Connection": [
-        "Unity",
-        "Equality",
-        "Respect",
-        "Humanity",
-        "Inclusive Culture",
-      ],
-      "Kids & Teens": [
-        "Cartoon Style",
-        "Adventure",
-        "Fantasy",
-        "Learning",
-        "Friendship",
-      ],
-      "Wellness & Mindful Living": [
-        "Faith",
-        "Hope",
-        "Peace",
-        "Meditation",
-        "Healing",
-        "Nature & Balance",
-      ],
-      "Life Journeys & Transitions": [
-        "Graduation",
-        "New Home",
-        "Retirement",
-        "Career Change",
-        "Travel",
-        "New Chapter",
-      ],
-    };
-
-    // 🧩 Generar mapa inverso subcategoría → categoría
-    const categoryMap = {};
-    Object.entries(categoryTree).forEach(([cat, subs]) => {
-      subs.forEach((sub) => {
-        categoryMap[sub.toLowerCase().replace(/[^a-z0-9]/g, "")] = cat;
-      });
-    });
-
-    // 🧠 Leer todos los videos con datos enriquecidos
-    const videos = files.map((file) => {
-      const slug = file.replace(".mp4", "");
-      const lower = slug.toLowerCase();
-
-      // 🏷️ Crear nombre legible (objeto base)
-      const object = slug
-        .replace(/_/g, " ")
-        .replace(/\b\w/g, (c) => c.toUpperCase());
-
-      // 🔎 Detectar subcategoría
-      const subcategory =
-        Object.keys(categoryMap).find((k) => lower.includes(k)) ||
-        "General";
-
-      // 🧭 Buscar categoría principal
-      const category = categoryMap[subcategory] || "Everyday & Appreciation";
-
-      // 🔢 Detectar base (para grupos tipo _1A, _2A, etc.)
-      const baseSlug = slug.replace(/_\d+[A-Z]?$/i, "");
-
-      // 📅 Fecha de actualización
-      const updatedAt = fs.statSync(path.join(videosDir, file)).mtimeMs;
-
-      return {
-        object,
-        slug,
-        baseSlug,
-        src: `/videos/${file}`,
-        category,
-        subcategory,
-        updatedAt,
-      };
-    });
-
-    // 🧮 Agrupar por baseSlug → mantener solo el más reciente
-    const grouped = {};
-    for (const v of videos) {
-      if (!grouped[v.baseSlug] || grouped[v.baseSlug].updatedAt < v.updatedAt) {
-        grouped[v.baseSlug] = v;
+// 🧠 Detectar categoría/subcategoría según palabras
+function detectCategory(words, subcategoryMap) {
+  const lower = words.map((w) => w.toLowerCase());
+  for (const [mainCat, subs] of Object.entries(subcategoryMap)) {
+    for (const sub of subs) {
+      const allTerms = [
+        sub.name_en.toLowerCase(),
+        sub.name_es.toLowerCase(),
+        mainCat.replace(/-/g, " "),
+      ];
+      if (allTerms.some((term) => lower.some((w) => w.includes(term.split(" ")[0])))) {
+        return [mainCat, sub.name_en];
       }
     }
+  }
+  return ["Just Because & Everyday", "General"];
+}
 
-    // 🗂️ Resultado ordenado
-    const sorted = Object.values(grouped).sort((a, b) =>
-      a.object.localeCompare(b.object)
+// 🧮 Buscar recursivamente todos los .mp4
+function getAllMp4Files(dir) {
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  return entries.flatMap((entry) => {
+    const fullPath = path.join(dir, entry.name);
+    return entry.isDirectory()
+      ? getAllMp4Files(fullPath)
+      : entry.name.toLowerCase().endsWith(".mp4")
+      ? [fullPath]
+      : [];
+  });
+}
+
+// ⚙️ Generar índice si no existe
+function generateIndex() {
+  console.log("⚙️ Generando index.json dinámicamente...");
+
+  let subcategoryMap = {};
+  try {
+    subcategoryMap = JSON.parse(fs.readFileSync(subcategoryMapPath, "utf-8"));
+  } catch (err) {
+    console.error("⚠️ No se pudo cargar subcategories.json:", err);
+  }
+
+  const files = getAllMp4Files(videosRoot);
+  const index = files.map((filePath) => {
+    const relative = path.relative(videosRoot, filePath).replace(/\\/g, "/");
+    const name = path.basename(filePath, ".mp4");
+    const parts = name.split("_");
+
+    const object = formatWord(parts[0] || "Unknown");
+    const [category, subcategory] = detectCategory(parts, subcategoryMap);
+    const variant = parts[parts.length - 1]?.toUpperCase() || "";
+
+    const tags = Array.from(
+      new Set(
+        [object, category, subcategory, variant, ...parts]
+          .filter(Boolean)
+          .map((t) => t.toLowerCase())
+      )
     );
 
-    // ✅ Responder JSON con todos los campos solicitados
-    return new Response(
-      JSON.stringify(
-        {
-          updatedAt: new Date().toISOString(),
-          total: sorted.length,
-          videos: sorted,
-          categories: categoryTree,
-        },
-        null,
-        2
-      ),
-      {
+    return {
+      name,
+      file: `/videos/${relative}`,
+      object,
+      category,
+      subcategory,
+      variant,
+      categories: [category],
+      tags,
+    };
+  });
+
+  fs.writeFileSync(indexFile, JSON.stringify(index, null, 2), "utf-8");
+  console.log(`✅ Index actualizado con ${index.length} archivos.`);
+  return index;
+}
+
+// 📡 Endpoint GET
+export async function GET() {
+  try {
+    // Si el archivo ya existe, leerlo directamente
+    if (fs.existsSync(indexFile)) {
+      const data = fs.readFileSync(indexFile, "utf-8");
+      return new Response(data, {
         headers: { "Content-Type": "application/json" },
         status: 200,
-      }
-    );
-  } catch (error) {
-    console.error("❌ Error leyendo videos:", error);
+      });
+    }
+
+    // Si no existe, generarlo
+    const index = generateIndex();
+    return new Response(JSON.stringify(index, null, 2), {
+      headers: { "Content-Type": "application/json" },
+      status: 200,
+    });
+  } catch (err) {
+    console.error("❌ Error en API /api/videos:", err);
     return new Response(
-      JSON.stringify({
-        error: "Failed to load videos",
-        details: error.message,
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
+      JSON.stringify({ error: "Failed to load or generate index", details: err.message }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
-      }
+}
