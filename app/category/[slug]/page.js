@@ -18,7 +18,7 @@ export default function CategoryPage() {
         const res = await fetch("/videos/index.json", { cache: "no-store" });
         const data = await res.json();
 
-        // ✅ Soporte para estructura directa del index.json
+        // ✅ Adaptado al generateindex.js (array plano)
         const videos = Array.isArray(data) ? data : data.videos || [];
 
         const normalize = (str) =>
@@ -26,7 +26,7 @@ export default function CategoryPage() {
 
         const currentCategory = normalize(slug);
 
-        // ✅ Filtrar los videos que pertenezcan a la categoría actual
+        // ✅ Filtrar videos pertenecientes a esta categoría
         let filtered = videos.filter(
           (v) =>
             normalize(v.category) === currentCategory ||
@@ -35,7 +35,7 @@ export default function CategoryPage() {
             )
         );
 
-        // 🔍 Si hay búsqueda, filtra por palabra clave
+        // 🔍 Si hay búsqueda, mantener solo los que incluyan la palabra
         if (search.trim() !== "") {
           const q = search.toLowerCase();
           filtered = filtered.filter(
@@ -43,7 +43,7 @@ export default function CategoryPage() {
               v.name.toLowerCase().includes(q) ||
               v.object.toLowerCase().includes(q) ||
               v.subcategory.toLowerCase().includes(q) ||
-              v.tags.some((t) => t.toLowerCase().includes(q))
+              (v.tags || []).some((t) => t.toLowerCase().includes(q))
           );
         }
 
@@ -202,7 +202,6 @@ export default function CategoryPage() {
   );
 }
 
-// 🧁 Emojis por subcategoría
 function getEmojiForSubcategory(name) {
   const map = {
     halloween: "🎃",
@@ -225,4 +224,4 @@ function getEmojiForSubcategory(name) {
   };
   const key = name?.toLowerCase() || "";
   return map[key] || "✨";
-          }
+      }
