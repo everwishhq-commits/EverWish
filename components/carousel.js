@@ -28,18 +28,46 @@ export default function Carousel() {
     }
   };
 
-  // 🎥 Cargar videos desde API
+  // 🎥 Cargar videos desde API con agrupación, top 10 y actualización diaria
   useEffect(() => {
-    async function fetchVideos() {
+    async function loadAndFilter() {
       try {
         const res = await fetch("/api/videos");
         const data = await res.json();
-        setVideos(data);
+        const allVideos = data.videos || data || [];
+
+        // 🧩 Agrupar por baseSlug (ej: pumpkin_halloween_1A → pumpkin_halloween)
+        const grouped = {};
+        allVideos.forEach((v) => {
+          const base = v.slug.replace(/_\d+[A-Z]?$/i, "");
+          if (!grouped[base]) grouped[base] = [];
+          grouped[base].push(v);
+        });
+
+        // 🏆 Tomar el video más reciente o más popular de cada grupo
+        const uniqueVideos = Object.values(grouped).map((arr) =>
+          arr.sort((a, b) => {
+            const aDate = a.updatedAt || a.date || 0;
+            const bDate = b.updatedAt || b.date || 0;
+            const aPop = a.popularity || 0;
+            const bPop = b.popularity || 0;
+            return bPop - aPop || bDate - aDate;
+          })[0]
+        );
+
+        // 🔝 Limitar a los 10 mejores
+        const top10 = uniqueVideos.slice(0, 10);
+        setVideos(top10);
       } catch (err) {
         console.error("❌ Error cargando videos:", err);
       }
     }
-    fetchVideos();
+
+    loadAndFilter();
+
+    // ⏰ Actualizar automáticamente cada 24 horas
+    const interval = setInterval(loadAndFilter, 24 * 60 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -67,9 +95,7 @@ export default function Carousel() {
       moved.current = true;
       direction.current =
         Math.abs(deltaX) > Math.abs(deltaY) ? "horizontal" : "vertical";
-
-      // 🚫 Bloquea propagación si hay movimiento
-      e.stopPropagation();
+      e.stopPropagation(); // 🚫 Bloquea propagación si hay movimiento
     }
   };
 
@@ -77,7 +103,7 @@ export default function Carousel() {
     e.stopPropagation(); // 🚫 Evita que suba a la página
 
     if (!moved.current) {
-      // TAP real → abrir fullscreen
+      // TAP → abrir fullscreen
       const tapped = videos[index];
       if (tapped?.slug) handleClick(tapped.slug);
     } else if (direction.current === "horizontal") {
@@ -90,8 +116,6 @@ export default function Carousel() {
             : (prev - 1 + videos.length) % videos.length
         );
       }
-    } else if (direction.current === "vertical") {
-      // Swipe vertical → ignora (solo scroll)
     }
 
     setTimeout(() => {
