@@ -8,33 +8,19 @@ import Link from "next/link";
 import "swiper/css";
 
 const allCategories = [
-  { name: "Seasonal & Holidays", emoji: "🎉", slug: "seasonal-holidays", color: "#FFE0E9" },
-  { name: "Birthday", emoji: "🎂", slug: "birthday", color: "#FFDDEE" },
-  { name: "Weddings & Anniversaries", emoji: "💍", slug: "weddings-anniversaries", color: "#F3E5FF" },
-  { name: "Love & Romance", emoji: "💘", slug: "love-romance", color: "#FFECEC" },
-  { name: "Family & Relationships", emoji: "👨‍👩‍👧‍👦", slug: "family-relationships", color: "#E5EDFF" },
+  { name: "Seasonal & Global Celebrations", emoji: "🎉", slug: "seasonal-global-celebrations", color: "#FFE0E9" },
+  { name: "Love, Weddings & Anniversaries", emoji: "💍", slug: "love-weddings-anniversaries", color: "#FFECEC" },
+  { name: "Birthdays & Celebrations", emoji: "🎂", slug: "birthdays-celebrations", color: "#FFDDEE" },
+  { name: "Family & Friendship", emoji: "👨‍👩‍👧‍👦", slug: "family-friendship", color: "#E5EDFF" },
   { name: "Babies & Parenting", emoji: "👶", slug: "babies-parenting", color: "#DFF7FF" },
   { name: "Pets & Animal Lovers", emoji: "🐾", slug: "pets-animal-lovers", color: "#FFF3E0" },
-  { name: "Sympathy & Remembrance", emoji: "🕊️", slug: "sympathy-remembrance", color: "#F3F3F3" },
-  { name: "Everyday", emoji: "💌", slug: "everyday", color: "#FDE6E6" },
-  { name: "Art & Cultural", emoji: "🎨", slug: "art-cultural", color: "#FFEDDF" },
-  { name: "Spiritual & Mindfulness", emoji: "🕯️", slug: "spiritual-mindfulness", color: "#EDEAFF" },
+  { name: "Support, Healing & Care", emoji: "🕊️", slug: "support-healing-care", color: "#F3F3F3" },
+  { name: "Everyday & Appreciation", emoji: "💌", slug: "everyday-appreciation", color: "#FDE6E6" },
+  { name: "Creativity & Expression", emoji: "🎨", slug: "creativity-expression", color: "#FFEDDF" },
   { name: "Kids & Teens", emoji: "🧸", slug: "kids-teens", color: "#FFE6FA" },
-  { name: "Encouragement & Motivation", emoji: "🌟", slug: "encouragement-motivation", color: "#FFF5D9" },
-  { name: "Thank You & Appreciation", emoji: "🙏", slug: "thank-you-appreciation", color: "#FFF0E5" },
-  { name: "Health & Support", emoji: "🩺", slug: "health-support", color: "#DFFAFF" },
-  { name: "Work & Professional", emoji: "💼", slug: "work-professional", color: "#D9F3FF" },
-  { name: "School & Graduation", emoji: "🎓", slug: "school-graduation", color: "#E2FFD7" },
-  { name: "House & Moving", emoji: "🏡", slug: "house-moving", color: "#E8FFF3" },
-  { name: "Congratulations & Milestones", emoji: "🏆", slug: "congratulations-milestones", color: "#FFF3C4" },
-  { name: "Invitations & Events", emoji: "✉️", slug: "invitations-events", color: "#FFD9E8" },
-  { name: "Gifts & Surprises", emoji: "🎁", slug: "gifts-surprises", color: "#E7E9FF" },
-  { name: "Inspirations & Quotes", emoji: "📝", slug: "inspirations-quotes", color: "#E8F6FF" },
-  { name: "Humor & Memes", emoji: "😄", slug: "humor-memes", color: "#E7F7FF" },
-  { name: "Adventure", emoji: "🗺️", slug: "adventure", color: "#E8ECFF" },
-  { name: "Friendship", emoji: "🤝", slug: "friendship", color: "#FFEAF5" },
-  { name: "Festivals", emoji: "🎭", slug: "festivals", color: "#FEEAFF" },
-  { name: "Season Greetings", emoji: "❄️", slug: "season-greetings", color: "#EAF4FF" }
+  { name: "Diversity & Connection", emoji: "🌈", slug: "diversity-connection", color: "#E7E9FF" },
+  { name: "Life Journeys & Transitions", emoji: "🏡", slug: "life-journeys-transitions", color: "#E8FFF3" },
+  { name: "Wellness & Mindful Living", emoji: "🕯️", slug: "wellness-mindful-living", color: "#EDEAFF" }
 ];
 
 export default function Categories() {
@@ -71,7 +57,7 @@ export default function Categories() {
         item.slug,
         item.object,
         item.subcategory,
-        item.category
+        item.category,
       ]
         .join(" ")
         .toLowerCase();
@@ -102,7 +88,7 @@ export default function Categories() {
       <div className="flex justify-center mb-10">
         <input
           type="text"
-          placeholder="Search any theme — e.g. turtle, love, halloween..."
+          placeholder="Search any theme — e.g. love, new year, turtle, graduation..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-80 md:w-96 px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700"
@@ -167,4 +153,4 @@ export default function Categories() {
       </Swiper>
     </section>
   );
-    }
+}
