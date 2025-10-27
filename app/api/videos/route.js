@@ -1,4 +1,4 @@
-export const runtime = "nodejs"; // 🚀 Ejecutar en Node.js en Vercel
+export const runtime = "nodejs"; // 🚀 Ejecutar en Node.js (no Edge)
 
 import fs from "fs";
 import path from "path";
@@ -7,11 +7,12 @@ export async function GET() {
   try {
     // 📂 Carpeta donde están los videos
     const videosDir = path.join(process.cwd(), "public", "videos");
+    const indexFile = path.join(videosDir, "index.json");
 
-    // 📜 Leer solo archivos .mp4
+    // 📜 Leer todos los archivos .mp4
     const files = fs
       .readdirSync(videosDir)
-      .filter((file) => file.toLowerCase().endsWith(".mp4"));
+      .filter((f) => f.toLowerCase().endsWith(".mp4"));
 
     // 🌎 Árbol oficial de categorías y subcategorías
     const categoryTree = {
@@ -52,7 +53,7 @@ export async function GET() {
         "Proposal",
         "Romantic",
         "Togetherness",
-        "Inclusive Love", // 🌈 sin mencionar Pride directamente
+        "Inclusive Love",
       ],
       "Family & Friendship": [
         "Parents",
@@ -138,7 +139,7 @@ export async function GET() {
       ],
     };
 
-    // 🧩 Mapa inverso para detectar categoría a partir del nombre del archivo
+    // 🧩 Crear mapa inverso (sub → categoría)
     const categoryMap = {};
     Object.entries(categoryTree).forEach(([cat, subs]) => {
       subs.forEach((sub) => {
@@ -146,63 +147,81 @@ export async function GET() {
       });
     });
 
-    // 🧠 Procesar todos los videos
-    const allVideos = files.map((file) => {
+    // 📄 Leer index.json si existe
+    let existingData = [];
+    if (fs.existsSync(indexFile)) {
+      try {
+        const raw = fs.readFileSync(indexFile, "utf8");
+        existingData = JSON.parse(raw);
+      } catch {
+        existingData = [];
+      }
+    }
+
+    // 🧠 Procesar todos los videos nuevos o actualizados
+    const videos = files.map((file) => {
       const slug = file.replace(".mp4", "");
       const title = slug
         .replace(/_/g, " ")
         .replace(/\b\w/g, (c) => c.toUpperCase());
       const lower = slug.toLowerCase();
 
-      // 🧩 Detectar subcategoría por coincidencia
       const subcategory =
         Object.keys(categoryMap).find((k) => lower.includes(k)) || "General";
       const category = categoryMap[subcategory] || "Everyday & Appreciation";
-
-      // Agrupar variantes tipo “1A”, “2A”
       const baseSlug = slug.replace(/_\d+[A-Z]?$/i, "");
 
+      const updatedAt = fs.statSync(path.join(videosDir, file)).mtimeMs;
+
+      // 🧾 Buscar si ya existía en index.json
+      const existing = existingData.find((v) => v.slug === slug);
+
       return {
-        title,
         slug,
-        baseSlug,
+        title: existing?.title || title, // editable manual
+        message: existing?.message || "", // mensaje opcional
         src: `/videos/${file}`,
+        baseSlug,
         category,
         subcategory,
-        updatedAt: fs.statSync(path.join(videosDir, file)).mtimeMs,
+        updatedAt,
       };
     });
 
-    // 🧮 Agrupar por baseSlug → mantener solo la versión más reciente
+    // 🧮 Agrupar por baseSlug → mantener más reciente
     const grouped = {};
-    for (const v of allVideos) {
-      const key = v.baseSlug;
-      if (!grouped[key] || grouped[key].updatedAt < v.updatedAt) {
-        grouped[key] = v;
+    for (const v of videos) {
+      if (!grouped[v.baseSlug] || grouped[v.baseSlug].updatedAt < v.updatedAt) {
+        grouped[v.baseSlug] = v;
       }
     }
 
-    // 🎯 Seleccionar las 10 más recientes / actualizadas
-    const top10 = Object.values(grouped)
-      .sort((a, b) => b.updatedAt - a.updatedAt)
-      .slice(0, 10);
+    // 🕒 Ordenar por fecha
+    const finalList = Object.values(grouped).sort(
+      (a, b) => b.updatedAt - a.updatedAt
+    );
 
-    // ✅ Respuesta final
+    // 💾 Guardar/actualizar index.json
+    fs.writeFileSync(
+      indexFile,
+      JSON.stringify(finalList, null, 2),
+      "utf8"
+    );
+
+    // ✅ Responder JSON
     return new Response(
       JSON.stringify(
         {
-          videos: top10,
-          categories: categoryTree,
           updatedAt: new Date().toISOString(),
+          total: finalList.length,
+          videos: finalList,
+          categories: categoryTree,
         },
         null,
         2
       ),
       {
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "no-store",
-        },
+        headers: { "Content-Type": "application/json" },
         status: 200,
       }
     );
@@ -210,13 +229,10 @@ export async function GET() {
     console.error("❌ Error leyendo videos:", error);
     return new Response(
       JSON.stringify({
-        error: "Failed to load videos",
+        error: "Failed to load or save videos",
         details: error.message,
       }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
         }
