@@ -10,20 +10,26 @@ export default function CategoryPage() {
   const [activeSub, setActiveSub] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // 🧩 Cargar categorías y videos desde la API dinámica
   useEffect(() => {
     async function loadVideos() {
       try {
-        const res = await fetch("/videos/index.json", { cache: "no-store" });
+        const res = await fetch("/api/videos", { cache: "no-store" });
         const data = await res.json();
 
-        // ✅ Filtra los videos pertenecientes a esta categoría
-        const filtered = data.filter((v) =>
-          (v.categories || []).some((cat) =>
-            cat.toLowerCase().includes(slug.replace("-", " "))
-          )
+        const normalize = (str) =>
+          str?.toLowerCase().replace(/&/g, "and").replace(/\s+/g, "-").trim();
+
+        const currentCategory = normalize(slug);
+
+        // ✅ Filtrar videos pertenecientes a esta categoría
+        const filtered = (data || []).filter(
+          (v) =>
+            normalize(v.category) === currentCategory ||
+            (v.categories || []).some((c) => normalize(c) === currentCategory)
         );
 
-        // ✅ Agrupa por subcategoría o categoría (normalizado)
+        // ✅ Agrupar por subcategoría o fallback "General"
         const grouped = {};
         for (const v of filtered) {
           const sub =
@@ -75,7 +81,7 @@ export default function CategoryPage() {
 
       {/* 🏷️ Title */}
       <h1 className="text-4xl font-extrabold text-pink-600 mb-3 capitalize text-center">
-        {slug.replace("-", " ")}
+        {slug.replace(/-/g, " ")}
       </h1>
       <p className="text-gray-600 mb-10 text-center max-w-lg">
         Explore the celebrations and moments in this category 🎉
@@ -173,7 +179,7 @@ export default function CategoryPage() {
   );
 }
 
-// 🧁 Emojis
+// 🧁 Emojis para subcategorías
 function getEmojiForSubcategory(name) {
   const map = {
     halloween: "🎃",
@@ -182,7 +188,16 @@ function getEmojiForSubcategory(name) {
     "4th of july": "🦅",
     easter: "🐰",
     newyear: "🎆",
+    birthday: "🎂",
+    wedding: "💍",
+    love: "💘",
+    pet: "🐾",
+    family: "👨‍👩‍👧‍👦",
+    sympathy: "🕊️",
+    art: "🎨",
+    diversity: "🧩",
+    wellness: "🕯️",
   };
   const key = name?.toLowerCase() || "";
   return map[key] || "✨";
-          }
+        }
