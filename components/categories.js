@@ -18,7 +18,7 @@ const allCategories = [
   { name: "Everyday & Appreciation", emoji: "💌", slug: "everyday-appreciation", color: "#FDE6E6" },
   { name: "Creativity & Expression", emoji: "🎨", slug: "creativity-expression", color: "#FFEDDF" },
   { name: "Kids & Teens", emoji: "🧸", slug: "kids-teens", color: "#FFE6FA" },
-  { name: "Diversity & Connection", emoji: "🌈", slug: "diversity-connection", color: "#E7E9FF" },
+  { name: "Diversity & Connection", emoji: "🧩", slug: "diversity-connection", color: "#E7E9FF" },
   { name: "Life Journeys & Transitions", emoji: "🏡", slug: "life-journeys-transitions", color: "#E8FFF3" },
   { name: "Wellness & Mindful Living", emoji: "🕯️", slug: "wellness-mindful-living", color: "#EDEAFF" }
 ];
@@ -153,4 +153,4 @@ export default function Categories() {
       </Swiper>
     </section>
   );
-}
+    }
