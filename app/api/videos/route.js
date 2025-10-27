@@ -1,20 +1,18 @@
-export const runtime = "nodejs"; // 🚀 Ejecutar en Node.js (no Edge)
+export const runtime = "nodejs"; // 🚀 Ejecutar en Node.js en Vercel
 
 import fs from "fs";
 import path from "path";
 
 export async function GET() {
   try {
-    // 📂 Carpeta donde están los videos
+    // 📂 Carpeta donde están los videos (.mp4)
     const videosDir = path.join(process.cwd(), "public", "videos");
     const indexFile = path.join(videosDir, "index.json");
 
-    // 📜 Leer todos los archivos .mp4
-    const files = fs
-      .readdirSync(videosDir)
-      .filter((f) => f.toLowerCase().endsWith(".mp4"));
+    // 📜 Leer todos los .mp4
+    const files = fs.readdirSync(videosDir).filter((f) => f.endsWith(".mp4"));
 
-    // 🌎 Árbol oficial de categorías y subcategorías
+    // 🌎 Categorías y subcategorías (organización principal)
     const categoryTree = {
       "Seasonal & Global Celebrations": [
         "Halloween",
@@ -147,39 +145,37 @@ export async function GET() {
       });
     });
 
-    // 📄 Leer index.json si existe
+    // 📄 Leer index.json si ya existe
     let existingData = [];
     if (fs.existsSync(indexFile)) {
       try {
-        const raw = fs.readFileSync(indexFile, "utf8");
-        existingData = JSON.parse(raw);
+        existingData = JSON.parse(fs.readFileSync(indexFile, "utf8"));
       } catch {
         existingData = [];
       }
     }
 
-    // 🧠 Procesar todos los videos nuevos o actualizados
-    const videos = files.map((file) => {
+    // 🧠 Procesar todos los videos
+    const allVideos = files.map((file) => {
       const slug = file.replace(".mp4", "");
+      const lower = slug.toLowerCase();
       const title = slug
         .replace(/_/g, " ")
         .replace(/\b\w/g, (c) => c.toUpperCase());
-      const lower = slug.toLowerCase();
 
+      // 🔍 Detección automática de subcategoría
       const subcategory =
         Object.keys(categoryMap).find((k) => lower.includes(k)) || "General";
       const category = categoryMap[subcategory] || "Everyday & Appreciation";
       const baseSlug = slug.replace(/_\d+[A-Z]?$/i, "");
-
       const updatedAt = fs.statSync(path.join(videosDir, file)).mtimeMs;
 
-      // 🧾 Buscar si ya existía en index.json
       const existing = existingData.find((v) => v.slug === slug);
 
       return {
         slug,
-        title: existing?.title || title, // editable manual
-        message: existing?.message || "", // mensaje opcional
+        title: existing?.title || title, // editable
+        message: existing?.message || "", // texto opcional
         src: `/videos/${file}`,
         baseSlug,
         category,
@@ -188,27 +184,23 @@ export async function GET() {
       };
     });
 
-    // 🧮 Agrupar por baseSlug → mantener más reciente
+    // 🧮 Agrupar versiones (_1A, _2A, etc.) y mantener la más reciente
     const grouped = {};
-    for (const v of videos) {
+    for (const v of allVideos) {
       if (!grouped[v.baseSlug] || grouped[v.baseSlug].updatedAt < v.updatedAt) {
         grouped[v.baseSlug] = v;
       }
     }
 
-    // 🕒 Ordenar por fecha
+    // 🕒 Ordenar los más nuevos primero
     const finalList = Object.values(grouped).sort(
       (a, b) => b.updatedAt - a.updatedAt
     );
 
     // 💾 Guardar/actualizar index.json
-    fs.writeFileSync(
-      indexFile,
-      JSON.stringify(finalList, null, 2),
-      "utf8"
-    );
+    fs.writeFileSync(indexFile, JSON.stringify(finalList, null, 2), "utf8");
 
-    // ✅ Responder JSON
+    // ✅ Respuesta JSON
     return new Response(
       JSON.stringify(
         {
@@ -220,10 +212,7 @@ export async function GET() {
         null,
         2
       ),
-      {
-        headers: { "Content-Type": "application/json" },
-        status: 200,
-      }
+      { headers: { "Content-Type": "application/json" }, status: 200 }
     );
   } catch (error) {
     console.error("❌ Error leyendo videos:", error);
