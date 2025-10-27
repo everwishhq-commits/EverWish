@@ -18,24 +18,32 @@ export default function CategoryPage() {
         const res = await fetch("/videos/index.json", { cache: "no-store" });
         const data = await res.json();
 
+        // ✅ Soporte para estructura directa del index.json
+        const videos = Array.isArray(data) ? data : data.videos || [];
+
         const normalize = (str) =>
           str?.toLowerCase().replace(/\s+/g, "-").trim();
 
         const currentCategory = normalize(slug);
 
-        // ✅ Filtrar videos pertenecientes a esta categoría
-        let filtered = (data.videos || []).filter(
-          (v) => normalize(v.category) === currentCategory
+        // ✅ Filtrar los videos que pertenezcan a la categoría actual
+        let filtered = videos.filter(
+          (v) =>
+            normalize(v.category) === currentCategory ||
+            (v.categories || []).some(
+              (cat) => normalize(cat) === currentCategory
+            )
         );
 
-        // 🔍 Si hay búsqueda, mantener solo los que incluyan la palabra
+        // 🔍 Si hay búsqueda, filtra por palabra clave
         if (search.trim() !== "") {
           const q = search.toLowerCase();
           filtered = filtered.filter(
             (v) =>
               v.name.toLowerCase().includes(q) ||
               v.object.toLowerCase().includes(q) ||
-              v.subcategory.toLowerCase().includes(q)
+              v.subcategory.toLowerCase().includes(q) ||
+              v.tags.some((t) => t.toLowerCase().includes(q))
           );
         }
 
@@ -50,7 +58,7 @@ export default function CategoryPage() {
 
         setGroups(grouped);
       } catch (err) {
-        console.error("❌ Error cargando videos:", err);
+        console.error("❌ Error cargando index.json:", err);
       } finally {
         setLoading(false);
       }
@@ -217,4 +225,4 @@ function getEmojiForSubcategory(name) {
   };
   const key = name?.toLowerCase() || "";
   return map[key] || "✨";
-      }
+          }
