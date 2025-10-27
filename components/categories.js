@@ -1,229 +1,154 @@
-export const runtime = "nodejs"; // 🚀 Ejecutar en Node.js en Vercel
+"use client";
 
-import fs from "fs";
-import path from "path";
+import { useEffect, useState } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay } from "swiper/modules";
+import { motion } from "framer-motion";
+import Link from "next/link";
+import "swiper/css";
 
-export async function GET() {
-  try {
-    // 📂 Carpeta donde están los videos (.mp4)
-    const videosDir = path.join(process.cwd(), "public", "videos");
-    const indexFile = path.join(videosDir, "index.json");
+const allCategories = [
+  { name: "Seasonal & Global Celebrations", emoji: "🎉", slug: "seasonal-global-celebrations", color: "#FFE0E9" },
+  { name: "Birthdays & Celebrations", emoji: "🎂", slug: "birthdays-celebrations", color: "#FFDDEE" },
+  { name: "Love, Weddings & Anniversaries", emoji: "💍", slug: "love-weddings-anniversaries", color: "#FFECEC" },
+  { name: "Family & Friendship", emoji: "👨‍👩‍👧‍👦", slug: "family-friendship", color: "#E5EDFF" },
+  { name: "Babies & Parenting", emoji: "👶", slug: "babies-parenting", color: "#DFF7FF" },
+  { name: "Pets & Animal Lovers", emoji: "🐾", slug: "pets-animal-lovers", color: "#FFF3E0" },
+  { name: "Support, Healing & Care", emoji: "🕊️", slug: "support-healing-care", color: "#F3F3F3" },
+  { name: "Everyday & Appreciation", emoji: "💌", slug: "everyday-appreciation", color: "#FDE6E6" },
+  { name: "Creativity & Expression", emoji: "🎨", slug: "creativity-expression", color: "#FFEDDF" },
+  { name: "Diversity & Connection", emoji: "🧩", slug: "diversity-connection", color: "#E7E9FF" },
+  { name: "Kids & Teens", emoji: "🧸", slug: "kids-teens", color: "#FFE6FA" },
+  { name: "Wellness & Mindful Living", emoji: "🕯️", slug: "wellness-mindful-living", color: "#EDEAFF" },
+  { name: "Life Journeys & Transitions", emoji: "🏡", slug: "life-journeys-transitions", color: "#E8FFF3" },
+];
 
-    // 📜 Leer solo archivos .mp4
-    const files = fs.readdirSync(videosDir).filter((f) => f.endsWith(".mp4"));
+export default function Categories() {
+  const [search, setSearch] = useState("");
+  const [filtered, setFiltered] = useState(allCategories);
+  const [videos, setVideos] = useState([]);
 
-    // 🌎 Árbol oficial de categorías y subcategorías
-    const categoryTree = {
-      "Seasonal & Global Celebrations": [
-        "Halloween",
-        "Christmas",
-        "Thanksgiving",
-        "Easter",
-        "New Year",
-        "Independence Day",
-        "July 4th",
-        "Valentine’s Day",
-        "St. Patrick’s Day",
-        "Hanukkah",
-        "Diwali",
-        "Chinese New Year",
-        "Mother’s Day",
-        "Father’s Day",
-        "Veterans Day",
-        "Memorial Day",
-        "Labor Day",
-        "Earth Day",
-        "Women’s Day",
-        "Cultural Heritage",
-      ],
-      "Birthdays & Celebrations": [
-        "Adult Birthday",
-        "Kids Birthday",
-        "Milestone Birthday",
-        "Funny Birthday",
-        "General Birthday",
-      ],
-      "Love, Weddings & Anniversaries": [
-        "Wedding",
-        "Engagement",
-        "Anniversary",
-        "Renewal of Vows",
-        "Proposal",
-        "Romantic",
-        "Togetherness",
-        "Inclusive Love", // 🏳️‍🌈 sin mencionar Pride
-      ],
-      "Family & Friendship": [
-        "Parents",
-        "Siblings",
-        "Grandparents",
-        "Friendship",
-        "Community",
-        "Reunion",
-        "General Family",
-      ],
-      "Babies & Parenting": [
-        "Baby Shower",
-        "Newborn",
-        "Pregnancy",
-        "Gender Reveal",
-        "Adoption",
-        "First Birthday",
-      ],
-      "Pets & Animal Lovers": [
-        "Dogs",
-        "Cats",
-        "Birds",
-        "Turtles",
-        "Fish",
-        "Farm Animals",
-        "Wildlife",
-      ],
-      "Support, Healing & Care": [
-        "Condolence",
-        "Memorial",
-        "Loss of Pet",
-        "Get Well Soon",
-        "Emotional Support",
-        "Caregiver",
-      ],
-      "Everyday & Appreciation": [
-        "General",
-        "Encouragement",
-        "Thank You",
-        "Congratulations",
-        "Thinking of You",
-        "Just Because",
-        "Good Luck",
-        "Motivational",
-      ],
-      "Creativity & Expression": [
-        "Artistic",
-        "Design",
-        "Cultural Festivity",
-        "Crafts",
-        "Visual Arts",
-        "Music",
-      ],
-      "Diversity & Connection": [
-        "Unity",
-        "Equality",
-        "Respect",
-        "Humanity",
-        "Inclusive Culture",
-      ],
-      "Kids & Teens": [
-        "Cartoon Style",
-        "Adventure",
-        "Fantasy",
-        "Learning",
-        "Friendship",
-      ],
-      "Wellness & Mindful Living": [
-        "Faith",
-        "Hope",
-        "Peace",
-        "Meditation",
-        "Healing",
-        "Nature & Balance",
-      ],
-      "Life Journeys & Transitions": [
-        "Graduation",
-        "New Home",
-        "Retirement",
-        "Career Change",
-        "Travel",
-        "New Chapter",
-      ],
-    };
-
-    // 🧩 Mapa inverso para detección rápida de subcategorías
-    const categoryMap = {};
-    Object.entries(categoryTree).forEach(([cat, subs]) => {
-      subs.forEach((sub) => {
-        categoryMap[sub.toLowerCase().replace(/[^a-z0-9]/g, "")] = cat;
-      });
-    });
-
-    // 📄 Leer index.json si ya existe
-    let existingData = [];
-    if (fs.existsSync(indexFile)) {
+  // 📥 Cargar videos reales desde el API
+  useEffect(() => {
+    async function loadVideos() {
       try {
-        existingData = JSON.parse(fs.readFileSync(indexFile, "utf8"));
-      } catch {
-        existingData = [];
+        const res = await fetch("/api/videos", { cache: "no-store" });
+        const data = await res.json();
+        setVideos(data.videos || []);
+      } catch (err) {
+        console.error("❌ Error cargando /api/videos:", err);
       }
     }
+    loadVideos();
+  }, []);
 
-    // 🧠 Procesar todos los videos
-    const allVideos = files.map((file) => {
-      const slug = file.replace(".mp4", "");
-      const lower = slug.toLowerCase();
-      const title = slug
-        .replace(/_/g, " ")
-        .replace(/\b\w/g, (c) => c.toUpperCase());
+  // 🔍 Buscar coincidencias (por categoría o subcategoría)
+  useEffect(() => {
+    const q = search.toLowerCase().trim();
+    if (!q) {
+      setFiltered(allCategories);
+      return;
+    }
 
-      // 🔍 Detectar subcategoría y categoría automáticamente
-      const subcategory =
-        Object.keys(categoryMap).find((k) => lower.includes(k)) || "General";
-      const category = categoryMap[subcategory] || "Everyday & Appreciation";
+    const foundCategories = new Set();
 
-      // 🔢 Agrupar variantes (1A, 2A, etc.)
-      const baseSlug = slug.replace(/_\d+[A-Z]?$/i, "");
+    videos.forEach((item) => {
+      const searchableText = [
+        item.slug,
+        item.category,
+        item.subcategory,
+        item.title,
+      ]
+        .join(" ")
+        .toLowerCase();
 
-      const updatedAt = fs.statSync(path.join(videosDir, file)).mtimeMs;
-      const existing = existingData.find((v) => v.slug === slug);
-
-      return {
-        slug,
-        title: existing?.title || title, // editable manualmente
-        message: existing?.message || "", // campo opcional
-        src: `/videos/${file}`,
-        baseSlug,
-        category,
-        subcategory,
-        updatedAt,
-      };
+      if (searchableText.includes(q)) {
+        if (item.category) foundCategories.add(item.category.trim());
+      }
     });
 
-    // 🧮 Agrupar variantes y mantener la más reciente
-    const grouped = {};
-    for (const v of allVideos) {
-      if (!grouped[v.baseSlug] || grouped[v.baseSlug].updatedAt < v.updatedAt) {
-        grouped[v.baseSlug] = v;
-      }
-    }
-
-    // 🕒 Ordenar por fecha más reciente
-    const finalList = Object.values(grouped).sort(
-      (a, b) => b.updatedAt - a.updatedAt
+    const matches = allCategories.filter((cat) =>
+      [...foundCategories].some((f) =>
+        f.toLowerCase().includes(cat.name.toLowerCase().split("&")[0].trim())
+      )
     );
 
-    // 💾 Guardar o actualizar index.json
-    fs.writeFileSync(indexFile, JSON.stringify(finalList, null, 2), "utf8");
+    setFiltered(matches.length > 0 ? matches : []);
+  }, [search, videos]);
 
-    // ✅ Respuesta completa
-    return new Response(
-      JSON.stringify(
-        {
-          updatedAt: new Date().toISOString(),
-          total: finalList.length,
-          videos: finalList,
-          categories: categoryTree,
-        },
-        null,
-        2
-      ),
-      { headers: { "Content-Type": "application/json" }, status: 200 }
-    );
-  } catch (error) {
-    console.error("❌ Error leyendo videos:", error);
-    return new Response(
-      JSON.stringify({
-        error: "Failed to load or save videos",
-        details: error.message,
-      }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
-  }
-                                      }
+  return (
+    <section id="categories" className="text-center py-10 px-3 overflow-hidden">
+      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
+        Categories
+      </h2>
+
+      {/* 🔎 Barra de búsqueda */}
+      <div className="flex justify-center mb-10">
+        <input
+          type="text"
+          placeholder="Search any theme — e.g. love, new year, turtle..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-80 md:w-96 px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700"
+        />
+      </div>
+
+      {/* 🎠 Carrusel de categorías */}
+      <Swiper
+        slidesPerView={3.2}
+        spaceBetween={16}
+        centeredSlides={true}
+        loop={true}
+        autoplay={{
+          delay: 2500,
+          disableOnInteraction: false,
+        }}
+        speed={1000}
+        breakpoints={{
+          0: { slidesPerView: 2.3, spaceBetween: 10 },
+          640: { slidesPerView: 3.4, spaceBetween: 14 },
+          1024: { slidesPerView: 5, spaceBetween: 18 },
+        }}
+        modules={[Autoplay]}
+        className="overflow-visible"
+      >
+        {filtered.length > 0 ? (
+          filtered.map((cat, i) => (
+            <SwiperSlide key={i}>
+              <Link href={`/category/${cat.slug}`}>
+                <motion.div
+                  className="flex flex-col items-center justify-center cursor-pointer"
+                  whileHover={{ scale: 1.07 }}
+                >
+                  <motion.div
+                    className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md"
+                    style={{ backgroundColor: cat.color }}
+                  >
+                    <motion.span
+                      className="text-4xl sm:text-5xl"
+                      animate={{ y: [0, -5, 0] }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    >
+                      {cat.emoji}
+                    </motion.span>
+                  </motion.div>
+                  <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
+                    {cat.name}
+                  </p>
+                </motion.div>
+              </Link>
+            </SwiperSlide>
+          ))
+        ) : (
+          <p className="text-gray-500 text-sm mt-8">
+            No matching categories for “{search}”
+          </p>
+        )}
+      </Swiper>
+    </section>
+  );
+        }
