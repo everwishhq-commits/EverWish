@@ -1,8 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
+// 🌸 Lista base de categorías (para colores y emojis)
 const allCategories = [
   { name: "Seasonal & Global Celebrations", emoji: "🎉", slug: "seasonal-global-celebrations", color: "#FFE0E9" },
   { name: "Love, Weddings & Anniversaries", emoji: "💍", slug: "love-weddings-anniversaries", color: "#FFECEC" },
@@ -16,19 +17,71 @@ const allCategories = [
   { name: "Kids & Teens", emoji: "🧸", slug: "kids-teens", color: "#FFE6FA" },
   { name: "Diversity & Connection", emoji: "🧩", slug: "diversity-connection", color: "#E7E9FF" },
   { name: "Life Journeys & Transitions", emoji: "🏡", slug: "life-journeys-transitions", color: "#E8FFF3" },
-  { name: "Wellness & Mindful Living", emoji: "🕯️", slug: "wellness-mindful-living", color: "#EDEAFF" }
+  { name: "Wellness & Mindful Living", emoji: "🕯️", slug: "wellness-mindful-living", color: "#EDEAFF" },
 ];
 
 export default function CategoriesGridPage() {
   const router = useRouter();
   const [search, setSearch] = useState("");
+  const [filteredCategories, setFilteredCategories] = useState(allCategories);
+  const [loading, setLoading] = useState(false);
 
-  const filtered = allCategories.filter((cat) =>
-    cat.name.toLowerCase().includes(search.toLowerCase().trim())
-  );
+  useEffect(() => {
+    // 🔍 Si no hay texto, mostrar todas las categorías
+    if (!search.trim()) {
+      setFilteredCategories(allCategories);
+      return;
+    }
+
+    setLoading(true);
+
+    async function fetchVideos() {
+      try {
+        const res = await fetch("/videos/index.json", { cache: "no-store" });
+        const data = await res.json();
+        const term = search.toLowerCase().trim();
+
+        // Buscar coincidencias en object, subcategory o category
+        const matches = data.filter(v =>
+          (v.object?.toLowerCase().includes(term)) ||
+          (v.subcategory?.toLowerCase().includes(term)) ||
+          (v.category?.toLowerCase().includes(term))
+        );
+
+        // Extraer categorías únicas encontradas
+        const matchedCats = [...new Set(matches.map(v => v.category).filter(Boolean))];
+
+        // Asociar las categorías encontradas con las del array base
+        const dynamicFiltered = allCategories.filter(cat =>
+          matchedCats.some(mc => cat.name.toLowerCase().includes(mc.toLowerCase()) || mc.toLowerCase().includes(cat.slug))
+        );
+
+        setFilteredCategories(dynamicFiltered.length > 0 ? dynamicFiltered : []);
+      } catch (err) {
+        console.error("❌ Error loading index.json:", err);
+        setFilteredCategories([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchVideos();
+  }, [search]);
 
   return (
     <main className="min-h-screen bg-[#fff5f8] flex flex-col items-center py-10 px-4">
+      {/* 🧭 Breadcrumb */}
+      <nav className="text-sm text-gray-500 mb-6">
+        <span
+          onClick={() => router.push("/")}
+          className="cursor-pointer hover:text-pink-500"
+        >
+          Home
+        </span>{" "}
+        › <span className="text-gray-700">Categories</span>
+      </nav>
+
+      {/* 🏷️ Título */}
       <h1 className="text-4xl font-extrabold text-pink-600 mb-3 text-center">
         Explore Main Categories 💌
       </h1>
@@ -36,17 +89,23 @@ export default function CategoriesGridPage() {
         Discover every Everwish theme, celebration, and life moment ✨
       </p>
 
-      <input
-        type="text"
-        placeholder="Search any theme — e.g. love, halloween, graduation..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="w-80 md:w-96 px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700 bg-white/80 mb-12"
-      />
+      {/* 🔍 Search bar */}
+      <div className="flex justify-center mb-12 w-full">
+        <input
+          type="text"
+          placeholder="Search any theme — e.g. yeti, turtle, octopus..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-80 md:w-96 px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700 bg-white/80"
+        />
+      </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 w-full max-w-6xl">
-        {filtered.length > 0 ? (
-          filtered.map((cat, i) => (
+      {/* 🧩 Grid de categorías */}
+      {loading ? (
+        <p className="text-gray-500 animate-pulse">Searching...</p>
+      ) : filteredCategories.length > 0 ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 w-full max-w-6xl">
+          {filteredCategories.map((cat, i) => (
             <motion.div
               key={i}
               whileHover={{
@@ -61,13 +120,13 @@ export default function CategoriesGridPage() {
               <span className="text-5xl mb-3">{cat.emoji}</span>
               <span className="text-sm md:text-base text-center">{cat.name}</span>
             </motion.div>
-          ))
-        ) : (
-          <p className="text-gray-500 text-sm mt-8">
-            No matching categories for “{search}”
-          </p>
-        )}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-gray-500 text-sm mt-8 text-center">
+          No matching categories for “{search}”
+        </p>
+      )}
     </main>
   );
-}
+            }
