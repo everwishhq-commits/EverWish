@@ -15,24 +15,34 @@ export default function CategoryVideosPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const res = await fetch("/videos/index.json", { cache: "no-store" });
-        const data = await res.json();
+        // 🔹 Leer datos desde la API dinámica
+        const res = await fetch("/api/videos", { cache: "no-store" });
+        const payload = await res.json();
+
+        // El API devuelve { videos: [...], categories: {...} }
+        const data = payload.videos || [];
 
         const normalize = (str) =>
-          str?.toLowerCase().replace(/\s+/g, "-").trim();
+          str?.toLowerCase().replace(/\s+/g, "-").replace(/&/g, "and").trim();
 
-        // 🔹 1. Filtrar videos que pertenecen a la categoría actual
-        const filtered = data.filter(
-          (v) => normalize(v.category) === normalize(slug)
-        );
+        const currentCategory = normalize(slug);
 
-        // 🔹 2. Extraer subcategorías únicas
+        // 🔍 Filtrar videos por categoría
+        const filtered = data.filter((v) => {
+          const cat = normalize(v.category);
+          return cat.includes(currentCategory) || currentCategory.includes(cat);
+        });
+
+        // 🧩 Subcategorías únicas
         const foundSubs = Array.from(
           new Set(filtered.map((v) => v.subcategory).filter(Boolean))
         );
 
         setSubcategories(foundSubs);
         setVideos(filtered);
+
+        console.log("📁 Categoría actual:", currentCategory);
+        console.log("📂 Subcategorías detectadas:", foundSubs);
       } catch (err) {
         console.error("❌ Error loading videos:", err);
       } finally {
@@ -44,7 +54,7 @@ export default function CategoryVideosPage() {
   }, [slug]);
 
   const normalize = (str) =>
-    str?.toLowerCase().replace(/\s+/g, "-").trim();
+    str?.toLowerCase().replace(/\s+/g, "-").replace(/&/g, "and").trim();
 
   const filteredVideos = videos.filter((v) =>
     v.object?.toLowerCase().includes(search.toLowerCase())
@@ -90,7 +100,7 @@ export default function CategoryVideosPage() {
         </span>
       </nav>
 
-      {/* 🔙 Botón volver */}
+      {/* 🔙 Back button */}
       <button
         onClick={() => router.push("/categories")}
         className="text-pink-500 hover:text-pink-600 font-semibold mb-4"
@@ -98,7 +108,7 @@ export default function CategoryVideosPage() {
         ← Back to Categories
       </button>
 
-      {/* 🏷️ Encabezado */}
+      {/* 🏷️ Title */}
       <h1 className="text-4xl font-extrabold text-pink-600 mb-2 capitalize text-center">
         {slug.replaceAll("-", " ")}
       </h1>
@@ -106,7 +116,7 @@ export default function CategoryVideosPage() {
         Explore the celebrations and life moments in this category ✨
       </p>
 
-      {/* 🔍 Búsqueda */}
+      {/* 🔍 Search */}
       <input
         type="text"
         placeholder="Search cards..."
@@ -115,7 +125,7 @@ export default function CategoryVideosPage() {
         className="w-full max-w-md mb-10 rounded-full border border-pink-200 bg-white/70 px-4 py-3 text-center shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300"
       />
 
-      {/* 🎨 Subcategorías */}
+      {/* 🎨 Subcategories */}
       {subcategories.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 max-w-5xl w-full mb-12">
           {subcategories.map((sub, i) => (
@@ -124,7 +134,11 @@ export default function CategoryVideosPage() {
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.3 }}
               onClick={() => setActiveSub(sub)}
-              className="cursor-pointer bg-white rounded-3xl shadow-md border border-pink-100 hover:shadow-lg p-6 flex flex-col items-center justify-center"
+              className={`cursor-pointer bg-white rounded-3xl shadow-md border ${
+                activeSub === sub
+                  ? "border-pink-300 bg-pink-50"
+                  : "border-pink-100 hover:border-pink-200 hover:bg-pink-50"
+              } p-6 flex flex-col items-center justify-center`}
             >
               <span className="text-5xl mb-2">
                 {getEmojiForSubcategory(sub)}
@@ -141,11 +155,10 @@ export default function CategoryVideosPage() {
         </p>
       )}
 
-      {/* 💫 Modal con tarjetas */}
+      {/* 💫 Modal with cards */}
       <AnimatePresence>
         {activeSub && (
           <>
-            {/* Fondo del modal */}
             <motion.div
               className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
               initial={{ opacity: 0 }}
@@ -154,7 +167,6 @@ export default function CategoryVideosPage() {
               onClick={() => setActiveSub(null)}
             />
 
-            {/* Contenido del modal */}
             <motion.div
               className="fixed inset-0 z-50 flex items-center justify-center p-4"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -163,7 +175,6 @@ export default function CategoryVideosPage() {
               transition={{ duration: 0.3 }}
             >
               <div className="relative bg-white rounded-3xl shadow-xl w-[90%] max-w-5xl h-[75vh] overflow-y-auto border border-pink-100 p-6">
-                {/* Botón cerrar */}
                 <button
                   onClick={() => setActiveSub(null)}
                   className="absolute top-3 right-5 text-gray-400 hover:text-pink-500 text-2xl font-bold"
@@ -171,12 +182,10 @@ export default function CategoryVideosPage() {
                   ×
                 </button>
 
-                {/* Título del modal */}
                 <h2 className="text-2xl font-bold text-pink-600 mb-4 capitalize">
                   {getEmojiForSubcategory(activeSub)} {activeSub}
                 </h2>
 
-                {/* Tarjetas dentro del modal */}
                 {activeVideos.length === 0 ? (
                   <p className="text-gray-500 text-center mt-10">
                     No cards found for this subcategory.
@@ -188,11 +197,11 @@ export default function CategoryVideosPage() {
                         key={i}
                         whileHover={{ scale: 1.05 }}
                         transition={{ duration: 0.3 }}
-                        onClick={() => router.push(`/edit/${video.name}`)}
+                        onClick={() => router.push(`/edit/${video.slug}`)}
                         className="cursor-pointer bg-white rounded-3xl shadow-md border border-pink-100 overflow-hidden hover:shadow-lg"
                       >
                         <video
-                          src={video.file}
+                          src={video.src}
                           className="object-cover w-full aspect-[4/5]"
                           playsInline
                           loop
@@ -231,4 +240,4 @@ function getEmojiForSubcategory(name) {
   };
   const key = name?.toLowerCase() || "";
   return map[key] || "✨";
-        }
+}
