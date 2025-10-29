@@ -9,7 +9,6 @@ export default function Carousel() {
   const autoplayRef = useRef(null);
   const pauseRef = useRef(false);
 
-  // 🧭 Variables de gesto
   const startX = useRef(0);
   const startY = useRef(0);
   const moved = useRef(false);
@@ -18,14 +17,18 @@ export default function Carousel() {
   const TAP_THRESHOLD = 10;
   const SWIPE_THRESHOLD = 40;
 
-  // 🎥 Cargar videos desde el API
+  // 🎥 Cargar videos desde API
   useEffect(() => {
     async function fetchVideos() {
       try {
-        const res = await fetch("/api/videos", { cache: "no-store" });
+        const res = await fetch("/api/videos");
         const data = await res.json();
-        if (Array.isArray(data.videos)) setVideos(data.videos);
-        else console.error("⚠️ Invalid video data:", data);
+        const fixed = (data.videos || []).map(v => ({
+          ...v,
+          // 🔧 Corrige rutas si están en /videos/
+          src: v.src.replace("/cards/", "/videos/"),
+        }));
+        setVideos(fixed);
       } catch (err) {
         console.error("❌ Error cargando videos:", err);
       }
@@ -48,7 +51,7 @@ export default function Carousel() {
     return () => clearInterval(autoplayRef.current);
   }, [videos]);
 
-  // 🖐️ Control táctil
+  // 🖐️ Gestos táctiles
   const handleTouchStart = (e) => {
     const t = e.touches[0];
     startX.current = t.clientX;
@@ -63,7 +66,6 @@ export default function Carousel() {
     const t = e.touches[0];
     const deltaX = t.clientX - startX.current;
     const deltaY = t.clientY - startY.current;
-
     if (Math.abs(deltaX) > TAP_THRESHOLD || Math.abs(deltaY) > TAP_THRESHOLD) {
       moved.current = true;
       direction.current =
@@ -76,7 +78,7 @@ export default function Carousel() {
     e.stopPropagation();
     if (!moved.current) {
       const tapped = videos[index];
-      if (tapped?.mainSlug) handleClick(tapped);
+      if (tapped?.slug) handleClick(tapped.slug);
     } else if (direction.current === "horizontal") {
       const diffX = startX.current - e.changedTouches[0].clientX;
       if (Math.abs(diffX) > SWIPE_THRESHOLD) {
@@ -93,28 +95,17 @@ export default function Carousel() {
     }, 3000);
   };
 
-  // 🎬 Ir al editor (pantalla extendida)
-  const handleClick = async (video) => {
+  const handleClick = async (slug) => {
     try {
       const elem = document.documentElement;
       if (elem.requestFullscreen) await elem.requestFullscreen();
-      else if (elem.webkitRequestFullscreen)
-        await elem.webkitRequestFullscreen();
+      else if (elem.webkitRequestFullscreen) await elem.webkitRequestFullscreen();
       await new Promise((r) => setTimeout(r, 150));
-      router.push(`/edit/${video.mainSlug || video.category}`);
+      router.push(`/edit/${slug}`);
     } catch {
-      router.push(`/edit/${video.mainSlug || video.category}`);
+      router.push(`/edit/${slug}`);
     }
   };
-
-  // 🔄 Sin videos → placeholder
-  if (!videos || videos.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-[440px] text-gray-400">
-        Loading videos...
-      </div>
-    );
-  }
 
   return (
     <div
@@ -125,7 +116,6 @@ export default function Carousel() {
           "linear-gradient(to bottom, #fff8fa 0%, #fff5f7 30%, #ffffff 100%)",
       }}
     >
-      {/* 🎞️ Carrusel principal */}
       <div
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -159,9 +149,6 @@ export default function Carousel() {
                 onContextMenu={(e) => e.preventDefault()}
                 className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-3xl shadow-lg object-cover object-center bg-white overflow-hidden transition-transform duration-500 hover:scale-[1.03]"
               />
-              <p className="text-center mt-2 text-gray-600 text-sm">
-                {video.mainName || "Everwish Card"}
-              </p>
             </div>
           );
         })}
@@ -191,4 +178,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-        }
+          }
