@@ -10,38 +10,34 @@ export default function CategoryPage() {
   const [activeSub, setActiveSub] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // 🧠 Cargar desde /api/videos (ya estructurado con categorías y subcategorías)
   useEffect(() => {
     async function loadVideos() {
       try {
-        const res = await fetch("/videos/index.json", { cache: "no-store" });
+        const res = await fetch("/api/videos", { cache: "no-store" });
         const data = await res.json();
+        const videos = data.videos || [];
 
-        // ✅ Normaliza cadenas para evitar fallos por guiones, &, o espacios
         const normalize = (str) =>
-          str
-            ?.toLowerCase()
-            .replace(/&/g, "and")
-            .replace(/\s+/g, "-")
-            .trim();
+          str?.toLowerCase().replace(/&/g, "and").replace(/\s+/g, "-").trim();
 
-        // ✅ Filtra los videos que pertenecen a esta categoría
-        const filtered = data.filter((v) =>
-          (v.categories || [])
-            .map((c) => normalize(c))
-            .includes(normalize(slug))
+        // 🎯 Filtra los que pertenecen a la categoría (mainSlug)
+        const filtered = videos.filter(
+          (v) => normalize(v.mainSlug) === normalize(slug)
         );
 
-        // ✅ Agrupa los videos por subcategoría o categoría
+        // 🧩 Agrupa por subcategoría o categoría
         const grouped = {};
         for (const v of filtered) {
           const sub =
             (v.subcategory && v.subcategory.trim()) ||
             (v.category && v.category.trim()) ||
-            "General";
+            "general";
 
-          const clean = sub
-            .replace(/_/g, " ")
-            .replace(/\b\w/g, (c) => c.toUpperCase());
+          const clean =
+            sub
+              .replace(/_/g, " ")
+              .replace(/\b\w/g, (c) => c.toUpperCase()) || "General";
 
           if (!grouped[clean]) grouped[clean] = [];
           grouped[clean].push(v);
@@ -61,6 +57,7 @@ export default function CategoryPage() {
   const subcategories = Object.keys(groups);
   const activeVideos = activeSub ? groups[activeSub] || [] : [];
 
+  // ⏳ Estado de carga
   if (loading) {
     return (
       <main className="flex flex-col items-center justify-center min-h-screen bg-[#fff5f8] text-gray-600">
@@ -75,10 +72,10 @@ export default function CategoryPage() {
     <main className="min-h-screen bg-[#fff5f8] text-gray-800 flex flex-col items-center py-10 px-4">
       {/* 🔙 Back */}
       <button
-        onClick={() => router.push("/categories")}
+        onClick={() => router.push("/")}
         className="text-pink-500 hover:text-pink-600 font-semibold mb-6"
       >
-        ← Back to Main Categories
+        ← Back to Home
       </button>
 
       {/* 🏷️ Title */}
@@ -86,10 +83,10 @@ export default function CategoryPage() {
         {slug.replace("-", " ")}
       </h1>
       <p className="text-gray-600 mb-10 text-center max-w-lg">
-        Explore the celebrations and moments in this category 🎉
+        Explore cards from this category 🎁
       </p>
 
-      {/* 🌸 Subcategories */}
+      {/* 🌸 Subcategorías */}
       {subcategories.length > 0 ? (
         <div className="flex flex-wrap justify-center gap-4 max-w-5xl">
           {subcategories.map((sub, i) => (
@@ -106,14 +103,16 @@ export default function CategoryPage() {
           ))}
         </div>
       ) : (
-        <p className="text-gray-500 text-center">No subcategories found.</p>
+        <p className="text-gray-500 text-center mt-10">
+          No subcategories found.
+        </p>
       )}
 
-      {/* 💫 Modal */}
+      {/* 💫 Modal con los videos */}
       <AnimatePresence>
         {activeSub && (
           <>
-            {/* Fondo con blur 70% */}
+            {/* Fondo con blur */}
             <motion.div
               className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
               initial={{ opacity: 0 }}
@@ -121,7 +120,7 @@ export default function CategoryPage() {
               exit={{ opacity: 0 }}
               onClick={() => setActiveSub(null)}
             />
-            {/* Ventana del modal */}
+            {/* Ventana principal */}
             <motion.div
               className="fixed inset-0 z-50 flex items-center justify-center p-4"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -129,8 +128,8 @@ export default function CategoryPage() {
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="relative bg-white rounded-3xl shadow-xl w-[90%] max-w-5xl h-[70vh] overflow-y-auto border border-pink-100 p-6">
-                {/* ✖ Close */}
+              <div className="relative bg-white rounded-3xl shadow-xl w-[90%] max-w-5xl h-[75vh] overflow-y-auto border border-pink-100 p-6">
+                {/* ✖ Cerrar */}
                 <button
                   onClick={() => setActiveSub(null)}
                   className="absolute top-3 right-5 text-gray-400 hover:text-pink-500 text-2xl font-bold"
@@ -138,7 +137,7 @@ export default function CategoryPage() {
                   ×
                 </button>
 
-                {/* Título */}
+                {/* Título del modal */}
                 <h2 className="text-2xl font-bold text-pink-600 mb-4 capitalize">
                   {getEmojiForSubcategory(activeSub)} {activeSub}
                 </h2>
@@ -155,18 +154,20 @@ export default function CategoryPage() {
                         key={i}
                         whileHover={{ scale: 1.05 }}
                         transition={{ duration: 0.3 }}
-                        onClick={() => router.push(`/edit/${video.name}`)}
+                        onClick={() =>
+                          router.push(`/edit/${video.slug || video.object}`)
+                        }
                         className="cursor-pointer bg-white rounded-3xl shadow-md border border-pink-100 overflow-hidden hover:shadow-lg"
                       >
                         <video
-                          src={video.file}
+                          src={video.src}
                           className="object-cover w-full aspect-[4/5]"
                           playsInline
                           loop
                           muted
                         />
                         <div className="text-center py-2 text-gray-700 font-semibold text-sm">
-                          {video.object}
+                          {video.combinedName || video.object}
                         </div>
                       </motion.div>
                     ))}
@@ -181,7 +182,7 @@ export default function CategoryPage() {
   );
 }
 
-// 🧁 Emojis para subcategorías
+// 🧁 Emojis por subcategoría
 function getEmojiForSubcategory(name) {
   const map = {
     halloween: "🎃",
@@ -190,7 +191,11 @@ function getEmojiForSubcategory(name) {
     "4th of july": "🦅",
     easter: "🐰",
     newyear: "🎆",
+    valentine: "💘",
+    birthday: "🎂",
+    wedding: "💍",
+    babyshower: "🍼",
   };
   const key = name?.toLowerCase() || "";
   return map[key] || "✨";
-    }
+      }
