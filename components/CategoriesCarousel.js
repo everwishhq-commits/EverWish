@@ -7,8 +7,8 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import "swiper/css";
 
-// 🌸 CATEGORÍAS ACTUALIZADAS
-const allCategories = [
+// 🌸 CATEGORÍAS PRINCIPALES (con colores Everwish)
+const ALL_CATEGORIES = [
   { name: "Holidays & Festivities", emoji: "🎄", slug: "holidays", color: "#FFF4E0" },
   { name: "Love & Romance", emoji: "❤️", slug: "love", color: "#FFE8EE" },
   { name: "Celebrations & Special Moments", emoji: "🎉", slug: "celebrations", color: "#FFF7FF" },
@@ -19,12 +19,12 @@ const allCategories = [
   { name: "Inspirational & Friendship", emoji: "🌟", slug: "inspirational", color: "#FFFBE5" },
 ];
 
-export default function Categories() {
+export default function CategoriesCarousel() {
   const [search, setSearch] = useState("");
-  const [filtered, setFiltered] = useState(allCategories);
+  const [filtered, setFiltered] = useState(ALL_CATEGORIES);
   const [videos, setVideos] = useState([]);
 
-  // 📥 Cargar los videos (para búsqueda)
+  // 📥 Cargar videos (para buscar palabras clave dinámicamente)
   useEffect(() => {
     async function loadVideos() {
       try {
@@ -38,11 +38,11 @@ export default function Categories() {
     loadVideos();
   }, []);
 
-  // 🔍 Filtrar por búsqueda
+  // 🔍 Filtrar categorías dinámicamente según búsqueda
   useEffect(() => {
     const q = search.toLowerCase().trim();
     if (!q) {
-      setFiltered(allCategories);
+      setFiltered(ALL_CATEGORIES);
       return;
     }
 
@@ -50,10 +50,10 @@ export default function Categories() {
 
     videos.forEach((item) => {
       const searchableText = [
-        item.name,
+        item.slug,
         item.object,
-        item.subcategory,
         item.category,
+        item.subcategory,
         ...(item.tags || []),
       ]
         .join(" ")
@@ -64,7 +64,7 @@ export default function Categories() {
       }
     });
 
-    const matches = allCategories.filter((cat) =>
+    const matches = ALL_CATEGORIES.filter((cat) =>
       [...foundCategories].some((f) =>
         f.toLowerCase().replace("&", "and").includes(cat.slug)
       )
@@ -74,12 +74,20 @@ export default function Categories() {
   }, [search, videos]);
 
   return (
-    <section id="categories" className="text-center py-10 px-3 overflow-hidden">
+    <section
+      id="categories"
+      className="text-center py-10 px-3 overflow-hidden"
+      style={{
+        background:
+          "linear-gradient(to bottom, #fff8fa 0%, #fff5f7 50%, #ffffff 100%)",
+      }}
+    >
+      {/* 🏷️ Título */}
       <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
-        Categories
+        Explore by Category ✨
       </h2>
 
-      {/* 🔎 Búsqueda */}
+      {/* 🔎 Barra de búsqueda */}
       <div className="flex justify-center mb-10">
         <input
           type="text"
@@ -90,12 +98,12 @@ export default function Categories() {
         />
       </div>
 
-      {/* 🎠 Carrusel */}
+      {/* 🎠 Carrusel de categorías */}
       <Swiper
         slidesPerView={3.2}
         spaceBetween={16}
-        centeredSlides={true}
-        loop={true}
+        centeredSlides
+        loop
         autoplay={{ delay: 2500, disableOnInteraction: false }}
         speed={1000}
         breakpoints={{
@@ -145,4 +153,4 @@ export default function Categories() {
       </Swiper>
     </section>
   );
-                     }
+}
