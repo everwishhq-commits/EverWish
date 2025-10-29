@@ -118,12 +118,11 @@ export async function GET() {
     const cleanName = file.replace(".mp4", "");
     const parts = cleanName.split("_");
 
-    // 🧩 Estructura: objeto_categoria_subcategoría_version
     const object = normalize(parts[0] || "unknown");
     const category = normalize(parts[1] || "general");
     const subcategory = normalize(parts[2] || "general");
 
-    // 🔍 Busca grupo principal
+    // 🔍 Encuentra grupo principal según coincidencia parcial
     const match = Object.entries(MAIN_GROUPS).find(([key, group]) =>
       group.keywords.some((kw) => cleanName.includes(kw))
     );
@@ -137,7 +136,7 @@ export async function GET() {
     }`.replace(/-/g, " ");
 
     return {
-      slug, // ✅ conexión directa con /edit/[slug]
+      slug,
       src: `/cards/${file}`,
       object,
       category,
@@ -150,6 +149,6 @@ export async function GET() {
     };
   });
 
-  // ✅ Usa el nombre "videos" (el editor y carrusel esperan esa clave)
+  // ✅ El endpoint devuelve la lista en formato estándar
   return NextResponse.json({ videos });
-    }
+}
