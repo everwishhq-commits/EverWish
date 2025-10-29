@@ -2,8 +2,8 @@
 export const dynamic = "force-dynamic";
 
 import { useState } from "react";
-import Splash from "@/components/splash";
-import Carousel from "@/components/carousel";
+import Splash from "@/components/Splash";
+import Carousel from "@/components/Carousel";
 
 export default function TestPage() {
   const [loading, setLoading] = useState(true);
