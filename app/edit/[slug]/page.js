@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
@@ -7,12 +8,16 @@ import {
   AnimationOverlay,
 } from "@/lib/animations";
 import { getMessageForSlug } from "@/lib/messages";
-import GiftCardPopup from "@/components/Giftcard";
+
+// ✅ Corrige los imports con nombres exactos
+import GiftCardPopup from "@/components/GiftCard";
 import CheckoutModal from "@/components/Checkout";
 import CropperModal from "@/components/CropperModal";
 
 export default function EditPage({ params }) {
   const slug = params.slug;
+
+  // 🎬 Estados principales
   const [stage, setStage] = useState("expanded");
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("");
@@ -21,6 +26,7 @@ export default function EditPage({ params }) {
   const [videoSrc, setVideoSrc] = useState("");
   const [videoFound, setVideoFound] = useState(true);
 
+  // 🎁 Modales y regalos
   const [gift, setGift] = useState(null);
   const [showGift, setShowGift] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
@@ -29,6 +35,7 @@ export default function EditPage({ params }) {
   const [total, setTotal] = useState(5);
   const [userImage, setUserImage] = useState(null);
 
+  // 🌈 Configuración de animación
   const [intensity, setIntensity] = useState("normal");
   const [opacityLevel, setOpacityLevel] = useState(0.9);
   const [emojiCount, setEmojiCount] = useState(20);
@@ -38,13 +45,12 @@ export default function EditPage({ params }) {
   const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
   const [animKey, setAnimKey] = useState(0);
 
-  // 🧭 Verificación de actualización cada 24 h
+  // 🧭 Verificación y caché cada 24 h
   useEffect(() => {
     const lastCheck = localStorage.getItem("everwish_videos_lastCheck");
     const now = Date.now();
     const day = 24 * 60 * 60 * 1000;
 
-    // Si han pasado 24 horas, forzamos recarga de la lista
     if (!lastCheck || now - parseInt(lastCheck, 10) > day) {
       localStorage.setItem("everwish_videos_lastCheck", now.toString());
       fetch("/api/videos?refresh=" + now)
@@ -56,11 +62,10 @@ export default function EditPage({ params }) {
     }
   }, []);
 
-  // 🎬 Inicializa datos y busca video
+  // 🎥 Carga video principal
   useEffect(() => {
     async function loadVideo() {
       try {
-        // 🔍 Busca primero en caché local para velocidad
         const cached = localStorage.getItem("everwish_videos_cache");
         let data = cached ? JSON.parse(cached) : null;
 
@@ -116,7 +121,7 @@ export default function EditPage({ params }) {
     [animation, category, intensity, opacityLevel, emojiCount]
   );
 
-  // 🎁 Gift Card
+  // 🎁 Funciones de regalo
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
@@ -141,6 +146,7 @@ export default function EditPage({ params }) {
     link.remove();
   };
 
+  // 🧠 Render principal
   return (
     <div
       className="relative min-h-[100dvh] bg-[#fff7f5] flex flex-col items-center overflow-hidden"
@@ -179,7 +185,7 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
-      {/* 🎨 Editor principal */}
+      {/* 🎨 Editor */}
       {stage === "editor" && (
         <>
           <AnimationOverlay
@@ -409,4 +415,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-        }
+      }
