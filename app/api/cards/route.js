@@ -118,6 +118,7 @@ export async function GET() {
     const cleanName = file.replace(".mp4", "");
     const parts = cleanName.split("_");
 
+    // 🧩 Estructura: objeto_categoria_subcategoría_version
     const object = normalize(parts[0] || "unknown");
     const category = normalize(parts[1] || "general");
     const subcategory = normalize(parts[2] || "general");
@@ -149,6 +150,6 @@ export async function GET() {
     };
   });
 
-  // ✅ Usa el nombre "videos" para compatibilidad con el editor y carrusel
+  // ✅ Usa el nombre "videos" (el editor y carrusel esperan esa clave)
   return NextResponse.json({ videos });
-}
+    }
