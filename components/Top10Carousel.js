@@ -2,14 +2,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function Top10Carousel() {
+export default function Carousel() {
   const router = useRouter();
   const [videos, setVideos] = useState([]);
   const [index, setIndex] = useState(0);
   const autoplayRef = useRef(null);
   const pauseRef = useRef(false);
 
-  // 🧭 Variables de control táctil
+  // 🧭 Control táctil
   const startX = useRef(0);
   const startY = useRef(0);
   const moved = useRef(false);
@@ -18,32 +18,20 @@ export default function Top10Carousel() {
   const TAP_THRESHOLD = 10;
   const SWIPE_THRESHOLD = 40;
 
-  // 🎥 Cargar tarjetas desde API
+  // 🎥 Cargar videos desde el API principal
   useEffect(() => {
-    async function loadVideos() {
+    async function fetchVideos() {
       try {
-        let data;
-
-        // 🔹 Primero intenta /api/videos (principal)
-        const res = await fetch("/api/videos");
-        if (res.ok) {
-          data = await res.json();
-        } else {
-          // 🔸 Fallback /api/cards (por compatibilidad)
-          const fallback = await fetch("/api/cards");
-          data = await fallback.json();
-        }
-
-        // ✅ Normaliza estructura
-        const list = Array.isArray(data.videos || data.cards)
-          ? data.videos || data.cards
-          : [];
+        const res = await fetch("/api/videos", { cache: "no-store" });
+        const data = await res.json();
+        const list = Array.isArray(data.videos) ? data.videos : [];
 
         if (list.length === 0) {
-          console.warn("⚠️ No se encontraron videos en el API.");
+          console.warn("⚠️ No se encontraron videos en /api/videos");
           return;
         }
 
+        // 🔹 Normaliza estructura
         const formatted = list.map((v, i) => ({
           id: i,
           src: v.src,
@@ -57,14 +45,14 @@ export default function Top10Carousel() {
           mainName: v.mainName || "General",
         }));
 
-        // 🔝 Limita a 10 elementos
+        // 🔝 Toma los 10 primeros
         setVideos(formatted.slice(0, 10));
       } catch (err) {
         console.error("❌ Error cargando videos:", err);
       }
     }
 
-    loadVideos();
+    fetchVideos();
   }, []);
 
   // 🕒 Autoplay
@@ -82,7 +70,7 @@ export default function Top10Carousel() {
     return () => clearInterval(autoplayRef.current);
   }, [videos]);
 
-  // 🖐️ Control táctil
+  // 🖐️ Control táctil (swipe)
   const handleTouchStart = (e) => {
     const t = e.touches[0];
     startX.current = t.clientX;
@@ -129,7 +117,7 @@ export default function Top10Carousel() {
     }, 3000);
   };
 
-  // 🎬 Abrir en modo editor
+  // 🎬 Abrir editor
   const handleClick = async (slug) => {
     try {
       const elem = document.documentElement;
@@ -143,7 +131,7 @@ export default function Top10Carousel() {
     }
   };
 
-  // 🧩 Render del carrusel
+  // 🧩 Render principal
   return (
     <div
       className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none"
@@ -153,6 +141,7 @@ export default function Top10Carousel() {
           "linear-gradient(to bottom, #fff8fa 0%, #fff5f7 30%, #ffffff 100%)",
       }}
     >
+      {/* 🎞️ Contenedor de videos */}
       <div
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -219,4 +208,4 @@ export default function Top10Carousel() {
       </div>
     </div>
   );
-                           }
+      }
