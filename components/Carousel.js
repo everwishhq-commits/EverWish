@@ -1,98 +1,202 @@
 "use client";
-import "swiper/css";
-import "swiper/css/autoplay";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay } from "swiper/modules";
-import { motion } from "framer-motion";
-import Link from "next/link";
-import { useState, useEffect } from "react";
-
-const CATEGORIES = [
-  { name: "Holidays", emoji: "🎄", slug: "holidays", color: "#FFF4E0" },
-  { name: "Love & Romance", emoji: "❤️", slug: "love", color: "#FFE8EE" },
-  { name: "Celebrations", emoji: "🎉", slug: "celebrations", color: "#FFF7FF" },
-  { name: "Work & Professional", emoji: "💼", slug: "work", color: "#EAF4FF" },
-  { name: "Condolences", emoji: "🕊️", slug: "condolences", color: "#F8F8F8" },
-  { name: "Animals & Nature", emoji: "🐾", slug: "animals", color: "#E8FFF3" },
-  { name: "Seasons", emoji: "🍂", slug: "seasons", color: "#FFFBE5" },
-  { name: "Inspirational", emoji: "🌟", slug: "inspirational", color: "#FFFBE5" },
-];
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Carousel() {
-  const [search, setSearch] = useState("");
-  const [filtered, setFiltered] = useState(CATEGORIES);
+  const router = useRouter();
+  const [videos, setVideos] = useState([]);
+  const [index, setIndex] = useState(0);
+  const autoplayRef = useRef(null);
+  const pauseRef = useRef(false);
 
-  // 🔍 Filtrado local
+  // 🧭 Variables de control de gesto
+  const startX = useRef(0);
+  const startY = useRef(0);
+  const moved = useRef(false);
+  const direction = useRef(null);
+
+  const TAP_THRESHOLD = 10;
+  const SWIPE_THRESHOLD = 40;
+
+  // 🎥 Cargar videos desde API Everwish
   useEffect(() => {
-    const q = search.toLowerCase().trim();
-    if (!q) return setFiltered(CATEGORIES);
-    setFiltered(CATEGORIES.filter((cat) => cat.name.toLowerCase().includes(q)));
-  }, [search]);
+    async function loadVideos() {
+      try {
+        const res = await fetch("/api/videos");
+        const data = await res.json();
 
+        // ✅ el API devuelve { videos: [...] }
+        const list = Array.isArray(data.videos) ? data.videos : [];
+        if (list.length === 0) return;
+
+        // 🔹 Normaliza estructura
+        const formatted = list.map((v, i) => ({
+          id: i,
+          src: v.src,
+          category: v.category || v.mainSlug || "general",
+          slug:
+            v.slug ||
+            v.object ||
+            v.category ||
+            v.src?.split("/").pop()?.replace(".mp4", "") ||
+            `video-${i}`,
+          mainName: v.mainName || "General",
+        }));
+
+        // 🔝 Toma máximo 10
+        setVideos(formatted.slice(0, 10));
+      } catch (err) {
+        console.error("❌ Error cargando videos desde /api/videos:", err);
+      }
+    }
+
+    loadVideos();
+  }, []);
+
+  // 🕒 Autoplay
+  const startAutoplay = () => {
+    clearInterval(autoplayRef.current);
+    if (!pauseRef.current && videos.length > 0) {
+      autoplayRef.current = setInterval(() => {
+        setIndex((prev) => (prev + 1) % videos.length);
+      }, 5000);
+    }
+  };
+
+  useEffect(() => {
+    startAutoplay();
+    return () => clearInterval(autoplayRef.current);
+  }, [videos]);
+
+  // 🖐️ Control táctil
+  const handleTouchStart = (e) => {
+    const t = e.touches[0];
+    startX.current = t.clientX;
+    startY.current = t.clientY;
+    moved.current = false;
+    direction.current = null;
+    pauseRef.current = true;
+    clearInterval(autoplayRef.current);
+  };
+
+  const handleTouchMove = (e) => {
+    const t = e.touches[0];
+    const deltaX = t.clientX - startX.current;
+    const deltaY = t.clientY - startY.current;
+
+    if (Math.abs(deltaX) > TAP_THRESHOLD || Math.abs(deltaY) > TAP_THRESHOLD) {
+      moved.current = true;
+      direction.current =
+        Math.abs(deltaX) > Math.abs(deltaY) ? "horizontal" : "vertical";
+      e.stopPropagation();
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    e.stopPropagation();
+
+    if (!moved.current) {
+      const tapped = videos[index];
+      if (tapped?.slug) handleClick(tapped.slug);
+    } else if (direction.current === "horizontal") {
+      const diffX = startX.current - e.changedTouches[0].clientX;
+      if (Math.abs(diffX) > SWIPE_THRESHOLD) {
+        setIndex((prev) =>
+          diffX > 0
+            ? (prev + 1) % videos.length
+            : (prev - 1 + videos.length) % videos.length
+        );
+      }
+    }
+
+    setTimeout(() => {
+      pauseRef.current = false;
+      startAutoplay();
+    }, 3000);
+  };
+
+  // 🎬 Abrir en editor
+  const handleClick = async (slug) => {
+    try {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) await elem.requestFullscreen();
+      else if (elem.webkitRequestFullscreen)
+        await elem.webkitRequestFullscreen();
+      await new Promise((r) => setTimeout(r, 150));
+      router.push(`/edit/${slug}`);
+    } catch {
+      router.push(`/edit/${slug}`);
+    }
+  };
+
+  // 🧩 Render
   return (
-    <section id="categories" className="text-center py-12 px-3 overflow-visible bg-[#fff7f5]">
-      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
-        Explore by Category ✨
-      </h2>
+    <div
+      className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none"
+      style={{ touchAction: "pan-y" }}
+    >
+      <div
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        className="relative w-full max-w-5xl flex justify-center items-center h-[440px]"
+      >
+        {videos.length === 0 && (
+          <p className="text-gray-500 text-sm">Loading cards...</p>
+        )}
 
-      {/* 🔍 Barra de búsqueda */}
-      <div className="flex justify-center mb-10">
-        <input
-          type="text"
-          placeholder="Search — e.g. birthday, love, condolences..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-80 md:w-96 px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700 bg-white/90"
-        />
+        {videos.map((video, i) => {
+          const offset = (i - index + videos.length) % videos.length;
+          const positionClass =
+            offset === 0
+              ? "translate-x-0 scale-100 z-20 opacity-100"
+              : offset === 1
+              ? "translate-x-full scale-90 z-10 opacity-50"
+              : offset === videos.length - 1
+              ? "-translate-x-full scale-90 z-10 opacity-50"
+              : "opacity-0 z-0";
+
+          return (
+            <div
+              key={video.slug || i}
+              className={`absolute transition-all duration-500 ease-in-out ${positionClass}`}
+            >
+              <video
+                src={video.src}
+                autoPlay
+                loop
+                muted
+                playsInline
+                controlsList="nodownload noplaybackrate"
+                draggable="false"
+                onContextMenu={(e) => e.preventDefault()}
+                className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover object-center bg-white overflow-hidden"
+              />
+            </div>
+          );
+        })}
       </div>
 
-      {/* 🎠 Carrusel de categorías */}
-      <Swiper
-        slidesPerView={3.2}
-        spaceBetween={16}
-        centeredSlides
-        loop
-        autoplay={{ delay: 2500, disableOnInteraction: false }}
-        speed={900}
-        breakpoints={{
-          0: { slidesPerView: 2.2, spaceBetween: 10 },
-          640: { slidesPerView: 3.4, spaceBetween: 14 },
-          1024: { slidesPerView: 5, spaceBetween: 20 },
-        }}
-        modules={[Autoplay]}
-        className="overflow-visible"
-      >
-        {filtered.map((cat, i) => (
-          <SwiperSlide key={i}>
-            <Link href={`/category/${cat.slug}`}>
-              <motion.div
-                className="flex flex-col items-center justify-center cursor-pointer"
-                whileHover={{ scale: 1.08 }}
-              >
-                <div
-                  className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md"
-                  style={{ backgroundColor: cat.color }}
-                >
-                  <motion.span
-                    className="text-4xl sm:text-5xl"
-                    animate={{ y: [0, -6, 0] }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                  >
-                    {cat.emoji}
-                  </motion.span>
-                </div>
-                <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
-                  {cat.name}
-                </p>
-              </motion.div>
-            </Link>
-          </SwiperSlide>
+      {/* 🔘 Dots */}
+      <div className="flex mt-5 gap-2">
+        {videos.map((_, i) => (
+          <span
+            key={i}
+            onClick={() => {
+              setIndex(i);
+              pauseRef.current = true;
+              clearInterval(autoplayRef.current);
+              setTimeout(() => {
+                pauseRef.current = false;
+                startAutoplay();
+              }, 3000);
+            }}
+            className={`w-3 h-3 rounded-full cursor-pointer transition-all ${
+              i === index ? "bg-pink-500 scale-125" : "bg-gray-300"
+            }`}
+          ></span>
         ))}
-      </Swiper>
-    </section>
+      </div>
+    </div>
   );
-}
+          }
