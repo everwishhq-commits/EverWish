@@ -1,154 +1,87 @@
 import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
+import { MAIN_CATEGORIES, normalize } from "@/lib/categories";
 
-// 🌎 CATEGORÍAS PRINCIPALES Y PALABRAS CLAVE
-const MAIN_GROUPS = {
-  holidays: {
-    mainName: "Holidays",
-    mainEmoji: "🎄",
-    mainColor: "#FFF4E0",
-    keywords: [
-      "christmas","halloween","thanksgiving","easter","newyear",
-      "independence","july4","fireworks","memorial","veterans",
-      "labor","columbus","presidents","mlk","stpatrick",
-      "oktoberfest","pride","earth","womens","workers",
-      "friendship","mothers","fathers","teachers","heritage",
-      "dayofthedead","carnival","kindness","holiday","pumpkin","santa"
-    ],
+// ✅ Ejemplo de data (se puede expandir después)
+const VIDEOS = [
+  {
+    object: "Ghost Halloween Love 1A",
+    slug: "ghost_halloween_love_1A",
+    src: "/videos/ghost_halloween_love_1A.mp4",
+    category: "Holidays",
+    subcategory: "halloween",
   },
-
-  love: {
-    mainName: "Love & Romance",
-    mainEmoji: "❤️",
-    mainColor: "#FFE8EE",
-    keywords: [
-      "valentine","romance","anniversary","wedding","engagement",
-      "proposal","couple","relationship","sweetheart","heart",
-      "kiss","forever","date","affection","together","partner","crush","love"
-    ],
+  {
+    object: "Mother Mothers-Day Celebration 1A",
+    slug: "mother_mothers-day_celebration_1A",
+    src: "/videos/mother_mothers-day_celebration_1A.mp4",
+    category: "Celebrations & Special Moments",
+    subcategory: "mothersday",
   },
-
-  celebrations: {
-    mainName: "Celebrations & Special Moments",
-    mainEmoji: "🎉",
-    mainColor: "#FFF7FF",
-    keywords: [
-      "birthday","graduation","babyshower","genderreveal","newhome",
-      "newjob","promotion","retirement","success","party",
-      "congratulations","achievement","milestone","event","joy","welcome"
-    ],
+  {
+    object: "Dogcat Petsandanimals Appreciationday",
+    slug: "dogcat_petsandanimals_appreciationday",
+    src: "/videos/dogcat_petsandanimals_appreciationday.mp4",
+    category: "Animals & Nature",
+    subcategory: "general",
   },
-
-  work: {
-    mainName: "Work & Professional Life",
-    mainEmoji: "💼",
-    mainColor: "#EAF4FF",
-    keywords: [
-      "career","job","employee","boss","achievement","teamwork","goal",
-      "mentor","teacher","doctor","nurse","engineer","artist","coach",
-      "athlete","volunteer","entrepreneur","colleague","motivation","skill",
-    ],
+  {
+    object: "Hugs Anniversary Love A1",
+    slug: "hugs_anniversary_love_A1",
+    src: "/videos/hugs_anniversary_love_A1.mp4",
+    category: "Love & Romance",
+    subcategory: "anniversary",
   },
-
-  condolences: {
-    mainName: "Condolences & Support",
-    mainEmoji: "🕊️",
-    mainColor: "#F8F8F8",
-    keywords: [
-      "condolence","sympathy","getwell","healing","encouragement",
-      "appreciation","thankyou","remembrance","gratitude","support",
-      "recovery","loss","memory","hope","care","empathy","thanks",
-    ],
+  {
+    object: "Eagle July4th Independenceday 1A",
+    slug: "eagle_July4th_independenceday_1A",
+    src: "/videos/eagle_July4th_independenceday_1A.mp4",
+    category: "Holidays",
+    subcategory: "independenceday",
   },
-
-  animals: {
-    mainName: "Animals & Nature",
-    mainEmoji: "🐾",
-    mainColor: "#E8FFF3",
-    keywords: [
-      "pets","wildlife","ocean","forest","farm","bird","turtle",
-      "elephant","butterfly","dolphin","cat","dog","nature","flora","fauna",
-    ],
+  {
+    object: "Mother Mothers-Day General 2A",
+    slug: "mother_mothers-day_general_2A",
+    src: "/videos/mother_mothers-day_general_2A.mp4",
+    category: "Celebrations & Special Moments",
+    subcategory: "mothersday",
   },
-
-  seasons: {
-    mainName: "Seasons",
-    mainEmoji: "🍂",
-    mainColor: "#FFFBE5",
-    keywords: [
-      "spring","summer","autumn","fall","winter","rainy","sunny",
-      "snow","beach","mountain","forest","sunset","travel","vacation","breeze",
-    ],
+  {
+    object: "Octopus Petsandanimals General 1A",
+    slug: "octopus_petsandanimals_general_1A",
+    src: "/videos/octopus_petsandanimals_general_1A.mp4",
+    category: "Animals & Nature",
+    subcategory: "general",
   },
-
-  inspirational: {
-    mainName: "Inspirational & Friendship",
-    mainEmoji: "🌟",
-    mainColor: "#FFFBE5",
-    keywords: [
-      "inspiration","motivation","hope","faith","dream","success","happiness",
-      "peace","friendship","teamwork","goal","believe","gratitude","positivity",
-    ],
+  {
+    object: "Bunny Easter General",
+    slug: "bunny_easter_general",
+    src: "/videos/bunny_easter_general.mp4",
+    category: "Holidays",
+    subcategory: "easter",
   },
-};
+];
 
-// 🧹 Normaliza texto
-function normalize(str) {
-  return str
-    ?.toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/&/g, "and")
-    .replace(/[^a-z0-9-]/g, "")
-    .trim();
-}
+// 🧠 Asigna mainSlug correcto basándose en tus categorías de lib/categories.js
+const ENRICHED_VIDEOS = VIDEOS.map((v) => {
+  const found = MAIN_CATEGORIES.find((c) =>
+    c.keywords.some((k) =>
+      v.subcategory?.toLowerCase().includes(k.toLowerCase())
+    )
+  );
+  return {
+    ...v,
+    mainSlug: found?.slug || "general",
+    mainName: found?.name || "General",
+    mainEmoji: found?.emoji || "✨",
+    updatedAt: Date.now(),
+  };
+});
 
-// 🚀 Endpoint principal
+// 🚀 API Response
 export async function GET() {
-  const dir = path.join(process.cwd(), "public/cards");
-
-  if (!fs.existsSync(dir)) {
-    console.warn("⚠️ No se encontró carpeta /public/cards");
-    return NextResponse.json({ videos: [] });
-  }
-
-  const files = fs.readdirSync(dir).filter((f) => f.endsWith(".mp4"));
-
-  const videos = files.map((file) => {
-    const cleanName = file.replace(".mp4", "");
-    const parts = cleanName.split("_");
-
-    const object = normalize(parts[0] || "unknown");
-    const category = normalize(parts[1] || "general");
-    const subcategory = normalize(parts[2] || "general");
-
-    // 🔍 Encuentra grupo principal según coincidencia parcial
-    const match = Object.entries(MAIN_GROUPS).find(([key, group]) =>
-      group.keywords.some((kw) => cleanName.includes(kw))
-    );
-
-    const [selectedKey, selectedGroup] =
-      match || ["celebrations", MAIN_GROUPS.celebrations];
-
-    const slug = normalize(cleanName);
-    const fullCategoryName = `${selectedGroup.mainName} — ${
-      subcategory !== "general" ? subcategory : category
-    }`.replace(/-/g, " ");
-
-    return {
-      slug,
-      src: `/cards/${file}`,
-      object,
-      category,
-      subcategory,
-      combinedName: fullCategoryName,
-      mainSlug: selectedKey,
-      mainName: selectedGroup.mainName,
-      mainEmoji: selectedGroup.mainEmoji,
-      mainColor: selectedGroup.mainColor,
-    };
+  return NextResponse.json({
+    updatedAt: new Date().toISOString(),
+    total: ENRICHED_VIDEOS.length,
+    videos: ENRICHED_VIDEOS,
   });
-
-  // ✅ El endpoint devuelve la lista en formato estándar
-  return NextResponse.json({ videos });
 }
