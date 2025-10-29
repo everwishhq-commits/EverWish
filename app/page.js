@@ -1,7 +1,7 @@
 "use client";
 export const dynamic = "force-dynamic";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Carousel from "@/components/Carousel";
 import Categories from "@/components/Categories";
@@ -11,6 +11,11 @@ import Splash from "@/components/Splash";
 export default function Page() {
   const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 2500);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <>
       {loading && <Splash onFinish={() => setLoading(false)} />}
@@ -18,15 +23,13 @@ export default function Page() {
         <>
           <Header />
 
-          {/* 🌸 Fondo rosado → blanco extendido hasta el footer */}
           <main
-            className="flex flex-col items-center justify-start min-h-screen text-gray-700 pt-20 px-4"
+            className="flex flex-col items-center justify-start min-h-screen text-gray-700 pt-16 sm:pt-20 px-3 sm:px-4"
             style={{
               background:
-                "linear-gradient(to bottom, #fff5f7 0%, #fff8f9 40%, #ffffff 100%)",
+                "linear-gradient(180deg, #fff5f7 0%, #fff8f9 60%, #ffffff 100%)",
             }}
           >
-            {/* ✨ Mensaje principal */}
             <h1 className="text-3xl font-bold mb-3 text-gray-800 text-center">
               Share moments that last forever 💫
             </h1>
@@ -39,9 +42,11 @@ export default function Page() {
               <Carousel />
             </div>
 
-            {/* 📦 Contenedor blanco con sombra */}
-            <div className="w-full bg-white rounded-3xl shadow-lg px-2 py-4 mb-10 border border-pink-100">
-              <h2 className="text-2xl font-semibold mb-4 text-gray-800 text-center"></h2>
+            {/* 📦 Bloque blanco con sombra */}
+            <div className="w-full bg-white rounded-3xl shadow-lg px-2 py-6 mb-10 border border-pink-100">
+              <h2 className="text-xl sm:text-2xl font-semibold mb-4 text-gray-700 text-center">
+                Explore by Category 🌸
+              </h2>
               <Categories />
             </div>
           </main>
@@ -51,4 +56,4 @@ export default function Page() {
       )}
     </>
   );
-              }
+        }
