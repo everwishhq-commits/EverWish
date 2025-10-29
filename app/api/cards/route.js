@@ -14,7 +14,7 @@ const MAIN_GROUPS = {
       "labor","columbus","presidents","mlk","stpatrick",
       "oktoberfest","pride","earth","womens","workers",
       "friendship","mothers","fathers","teachers","heritage",
-      "dayofthedead","carnival","kindness",
+      "dayofthedead","carnival","kindness","holiday","pumpkin","santa"
     ],
   },
 
@@ -25,7 +25,7 @@ const MAIN_GROUPS = {
     keywords: [
       "valentine","romance","anniversary","wedding","engagement",
       "proposal","couple","relationship","sweetheart","heart",
-      "kiss","forever","date","affection","together",
+      "kiss","forever","date","affection","together","partner","crush","love"
     ],
   },
 
@@ -36,7 +36,7 @@ const MAIN_GROUPS = {
     keywords: [
       "birthday","graduation","babyshower","genderreveal","newhome",
       "newjob","promotion","retirement","success","party",
-      "congratulations","achievement","milestone","event","joy",
+      "congratulations","achievement","milestone","event","joy","welcome"
     ],
   },
 
@@ -103,6 +103,7 @@ function normalize(str) {
     .trim();
 }
 
+// 🚀 Endpoint principal
 export async function GET() {
   const dir = path.join(process.cwd(), "public/cards");
 
@@ -117,12 +118,11 @@ export async function GET() {
     const cleanName = file.replace(".mp4", "");
     const parts = cleanName.split("_");
 
-    // 🧩 Estructura: objeto_categoria_subcategoría_version
     const object = normalize(parts[0] || "unknown");
     const category = normalize(parts[1] || "general");
     const subcategory = normalize(parts[2] || "general");
 
-    // 🔍 Busca grupo principal por palabra clave
+    // 🔍 Busca grupo principal
     const match = Object.entries(MAIN_GROUPS).find(([key, group]) =>
       group.keywords.some((kw) => cleanName.includes(kw))
     );
@@ -130,7 +130,6 @@ export async function GET() {
     const [selectedKey, selectedGroup] =
       match || ["celebrations", MAIN_GROUPS.celebrations];
 
-    // 🔗 Genera slug y nombre legible
     const slug = normalize(cleanName);
     const fullCategoryName = `${selectedGroup.mainName} — ${
       subcategory !== "general" ? subcategory : category
@@ -143,8 +142,6 @@ export async function GET() {
       category,
       subcategory,
       combinedName: fullCategoryName,
-
-      // Datos del grupo
       mainSlug: selectedKey,
       mainName: selectedGroup.mainName,
       mainEmoji: selectedGroup.mainEmoji,
@@ -152,5 +149,6 @@ export async function GET() {
     };
   });
 
+  // ✅ Usa el nombre "videos" para compatibilidad con el editor y carrusel
   return NextResponse.json({ videos });
-             }
+}
