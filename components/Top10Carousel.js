@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function Carousel() {
+export default function Top10Carousel() {
   const router = useRouter();
   const [videos, setVideos] = useState([]);
   const [index, setIndex] = useState(0);
@@ -18,25 +18,25 @@ export default function Carousel() {
   const TAP_THRESHOLD = 10;
   const SWIPE_THRESHOLD = 40;
 
-  // 🎥 Cargar tarjetas desde API /api/cards
+  // 🎥 Cargar tarjetas desde API
   useEffect(() => {
     async function loadVideos() {
       try {
         let data;
 
-        // 🔹 Primero intenta con /api/cards
-        const res = await fetch("/api/cards");
+        // 🔹 Primero intenta /api/videos (principal)
+        const res = await fetch("/api/videos");
         if (res.ok) {
           data = await res.json();
         } else {
-          // 🔸 Si no existe, intenta fallback con /api/videos
-          const fallback = await fetch("/api/videos");
+          // 🔸 Fallback /api/cards (por compatibilidad)
+          const fallback = await fetch("/api/cards");
           data = await fallback.json();
         }
 
         // ✅ Normaliza estructura
-        const list = Array.isArray(data.cards || data.videos)
-          ? data.cards || data.videos
+        const list = Array.isArray(data.videos || data.cards)
+          ? data.videos || data.cards
           : [];
 
         if (list.length === 0) {
@@ -47,27 +47,27 @@ export default function Carousel() {
         const formatted = list.map((v, i) => ({
           id: i,
           src: v.src,
-          category: v.category || v.mainSlug || "general",
           slug:
             v.slug ||
             v.object ||
             v.category ||
             v.src?.split("/").pop()?.replace(".mp4", "") ||
             `video-${i}`,
+          category: v.category || v.mainSlug || "general",
           mainName: v.mainName || "General",
         }));
 
         // 🔝 Limita a 10 elementos
         setVideos(formatted.slice(0, 10));
       } catch (err) {
-        console.error("❌ Error cargando videos desde /api/cards:", err);
+        console.error("❌ Error cargando videos:", err);
       }
     }
 
     loadVideos();
   }, []);
 
-  // 🕒 Autoplay del carrusel
+  // 🕒 Autoplay
   const startAutoplay = () => {
     clearInterval(autoplayRef.current);
     if (!pauseRef.current && videos.length > 0) {
@@ -147,7 +147,11 @@ export default function Carousel() {
   return (
     <div
       className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none"
-      style={{ touchAction: "pan-y" }}
+      style={{
+        touchAction: "pan-y",
+        background:
+          "linear-gradient(to bottom, #fff8fa 0%, #fff5f7 30%, #ffffff 100%)",
+      }}
     >
       <div
         onTouchStart={handleTouchStart}
@@ -173,7 +177,7 @@ export default function Carousel() {
           return (
             <div
               key={video.slug || i}
-              className={`absolute transition-all duration-500 ease-in-out ${positionClass}`}
+              className={`absolute transition-all duration-700 ease-in-out ${positionClass}`}
             >
               <video
                 src={video.src}
@@ -184,7 +188,7 @@ export default function Carousel() {
                 controlsList="nodownload noplaybackrate"
                 draggable="false"
                 onContextMenu={(e) => e.preventDefault()}
-                className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover object-center bg-white overflow-hidden"
+                className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-3xl shadow-lg object-cover object-center bg-white overflow-hidden transition-transform duration-500 hover:scale-[1.03]"
               />
             </div>
           );
@@ -192,7 +196,7 @@ export default function Carousel() {
       </div>
 
       {/* 🔘 Dots de navegación */}
-      <div className="flex mt-5 gap-2">
+      <div className="flex mt-6 gap-2">
         {videos.map((_, i) => (
           <span
             key={i}
@@ -205,12 +209,14 @@ export default function Carousel() {
                 startAutoplay();
               }, 3000);
             }}
-            className={`w-3 h-3 rounded-full cursor-pointer transition-all ${
-              i === index ? "bg-pink-500 scale-125" : "bg-gray-300"
+            className={`w-3 h-3 rounded-full cursor-pointer transition-all duration-300 ${
+              i === index
+                ? "bg-pink-500 scale-125 shadow-md"
+                : "bg-gray-300 hover:bg-pink-300"
             }`}
           ></span>
         ))}
       </div>
     </div>
   );
-        }
+                           }
