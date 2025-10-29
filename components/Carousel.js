@@ -9,7 +9,7 @@ export default function Carousel() {
   const autoplayRef = useRef(null);
   const pauseRef = useRef(false);
 
-  // 🧭 Variables de control de gesto
+  // 🧭 Variables de control táctil
   const startX = useRef(0);
   const startY = useRef(0);
   const moved = useRef(false);
@@ -18,18 +18,32 @@ export default function Carousel() {
   const TAP_THRESHOLD = 10;
   const SWIPE_THRESHOLD = 40;
 
-  // 🎥 Cargar videos desde API Everwish
+  // 🎥 Cargar tarjetas desde API /api/cards
   useEffect(() => {
     async function loadVideos() {
       try {
-        const res = await fetch("/api/videos");
-        const data = await res.json();
+        let data;
 
-        // ✅ el API devuelve { videos: [...] }
-        const list = Array.isArray(data.videos) ? data.videos : [];
-        if (list.length === 0) return;
+        // 🔹 Primero intenta con /api/cards
+        const res = await fetch("/api/cards");
+        if (res.ok) {
+          data = await res.json();
+        } else {
+          // 🔸 Si no existe, intenta fallback con /api/videos
+          const fallback = await fetch("/api/videos");
+          data = await fallback.json();
+        }
 
-        // 🔹 Normaliza estructura
+        // ✅ Normaliza estructura
+        const list = Array.isArray(data.cards || data.videos)
+          ? data.cards || data.videos
+          : [];
+
+        if (list.length === 0) {
+          console.warn("⚠️ No se encontraron videos en el API.");
+          return;
+        }
+
         const formatted = list.map((v, i) => ({
           id: i,
           src: v.src,
@@ -43,17 +57,17 @@ export default function Carousel() {
           mainName: v.mainName || "General",
         }));
 
-        // 🔝 Toma máximo 10
+        // 🔝 Limita a 10 elementos
         setVideos(formatted.slice(0, 10));
       } catch (err) {
-        console.error("❌ Error cargando videos desde /api/videos:", err);
+        console.error("❌ Error cargando videos desde /api/cards:", err);
       }
     }
 
     loadVideos();
   }, []);
 
-  // 🕒 Autoplay
+  // 🕒 Autoplay del carrusel
   const startAutoplay = () => {
     clearInterval(autoplayRef.current);
     if (!pauseRef.current && videos.length > 0) {
@@ -115,7 +129,7 @@ export default function Carousel() {
     }, 3000);
   };
 
-  // 🎬 Abrir en editor
+  // 🎬 Abrir en modo editor
   const handleClick = async (slug) => {
     try {
       const elem = document.documentElement;
@@ -129,7 +143,7 @@ export default function Carousel() {
     }
   };
 
-  // 🧩 Render
+  // 🧩 Render del carrusel
   return (
     <div
       className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none"
@@ -177,7 +191,7 @@ export default function Carousel() {
         })}
       </div>
 
-      {/* 🔘 Dots */}
+      {/* 🔘 Dots de navegación */}
       <div className="flex mt-5 gap-2">
         {videos.map((_, i) => (
           <span
@@ -199,4 +213,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-          }
+        }
