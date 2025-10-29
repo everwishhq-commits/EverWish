@@ -94,6 +94,7 @@ function normalize(str) {
     .trim();
 }
 
+// 🚀 Endpoint principal
 export async function GET() {
   const dir = path.join(process.cwd(), "public/cards");
   const files = fs.existsSync(dir)
@@ -114,28 +115,27 @@ export async function GET() {
       group.keywords.some((kw) => cleanName.includes(kw))
     );
 
-    const [selectedKey, selectedGroup] = match || ["appreciation", MAIN_GROUPS.appreciation];
+    const [selectedKey, selectedGroup] =
+      match || ["appreciation", MAIN_GROUPS.appreciation];
 
     // 🧠 Combinación automática de nombres
-    const fullCategoryName = `${selectedGroup.mainName} — ${subcategory !== "general" ? subcategory : category}`.replace(/-/g, " ");
+    const fullCategoryName = `${selectedGroup.mainName} — ${
+      subcategory !== "general" ? subcategory : category
+    }`.replace(/-/g, " ");
 
     return {
-      // 🌸 Primero categoría principal
       mainName: selectedGroup.mainName,
       mainEmoji: selectedGroup.mainEmoji,
       mainColor: selectedGroup.mainColor,
-
-      // 🧩 Luego datos combinados y limpios
       object,
       category,
       subcategory,
       combinedName: fullCategoryName,
       src: `/cards/${file}`,
-
-      // 🔗 Slug técnico
       mainSlug: selectedKey,
     };
   });
 
-  return NextResponse.json({ videos });
-      }
+  // ✅ Ahora devuelve "cards" para el carrusel
+  return NextResponse.json({ cards: videos });
+}
