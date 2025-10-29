@@ -47,7 +47,7 @@ export default function EditPage({ params }) {
   const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
   const [animKey, setAnimKey] = useState(0);
 
-  // 🧭 Verificación y caché cada 24 h
+  // 🧭 Verificación y caché cada 24 h (usa /api/videos)
   useEffect(() => {
     const lastCheck = localStorage.getItem("everwish_videos_lastCheck");
     const now = Date.now();
@@ -55,7 +55,7 @@ export default function EditPage({ params }) {
 
     if (!lastCheck || now - parseInt(lastCheck, 10) > day) {
       localStorage.setItem("everwish_videos_lastCheck", now.toString());
-      fetch("/api/cards?refresh=" + now)
+      fetch("/api/videos?refresh=" + now)
         .then((r) => r.json())
         .then((data) => {
           localStorage.setItem("everwish_videos_cache", JSON.stringify(data));
@@ -64,7 +64,7 @@ export default function EditPage({ params }) {
     }
   }, []);
 
-  // 🎥 Carga video principal
+  // 🎥 Carga video principal desde /api/videos
   useEffect(() => {
     async function loadVideo() {
       try {
@@ -72,7 +72,7 @@ export default function EditPage({ params }) {
         let data = cached ? JSON.parse(cached) : null;
 
         if (!data) {
-          const res = await fetch("/api/cards");
+          const res = await fetch("/api/videos");
           data = await res.json();
           localStorage.setItem("everwish_videos_cache", JSON.stringify(data));
         }
@@ -93,9 +93,11 @@ export default function EditPage({ params }) {
         if (match) {
           setVideoSrc(match.src);
           setVideoFound(true);
+          console.log("🎬 Video encontrado:", match.src);
         } else {
           setVideoSrc(`/cards/${slug}.mp4`);
           setVideoFound(false);
+          console.warn("⚠️ No se encontró el video, usando fallback:", slug);
         }
       } catch (err) {
         console.error("❌ Error loading video:", err);
@@ -275,4 +277,4 @@ export default function EditPage({ params }) {
       )}
     </div>
   );
-                }
+}
