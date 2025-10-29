@@ -1,80 +1,48 @@
 import fs from "fs";
 import path from "path";
+import { NextResponse } from "next/server";
 
+// 📂 Ruta correcta: ahora apunta a /public/videos
+const VIDEOS_DIR = path.join(process.cwd(), "public/videos");
+
+// 🧩 Función para generar metadatos básicos desde el nombre del archivo
+function parseVideoName(filename) {
+  // ejemplo: pumpkin_halloween_general_1A.mp4
+  const nameWithoutExt = filename.replace(/\.[^/.]+$/, "");
+  const parts = nameWithoutExt.split("_");
+
+  // Construimos estructura base
+  return {
+    slug: nameWithoutExt,
+    src: `/videos/${filename}`,
+    mainName: parts[0] || "video",
+    category: parts[1] || "general",
+    theme: parts[2] || "",
+    version: parts[3] || "",
+  };
+}
+
+// 🧠 API Handler
 export async function GET() {
   try {
-    // 📂 Carpeta donde están los videos
-    const videosDir = path.join(process.cwd(), "public/videos");
+    // ✅ lee carpeta
+    const files = fs.readdirSync(VIDEOS_DIR);
 
-    // 📜 Leer los archivos que terminan en .mp4
-    const files = fs
-      .readdirSync(videosDir)
-      .filter((file) => file.endsWith(".mp4"));
+    // filtra solo archivos .mp4 y similares
+    const videos = files
+      .filter((file) => file.toLowerCase().endsWith(".mp4"))
+      .map((file) => parseVideoName(file));
 
-    // 📁 Mapa de categorías automáticas por palabra clave
-    const categoryMap = {
-      halloween: "Seasonal & Holidays",
-      christmas: "Seasonal & Holidays",
-      thanksgiving: "Seasonal & Holidays",
-      july4th: "Seasonal & Holidays",
-      easter: "Seasonal & Holidays",
-      independence: "Seasonal & Holidays",
+    // ordena (opcional: por nombre alfabético)
+    const sorted = videos.sort((a, b) => a.slug.localeCompare(b.slug));
 
-      birthday: "Birthdays",
-      anniversary: "Weddings & Anniversaries",
-      wedding: "Weddings & Anniversaries",
-
-      love: "Love & Romance",
-      valentines: "Love & Romance",
-
-      mother: "Family & Relationships",
-      mothersday: "Family & Relationships",
-      father: "Family & Relationships",
-      fathersday: "Family & Relationships",
-
-      baby: "New Baby",
-      newborn: "New Baby",
-
-      pet: "Pets & Animal Lovers",
-      dog: "Pets & Animal Lovers",
-      cat: "Pets & Animal Lovers",
-
-      condolence: "Condolences",
-      sympathy: "Condolences",
-
-      general: "Everyday",
-    };
-
-    // 🧠 Generar lista de videos automáticamente
-    const videos = files.map((file) => {
-      const slug = file.replace(".mp4", "");
-      const title = slug
-        .replace(/_/g, " ")
-        .replace(/\b\w/g, (c) => c.toUpperCase());
-
-      // 🔍 Detectar categoría automáticamente
-      const lower = slug.toLowerCase();
-      const foundCategory =
-        Object.entries(categoryMap).find(([key]) => lower.includes(key))?.[1] ||
-        "Other";
-
-      return {
-        title,
-        src: `/videos/${file}`,
-        slug,
-        category: foundCategory,
-      };
-    });
-
-    // ✅ Devolver respuesta JSON
-    return new Response(JSON.stringify(videos, null, 2), {
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (error) {
-    console.error("❌ Error reading videos:", error);
-    return new Response(JSON.stringify({ error: "Failed to load videos" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    // devuelve respuesta
+    return NextResponse.json({ videos: sorted });
+  } catch (err) {
+    console.error("❌ Error leyendo videos:", err);
+    return NextResponse.json(
+      { error: "Error loading videos", details: err.message },
+      { status: 500 }
+    );
   }
-        }
+}
