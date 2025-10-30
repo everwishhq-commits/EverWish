@@ -4,20 +4,38 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { MAIN_CATEGORIES } from "@/lib/categories.js";
 
+// 🧠 Sinónimos básicos (igual que en categories/page.js)
+const SYNONYMS = {
+  zombies: "zombie", zombie: "zombie",
+  ghosts: "ghost", ghost: "ghost",
+  pumpkins: "pumpkin", pumpkin: "pumpkin",
+  dogs: "dog", puppies: "dog",
+  cats: "cat", kittens: "cat",
+  turkeys: "turkey", hearts: "heart",
+  flowers: "flower", turtles: "turtle",
+  lions: "lion", tigers: "tiger", bears: "bear",
+  halloween: "halloween", spooky: "halloween", boo: "halloween",
+  valentine: "valentine", love: "love", heart: "love",
+  christmas: "christmas", xmas: "christmas", santa: "christmas",
+  thanksgiving: "thanksgiving", turkey: "thanksgiving",
+  easter: "easter", bunny: "easter", egg: "easter",
+};
+
 export default function CategoryPage() {
   const { slug } = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const query = searchParams.get("q")?.toLowerCase().trim() || "";
+  const query = searchParams.get("q")?.toLowerCase() || "";
 
   const [groups, setGroups] = useState({});
   const [activeSub, setActiveSub] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 🔍 Normalizador base
-  const normalize = (str) =>
-    str?.toLowerCase().replace(/&/g, "and").replace(/\s+/g, "-").trim();
+  // Normalizador
+  const normalize = (s) =>
+    s?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 
+  // 🧩 Cargar y agrupar videos
   useEffect(() => {
     async function loadVideos() {
       try {
@@ -25,44 +43,66 @@ export default function CategoryPage() {
         const data = await res.json();
         const grouped = {};
 
-        // 🎯 Filtrar videos pertenecientes a esta categoría
+        const normalizedSlug = normalize(slug);
+        const baseQuery = SYNONYMS[normalize(query)] || normalize(query);
+
+        // Recorrer los videos
         for (const v of data.videos) {
-          const videoCategories = [
-            v.mainSlug,
-            v.category,
-            v.subcategory,
-            ...(v.extraCategories || []),
-          ]
-            .filter(Boolean)
-            .map((c) => normalize(c));
+          const belongsToCategory = normalize(v.mainSlug) === normalizedSlug;
 
-          // ✅ Si el video pertenece a esta categoría
-          if (videoCategories.includes(normalize(slug))) {
-            const text = `${v.object} ${v.category} ${v.subcategory}`.toLowerCase();
+          if (!belongsToCategory) continue;
 
-            // ✅ Si hay búsqueda, solo incluir si contiene la palabra
-            if (!query || text.includes(query)) {
-              const sub =
-                (v.subcategory && v.subcategory.trim()) ||
-                (v.category && v.category.trim()) ||
-                "General";
+          const text = normalize(
+            `${v.object} ${v.category} ${v.subcategory}`
+          );
 
-              const clean = sub
-                .replace(/_/g, " ")
-                .replace(/\b\w/g, (c) => c.toUpperCase());
+          // Filtrar por búsqueda o incluir todo si no hay query
+          const matchByQuery =
+            !baseQuery || text.includes(baseQuery);
 
-              if (!grouped[clean]) grouped[clean] = [];
-              grouped[clean].push(v);
-            }
+          if (matchByQuery) {
+            const sub =
+              (v.subcategory && v.subcategory.trim()) ||
+              (v.category && v.category.trim()) ||
+              "General";
+
+            const cleanSub = sub
+              .replace(/_/g, " ")
+              .replace(/\b\w/g, (c) => c.toUpperCase());
+
+            if (!grouped[cleanSub]) grouped[cleanSub] = [];
+            grouped[cleanSub].push(v);
           }
         }
 
-        // 🧩 Si no hay búsqueda, mantener solo subcategorías con tarjetas reales
-        const filteredGroups = Object.fromEntries(
-          Object.entries(grouped).filter(([_, vids]) => vids.length > 0)
-        );
+        // Añadir subcategorías definidas en lib/categories.js
+        const categoryData = MAIN_CATEGORIES[slug];
+        if (categoryData?.subcategories?.length) {
+          for (const sub of categoryData.subcategories) {
+            const hasMatch =
+              grouped[sub]?.length > 0 ||
+              (!query &&
+                !Object.keys(grouped).includes(sub));
+            if (hasMatch) grouped[sub] = grouped[sub] || [];
+          }
+        }
 
-        setGroups(filteredGroups);
+        // Eliminar subcategorías vacías si hay una búsqueda activa
+        if (baseQuery) {
+          for (const sub of Object.keys(grouped)) {
+            const videos = grouped[sub];
+            const containsMatch =
+              videos.length > 0 &&
+              videos.some((v) =>
+                normalize(
+                  `${v.object} ${v.category} ${v.subcategory}`
+                ).includes(baseQuery)
+              );
+            if (!containsMatch && videos.length === 0) delete grouped[sub];
+          }
+        }
+
+        setGroups(grouped);
       } catch (err) {
         console.error("❌ Error loading videos:", err);
       } finally {
@@ -86,7 +126,6 @@ export default function CategoryPage() {
 
   return (
     <main className="min-h-screen bg-[#fff5f8] text-gray-800 flex flex-col items-center py-10 px-4">
-      {/* 🔙 Volver */}
       <button
         onClick={() => router.push("/categories")}
         className="text-pink-500 hover:text-pink-600 font-semibold mb-6"
@@ -94,7 +133,6 @@ export default function CategoryPage() {
         ← Back to Categories
       </button>
 
-      {/* 🏷️ Título */}
       <h1 className="text-3xl font-extrabold text-pink-600 mb-3 capitalize text-center">
         {MAIN_CATEGORIES[slug]?.mainName || slug.replace(/-/g, " ")}
       </h1>
@@ -130,7 +168,7 @@ export default function CategoryPage() {
         </p>
       )}
 
-      {/* 💫 Modal con las tarjetas */}
+      {/* 💫 Modal con videos */}
       <AnimatePresence>
         {activeSub && (
           <>
@@ -194,4 +232,4 @@ export default function CategoryPage() {
       </AnimatePresence>
     </main>
   );
-                             }
+      }
