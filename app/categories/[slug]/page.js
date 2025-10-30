@@ -16,11 +16,14 @@ export default function CategoryPage() {
         const data = await res.json();
         const all = data.videos || [];
 
-        // Filtra por categoría principal (mainSlug)
+        // Filtra por mainSlug o palabra clave
         const filtered = all.filter(
-          (v) => v.mainSlug?.toLowerCase() === slug?.toLowerCase()
+          (v) =>
+            v.mainSlug?.toLowerCase() === slug?.toLowerCase() ||
+            v.object?.toLowerCase().includes(slug?.toLowerCase()) ||
+            v.category?.toLowerCase().includes(slug?.toLowerCase()) ||
+            v.subcategory?.toLowerCase().includes(slug?.toLowerCase())
         );
-
         setVideos(filtered);
       } catch (err) {
         console.error("❌ Error cargando videos:", err);
@@ -40,7 +43,6 @@ export default function CategoryPage() {
 
   return (
     <main className="min-h-screen bg-[#fff5f8] text-gray-800 flex flex-col items-center py-10 px-4">
-      {/* 🔙 Back button */}
       <button
         onClick={() => router.push("/categories")}
         className="text-pink-500 hover:text-pink-600 font-semibold mb-6"
@@ -48,7 +50,6 @@ export default function CategoryPage() {
         ← Back to Categories
       </button>
 
-      {/* 🏷️ Title */}
       <h1 className="text-4xl font-extrabold text-pink-600 mb-2 capitalize text-center">
         {videos[0]?.mainEmoji || "✨"} {videos[0]?.mainName || slug}
       </h1>
@@ -56,7 +57,6 @@ export default function CategoryPage() {
         Explore beautiful Everwish cards in this category 💌
       </p>
 
-      {/* 🖼️ Grid de videos */}
       {videos.length === 0 ? (
         <p className="text-gray-500 text-center mt-20">
           No cards found in this category yet 💫
@@ -68,7 +68,7 @@ export default function CategoryPage() {
               key={i}
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.25 }}
-              onClick={() => router.push(`/edit/${v.slug}`)}
+              onClick={() => router.push(`/edit/${v.slug || v.category}`)}
               className="bg-white rounded-3xl shadow-md border border-pink-100 hover:border-pink-200 hover:bg-pink-50 p-3 cursor-pointer flex flex-col items-center overflow-hidden w-[150px] sm:w-[200px]"
             >
               <video
@@ -78,7 +78,6 @@ export default function CategoryPage() {
                 muted
                 loop
                 autoPlay
-                onError={(e) => (e.target.poster = "/placeholder.png")}
               />
               <div className="text-center mt-2">
                 <p className="text-gray-700 font-semibold text-sm truncate">
@@ -94,4 +93,4 @@ export default function CategoryPage() {
       )}
     </main>
   );
-}
+    }
