@@ -4,10 +4,8 @@ import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
-import Link from "next/link";
 import "swiper/css";
 
-// 🌸 CATEGORÍAS PRINCIPALES (colores Everwish)
 const ALL_CATEGORIES = [
   { name: "Holidays & Festivities", emoji: "🎄", slug: "holidays", color: "#FFF4E0" },
   { name: "Love & Romance", emoji: "❤️", slug: "love", color: "#FFE8EE" },
@@ -22,12 +20,12 @@ const ALL_CATEGORIES = [
 export default function CategoriesCarousel() {
   const [search, setSearch] = useState("");
   const [videos, setVideos] = useState([]);
-  const [level, setLevel] = useState("categories"); // categories → subcategories → cards
+  const [level, setLevel] = useState("categories");
   const [selectedCat, setSelectedCat] = useState(null);
   const [subcategories, setSubcategories] = useState([]);
   const [filteredVideos, setFilteredVideos] = useState([]);
 
-  // 📥 Cargar videos del API
+  // 📥 Cargar videos
   useEffect(() => {
     async function loadVideos() {
       try {
@@ -41,7 +39,7 @@ export default function CategoriesCarousel() {
     loadVideos();
   }, []);
 
-  // 🔍 Categorías que coinciden con la búsqueda
+  // 🔍 Filtrar categorías según búsqueda
   const filteredCategories = (() => {
     const q = search.toLowerCase().trim();
     if (!q) return ALL_CATEGORIES;
@@ -52,39 +50,33 @@ export default function CategoriesCarousel() {
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
-      if (text.includes(q)) {
-        v.matches?.forEach((m) => matchedSlugs.add(m.mainSlug));
-      }
+      if (text.includes(q)) matchedSlugs.add(v.mainSlug);
     });
 
     return ALL_CATEGORIES.filter((cat) => matchedSlugs.has(cat.slug));
   })();
 
-  // 🔹 Cuando selecciona una categoría → muestra subcategorías relevantes
+  // 🔹 Mostrar subcategorías relevantes
   const handleCategoryClick = (slug) => {
     setSelectedCat(slug);
     setLevel("subcategories");
 
     const related = new Set();
     videos.forEach((v) => {
-      const belongs = v.matches?.some((m) => m.mainSlug === slug);
-      if (belongs) related.add(v.subcategory || "general");
+      if (v.mainSlug === slug) related.add(v.subcategory || "general");
     });
     setSubcategories([...related]);
   };
 
-  // 🔹 Al elegir una subcategoría → muestra las tarjetas (videos)
+  // 🔹 Mostrar las tarjetas
   const handleSubClick = (sub) => {
     const filtered = videos.filter(
-      (v) =>
-        v.subcategory === sub &&
-        v.matches?.some((m) => m.mainSlug === selectedCat)
+      (v) => v.subcategory === sub && v.mainSlug === selectedCat
     );
     setFilteredVideos(filtered);
     setLevel("cards");
   };
 
-  // 🔙 Volver atrás
   const goBack = () => {
     if (level === "cards") setLevel("subcategories");
     else if (level === "subcategories") setLevel("categories");
@@ -99,12 +91,10 @@ export default function CategoriesCarousel() {
           "linear-gradient(to bottom, #fff8fa 0%, #fff5f7 50%, #ffffff 100%)",
       }}
     >
-      {/* 🏷️ Título */}
       <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
         Explore by Category ✨
       </h2>
 
-      {/* 🔙 Back */}
       {level !== "categories" && (
         <button
           onClick={goBack}
@@ -114,7 +104,6 @@ export default function CategoriesCarousel() {
         </button>
       )}
 
-      {/* 🔎 Barra de búsqueda */}
       {level === "categories" && (
         <div className="flex justify-center mb-10">
           <input
@@ -127,7 +116,6 @@ export default function CategoriesCarousel() {
         </div>
       )}
 
-      {/* 🌸 Niveles */}
       {level === "categories" && (
         <Swiper
           slidesPerView={3.2}
@@ -182,7 +170,6 @@ export default function CategoriesCarousel() {
         </Swiper>
       )}
 
-      {/* 🌿 Subcategorías */}
       {level === "subcategories" && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
           {subcategories.map((sub) => (
@@ -200,7 +187,6 @@ export default function CategoriesCarousel() {
         </div>
       )}
 
-      {/* 🎴 Tarjetas */}
       {level === "cards" && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8 max-w-6xl justify-items-center">
           {filteredVideos.map((v, i) => (
@@ -233,4 +219,4 @@ export default function CategoriesCarousel() {
       )}
     </section>
   );
-      }
+        }
