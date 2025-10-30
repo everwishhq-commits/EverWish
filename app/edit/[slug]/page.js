@@ -11,7 +11,7 @@ import {
 } from "@/lib/animations";
 import { getMessageForSlug } from "@/lib/messages";
 
-// ✅ Corrige los imports con nombres exactos
+// ✅ Importaciones corregidas
 import GiftCardPopup from "@/components/GiftCard";
 import CheckoutModal from "@/components/Checkout";
 import CropperModal from "@/components/CropperModal";
@@ -47,7 +47,7 @@ export default function EditPage({ params }) {
   const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
   const [animKey, setAnimKey] = useState(0);
 
-  // 🧭 Verificación y caché cada 24 h (usa /api/videos)
+  // 🧭 Actualiza caché cada 24h
   useEffect(() => {
     const lastCheck = localStorage.getItem("everwish_videos_lastCheck");
     const now = Date.now();
@@ -64,7 +64,7 @@ export default function EditPage({ params }) {
     }
   }, []);
 
-  // 🎥 Carga video principal desde /api/videos
+  // 🎥 Carga video desde /api/videos
   useEffect(() => {
     async function loadVideo() {
       try {
@@ -83,17 +83,24 @@ export default function EditPage({ params }) {
           ? data
           : [];
 
+        // 🔍 Normaliza el slug para comparar bien
+        const normalizedSlug = slug.toLowerCase().replace(/-/g, "_");
+
         const match = list.find(
           (v) =>
-            v.slug === slug ||
-            v.object === slug ||
-            v.src?.includes(slug)
+            v.slug?.toLowerCase() === normalizedSlug ||
+            v.src?.toLowerCase().includes(normalizedSlug) ||
+            v.object?.toLowerCase() === normalizedSlug ||
+            v.category?.toLowerCase() === normalizedSlug ||
+            v.subcategory?.toLowerCase() === normalizedSlug
         );
 
         if (match) {
-          setVideoSrc(match.src);
+          const src =
+            match.src?.startsWith("/cards/") ? match.src : `/cards/${match.src}`;
+          setVideoSrc(src);
           setVideoFound(true);
-          console.log("🎬 Video encontrado:", match.src);
+          console.log("🎬 Video encontrado:", src);
         } else {
           setVideoSrc(`/cards/${slug}.mp4`);
           setVideoFound(false);
@@ -127,13 +134,13 @@ export default function EditPage({ params }) {
     return () => clearInterval(id);
   }, []);
 
-  // 🧩 Sincroniza animaciones dinámicamente
+  // 🧩 Sincroniza animaciones
   useEffect(
     () => setAnimKey(Date.now()),
     [animation, category, intensity, opacityLevel, emojiCount]
   );
 
-  // 🎁 Funciones de regalo
+  // 🎁 Funciones
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
@@ -223,7 +230,6 @@ export default function EditPage({ params }) {
                 emojiCount={emojiCount}
               />
 
-              {/* 💌 Editor principal */}
               <motion.div
                 key="editor"
                 initial={{ opacity: 0, y: 40 }}
@@ -255,7 +261,6 @@ export default function EditPage({ params }) {
                   onChange={(e) => setMessage(e.target.value)}
                 />
 
-                {/* Botones */}
                 <div className="mt-4 flex flex-wrap justify-center gap-3">
                   <button
                     onClick={() => setShowGift(true)}
@@ -277,4 +282,4 @@ export default function EditPage({ params }) {
       )}
     </div>
   );
-}
+        }
