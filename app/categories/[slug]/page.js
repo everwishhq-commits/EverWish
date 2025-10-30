@@ -34,36 +34,30 @@ export default function CategoryPage() {
 
         for (const v of videos) {
           const main = normalize(v.mainSlug);
-          const cat = normalize(v.categorySlug);
+          const cat = normalize(v.category);
           const sub = normalize(v.subcategory);
 
-          // ✅ Mostrar videos si pertenecen a esta categoría o subcategoría
-          const matchBySlug =
-            main === normalize(slug) ||
-            cat === normalize(slug) ||
-            sub === normalize(slug);
+          // ✅ Coincide si pertenece a la categoría activa
+          const belongsToCategory = main === normalize(slug);
 
-          if (!matchBySlug) continue;
+          if (!belongsToCategory) continue;
 
-          // ✅ Filtrar por búsqueda (si hay palabra)
+          // ✅ Filtrar por palabra buscada
           const fullText = normalize(
-            [
-              v.object,
-              v.categorySlug,
-              v.subcategory,
-              v.src,
-              v.mainSlug,
-            ].join(" ")
+            [v.object, v.category, v.subcategory, v.src].join(" ")
           );
 
           if (q && !fullText.includes(q) && !fullText.includes(singularQ)) {
             continue;
           }
 
+          // Agrupar por subcategoría
           const subKey =
-            v.subcategory && v.subcategory !== "general"
-              ? v.subcategory
-              : v.categorySlug || "General";
+            sub && sub !== "general"
+              ? sub
+              : cat && cat !== "general"
+              ? cat
+              : "General";
 
           if (!grouped[subKey]) grouped[subKey] = [];
           grouped[subKey].push(v);
@@ -128,7 +122,7 @@ export default function CategoryPage() {
                   : "border-pink-100 hover:border-pink-200 hover:bg-pink-50"
               } text-gray-700 font-semibold`}
             >
-              {sub}
+              {sub.replace(/-/g, " ")}
             </motion.button>
           ))}
         </div>
@@ -177,7 +171,7 @@ export default function CategoryPage() {
                         key={i}
                         whileHover={{ scale: 1.05 }}
                         transition={{ duration: 0.3 }}
-                        onClick={() => router.push(`/edit/${video.slug}`)}
+                        onClick={() => router.push(`/edit/${video.mainSlug}`)}
                         className="cursor-pointer bg-white rounded-3xl shadow-md border border-pink-100 overflow-hidden hover:shadow-lg"
                       >
                         <video
@@ -201,4 +195,4 @@ export default function CategoryPage() {
       </AnimatePresence>
     </main>
   );
-          }
+  }
