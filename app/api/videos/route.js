@@ -5,7 +5,6 @@ import { MAIN_CATEGORIES as MAIN_GROUPS } from "@/lib/categories.js";
 
 // 🧠 Diccionario de sinónimos e inclusividad
 const SYNONYMS = {
-  // plurales y animales
   zombies: "zombie", ghosts: "ghost", pumpkins: "pumpkin",
   dogs: "dog", puppies: "dog", cats: "cat", kittens: "cat",
   turkeys: "turkey", hearts: "heart", flowers: "flower",
@@ -36,21 +35,6 @@ const SYNONYMS = {
   color: "diversity", diversity: "diversity"
 };
 
-// 🧩 Frases detectables
-const PHRASES = {
-  "feliz cumpleaños": "birthday", "happy birthday": "birthday",
-  "día de la madre": "mother’s day", "dia de la madre": "mother’s day",
-  "día del padre": "father’s day", "día de san valentín": "valentine’s day",
-  "día del amor": "valentine’s day", "feliz navidad": "christmas",
-  "merry christmas": "christmas", "feliz año nuevo": "new year’s eve",
-  "día del trabajo": "labor day", "día de la independencia": "independence day",
-  "día de acción de gracias": "thanksgiving", "día de los muertos": "day of the dead",
-  "felices fiestas": "holidays", "feliz pascua": "easter",
-  "unity and inclusion": "diversity", "celebrating diversity": "diversity",
-  "black heritage": "diversity", "latino pride": "diversity",
-  "love is love": "diversity", "cultural celebration": "diversity"
-};
-
 // 🧹 Normalizador
 function normalize(str) {
   return str
@@ -61,76 +45,74 @@ function normalize(str) {
     .trim();
 }
 
-// 🚀 API principal híbrida
+// 🚀 API principal
 export async function GET() {
-  const dir = path.join(process.cwd(), "public/cards");
-  const logDir = path.join(process.cwd(), "public/logs");
-  const logFile = path.join(logDir, "unrecognized.json");
-
-  if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
-
-  const files = fs.existsSync(dir)
-    ? fs.readdirSync(dir).filter((f) => f.endsWith(".mp4"))
-    : [];
-
-  let unrecognized = [];
-
-  const videos = files.map((file) => {
-    const clean = file.replace(".mp4", "");
-    const parts = clean.split("_");
-    const normalizedName = normalize(clean);
-
-    let [object, category, subcategory] = ["unknown", "general", "general"];
-
-    // 1️⃣ Si cumple el formato (object_category_subcategory_value)
-    if (parts.length >= 3) {
-      [object, category, subcategory] = parts;
-    } else {
-      // 2️⃣ Si no cumple formato, usar detección automática
-      let detectedSub = null;
-      for (const [phrase, mapped] of Object.entries(PHRASES)) {
-        if (normalizedName.includes(normalize(phrase))) {
-          detectedSub = mapped;
-          break;
-        }
-      }
-
-      const tokens = normalizedName.split(/\s+/).map((t) => SYNONYMS[t] || t);
-      const text = tokens.join(" ");
-
-      // Buscar categoría base
-      const matchedCat = Object.entries(MAIN_GROUPS).find(([key, g]) =>
-        g.keywords.some((kw) => text.includes(normalize(kw)))
-      );
-      category = matchedCat ? matchedCat[0] : "inspirational";
-
-      // Buscar subcategoría dentro de esa categoría
-      const group = matchedCat ? matchedCat[1] : MAIN_GROUPS.inspirational;
-      const foundSub = group.subcategories.find((s) =>
-        text.includes(normalize(s))
-      );
-      subcategory = foundSub || detectedSub || "General";
+  try {
+    const baseDir = path.join(process.cwd(), "public/cards");
+    if (!fs.existsSync(baseDir)) {
+      return NextResponse.json({ videos: [] });
     }
 
-    // 3️⃣ Validar subcategoría: si no existe en el lib, asignar “General”
-    const validSubs = Object.values(MAIN_GROUPS).flatMap((g) => g.subcategories);
-    if (!validSubs.includes(subcategory)) subcategory = "General";
+    let videos = [];
 
-    // 4️⃣ Extraer datos de grupo
-    const group = MAIN_GROUPS[category] || MAIN_GROUPS.inspirational;
+    // 🔍 Recorre todas las carpetas principales (categorías)
+    const categoryFolders = fs.readdirSync(baseDir);
 
-    return {
-      mainName: group.mainName,
-      mainEmoji: group.mainEmoji,
-      mainColor: group.mainColor,
-      mainSlug: category,
-      object,
-      category,
-      subcategory,
-      src: `/cards/${file}`,
-    };
-  });
+    for (const categoryFolder of categoryFolders) {
+      const catPath = path.join(baseDir, categoryFolder);
+      if (!fs.statSync(catPath).isDirectory()) continue;
 
-  fs.writeFileSync(logFile, JSON.stringify(unrecognized, null, 2));
-  return NextResponse.json({ videos });
-}
+      const files = fs.readdirSync(catPath).filter((f) => f.endsWith(".mp4"));
+
+      for (const file of files) {
+        const cleanName = file.replace(".mp4", "");
+        const parts = cleanName.split("_");
+        const normalizedName = normalize(cleanName);
+
+        let [object, category, subcategory] = ["unknown", "general", "general"];
+
+        // 📁 Detecta formato estándar object_category_subcategory_value
+        if (parts.length >= 3) {
+          [object, category, subcategory] = parts;
+        } else {
+          // Si no tiene estructura, detecta automáticamente
+          const tokens = normalizedName.split(/\s+/).map((t) => SYNONYMS[t] || t);
+          const text = tokens.join(" ");
+
+          // Detectar categoría principal
+          const matchedCat = Object.entries(MAIN_GROUPS).find(([key, group]) =>
+            group.keywords?.some((kw) => text.includes(normalize(kw)))
+          );
+          category = matchedCat ? matchedCat[0] : categoryFolder;
+
+          // Detectar subcategoría dentro del grupo
+          const group = matchedCat ? matchedCat[1] : MAIN_GROUPS[categoryFolder];
+          const foundSub =
+            group?.subcategories?.find((s) => text.includes(normalize(s))) || "General";
+          subcategory = foundSub;
+        }
+
+        // 📦 Agrega video detectado
+        const group = MAIN_GROUPS[category] || MAIN_GROUPS.inspirational;
+
+        videos.push({
+          slug: cleanName,
+          src: `/cards/${categoryFolder}/${file}`,
+          object,
+          mainSlug: categoryFolder,
+          categorySlug: category,
+          subcategory,
+          mainName: group?.mainName || categoryFolder,
+          mainEmoji: group?.mainEmoji || "💌",
+          mainColor: group?.mainColor || "#FFF5F5",
+          extraCategories: [category, subcategory].filter(Boolean),
+        });
+      }
+    }
+
+    return NextResponse.json({ videos });
+  } catch (error) {
+    console.error("❌ Error loading videos:", error);
+    return NextResponse.json({ videos: [] });
+  }
+             }
