@@ -6,7 +6,6 @@ import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
 import "swiper/css";
 
-// 🌸 CATEGORÍAS PRINCIPALES (100% sincronizadas con /lib/categories.js)
 const ALL_CATEGORIES = [
   { name: "Holidays", emoji: "🥳", slug: "holidays", color: "#FFF4E0" },
   { name: "Love & Romance", emoji: "❤️", slug: "love", color: "#FFE8EE" },
@@ -23,10 +22,12 @@ export default function CategoriesCarousel() {
   const [videos, setVideos] = useState([]);
   const [level, setLevel] = useState("categories");
   const [selectedCat, setSelectedCat] = useState(null);
+  const [selectedCatName, setSelectedCatName] = useState("");
+  const [selectedEmoji, setSelectedEmoji] = useState("");
   const [subcategories, setSubcategories] = useState([]);
   const [filteredVideos, setFilteredVideos] = useState([]);
 
-  // 📥 Cargar videos desde el API
+  // 📥 Cargar videos
   useEffect(() => {
     async function loadVideos() {
       try {
@@ -57,9 +58,12 @@ export default function CategoriesCarousel() {
     return ALL_CATEGORIES.filter((cat) => matchedSlugs.has(cat.slug));
   })();
 
-  // 🔹 Mostrar subcategorías asociadas
+  // 🔹 Mostrar subcategorías relevantes
   const handleCategoryClick = (slug) => {
+    const cat = ALL_CATEGORIES.find((c) => c.slug === slug);
     setSelectedCat(slug);
+    setSelectedCatName(cat?.name || "");
+    setSelectedEmoji(cat?.emoji || "");
     setLevel("subcategories");
 
     const related = new Set();
@@ -69,7 +73,7 @@ export default function CategoriesCarousel() {
     setSubcategories([...related]);
   };
 
-  // 🔹 Mostrar tarjetas de la subcategoría seleccionada
+  // 🔹 Mostrar las tarjetas
   const handleSubClick = (sub) => {
     const filtered = videos.filter(
       (v) => v.subcategory === sub && v.mainSlug === selectedCat
@@ -78,7 +82,7 @@ export default function CategoriesCarousel() {
     setLevel("cards");
   };
 
-  // 🔙 Regresar de nivel
+  // 🔙 Volver atrás
   const goBack = () => {
     if (level === "cards") setLevel("subcategories");
     else if (level === "subcategories") setLevel("categories");
@@ -89,16 +93,17 @@ export default function CategoriesCarousel() {
       id="categories"
       className="text-center py-10 px-3 overflow-hidden"
       style={{
-        background:
-          "linear-gradient(to bottom, #fff8fa 0%, #fff5f7 50%, #ffffff 100%)",
+        background: "linear-gradient(to bottom, #fff8fa 0%, #fff5f7 50%, #ffffff 100%)",
       }}
     >
-      {/* 🏷️ Título principal */}
+      {/* 🏷️ Título dinámico */}
       <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
-        Explore by Category ✨
+        {level === "categories"
+          ? "Explore by Category ✨"
+          : `${selectedCatName} ${selectedEmoji} — Choose a Subcategory`}
       </h2>
 
-      {/* 🔙 Botón volver */}
+      {/* 🔙 Back */}
       {level !== "categories" && (
         <button
           onClick={goBack}
@@ -108,7 +113,7 @@ export default function CategoriesCarousel() {
         </button>
       )}
 
-      {/* 🔍 Barra de búsqueda */}
+      {/* 🔎 Barra de búsqueda */}
       {level === "categories" && (
         <div className="flex justify-center mb-10">
           <input
@@ -121,7 +126,7 @@ export default function CategoriesCarousel() {
         </div>
       )}
 
-      {/* 🎠 Carrusel de categorías */}
+      {/* 🎠 Categorías */}
       {level === "categories" && (
         <Swiper
           slidesPerView={3.2}
@@ -211,7 +216,7 @@ export default function CategoriesCarousel() {
                 muted
                 loop
                 autoPlay
-                onError={(e) => (e.target.poster = '/placeholder.png')}
+                onError={(e) => (e.target.poster = "/placeholder.png")}
               />
               <div className="text-center mt-2">
                 <p className="text-gray-700 font-semibold text-sm truncate">
@@ -227,4 +232,4 @@ export default function CategoriesCarousel() {
       )}
     </section>
   );
-}
+      }
