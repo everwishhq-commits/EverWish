@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { MAIN_CATEGORIES } from "@/lib/categories.js";
 
-// 🧩 Diccionario sincronizado con el API
+// 🧠 Sinónimos (idénticos al API)
 const SYNONYMS = {
   zombies: "zombie", zombie: "zombie",
   ghosts: "ghost", ghost: "ghost",
@@ -77,10 +77,12 @@ export default function CategoriesPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-pink-50 via-white to-pink-50 text-gray-800 flex flex-col items-center py-10 px-4">
+      {/* 🧭 Header breadcrumb */}
       <p className="text-gray-500 text-sm mb-3">
         Home › <span className="text-pink-500 font-semibold">Categories</span>
       </p>
 
+      {/* 🌸 Title */}
       <h1 className="text-3xl md:text-4xl font-extrabold text-pink-600 mb-3 text-center">
         Explore Main Categories 💌
       </h1>
@@ -99,7 +101,7 @@ export default function CategoriesPage() {
         />
       </div>
 
-      {/* 🌈 Grid */}
+      {/* 🌈 Categories grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 max-w-5xl justify-items-center">
         {filtered.length > 0 ? (
           filtered.map(([slug, cat], i) => (
@@ -135,4 +137,4 @@ export default function CategoriesPage() {
       </div>
     </main>
   );
-}
+    }
