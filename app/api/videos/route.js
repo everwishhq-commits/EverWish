@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
-// 🌎 CATEGORÍAS Y SUBCATEGORÍAS COMBINADAS AUTOMÁTICAMENTE
+// 🌎 CATEGORÍAS PRINCIPALES CON COLORES, EMOJIS Y PALABRAS CLAVE
 const MAIN_GROUPS = {
   holidays: {
     mainName: "Holidays",
@@ -16,7 +16,10 @@ const MAIN_GROUPS = {
       "oktoberfest","stpatrick","stpatricksday","earthday","kindnessday",
       "friendshipday","womensday","workersday","heritagemonth",
       "dayofthedead","holiday","holidayseason","diwali","hanukkah",
-      "boxingday","carnival","thankful","turkeyday","pumpkin","santa"
+      "boxingday","carnival","thankful","turkeyday","pumpkin","santa",
+      // 🆕 Añadidos para Halloween
+      "zombie","ghost","spooky","witch","monster","boo","skeleton",
+      "vampire","haunted","candy","costume","trick","treat"
     ],
   },
   love: {
@@ -46,7 +49,7 @@ const MAIN_GROUPS = {
     mainEmoji: "🐾",
     mainColor: "#E8FFF3",
     keywords: [
-      "pets","petsandanimal","dog","cat","puppy","kitten","horse","bird",
+      "pets","pet","dog","cat","puppy","kitten","horse","bird",
       "wildlife","eagle","forest","nature","butterfly","fish","turtle","bunny",
       "elephant","lion","tiger","bear","rabbit","dolphin","animal","zoo","sea",
       "flower","tree","bee","sunflower"
@@ -55,7 +58,7 @@ const MAIN_GROUPS = {
   seasons: {
     mainName: "Seasons",
     mainEmoji: "🍂",
-    mainColor: "#FFF4E0",
+    mainColor: "#FFFBE5",
     keywords: [
       "spring","summer","autumn","fall","winter","season","rainy","rain","snow",
       "cold","heat","beach","sunny","sunset","leaves","flowers","vacation",
@@ -63,8 +66,8 @@ const MAIN_GROUPS = {
     ],
   },
   appreciation: {
-    mainName: "Appreciation & Support",
-    mainEmoji: "💌",
+    mainName: "Condolences & Support",
+    mainEmoji: "🕊️",
     mainColor: "#FDE6E6",
     keywords: [
       "thankyou","appreciation","condolences","healing","getwell","support",
@@ -73,18 +76,32 @@ const MAIN_GROUPS = {
       "worker","mentor","helper","volunteer","thanks"
     ],
   },
+  inspirational: {
+    mainName: "Inspirational & Friendship",
+    mainEmoji: "🌟",
+    mainColor: "#FFFBE5",
+    keywords: [
+      "inspire","motivation","dream","hope","believe","smile","kindness",
+      "encourage","positive","friend","team","goal"
+    ],
+  },
+  work: {
+    mainName: "Work & Professional Life",
+    mainEmoji: "💼",
+    mainColor: "#EAF4FF",
+    keywords: [
+      "job","career","work","office","promotion","success","achievement",
+      "coworker","boss","professional","meeting","goal"
+    ],
+  },
 };
 
 // 🔹 Normaliza texto
 function normalize(str) {
-  return str
-    ?.toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/&/g, "and")
-    .replace(/[^a-z0-9-]/g, "")
-    .trim();
+  return str?.toLowerCase().replace(/\s+/g, "-").replace(/&/g, "and").replace(/[^a-z0-9-]/g, "").trim();
 }
 
+// 📦 API GET
 export async function GET() {
   const dir = path.join(process.cwd(), "public/cards");
   const files = fs.existsSync(dir)
@@ -92,68 +109,53 @@ export async function GET() {
     : [];
 
   const videos = files.map((file) => {
-    const cleanName = file.replace(".mp4", "").toLowerCase();
+    const cleanName = file.replace(".mp4", "");
     const parts = cleanName.split("_");
     const object = parts[0] || "unknown";
-    const category = normalize(parts[1] || "general");
-    const subcategory = normalize(parts[2] || "general");
-    const variant = parts[3] || ""; // ejemplo: 1a o 1b
 
-    // 🧩 Busca si existe su par (1A ↔ 1B)
-    const pairVariant =
-      variant.toLowerCase().includes("1a") ? variant.replace("1a", "1b") :
-      variant.toLowerCase().includes("1b") ? variant.replace("1b", "1a") : null;
+    // Analizar todas las palabras del nombre
+    const words = parts.map((p) => normalize(p));
+    const textToMatch = words.join(" ").toLowerCase();
 
-    const pairFile = pairVariant
-      ? files.find((f) =>
-          f.toLowerCase().includes(`${object}_${category}_${subcategory}_${pairVariant}`.toLowerCase())
-        )
-      : null;
-
-    // 🧠 Buscar TODAS las categorías coincidentes
-    const allMatches = Object.entries(MAIN_GROUPS)
-      .filter(([_, g]) =>
-        g.keywords.some((kw) => cleanName.includes(kw.toLowerCase()))
-      )
-      .map(([key, g]) => ({
-        mainSlug: key,
-        mainName: g.mainName,
-        mainEmoji: g.mainEmoji,
-        mainColor: g.mainColor,
+    // Detectar todos los grupos principales que coinciden
+    const matchedGroups = Object.entries(MAIN_GROUPS)
+      .filter(([_, g]) => g.keywords.some((kw) => textToMatch.includes(kw)))
+      .map(([key, group]) => ({
+        key,
+        ...group,
       }));
 
-    const matches = allMatches.length
-      ? allMatches
-      : [
-          {
-            mainSlug: "appreciation",
-            mainName: MAIN_GROUPS.appreciation.mainName,
-            mainEmoji: MAIN_GROUPS.appreciation.mainEmoji,
-            mainColor: MAIN_GROUPS.appreciation.mainColor,
-          },
-        ];
+    // Si no hay coincidencias, usar “appreciation” como fallback
+    const mainGroups = matchedGroups.length
+      ? matchedGroups
+      : [{ key: "appreciation", ...MAIN_GROUPS.appreciation }];
 
-    // 🔸 Nombre combinado
-    const combinedName = matches
-      .map(
-        (m) =>
-          `${m.mainName} — ${
-            subcategory !== "general" ? subcategory : category
-          }`.replace(/-/g, " ")
-      )
-      .join(", ");
+    // Determinar categoría y subcategoría según orden del nombre
+    const category = words[1] || "general";
+    const subcategory = words[2] || "general";
 
-    return {
-      object,
-      category,
-      subcategory,
-      variant,
-      pair: pairFile ? `/cards/${pairFile}` : null,
-      combinedName,
-      src: `/cards/${file}`,
-      matches,
-    };
+    // Crear una entrada por cada grupo principal detectado
+    return mainGroups.map((group) => {
+      const fullCategoryName = `${group.mainName} — ${
+        subcategory !== "general" ? subcategory : category
+      }`.replace(/-/g, " ");
+
+      return {
+        mainName: group.mainName,
+        mainEmoji: group.mainEmoji,
+        mainColor: group.mainColor,
+        object,
+        category,
+        subcategory,
+        combinedName: fullCategoryName,
+        src: `/cards/${file}`,
+        mainSlug: group.key,
+      };
+    });
   });
 
-  return NextResponse.json({ videos });
+  // Aplanar arrays anidados (para casos de múltiples categorías)
+  const flattenedVideos = videos.flat();
+
+  return NextResponse.json({ videos: flattenedVideos });
     }
