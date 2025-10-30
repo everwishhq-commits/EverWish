@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
-// 🌸 CATEGORÍAS PRINCIPALES
+// 🌸 CATEGORÍAS PRINCIPALES — versión oficial Everwish
 const ALL_CATEGORIES = [
-  { name: "Holidays", slug: "holidays", emoji: "🥳", color: "#FFF4E0" },
+  { name: "Holidays", slug: "holidays", emoji: "😊", color: "#FFF4E0" },
   { name: "Love & Romance", slug: "love", emoji: "❤️", color: "#FFE8EE" },
   { name: "Celebrations & Special Moments", slug: "celebrations", emoji: "🎉", color: "#FFF7FF" },
   { name: "Work & Professional Life", slug: "work", emoji: "💼", color: "#EAF4FF" },
@@ -16,23 +16,21 @@ const ALL_CATEGORIES = [
   { name: "Inspirational & Friendship", slug: "inspirational", emoji: "🌟", color: "#FFFBE5" },
 ];
 
-// 🧠 Sinónimos comunes
-const SYNONYMS = {
-  zombies: "zombie", zombie: "zombie", spooky: "halloween",
-  ghosts: "ghost", ghost: "ghost",
-  pumpkin: "halloween", pumpkins: "halloween",
-  halloween: "halloween", boo: "halloween",
-  christmas: "christmas", xmas: "christmas", santa: "christmas",
-  valentine: "love", love: "love", hearts: "love",
-  easter: "easter", bunny: "easter",
-  thanksgiving: "thanksgiving", turkey: "thanksgiving",
-};
+// 👇 mismo normalizador para que "zombie", "ZOMBIES", "zombies " sea lo mismo
+function normalize(str = "") {
+  return str
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
 
 export default function CategoriesPage() {
   const [search, setSearch] = useState("");
   const [videos, setVideos] = useState([]);
   const [filtered, setFiltered] = useState(ALL_CATEGORIES);
 
+  // 📥 Cargar videos desde API
   useEffect(() => {
     async function loadVideos() {
       try {
@@ -46,36 +44,63 @@ export default function CategoriesPage() {
     loadVideos();
   }, []);
 
-  // 🔍 Filtrar categorías según búsqueda real
+  // 🔍 Filtrar categorías según palabra
   useEffect(() => {
-    const q = search.toLowerCase().trim();
+    const q = normalize(search);
     if (!q) {
+      // sin búsqueda → mostrar todas
       setFiltered(ALL_CATEGORIES);
       return;
     }
 
-    const normalized = SYNONYMS[q] || q;
+    // Buscar si HAY al menos 1 video que tenga esa palabra
     const matchedSlugs = new Set();
 
     videos.forEach((v) => {
-      const text = `${v.object} ${v.category} ${v.subcategory}`
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "");
+      // texto total del video
+      const text = normalize(
+        [
+          v.object,
+          v.category,
+          v.subcategory,
+          v.mainSlug,
+          v.categorySlug,
+          v.src, // por si el nombre del archivo tiene zombie_halloween...
+        ]
+          .filter(Boolean)
+          .join(" ")
+      );
 
-      if (text.includes(normalized)) matchedSlugs.add(v.mainSlug);
+      if (text.includes(q)) {
+        // este video tiene la palabra → marca su categoría principal
+        if (v.mainSlug) {
+          matchedSlugs.add(normalize(v.mainSlug));
+        }
+        // y si trae una categoría secundaria en el archivo, igual
+        if (v.categorySlug) {
+          matchedSlugs.add(normalize(v.categorySlug));
+        }
+      }
     });
 
-    const result = ALL_CATEGORIES.filter((cat) => matchedSlugs.has(cat.slug));
+    // filtrar las categorías que sí salieron en vídeos
+    const result = ALL_CATEGORIES.filter((cat) =>
+      matchedSlugs.has(normalize(cat.slug))
+    );
+
     setFiltered(result);
   }, [search, videos]);
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-pink-50 via-white to-pink-50 text-gray-800 flex flex-col items-center py-10 px-4">
+    <main
+      className="min-h-screen bg-gradient-to-b from-pink-50 via-white to-pink-50 text-gray-800 flex flex-col items-center py-10 px-4"
+    >
+      {/* 🧭 Header breadcrumb */}
       <p className="text-gray-500 text-sm mb-3">
         Home › <span className="text-pink-500 font-semibold">Categories</span>
       </p>
 
+      {/* 🌸 Title */}
       <h1 className="text-3xl md:text-4xl font-extrabold text-pink-600 mb-3 text-center">
         Explore Main Categories 💌
       </h1>
@@ -87,7 +112,7 @@ export default function CategoriesPage() {
       <div className="flex justify-center mb-10 w-full">
         <input
           type="text"
-          placeholder="Search any theme — e.g. zombie, halloween, turtle..."
+          placeholder="Search any theme — e.g. zombie, turtle, halloween..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-80 md:w-96 px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700"
@@ -98,7 +123,14 @@ export default function CategoriesPage() {
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 max-w-5xl justify-items-center">
         {filtered.length > 0 ? (
           filtered.map((cat, i) => (
-            <Link key={i} href={`/categories/${cat.slug}?q=${search}`}>
+            <Link
+              key={i}
+              href={
+                search.trim()
+                  ? `/categories/${cat.slug}?q=${encodeURIComponent(search.trim())}`
+                  : `/categories/${cat.slug}`
+              }
+            >
               <motion.div
                 whileHover={{ scale: 1.07 }}
                 transition={{ duration: 0.2 }}
@@ -108,7 +140,11 @@ export default function CategoriesPage() {
                 <motion.span
                   className="text-4xl sm:text-5xl mb-2"
                   animate={{ y: [0, -5, 0] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
                 >
                   {cat.emoji}
                 </motion.span>
@@ -126,4 +162,4 @@ export default function CategoriesPage() {
       </div>
     </main>
   );
-}
+            }
