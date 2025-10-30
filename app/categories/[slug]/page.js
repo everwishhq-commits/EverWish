@@ -5,7 +5,6 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { MAIN_CATEGORIES } from "@/lib/categories.js";
 
-// Normalizador de texto
 function normalize(str = "") {
   return str
     .toLowerCase()
@@ -28,76 +27,46 @@ export default function CategoryPage() {
     async function loadVideos() {
       try {
         const res = await fetch("/api/videos", { cache: "no-store" });
-        const data = await res.json();
-
+        const { videos } = await res.json();
         const grouped = {};
-        const currentCat = MAIN_CATEGORIES[slug];
         const q = normalize(query);
         const singularQ = q.endsWith("s") ? q.slice(0, -1) : q;
 
-        for (const v of data.videos) {
-          // 👇 recolecta todos los posibles valores donde puede estar la categoría
-          const allCategories = [
-            v.mainSlug,
-            v.categorySlug,
-            v.category,
-            v.subcategory,
-            ...(v.extraCategories || []),
-          ]
-            .filter(Boolean)
-            .map((c) => normalize(c));
+        for (const v of videos) {
+          const main = normalize(v.mainSlug);
+          const cat = normalize(v.categorySlug);
+          const sub = normalize(v.subcategory);
 
-          // ⚡ Si el archivo tiene el slug dentro del nombre, también cuenta
-          const srcName = normalize(v.src || "");
-          const belongsToSlug =
-            allCategories.includes(normalize(slug)) ||
-            srcName.includes(normalize(slug));
+          // ✅ Mostrar videos si pertenecen a esta categoría o subcategoría
+          const matchBySlug =
+            main === normalize(slug) ||
+            cat === normalize(slug) ||
+            sub === normalize(slug);
 
-          if (!belongsToSlug) continue;
+          if (!matchBySlug) continue;
 
-          // 🧠 buscar texto completo para búsqueda (query)
+          // ✅ Filtrar por búsqueda (si hay palabra)
           const fullText = normalize(
             [
               v.object,
-              v.category,
+              v.categorySlug,
               v.subcategory,
               v.src,
               v.mainSlug,
-              v.categorySlug,
-            ]
-              .filter(Boolean)
-              .join(" ")
+            ].join(" ")
           );
 
           if (q && !fullText.includes(q) && !fullText.includes(singularQ)) {
             continue;
           }
 
-          // 🎯 subcategoría limpia
-          const rawSub =
-            v.subcategory ||
-            v.category ||
-            (srcName.includes("birthday")
-              ? "Birthday"
-              : srcName.includes("halloween")
-              ? "Halloween"
-              : srcName.includes("love")
-              ? "Love"
-              : "General");
+          const subKey =
+            v.subcategory && v.subcategory !== "general"
+              ? v.subcategory
+              : v.categorySlug || "General";
 
-          const cleanSub = rawSub
-            .replace(/_/g, " ")
-            .replace(/\b\w/g, (c) => c.toUpperCase());
-
-          if (!grouped[cleanSub]) grouped[cleanSub] = [];
-          grouped[cleanSub].push(v);
-        }
-
-        // ✅ Si no hay búsqueda, mostrar todas las sub predefinidas del lib
-        if (!q && currentCat?.subcategories?.length) {
-          currentCat.subcategories.forEach((sub) => {
-            if (!grouped[sub]) grouped[sub] = [];
-          });
+          if (!grouped[subKey]) grouped[subKey] = [];
+          grouped[subKey].push(v);
         }
 
         setGroups(grouped);
@@ -145,7 +114,6 @@ export default function CategoryPage() {
         </p>
       )}
 
-      {/* 🌸 Subcategorías */}
       {subcategories.length > 0 ? (
         <div className="flex flex-wrap justify-center gap-4 max-w-5xl">
           {subcategories.map((sub, i) => (
@@ -170,7 +138,6 @@ export default function CategoryPage() {
         </p>
       )}
 
-      {/* 💫 Modal con videos */}
       <AnimatePresence>
         {activeSub && (
           <>
@@ -221,7 +188,7 @@ export default function CategoryPage() {
                           muted
                         />
                         <div className="text-center py-2 text-gray-700 font-semibold text-sm">
-                          {video.object || "Untitled"}
+                          {video.object}
                         </div>
                       </motion.div>
                     ))}
