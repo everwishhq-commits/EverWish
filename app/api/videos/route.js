@@ -1,102 +1,146 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
-import { MAIN_CATEGORIES as MAIN_GROUPS } from "@/lib/categories.js";
 
-const SYNONYMS = {
-  zombies: "zombie", ghosts: "ghost", pumpkins: "pumpkin",
-  dogs: "dog", puppies: "dog", cats: "cat", kittens: "cat",
-  turkeys: "turkey", hearts: "heart", flowers: "flower",
-  tortugas: "turtle", gatos: "cat", calabazas: "pumpkin",
-  cumpleaños: "birthday", amor: "love", pareja: "couple",
-  boda: "wedding", aniversario: "anniversary", fiesta: "party",
-  diversidad: "diversity", orgullo: "diversity", gay: "diversity",
+// 🌎 CATEGORÍAS Y SUBCATEGORÍAS COMBINADAS AUTOMÁTICAMENTE
+const MAIN_GROUPS = {
+  holidays: {
+    mainName: "Holidays",
+    mainEmoji: "🥳",
+    mainColor: "#FFF4E0",
+    keywords: [
+      "christmas", "halloween", "thanksgiving", "easter", "newyear",
+      "independenceday", "july4th", "fourthofjuly", "fireworks",
+      "memorialday", "veteransday", "presidentsday", "laborday",
+      "mlkday", "columbusday", "flagday", "patriotsday",
+      "cinco", "cincodemayo", "oktoberfest", "stpatrick", "stpatricksday",
+      "earthday", "kindnessday", "friendshipday", "womensday", "workersday",
+      "heritagemonth", "dayofthedead", "holiday", "holidayseason",
+      "diwali", "hanukkah", "boxingday", "carnival", "thankful",
+      "turkeyday", "pumpkin", "santa"
+    ],
+  },
+
+  love: {
+    mainName: "Love",
+    mainEmoji: "❤️",
+    mainColor: "#FFE8EE",
+    keywords: [
+      "valentine", "romance", "anniversary", "wedding", "engagement",
+      "proposal", "couple", "relationship", "heart", "kiss",
+      "marriage", "love", "partner", "girlfriend", "boyfriend",
+      "crush", "affection", "date", "forever", "sweetheart"
+    ],
+  },
+
+  celebrations: {
+    mainName: "Celebrations",
+    mainEmoji: "🎉",
+    mainColor: "#FFF7FF",
+    keywords: [
+      "birthday", "graduation", "babyshower", "mothersday", "fathersday",
+      "retirement", "party", "event", "achievement", "success",
+      "promotion", "newjob", "newhome", "moving", "bridalshower",
+      "babyarrival", "genderreveal", "welcome", "farewell", "anniversaryparty"
+    ],
+  },
+
+  animals: {
+    mainName: "Animals & Nature",
+    mainEmoji: "🐾",
+    mainColor: "#E8FFF3",
+    keywords: [
+      "pets", "petsandanimal", "dog", "cat", "puppy", "kitten",
+      "horse", "bird", "wildlife", "eagle", "forest", "nature",
+      "butterfly", "fish", "turtle", "bunny", "elephant", "lion",
+      "tiger", "bear", "rabbit", "dolphin", "animal", "zoo",
+      "sea", "flower", "tree", "bee", "sunflower"
+    ],
+  },
+
+  seasons: {
+    mainName: "Seasons",
+    mainEmoji: "🍂",
+    mainColor: "#FFF4E0",
+    keywords: [
+      "spring", "summer", "autumn", "fall", "winter", "season",
+      "rainy", "rain", "snow", "cold", "heat", "beach", "sunny",
+      "sunset", "leaves", "flowers", "vacation", "travel", "mountain"
+    ],
+  },
+
+  appreciation: {
+    mainName: "Appreciation & Support",
+    mainEmoji: "💌",
+    mainColor: "#FDE6E6",
+    keywords: [
+      "thankyou", "appreciation", "condolences", "healing", "getwell",
+      "support", "care", "teacher", "nurse", "doctor", "gratitude",
+      "friendship", "help", "motivational", "inspiration",
+      "encouragement", "thank", "hero", "community", "worker",
+      "mentor", "helper", "volunteer", "thanks"
+    ],
+  },
 };
 
-const PHRASES = {
-  "feliz cumpleaños": "birthday", "happy birthday": "birthday",
-  "feliz navidad": "christmas", "día del amor": "valentine’s day",
-  "día del padre": "father’s day", "día de la madre": "mother’s day",
-  "día de los muertos": "day of the dead", "día de independencia": "independence day",
-};
-
-function normalize(str = "") {
-  return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+// 🔹 Normaliza texto
+function normalize(str) {
+  return str
+    ?.toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9-]/g, "")
+    .trim();
 }
 
 export async function GET() {
-  const dir = path.join(process.cwd(), "public/cards");
-  const logDir = path.join(process.cwd(), "public/logs");
-  const logFile = path.join(logDir, "video_read_log.json");
+  try {
+    const dir = path.join(process.cwd(), "public/cards");
 
-  if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
-
-  const files = fs.existsSync(dir)
-    ? fs.readdirSync(dir).filter((f) => f.endsWith(".mp4"))
-    : [];
-
-  const videos = [];
-
-  for (const file of files) {
-    const clean = file.replace(".mp4", "");
-    const parts = clean.split("_");
-    const normalized = normalize(clean);
-
-    let [object, categorySlug, subcategory] = ["unknown", "general", "general"];
-    let mainSlug = "inspirational";
-
-    if (parts.length >= 3) {
-      [object, categorySlug, subcategory] = parts;
-    } else {
-      const tokens = normalized.split(/\s+/).map((t) => SYNONYMS[t] || t);
-      const text = tokens.join(" ");
-      const matched = Object.entries(MAIN_GROUPS).find(([k, g]) =>
-        g.keywords.some((kw) => text.includes(normalize(kw)))
-      );
-      if (matched) {
-        mainSlug = matched[0];
-        categorySlug = matched[0];
-        const foundSub = matched[1].subcategories.find((s) =>
-          text.includes(normalize(s))
-        );
-        subcategory = foundSub || "general";
-      }
+    if (!fs.existsSync(dir)) {
+      return NextResponse.json({ videos: [] });
     }
 
-    // Validar subcategoría
-    const validSubs = Object.values(MAIN_GROUPS).flatMap((g) => g.subcategories);
-    if (!validSubs.includes(subcategory)) subcategory = "general";
+    const files = fs.readdirSync(dir).filter((f) => f.endsWith(".mp4"));
 
-    const group = MAIN_GROUPS[mainSlug] || MAIN_GROUPS.inspirational;
+    const videos = files.map((file) => {
+      const cleanName = file.replace(".mp4", "");
+      const parts = cleanName.split("_");
 
-    videos.push({
-      slug: clean,
-      src: `/cards/${file}`,
-      object,
-      mainSlug,
-      categorySlug,
-      subcategory,
-      mainName: group.mainName,
-      mainEmoji: group.mainEmoji,
-      mainColor: group.mainColor,
+      // Estructura: object_category_subcategory_version
+      const object = parts[0] || "unknown";
+      const category = normalize(parts[1] || "general");
+      const subcategory = normalize(parts[2] || "general");
+
+      // 🔍 Clasificación automática
+      const match = Object.entries(MAIN_GROUPS).find(([key, group]) =>
+        group.keywords.some((kw) => cleanName.includes(kw))
+      );
+
+      const [selectedKey, selectedGroup] =
+        match || ["appreciation", MAIN_GROUPS.appreciation];
+
+      // 🧠 Nombre limpio y legible
+      const fullCategoryName = `${selectedGroup.mainName} — ${
+        subcategory !== "general" ? subcategory : category
+      }`.replace(/-/g, " ");
+
+      return {
+        mainName: selectedGroup.mainName,
+        mainEmoji: selectedGroup.mainEmoji,
+        mainColor: selectedGroup.mainColor,
+        object,
+        category,
+        subcategory,
+        combinedName: fullCategoryName,
+        src: `/cards/${file}`,
+        mainSlug: selectedKey,
+      };
     });
+
+    return NextResponse.json({ videos });
+  } catch (error) {
+    console.error("❌ Error reading videos:", error);
+    return NextResponse.json({ videos: [] });
   }
-
-  // 🔍 Guardar lectura previa para comparar
-  fs.writeFileSync(
-    logFile,
-    JSON.stringify(
-      videos.map((v) => ({
-        file: v.slug,
-        mainSlug: v.mainSlug,
-        categorySlug: v.categorySlug,
-        subcategory: v.subcategory,
-      })),
-      null,
-      2
-    )
-  );
-
-  console.log("🧩 API /videos loaded", videos.length, "videos");
-  return NextResponse.json({ videos });
-          }
+        }
