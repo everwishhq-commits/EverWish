@@ -5,9 +5,11 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { MAIN_CATEGORIES } from "@/lib/categories.js";
 
+// 🔧 Normaliza texto (para comparar correctamente)
 function normalize(str = "") {
   return str
     .toLowerCase()
+    .replace(/-/g, "_")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .trim();
@@ -29,35 +31,34 @@ export default function CategoryPage() {
         const res = await fetch("/api/videos", { cache: "no-store" });
         const { videos } = await res.json();
         const grouped = {};
-        const q = normalize(query);
-        const singularQ = q.endsWith("s") ? q.slice(0, -1) : q;
+        const currentSlug = normalize(slug);
 
         for (const v of videos) {
           const main = normalize(v.mainSlug);
           const cat = normalize(v.category);
           const sub = normalize(v.subcategory);
+          const videoSlug = normalize(v.slug || v.src || "");
 
           // ✅ Coincide si pertenece a la categoría activa
-          const belongsToCategory = main === normalize(slug);
+          const belongsToCategory =
+            main === currentSlug ||
+            cat === currentSlug ||
+            sub === currentSlug ||
+            videoSlug.includes(currentSlug);
 
           if (!belongsToCategory) continue;
 
-          // ✅ Filtrar por palabra buscada
+          // ✅ Filtrar por búsqueda (si hay palabra)
           const fullText = normalize(
             [v.object, v.category, v.subcategory, v.src].join(" ")
           );
+          if (query && !fullText.includes(query)) continue;
 
-          if (q && !fullText.includes(q) && !fullText.includes(singularQ)) {
-            continue;
-          }
-
-          // Agrupar por subcategoría
+          // ✅ Subcategoría limpia (sin duplicados ni sufijos)
           const subKey =
             sub && sub !== "general"
-              ? sub
-              : cat && cat !== "general"
-              ? cat
-              : "General";
+              ? sub.replace(/[0-9]+a?/g, "")
+              : cat || "general";
 
           if (!grouped[subKey]) grouped[subKey] = [];
           grouped[subKey].push(v);
@@ -77,13 +78,12 @@ export default function CategoryPage() {
   const subcategories = Object.keys(groups).sort();
   const activeVideos = activeSub ? groups[activeSub] || [] : [];
 
-  if (loading) {
+  if (loading)
     return (
       <main className="flex flex-col items-center justify-center min-h-screen bg-[#fff5f8] text-gray-600">
         <p className="animate-pulse text-lg">Loading {slug} ✨</p>
       </main>
     );
-  }
 
   return (
     <main className="min-h-screen bg-[#fff5f8] text-gray-800 flex flex-col items-center py-10 px-4">
@@ -171,18 +171,24 @@ export default function CategoryPage() {
                         key={i}
                         whileHover={{ scale: 1.05 }}
                         transition={{ duration: 0.3 }}
-                        onClick={() => router.push(`/edit/${video.mainSlug}`)}
+                        onClick={() =>
+                          router.push(`/edit/${normalize(video.slug || video.src)}`)
+                        }
                         className="cursor-pointer bg-white rounded-3xl shadow-md border border-pink-100 overflow-hidden hover:shadow-lg"
                       >
                         <video
-                          src={video.src}
+                          src={
+                            video.src?.startsWith("/cards/")
+                              ? video.src
+                              : `/cards/${video.src}`
+                          }
                           className="object-cover w-full aspect-[4/5]"
                           playsInline
                           loop
                           muted
                         />
                         <div className="text-center py-2 text-gray-700 font-semibold text-sm">
-                          {video.object}
+                          {video.object || "Card"}
                         </div>
                       </motion.div>
                     ))}
@@ -195,4 +201,4 @@ export default function CategoryPage() {
       </AnimatePresence>
     </main>
   );
-  }
+        }
