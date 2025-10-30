@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
-// 🌎 CATEGORÍAS PRINCIPALES CON COLORES Y PALABRAS CLAVE
+// 🌎 GRUPOS PRINCIPALES CON NOMBRES Y PALABRAS CLAVE
 const MAIN_GROUPS = {
   holidays: {
     mainName: "Holidays",
@@ -17,7 +17,7 @@ const MAIN_GROUPS = {
       "earthday", "kindnessday", "friendshipday", "womensday", "workersday",
       "heritagemonth", "dayofthedead", "holiday", "holidayseason",
       "diwali", "hanukkah", "boxingday", "carnival", "thankful",
-      "turkeyday", "pumpkin", "santa"
+      "turkeyday", "pumpkin", "santa", "zombie", "ghost", "boo"
     ],
   },
 
@@ -27,7 +27,7 @@ const MAIN_GROUPS = {
     mainColor: "#FFE8EE",
     keywords: [
       "valentine", "romance", "anniversary", "wedding", "engagement",
-      "proposal", "couple", "relationship", "heart", "kiss",
+      "proposal", "couple", "relationship", "heart", "kiss", "hugs",
       "marriage", "love", "partner", "girlfriend", "boyfriend",
       "crush", "affection", "date", "forever", "sweetheart"
     ],
@@ -81,7 +81,7 @@ const MAIN_GROUPS = {
   },
 };
 
-// 🔹 Normaliza texto para evitar errores
+// 🔹 Normaliza texto
 function normalize(str = "") {
   return str
     .toLowerCase()
@@ -91,10 +91,15 @@ function normalize(str = "") {
     .trim();
 }
 
+// 🔍 Crea nombre legible
+function capitalize(word = "") {
+  return word.charAt(0).toUpperCase() + word.slice(1);
+}
+
+// 🔧 API PRINCIPAL
 export async function GET() {
   try {
     const dir = path.join(process.cwd(), "public/cards");
-
     if (!fs.existsSync(dir)) {
       return NextResponse.json({ videos: [] });
     }
@@ -109,20 +114,22 @@ export async function GET() {
       const category = normalize(parts[1] || "general");
       const sub = normalize(parts[2] || "general");
 
-      // 🧠 1️⃣ Coincidencia directa por nombre de categoría
-      let mainSlug = Object.keys(MAIN_GROUPS).find((key) => category.includes(key));
+      // 🧭 1️⃣ Intentar detectar categoría por nombre directo
+      let mainSlug = Object.keys(MAIN_GROUPS).find((key) =>
+        [object, category, sub].some((t) => t.includes(key))
+      );
 
-      // 🧠 2️⃣ Si no se detecta, busca por palabras clave
+      // 🧠 2️⃣ Si no hay coincidencia directa, buscar por palabra clave
       if (!mainSlug) {
-        const match = Object.entries(MAIN_GROUPS).find(([_, g]) =>
+        const keywordMatch = Object.entries(MAIN_GROUPS).find(([_, g]) =>
           g.keywords.some((kw) => clean.includes(kw))
         );
-        mainSlug = match ? match[0] : "appreciation";
+        mainSlug = keywordMatch ? keywordMatch[0] : "appreciation";
       }
 
       const group = MAIN_GROUPS[mainSlug];
 
-      // 🔹 Limpia subcategorías ("1a", "a", "general1a", etc.)
+      // 🧹 3️⃣ Limpieza de subcategoría
       const subcategory =
         sub.replace(/[0-9]+a?/g, "").replace(/[^a-z]/g, "") || "general";
 
@@ -132,7 +139,7 @@ export async function GET() {
         mainName: group.mainName,
         mainEmoji: group.mainEmoji,
         mainColor: group.mainColor,
-        object: object.charAt(0).toUpperCase() + object.slice(1),
+        object: capitalize(object),
         category,
         subcategory,
         src: `/cards/${file}`,
