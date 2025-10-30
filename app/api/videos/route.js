@@ -1,85 +1,115 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
-import { MAIN_CATEGORIES, normalize } from "@/lib/categories";
 
-// 🚀 API principal Everwish — Lee automáticamente los videos desde /public/cards
+// 🌎 CATEGORÍAS Y SUBCATEGORÍAS COMBINADAS AUTOMÁTICAMENTE
+const MAIN_GROUPS = {
+  holidays: {
+    mainName: "Holidays",
+    mainEmoji: "🎄",
+    mainColor: "#FFF4E0",
+    keywords: [
+      "christmas","halloween","thanksgiving","easter","newyear",
+      "independenceday","july4th","fourthofjuly","fireworks",
+      "memorialday","veteransday","presidentsday","laborday",
+      "mlkday","columbusday","flagday","patriotsday","cinco","cincodemayo",
+      "oktoberfest","stpatrick","stpatricksday","earthday","kindnessday",
+      "friendshipday","womensday","workersday","heritagemonth",
+      "dayofthedead","holiday","holidayseason","diwali","hanukkah",
+      "boxingday","carnival","thankful","turkeyday","pumpkin","santa"
+    ],
+  },
+  love: {
+    mainName: "Love",
+    mainEmoji: "❤️",
+    mainColor: "#FFE8EE",
+    keywords: [
+      "valentine","romance","anniversary","wedding","engagement",
+      "proposal","couple","relationship","heart","kiss","marriage","love",
+      "partner","girlfriend","boyfriend","crush","affection","date","forever",
+      "sweetheart"
+    ],
+  },
+  celebrations: {
+    mainName: "Celebrations",
+    mainEmoji: "🎉",
+    mainColor: "#FFF7FF",
+    keywords: [
+      "birthday","graduation","babyshower","mothersday","fathersday",
+      "retirement","party","event","achievement","success","promotion",
+      "newjob","newhome","moving","bridalshower","babyarrival","genderreveal",
+      "welcome","farewell","anniversaryparty"
+    ],
+  },
+  animals: {
+    mainName: "Animals & Nature",
+    mainEmoji: "🐾",
+    mainColor: "#E8FFF3",
+    keywords: [
+      "pets","petsandanimal","dog","cat","puppy","kitten","horse","bird",
+      "wildlife","eagle","forest","nature","butterfly","fish","turtle","bunny",
+      "elephant","lion","tiger","bear","rabbit","dolphin","animal","zoo","sea",
+      "flower","tree","bee","sunflower"
+    ],
+  },
+  seasons: {
+    mainName: "Seasons",
+    mainEmoji: "🍂",
+    mainColor: "#FFF4E0",
+    keywords: [
+      "spring","summer","autumn","fall","winter","season","rainy","rain","snow",
+      "cold","heat","beach","sunny","sunset","leaves","flowers","vacation",
+      "travel","mountain"
+    ],
+  },
+  appreciation: {
+    mainName: "Appreciation & Support",
+    mainEmoji: "💌",
+    mainColor: "#FDE6E6",
+    keywords: [
+      "thankyou","appreciation","condolences","healing","getwell","support",
+      "care","teacher","nurse","doctor","gratitude","friendship","help",
+      "motivational","inspiration","encouragement","thank","hero","community",
+      "worker","mentor","helper","volunteer","thanks"
+    ],
+  },
+};
+
+// 🔹 Normaliza texto
+function normalize(str) {
+  return str?.toLowerCase().replace(/\s+/g, "-").replace(/&/g, "and").replace(/[^a-z0-9-]/g, "").trim();
+}
+
 export async function GET() {
   const dir = path.join(process.cwd(), "public/cards");
-  let files = [];
+  const files = fs.existsSync(dir)
+    ? fs.readdirSync(dir).filter((f) => f.endsWith(".mp4"))
+    : [];
 
-  try {
-    if (fs.existsSync(dir)) {
-      files = fs.readdirSync(dir).filter((f) => f.endsWith(".mp4"));
-    }
-  } catch (error) {
-    console.error("⚠️ Error al leer /public/cards:", error);
-  }
-
-  if (files.length === 0) {
-    return NextResponse.json({
-      message: "⚠️ No se encontraron archivos .mp4 en /public/cards",
-      videos: [],
-    });
-  }
-
-  // 🧩 Mapeo: convierte nombre del archivo en estructura Everwish
   const videos = files.map((file) => {
     const cleanName = file.replace(".mp4", "");
     const parts = cleanName.split("_");
-
-    // 🧠 Estructura esperada: objeto_categoria_subcategoría_diseño
-    const object = normalize(parts[0] || "unknown");
+    const object = parts[0] || "unknown";
     const category = normalize(parts[1] || "general");
     const subcategory = normalize(parts[2] || "general");
-    const version = normalize(parts[3] || "1a");
-
-    // 🎨 Buscar grupo principal
-    const match = MAIN_CATEGORIES.find((group) =>
-      group.keywords.some((kw) =>
-        cleanName.toLowerCase().includes(kw.toLowerCase())
-      )
+    const match = Object.entries(MAIN_GROUPS).find(([_, g]) =>
+      g.keywords.some((kw) => cleanName.includes(kw))
     );
-
-    const mainSlug = match?.slug || "general";
-    const mainName = match?.name || "General";
-    const mainEmoji = match?.emoji || "✨";
-    const mainColor = match?.color || "#FFFFFF";
-
-    // 🧾 Generar nombre legible
-    const fullCategoryName =
-      subcategory !== "general"
-        ? `${mainName} — ${subcategory}`
-        : `${mainName} — ${category}`;
+    const [key, group] = match || ["appreciation", MAIN_GROUPS.appreciation];
+    const fullCategoryName = `${group.mainName} — ${subcategory !== "general" ? subcategory : category}`.replace(/-/g, " ");
 
     return {
+      mainName: group.mainName,
+      mainEmoji: group.mainEmoji,
+      mainColor: group.mainColor,
       object,
-      slug: cleanName,
-      src: `/cards/${file}`,
       category,
       subcategory,
-      version,
-      mainSlug,
-      mainName,
-      mainEmoji,
-      mainColor,
       combinedName: fullCategoryName,
+      src: `/cards/${file}`,
+      mainSlug: key,
     };
   });
 
-  // 🗂️ Agrupar por categoría principal (para tu vista Explore o listas ordenadas)
-  const grouped = {};
-  videos.forEach((v) => {
-    if (!grouped[v.mainName]) grouped[v.mainName] = [];
-    grouped[v.mainName].push(v);
-  });
-
-  // ✅ Respuesta final compatible con frontend Everwish y Everwish2
-  return NextResponse.json({
-    updatedAt: new Date().toISOString(),
-    total: videos.length,
-    categories: Object.keys(grouped),
-    videos,
-    grouped,
-  });
+  return NextResponse.json({ videos });
 }
