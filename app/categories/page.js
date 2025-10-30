@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -16,47 +15,32 @@ const ALL_CATEGORIES = [
   { name: "Inspirational & Friendship", slug: "inspirational", emoji: "🌟", color: "#FFFBE5" },
 ];
 
-// 💬 Sinónimos compatibles con categorías y nombres Everwish
+// 🧠 Sinónimos y plurales
 const SYNONYMS = {
-  zombies: "halloween",
-  zombie: "halloween",
-  ghost: "halloween",
-  ghosts: "halloween",
-  pumpkin: "halloween",
-  pumpkins: "halloween",
-  xmas: "christmas",
-  navidad: "christmas",
-  santa: "christmas",
-  perro: "animals",
-  perros: "animals",
-  dog: "animals",
-  dogs: "animals",
-  cat: "animals",
-  cats: "animals",
-  gato: "animals",
-  gatos: "animals",
-  love: "love",
+  zombies: "zombie",
+  ghosts: "ghost",
+  pumpkins: "pumpkin",
+  dogs: "dog",
+  puppies: "dog",
+  cats: "cat",
+  kittens: "cat",
+  turkeys: "turkey",
+  turtles: "turtle",
+  tortugas: "turtle",
+  gatos: "cat",
+  perros: "dog",
   amor: "love",
-  pareja: "love",
-  heart: "love",
-  corazon: "love",
-  bunny: "easter",
-  easter: "easter",
+  cumple: "birthday",
+  cumpleaños: "birthday",
+  navidad: "christmas",
   pascua: "easter",
-  birthday: "celebrations",
-  cumple: "celebrations",
-  cumpleaños: "celebrations",
-  thanksgiving: "holidays",
-  independence: "holidays",
-  summer: "seasons",
-  winter: "seasons",
-  spring: "seasons",
-  autumn: "seasons",
-  halloween: "holidays",
+  valentines: "valentine",
+  pareja: "love",
+  bunny: "easter",
 };
 
-// 🔤 Normalizador universal
-function normalizeText(str) {
+// 🔤 Normalizador
+function normalize(str) {
   return str
     ?.toLowerCase()
     .normalize("NFD")
@@ -84,39 +68,23 @@ export default function CategoriesPage() {
     loadVideos();
   }, []);
 
-  // 🔍 Filtrar categorías con sinónimos y detección flexible
+  // 🔍 Filtrar categorías por palabra o sinónimo
   useEffect(() => {
-    const q = normalizeText(search);
+    const q = normalize(search);
     if (!q) {
       setFiltered(ALL_CATEGORIES);
       return;
     }
 
-    // Buscar equivalencia de sinónimo
-    const synonymMatch = SYNONYMS[q] || q;
-
+    const synonym = SYNONYMS[q] || q;
     const matchedSlugs = new Set();
 
     videos.forEach((v) => {
-      const text = normalizeText(
-        [v.object, v.category, v.subcategory, v.mainName].filter(Boolean).join(" ")
-      );
-
-      // Coincidencia directa o por sinónimo
-      if (text.includes(q) || text.includes(synonymMatch)) {
+      const text = normalize([v.object, v.category, v.subcategory, v.mainSlug].join(" "));
+      if (text.includes(q) || text.includes(synonym)) {
         matchedSlugs.add(v.mainSlug);
       }
     });
-
-    // Si no hay coincidencias en videos, buscar en nombres base
-    if (matchedSlugs.size === 0) {
-      ALL_CATEGORIES.forEach((cat) => {
-        const text = normalizeText(cat.name);
-        if (text.includes(q) || text.includes(synonymMatch)) {
-          matchedSlugs.add(cat.slug);
-        }
-      });
-    }
 
     const result = ALL_CATEGORIES.filter((cat) => matchedSlugs.has(cat.slug));
     setFiltered(result.length > 0 ? result : []);
@@ -124,7 +92,7 @@ export default function CategoriesPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-pink-50 via-white to-pink-50 text-gray-800 flex flex-col items-center py-10 px-4">
-      {/* 🧭 Header breadcrumb */}
+      {/* 🧭 Header */}
       <p className="text-gray-500 text-sm mb-3">
         Home › <span className="text-pink-500 font-semibold">Categories</span>
       </p>
@@ -141,18 +109,18 @@ export default function CategoriesPage() {
       <div className="flex justify-center mb-10 w-full">
         <input
           type="text"
-          placeholder="Search any theme — e.g. yeti, turtle, halloween..."
+          placeholder="Search any theme — e.g. turtle, halloween, love..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-80 md:w-96 px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700"
         />
       </div>
 
-      {/* 🌈 Categories grid */}
+      {/* 🌈 Categories */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 max-w-5xl justify-items-center">
         {filtered.length > 0 ? (
           filtered.map((cat, i) => (
-            <Link key={i} href={`/categories/${cat.slug}`}>
+            <Link key={i} href={`/categories/${cat.slug}?q=${search}`}>
               <motion.div
                 whileHover={{ scale: 1.07 }}
                 transition={{ duration: 0.2 }}
@@ -162,11 +130,7 @@ export default function CategoriesPage() {
                 <motion.span
                   className="text-4xl sm:text-5xl mb-2"
                   animate={{ y: [0, -5, 0] }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                 >
                   {cat.emoji}
                 </motion.span>
@@ -184,4 +148,4 @@ export default function CategoriesPage() {
       </div>
     </main>
   );
-  }
+                       }
