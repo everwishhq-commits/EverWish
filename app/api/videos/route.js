@@ -2,19 +2,18 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
-// 🌎 CATEGORÍAS PRINCIPALES — sincronizadas con Everwish
+// 🌎 CATEGORÍAS PRINCIPALES
 const MAIN_GROUPS = {
   holidays: {
     mainName: "Holidays",
     mainEmoji: "😊",
     mainColor: "#FFF4E0",
     keywords: [
-      "holiday","holidays","christmas","xmas","santa","halloween","spooky","pumpkin",
-      "ghost","zombie","boo","monster","trick","treat","thanksgiving","turkey",
-      "autumn","fall","easter","bunny","egg","spring","newyear","fireworks","celebration",
-      "party","independenceday","july4th","4thofjuly","carnival","hanukkah","diwali",
-      "stpatricksday","oktoberfest","veteransday","memorialday","laborday","mlkday",
-      "dayofthedead","cincodemayo"
+      "holiday","holidays","christmas","xmas","santa","halloween","spooky","pumpkin","ghost",
+      "zombie","boo","monster","trick","treat","thanksgiving","turkey","autumn","fall",
+      "easter","bunny","egg","spring","newyear","fireworks","celebration","party",
+      "independenceday","july4th","4thofjuly","carnival","hanukkah","diwali","stpatricksday",
+      "oktoberfest","veteransday","memorialday","laborday","mlkday","dayofthedead","cincodemayo"
     ],
   },
   love: {
@@ -63,10 +62,9 @@ const MAIN_GROUPS = {
     mainColor: "#E8FFF3",
     keywords: [
       "animal","animals","pet","pets","dog","dogs","puppy","puppies","cat","cats","kitten",
-      "kittens","bird","birds","parrot","parrots","turtle","turtles","elephant","elephants",
-      "dolphin","dolphins","butterfly","butterflies","nature","forest","jungle","wildlife",
-      "zoo","eco","planet","garden","flower","flowers","flor","perro","perros","gato","gatos",
-      "conejo","conejo","pajaro","pájaros","tortuga","elefante"
+      "kittens","bird","birds","parrot","turtle","elephant","dolphin","butterfly","nature",
+      "forest","jungle","wildlife","zoo","eco","planet","garden","flower","flowers",
+      "perro","perros","gato","gatos","tortuga","elefante","conejo","pajaro"
     ],
   },
   seasons: {
@@ -75,8 +73,8 @@ const MAIN_GROUPS = {
     mainColor: "#E5EDFF",
     keywords: [
       "spring","summer","autumn","fall","winter","rain","snow","beach","sunny","cold",
-      "warm","vacation","holiday","travel","sunset","breeze","season","estacion","invierno",
-      "verano","otoño","primavera","clima"
+      "warm","vacation","holiday","travel","sunset","breeze","season","invierno","verano",
+      "otoño","primavera","clima"
     ],
   },
   inspirational: {
@@ -92,28 +90,50 @@ const MAIN_GROUPS = {
   },
 };
 
-// 🧩 Sinónimos universales (inglés/español, plurales, emociones)
+// 🧩 SINÓNIMOS universales (inglés/español, plurales, emociones)
 const SYNONYMS = {
-  // plural ↔ singular
-  zombies: "zombie", ghosts: "ghost", pumpkins: "pumpkin", dogs: "dog", puppies: "dog",
-  cats: "cat", kittens: "cat", turkeys: "turkey", fireworks: "firework", hearts: "heart",
-  flowers: "flower", monsters: "monster", leaves: "leaf", butterflies: "butterfly",
+  zombies:"zombie", ghosts:"ghost", pumpkins:"pumpkin", dogs:"dog", puppies:"dog",
+  cats:"cat", kittens:"cat", turkeys:"turkey", hearts:"heart", flowers:"flower",
+  perros:"dog", gatos:"cat", tortugas:"turtle", conejos:"bunny", fantasmas:"ghost",
+  monstruos:"monster", calabaza:"pumpkin", amor:"love", pareja:"couple", animales:"animal",
+  naturaleza:"nature", navidad:"christmas", halloween:"halloween", cumple:"birthday",
+  cumpleaños:"birthday", fiesta:"party", logro:"achievement", bendicion:"blessing",
+  bendición:"blessing", milagro:"miracle", feliz:"happy", alegria:"joy", alegría:"joy",
+  tristeza:"sadness", paz:"peace", esperanza:"hope", suerte:"luck", animo:"motivation",
+  ánimo:"motivation", gracias:"thankyou", trabajo:"work", familia:"family",
+  madre:"mother", padre:"father", bebe:"baby", bebé:"baby", doctor:"doctor",
+  enfermera:"nurse", profesor:"teacher", maestro:"teacher", amigo:"friend",
+  amiga:"friend", amigos:"friend", amigas:"friend", jefe:"boss", empleado:"employee",
+  voluntario:"volunteer", artista:"artist", ingeniero:"engineer",
+};
 
-  // español → inglés equivalentes
-  perros: "dog", gato: "cat", gatos: "cat", tortugas: "turtle", conejos: "bunny",
-  fantasmas: "ghost", monstruos: "monster", calabaza: "pumpkin", amor: "love",
-  pareja: "couple", animales: "animal", naturaleza: "nature", navidad: "christmas",
-  halloween: "halloween", cumple: "birthday", cumpleaños: "birthday", fiesta: "party",
-  logro: "achievement", bendicion: "blessing", bendición: "blessing", milagro: "miracle",
-  feliz: "happy", alegria: "joy", alegría: "joy", tristeza: "sadness", paz: "peace",
-  esperanza: "hope", suerte: "luck", animo: "motivation", ánimo: "motivation",
-  gracias: "thankyou", trabajo: "work", familia: "family", madre: "mother", padre: "father",
-  bebe: "baby", bebé: "baby", doctor: "doctor", enfermera: "nurse", profesor: "teacher",
-  maestro: "teacher", alumno: "student", amigo: "friend", amiga: "friend",
-  amigos: "friend", amigas: "friend", jefe: "boss", jefea: "boss", jefeas: "boss",
-  empleado: "employee", empleados: "employee", voluntario: "volunteer", artista: "artist",
-  ingeniero: "engineer", motivacion: "motivation", motivación: "motivation",
-  felicidad: "happiness", bendecido: "blessed", bendecida: "blessed",
+// 🧩 FRASES COMPUESTAS — (frase → palabra clave o categoría)
+const PHRASES = {
+  "feliz cumpleaños": "birthday",
+  "happy birthday": "birthday",
+  "día de la madre": "mothersday",
+  "dia de la madre": "mothersday",
+  "día del padre": "fathersday",
+  "dia del padre": "fathersday",
+  "día de san valentín": "valentine",
+  "dia de san valentin": "valentine",
+  "día del amor": "valentine",
+  "feliz navidad": "christmas",
+  "merry christmas": "christmas",
+  "feliz año nuevo": "newyear",
+  "happy new year": "newyear",
+  "día del trabajo": "laborday",
+  "dia del trabajo": "laborday",
+  "día de la independencia": "independenceday",
+  "dia de la independencia": "independenceday",
+  "día de acción de gracias": "thanksgiving",
+  "dia de accion de gracias": "thanksgiving",
+  "día de los muertos": "dayofthedead",
+  "dia de los muertos": "dayofthedead",
+  "felices fiestas": "holiday",
+  "happy holidays": "holiday",
+  "feliz pascua": "easter",
+  "happy easter": "easter",
 };
 
 // 🧩 Normalizador de texto
@@ -121,7 +141,7 @@ function normalizeText(str) {
   return str
     ?.toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // quita tildes
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 }
@@ -137,16 +157,26 @@ export async function GET() {
     const cleanName = file.replace(".mp4", "");
     const normalized = normalizeText(cleanName);
 
-    // Sustituye sinónimos
-    const tokens = normalized.split(/\s+/).map((w) => SYNONYMS[w] || w);
-    const text = tokens.join(" ");
+    // 1️⃣ Detectar frases completas antes que palabras
+    let detectedKeywords = [];
+    for (const [phrase, mapped] of Object.entries(PHRASES)) {
+      if (normalized.includes(normalizeText(phrase))) {
+        detectedKeywords.push(mapped);
+      }
+    }
 
+    // 2️⃣ Dividir en palabras y aplicar sinónimos
+    const tokens = normalized.split(/\s+/).map((w) => SYNONYMS[w] || w);
+    const text = tokens.concat(detectedKeywords).join(" ");
+
+    // 3️⃣ Buscar coincidencias por categoría
     const matchedGroups = [];
     for (const [key, g] of Object.entries(MAIN_GROUPS)) {
       const match = g.keywords.some((kw) => text.includes(normalizeText(kw)));
       if (match) matchedGroups.push([key, g]);
     }
 
+    // 4️⃣ Categoría predeterminada si no hay coincidencias
     if (matchedGroups.length === 0)
       matchedGroups.push(["inspirational", MAIN_GROUPS.inspirational]);
 
@@ -170,4 +200,4 @@ export async function GET() {
   });
 
   return NextResponse.json({ videos });
-}
+  }
