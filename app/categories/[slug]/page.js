@@ -1,18 +1,20 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { MAIN_CATEGORIES } from "@/lib/categories.js";
 
 export default function CategoryPage() {
   const { slug } = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
   const query = searchParams.get("q")?.toLowerCase() || "";
+
   const [groups, setGroups] = useState({});
   const [activeSub, setActiveSub] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // 🧠 Cargar videos desde API
   useEffect(() => {
     async function loadVideos() {
       try {
@@ -24,6 +26,7 @@ export default function CategoryPage() {
 
         const grouped = {};
 
+        // 🎯 Filtrar videos de esta categoría
         for (const v of data.videos) {
           const videoCategories = [
             v.mainSlug,
@@ -33,7 +36,6 @@ export default function CategoryPage() {
             .filter(Boolean)
             .map((c) => normalize(c));
 
-          // ✅ Si pertenece a esta categoría
           if (videoCategories.includes(normalize(slug))) {
             const matchByQuery =
               !query ||
@@ -57,16 +59,11 @@ export default function CategoryPage() {
           }
         }
 
-        // 🧠 Si no hay resultados, mostrar subcategorías vacías desde lib
-        if (Object.keys(grouped).length === 0) {
-          const res2 = await fetch("/api/videos", { cache: "no-store" });
-          const data2 = await res2.json();
-          const categoryData = data2.videos.find(
-            (v) => normalize(v.mainSlug) === normalize(slug)
-          );
-
-          if (categoryData?.mainName && categoryData?.mainSlug) {
-            grouped["No cards yet"] = [];
+        // 🧩 AÑADIR SUBCATEGORÍAS DEFINIDAS EN /lib/categories.js
+        const categoryData = MAIN_CATEGORIES[slug];
+        if (categoryData?.subcategories?.length) {
+          for (const sub of categoryData.subcategories) {
+            if (!grouped[sub]) grouped[sub] = [];
           }
         }
 
@@ -94,7 +91,6 @@ export default function CategoryPage() {
 
   return (
     <main className="min-h-screen bg-[#fff5f8] text-gray-800 flex flex-col items-center py-10 px-4">
-      {/* 🔙 Back */}
       <button
         onClick={() => router.push("/categories")}
         className="text-pink-500 hover:text-pink-600 font-semibold mb-6"
@@ -102,9 +98,8 @@ export default function CategoryPage() {
         ← Back to Categories
       </button>
 
-      {/* 🏷️ Title */}
       <h1 className="text-3xl font-extrabold text-pink-600 mb-3 capitalize text-center">
-        {slug.replace(/-/g, " ")}
+        {MAIN_CATEGORIES[slug]?.mainName || slug.replace(/-/g, " ")}
       </h1>
 
       {query && (
@@ -113,7 +108,7 @@ export default function CategoryPage() {
         </p>
       )}
 
-      {/* 🌸 Subcategories */}
+      {/* 🌸 Subcategorías */}
       {subcategories.length > 0 ? (
         <div className="flex flex-wrap justify-center gap-4 max-w-5xl">
           {subcategories.map((sub, i) => (
@@ -138,7 +133,7 @@ export default function CategoryPage() {
         </p>
       )}
 
-      {/* 💫 Modal */}
+      {/* 💫 Modal con las tarjetas */}
       <AnimatePresence>
         {activeSub && (
           <>
@@ -169,7 +164,7 @@ export default function CategoryPage() {
 
                 {activeVideos.length === 0 ? (
                   <p className="text-gray-400 text-center mt-10 italic">
-                    No cards found for this subcategory yet.
+                    No cards found for this subcategory yet ✨
                   </p>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 justify-items-center">
@@ -202,4 +197,4 @@ export default function CategoryPage() {
       </AnimatePresence>
     </main>
   );
-            }
+}
