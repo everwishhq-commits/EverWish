@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import "swiper/css";
 
-// 🌸 CATEGORÍAS PRINCIPALES (con colores Everwish)
+// 🌸 CATEGORÍAS PRINCIPALES (colores Everwish)
 const ALL_CATEGORIES = [
   { name: "Holidays & Festivities", emoji: "🎄", slug: "holidays", color: "#FFF4E0" },
   { name: "Love & Romance", emoji: "❤️", slug: "love", color: "#FFE8EE" },
@@ -24,7 +24,7 @@ export default function CategoriesCarousel() {
   const [filtered, setFiltered] = useState(ALL_CATEGORIES);
   const [videos, setVideos] = useState([]);
 
-  // 📥 Cargar videos (para buscar palabras clave dinámicamente)
+  // 📥 Cargar videos del API
   useEffect(() => {
     async function loadVideos() {
       try {
@@ -38,7 +38,7 @@ export default function CategoriesCarousel() {
     loadVideos();
   }, []);
 
-  // 🔍 Filtrar categorías dinámicamente según búsqueda
+  // 🔍 Filtrar categorías en tiempo real
   useEffect(() => {
     const q = search.toLowerCase().trim();
     if (!q) {
@@ -46,31 +46,26 @@ export default function CategoriesCarousel() {
       return;
     }
 
-    const foundCategories = new Set();
+    const matchedSlugs = new Set();
 
-    videos.forEach((item) => {
+    videos.forEach((v) => {
       const searchableText = [
-        item.slug,
-        item.object,
-        item.category,
-        item.subcategory,
-        ...(item.tags || []),
+        v.object,
+        v.category,
+        v.subcategory,
+        v.mainName,
+        v.mainSlug,
       ]
         .join(" ")
         .toLowerCase();
 
       if (searchableText.includes(q)) {
-        if (item.category) foundCategories.add(item.category.trim());
+        matchedSlugs.add(v.mainSlug);
       }
     });
 
-    const matches = ALL_CATEGORIES.filter((cat) =>
-      [...foundCategories].some((f) =>
-        f.toLowerCase().replace("&", "and").includes(cat.slug)
-      )
-    );
-
-    setFiltered(matches.length > 0 ? matches : []);
+    const result = ALL_CATEGORIES.filter((cat) => matchedSlugs.has(cat.slug));
+    setFiltered(result.length > 0 ? result : []);
   }, [search, videos]);
 
   return (
@@ -82,7 +77,6 @@ export default function CategoriesCarousel() {
           "linear-gradient(to bottom, #fff8fa 0%, #fff5f7 50%, #ffffff 100%)",
       }}
     >
-      {/* 🏷️ Título */}
       <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
         Explore by Category ✨
       </h2>
@@ -91,14 +85,14 @@ export default function CategoriesCarousel() {
       <div className="flex justify-center mb-10">
         <input
           type="text"
-          placeholder="Search any theme — e.g. wedding, halloween, baby..."
+          placeholder="Search any theme — e.g. wedding, halloween, turtle..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-80 md:w-96 px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700"
         />
       </div>
 
-      {/* 🎠 Carrusel de categorías */}
+      {/* 🎠 Carrusel */}
       <Swiper
         slidesPerView={3.2}
         spaceBetween={16}
@@ -117,7 +111,7 @@ export default function CategoriesCarousel() {
         {filtered.length > 0 ? (
           filtered.map((cat, i) => (
             <SwiperSlide key={i}>
-              <Link href={`/category/${cat.slug}`}>
+              <Link href={`/categories/${cat.slug}`}>
                 <motion.div
                   className="flex flex-col items-center justify-center cursor-pointer"
                   whileHover={{ scale: 1.07 }}
@@ -153,4 +147,4 @@ export default function CategoriesCarousel() {
       </Swiper>
     </section>
   );
-}
+                       }
