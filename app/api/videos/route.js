@@ -1,87 +1,85 @@
 import { NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
 import { MAIN_CATEGORIES, normalize } from "@/lib/categories";
 
-// ✅ Ejemplo de data (se puede expandir después)
-const VIDEOS = [
-  {
-    object: "Ghost Halloween Love 1A",
-    slug: "ghost_halloween_love_1A",
-    src: "/videos/ghost_halloween_love_1A.mp4",
-    category: "Holidays",
-    subcategory: "halloween",
-  },
-  {
-    object: "Mother Mothers-Day Celebration 1A",
-    slug: "mother_mothers-day_celebration_1A",
-    src: "/videos/mother_mothers-day_celebration_1A.mp4",
-    category: "Celebrations & Special Moments",
-    subcategory: "mothersday",
-  },
-  {
-    object: "Dogcat Petsandanimals Appreciationday",
-    slug: "dogcat_petsandanimals_appreciationday",
-    src: "/videos/dogcat_petsandanimals_appreciationday.mp4",
-    category: "Animals & Nature",
-    subcategory: "general",
-  },
-  {
-    object: "Hugs Anniversary Love A1",
-    slug: "hugs_anniversary_love_A1",
-    src: "/videos/hugs_anniversary_love_A1.mp4",
-    category: "Love & Romance",
-    subcategory: "anniversary",
-  },
-  {
-    object: "Eagle July4th Independenceday 1A",
-    slug: "eagle_July4th_independenceday_1A",
-    src: "/videos/eagle_July4th_independenceday_1A.mp4",
-    category: "Holidays",
-    subcategory: "independenceday",
-  },
-  {
-    object: "Mother Mothers-Day General 2A",
-    slug: "mother_mothers-day_general_2A",
-    src: "/videos/mother_mothers-day_general_2A.mp4",
-    category: "Celebrations & Special Moments",
-    subcategory: "mothersday",
-  },
-  {
-    object: "Octopus Petsandanimals General 1A",
-    slug: "octopus_petsandanimals_general_1A",
-    src: "/videos/octopus_petsandanimals_general_1A.mp4",
-    category: "Animals & Nature",
-    subcategory: "general",
-  },
-  {
-    object: "Bunny Easter General",
-    slug: "bunny_easter_general",
-    src: "/videos/bunny_easter_general.mp4",
-    category: "Holidays",
-    subcategory: "easter",
-  },
-];
-
-// 🧠 Asigna mainSlug correcto basándose en tus categorías de lib/categories.js
-const ENRICHED_VIDEOS = VIDEOS.map((v) => {
-  const found = MAIN_CATEGORIES.find((c) =>
-    c.keywords.some((k) =>
-      v.subcategory?.toLowerCase().includes(k.toLowerCase())
-    )
-  );
-  return {
-    ...v,
-    mainSlug: found?.slug || "general",
-    mainName: found?.name || "General",
-    mainEmoji: found?.emoji || "✨",
-    updatedAt: Date.now(),
-  };
-});
-
-// 🚀 API Response
+// 🚀 API principal Everwish — Lee automáticamente los videos desde /public/cards
 export async function GET() {
+  const dir = path.join(process.cwd(), "public/cards");
+  let files = [];
+
+  try {
+    if (fs.existsSync(dir)) {
+      files = fs.readdirSync(dir).filter((f) => f.endsWith(".mp4"));
+    }
+  } catch (error) {
+    console.error("⚠️ Error al leer /public/cards:", error);
+  }
+
+  if (files.length === 0) {
+    return NextResponse.json({
+      message: "⚠️ No se encontraron archivos .mp4 en /public/cards",
+      videos: [],
+    });
+  }
+
+  // 🧩 Mapeo: convierte nombre del archivo en estructura Everwish
+  const videos = files.map((file) => {
+    const cleanName = file.replace(".mp4", "");
+    const parts = cleanName.split("_");
+
+    // 🧠 Estructura esperada: objeto_categoria_subcategoría_diseño
+    const object = normalize(parts[0] || "unknown");
+    const category = normalize(parts[1] || "general");
+    const subcategory = normalize(parts[2] || "general");
+    const version = normalize(parts[3] || "1a");
+
+    // 🎨 Buscar grupo principal
+    const match = MAIN_CATEGORIES.find((group) =>
+      group.keywords.some((kw) =>
+        cleanName.toLowerCase().includes(kw.toLowerCase())
+      )
+    );
+
+    const mainSlug = match?.slug || "general";
+    const mainName = match?.name || "General";
+    const mainEmoji = match?.emoji || "✨";
+    const mainColor = match?.color || "#FFFFFF";
+
+    // 🧾 Generar nombre legible
+    const fullCategoryName =
+      subcategory !== "general"
+        ? `${mainName} — ${subcategory}`
+        : `${mainName} — ${category}`;
+
+    return {
+      object,
+      slug: cleanName,
+      src: `/cards/${file}`,
+      category,
+      subcategory,
+      version,
+      mainSlug,
+      mainName,
+      mainEmoji,
+      mainColor,
+      combinedName: fullCategoryName,
+    };
+  });
+
+  // 🗂️ Agrupar por categoría principal (para tu vista Explore o listas ordenadas)
+  const grouped = {};
+  videos.forEach((v) => {
+    if (!grouped[v.mainName]) grouped[v.mainName] = [];
+    grouped[v.mainName].push(v);
+  });
+
+  // ✅ Respuesta final compatible con frontend Everwish y Everwish2
   return NextResponse.json({
     updatedAt: new Date().toISOString(),
-    total: ENRICHED_VIDEOS.length,
-    videos: ENRICHED_VIDEOS,
+    total: videos.length,
+    categories: Object.keys(grouped),
+    videos,
+    grouped,
   });
 }
