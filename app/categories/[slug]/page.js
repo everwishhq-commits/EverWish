@@ -5,7 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { MAIN_CATEGORIES } from "@/lib/categories.js";
 
-// normalizador igual que en categories/page
+// Normalizador
 function normalize(str = "") {
   return str
     .toLowerCase()
@@ -24,7 +24,6 @@ export default function CategoryPage() {
   const [activeSub, setActiveSub] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 🧠 Cargar videos desde API
   useEffect(() => {
     async function loadVideos() {
       try {
@@ -32,11 +31,12 @@ export default function CategoryPage() {
         const data = await res.json();
 
         const grouped = {};
-        const currentCat = MAIN_CATEGORIES[slug]; // para traer sus subs predefinidas
+        const currentCat = MAIN_CATEGORIES[slug];
+        const q = normalize(query);
+        const singularQ = q.endsWith("s") ? q.slice(0, -1) : q;
 
         for (const v of data.videos) {
-          // colección de categorías del video
-          const videoCats = [
+          const allCategories = [
             v.mainSlug,
             v.categorySlug,
             ...(v.extraCategories || []),
@@ -44,10 +44,8 @@ export default function CategoryPage() {
             .filter(Boolean)
             .map((c) => normalize(c));
 
-          // ¿este video pertenece a esta categoría?
-          if (!videoCats.includes(normalize(slug))) continue;
+          if (!allCategories.includes(normalize(slug))) continue;
 
-          // ¿pasa el filtro de búsqueda?
           const fullText = normalize(
             [
               v.object,
@@ -61,17 +59,11 @@ export default function CategoryPage() {
               .join(" ")
           );
 
-          if (query && !fullText.includes(query)) {
-            // hay palabra y este video no la tiene → ignorar
+          if (q && !fullText.includes(q) && !fullText.includes(singularQ)) {
             continue;
           }
 
-          // decidir sub
-          const rawSub =
-            (v.subcategory && v.subcategory.trim()) ||
-            (v.category && v.category.trim()) ||
-            "General";
-
+          const rawSub = v.subcategory || v.category || "General";
           const cleanSub = rawSub
             .replace(/_/g, " ")
             .replace(/\b\w/g, (c) => c.toUpperCase());
@@ -80,8 +72,7 @@ export default function CategoryPage() {
           grouped[cleanSub].push(v);
         }
 
-        // 👇 si NO hay búsqueda, también mostramos las sub fijas del lib
-        if (!query && currentCat?.subcategories?.length) {
+        if (!q && currentCat?.subcategories?.length) {
           currentCat.subcategories.forEach((sub) => {
             if (!grouped[sub]) grouped[sub] = [];
           });
@@ -132,7 +123,6 @@ export default function CategoryPage() {
         </p>
       )}
 
-      {/* 🌸 Subcategorías */}
       {subcategories.length > 0 ? (
         <div className="flex flex-wrap justify-center gap-4 max-w-5xl">
           {subcategories.map((sub, i) => (
@@ -157,7 +147,6 @@ export default function CategoryPage() {
         </p>
       )}
 
-      {/* 💫 Modal con las tarjetas */}
       <AnimatePresence>
         {activeSub && (
           <>
@@ -221,4 +210,4 @@ export default function CategoryPage() {
       </AnimatePresence>
     </main>
   );
-                    }
+          }
