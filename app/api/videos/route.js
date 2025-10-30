@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
-// 🌎 GRUPOS PRINCIPALES CON NOMBRES Y PALABRAS CLAVE
+// 🌎 CATEGORÍAS PRINCIPALES Y PALABRAS CLAVE
 const MAIN_GROUPS = {
   holidays: {
     mainName: "Holidays",
@@ -10,73 +10,56 @@ const MAIN_GROUPS = {
     mainColor: "#FFF4E0",
     keywords: [
       "christmas", "halloween", "thanksgiving", "easter", "newyear",
-      "independenceday", "july4th", "fourthofjuly", "fireworks",
-      "memorialday", "veteransday", "presidentsday", "laborday",
-      "mlkday", "columbusday", "flagday", "patriotsday",
-      "cinco", "cincodemayo", "oktoberfest", "stpatrick", "stpatricksday",
-      "earthday", "kindnessday", "friendshipday", "womensday", "workersday",
-      "heritagemonth", "dayofthedead", "holiday", "holidayseason",
-      "diwali", "hanukkah", "boxingday", "carnival", "thankful",
-      "turkeyday", "pumpkin", "santa", "zombie", "ghost", "boo"
+      "independenceday", "july4th", "fireworks", "memorialday",
+      "holiday", "pumpkin", "turkey", "santa", "zombie", "ghost", "boo"
     ],
   },
-
   love: {
     mainName: "Love & Romance",
     mainEmoji: "❤️",
     mainColor: "#FFE8EE",
     keywords: [
       "valentine", "romance", "anniversary", "wedding", "engagement",
-      "proposal", "couple", "relationship", "heart", "kiss", "hugs",
-      "marriage", "love", "partner", "girlfriend", "boyfriend",
-      "crush", "affection", "date", "forever", "sweetheart"
+      "couple", "heart", "love", "kiss", "hug", "forever"
     ],
   },
-
   celebrations: {
     mainName: "Celebrations & Special Moments",
     mainEmoji: "🎉",
     mainColor: "#FFF7FF",
     keywords: [
-      "birthday", "graduation", "babyshower", "mothersday", "fathersday",
-      "retirement", "party", "achievement", "success",
-      "promotion", "newjob", "newhome", "moving", "bridalshower",
-      "babyarrival", "genderreveal", "welcome", "farewell", "anniversaryparty"
+      "birthday", "baby", "graduation", "party", "mothersday", "fathersday",
+      "retirement", "promotion", "newjob", "newhome", "moving", "success",
+      "achievement", "farewell", "genderreveal", "bridal", "event"
     ],
   },
-
   animals: {
     mainName: "Animals & Nature",
     mainEmoji: "🐾",
     mainColor: "#E8FFF3",
     keywords: [
-      "pets", "dog", "cat", "puppy", "kitten", "horse", "bird", "wildlife",
-      "forest", "nature", "butterfly", "fish", "turtle", "bunny", "elephant",
-      "lion", "tiger", "bear", "rabbit", "dolphin", "zoo", "flower", "tree", "bee", "sunflower"
+      "dog", "cat", "puppy", "kitten", "horse", "bird", "nature",
+      "forest", "bunny", "elephant", "lion", "tiger", "bear",
+      "rabbit", "dolphin", "fish", "zoo", "flower", "tree", "bee"
     ],
   },
-
   seasons: {
     mainName: "Seasons",
     mainEmoji: "🍂",
     mainColor: "#FFF4E0",
     keywords: [
-      "spring", "summer", "autumn", "fall", "winter", "season",
-      "rainy", "rain", "snow", "cold", "heat", "beach", "sunny",
-      "sunset", "leaves", "flowers", "vacation", "travel", "mountain"
+      "spring", "summer", "autumn", "fall", "winter", "rain",
+      "snow", "beach", "vacation", "sunset", "mountain", "season"
     ],
   },
-
   appreciation: {
     mainName: "Appreciation & Support",
     mainEmoji: "💌",
     mainColor: "#FDE6E6",
     keywords: [
-      "thankyou", "appreciation", "condolences", "healing", "getwell",
-      "support", "care", "teacher", "nurse", "doctor", "gratitude",
-      "friendship", "help", "motivational", "inspiration",
-      "encouragement", "thank", "hero", "community", "worker",
-      "mentor", "volunteer", "thanks"
+      "thank", "appreciation", "condolence", "healing", "getwell",
+      "support", "care", "teacher", "nurse", "doctor", "friendship",
+      "hero", "community", "volunteer"
     ],
   },
 };
@@ -91,18 +74,15 @@ function normalize(str = "") {
     .trim();
 }
 
-// 🔍 Crea nombre legible
-function capitalize(word = "") {
-  return word.charAt(0).toUpperCase() + word.slice(1);
+function capitalize(str = "") {
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-// 🔧 API PRINCIPAL
+// 🚀 API
 export async function GET() {
   try {
     const dir = path.join(process.cwd(), "public/cards");
-    if (!fs.existsSync(dir)) {
-      return NextResponse.json({ videos: [] });
-    }
+    if (!fs.existsSync(dir)) return NextResponse.json({ videos: [] });
 
     const files = fs.readdirSync(dir).filter((f) => f.endsWith(".mp4"));
 
@@ -114,24 +94,31 @@ export async function GET() {
       const category = normalize(parts[1] || "general");
       const sub = normalize(parts[2] || "general");
 
-      // 🧭 1️⃣ Intentar detectar categoría por nombre directo
+      // 🧠 Identificación flexible de categoría
       let mainSlug = Object.keys(MAIN_GROUPS).find((key) =>
-        [object, category, sub].some((t) => t.includes(key))
+        [object, category, sub].some((txt) => txt.includes(key))
       );
 
-      // 🧠 2️⃣ Si no hay coincidencia directa, buscar por palabra clave
       if (!mainSlug) {
-        const keywordMatch = Object.entries(MAIN_GROUPS).find(([_, g]) =>
+        // Buscar coincidencia por palabras clave
+        const match = Object.entries(MAIN_GROUPS).find(([_, g]) =>
           g.keywords.some((kw) => clean.includes(kw))
         );
-        mainSlug = keywordMatch ? keywordMatch[0] : "appreciation";
+        mainSlug = match ? match[0] : "appreciation";
       }
 
       const group = MAIN_GROUPS[mainSlug];
 
-      // 🧹 3️⃣ Limpieza de subcategoría
-      const subcategory =
-        sub.replace(/[0-9]+a?/g, "").replace(/[^a-z]/g, "") || "general";
+      // 🧩 Subcategoría más inteligente
+      const subcategoryCandidates = clean.split("_");
+      let subcategory =
+        subcategoryCandidates.find(
+          (p) =>
+            p.length > 2 &&
+            !["card", "general", "video", "everwish"].includes(p)
+        ) || "general";
+
+      subcategory = subcategory.replace(/[0-9]+[a-z]?/g, "");
 
       return {
         slug: normalize(clean),
@@ -148,7 +135,7 @@ export async function GET() {
 
     return NextResponse.json({ videos });
   } catch (error) {
-    console.error("❌ Error reading videos:", error);
+    console.error("❌ Error leyendo videos:", error);
     return NextResponse.json({ videos: [] });
   }
-      }
+                             }
