@@ -5,7 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { MAIN_CATEGORIES } from "@/lib/categories.js";
 
-// Normalizador
+// Normalizador de texto
 function normalize(str = "") {
   return str
     .toLowerCase()
@@ -36,16 +36,26 @@ export default function CategoryPage() {
         const singularQ = q.endsWith("s") ? q.slice(0, -1) : q;
 
         for (const v of data.videos) {
+          // 👇 recolecta todos los posibles valores donde puede estar la categoría
           const allCategories = [
             v.mainSlug,
             v.categorySlug,
+            v.category,
+            v.subcategory,
             ...(v.extraCategories || []),
           ]
             .filter(Boolean)
             .map((c) => normalize(c));
 
-          if (!allCategories.includes(normalize(slug))) continue;
+          // ⚡ Si el archivo tiene el slug dentro del nombre, también cuenta
+          const srcName = normalize(v.src || "");
+          const belongsToSlug =
+            allCategories.includes(normalize(slug)) ||
+            srcName.includes(normalize(slug));
 
+          if (!belongsToSlug) continue;
+
+          // 🧠 buscar texto completo para búsqueda (query)
           const fullText = normalize(
             [
               v.object,
@@ -63,7 +73,18 @@ export default function CategoryPage() {
             continue;
           }
 
-          const rawSub = v.subcategory || v.category || "General";
+          // 🎯 subcategoría limpia
+          const rawSub =
+            v.subcategory ||
+            v.category ||
+            (srcName.includes("birthday")
+              ? "Birthday"
+              : srcName.includes("halloween")
+              ? "Halloween"
+              : srcName.includes("love")
+              ? "Love"
+              : "General");
+
           const cleanSub = rawSub
             .replace(/_/g, " ")
             .replace(/\b\w/g, (c) => c.toUpperCase());
@@ -72,6 +93,7 @@ export default function CategoryPage() {
           grouped[cleanSub].push(v);
         }
 
+        // ✅ Si no hay búsqueda, mostrar todas las sub predefinidas del lib
         if (!q && currentCat?.subcategories?.length) {
           currentCat.subcategories.forEach((sub) => {
             if (!grouped[sub]) grouped[sub] = [];
@@ -123,6 +145,7 @@ export default function CategoryPage() {
         </p>
       )}
 
+      {/* 🌸 Subcategorías */}
       {subcategories.length > 0 ? (
         <div className="flex flex-wrap justify-center gap-4 max-w-5xl">
           {subcategories.map((sub, i) => (
@@ -147,6 +170,7 @@ export default function CategoryPage() {
         </p>
       )}
 
+      {/* 💫 Modal con videos */}
       <AnimatePresence>
         {activeSub && (
           <>
@@ -197,7 +221,7 @@ export default function CategoryPage() {
                           muted
                         />
                         <div className="text-center py-2 text-gray-700 font-semibold text-sm">
-                          {video.object}
+                          {video.object || "Untitled"}
                         </div>
                       </motion.div>
                     ))}
