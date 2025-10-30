@@ -6,7 +6,7 @@ import path from "path";
 const MAIN_GROUPS = {
   holidays: {
     mainName: "Holidays",
-    mainEmoji: "🎄",
+    mainEmoji: "🥳",
     mainColor: "#FFF4E0",
     keywords: [
       "holiday","holidays","christmas","xmas","santa",
@@ -92,7 +92,7 @@ const MAIN_GROUPS = {
   },
 };
 
-// 🧩 Normalizador
+// 🧩 Normaliza texto
 function normalize(str) {
   return str?.toLowerCase()
     .replace(/\s+/g, "-")
@@ -101,7 +101,7 @@ function normalize(str) {
     .trim();
 }
 
-// 🚀 Construcción de respuesta
+// 🚀 Endpoint principal
 export async function GET() {
   const dir = path.join(process.cwd(), "public/cards");
   const files = fs.existsSync(dir)
@@ -120,7 +120,7 @@ export async function GET() {
       g.keywords.some((kw) => cleanName.includes(kw))
     );
 
-    // Si no encontró ninguna coincidencia, asigna “inspirational”
+    // 🪶 Si no encontró ninguna coincidencia, asigna “inspirational”
     if (matchedGroups.length === 0)
       matchedGroups.push(["inspirational", MAIN_GROUPS.inspirational]);
 
