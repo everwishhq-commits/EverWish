@@ -1,9 +1,67 @@
-// /app/api/videos/route.js
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { MAIN_CATEGORIES as MAIN_GROUPS } from "@/lib/categories.js";
 
+// 🧠 Diccionario de sinónimos e inclusividad
+const SYNONYMS = {
+  // plurales y animales
+  zombies: "zombie", ghosts: "ghost", pumpkins: "pumpkin",
+  dogs: "dog", puppies: "dog", cats: "cat", kittens: "cat",
+  turkeys: "turkey", hearts: "heart", flowers: "flower",
+  turtles: "turtle", lions: "lion", tigers: "tiger", bears: "bear",
+
+  // español
+  perro: "dog", perros: "dog", gato: "cat", gatos: "cat", tortuga: "turtle",
+  tortugas: "turtle", conejo: "bunny", conejos: "bunny",
+  fantasma: "ghost", fantasmas: "ghost", calabaza: "pumpkin",
+  calabazas: "pumpkin", amor: "love", pareja: "couple",
+  boda: "wedding", aniversario: "anniversary", cumpleaños: "birthday",
+  cumple: "birthday", fiesta: "party", celebración: "celebration",
+  logro: "achievement", éxito: "success", trabajo: "work", familia: "family",
+  madre: "mother", padre: "father", bebé: "baby", bebe: "baby",
+  amigo: "friend", amiga: "friend", amigos: "friend", amigas: "friend",
+  profesor: "teacher", maestro: "teacher", jefa: "boss", jefe: "boss",
+  empleado: "employee", empleada: "employee", voluntario: "volunteer",
+  artista: "artist", ingeniero: "engineer", enfermera: "nurse", doctor: "doctor",
+
+  // diversidad
+  gay: "diversity", lesbian: "diversity", bisexual: "diversity",
+  lgbt: "diversity", queer: "diversity", trans: "diversity",
+  black: "diversity", african: "diversity", afro: "diversity",
+  latino: "diversity", latina: "diversity", hispanic: "diversity",
+  asian: "diversity", immigrant: "diversity", migrants: "diversity",
+  inclusion: "diversity", equality: "diversity", pride: "diversity",
+  respect: "diversity", unity: "diversity", cultural: "diversity",
+  color: "diversity", diversity: "diversity"
+};
+
+// 🧩 Frases detectables
+const PHRASES = {
+  "feliz cumpleaños": "birthday", "happy birthday": "birthday",
+  "día de la madre": "mother’s day", "dia de la madre": "mother’s day",
+  "día del padre": "father’s day", "día de san valentín": "valentine’s day",
+  "día del amor": "valentine’s day", "feliz navidad": "christmas",
+  "merry christmas": "christmas", "feliz año nuevo": "new year’s eve",
+  "día del trabajo": "labor day", "día de la independencia": "independence day",
+  "día de acción de gracias": "thanksgiving", "día de los muertos": "day of the dead",
+  "felices fiestas": "holidays", "feliz pascua": "easter",
+  "unity and inclusion": "diversity", "celebrating diversity": "diversity",
+  "black heritage": "diversity", "latino pride": "diversity",
+  "love is love": "diversity", "cultural celebration": "diversity"
+};
+
+// 🧹 Normalizador
+function normalize(str) {
+  return str
+    ?.toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+// 🚀 API principal híbrida
 export async function GET() {
   const dir = path.join(process.cwd(), "public/cards");
   const logDir = path.join(process.cwd(), "public/logs");
@@ -15,119 +73,64 @@ export async function GET() {
     ? fs.readdirSync(dir).filter((f) => f.endsWith(".mp4"))
     : [];
 
-  let unrecognized = fs.existsSync(logFile)
-    ? JSON.parse(fs.readFileSync(logFile, "utf-8") || "[]")
-    : [];
+  let unrecognized = [];
 
-  const videos = files
-    .map((file) => {
-      const cleanName = file.replace(".mp4", "");
-      const parts = cleanName.split("_");
+  const videos = files.map((file) => {
+    const clean = file.replace(".mp4", "");
+    const parts = clean.split("_");
+    const normalizedName = normalize(clean);
 
-      // --------------------------------------------------
-      // CASO 1: nombre CON formato (4 partes)
-      // object_category_subcategory_value.mp4
-      // --------------------------------------------------
-      if (parts.length >= 3) {
-        const [object, categoryRaw, subcategoryRaw, value] = parts;
+    let [object, category, subcategory] = ["unknown", "general", "general"];
 
-        const categoryKey = categoryRaw?.toLowerCase();
-        const group = MAIN_GROUPS[categoryKey];
-
-        // categoría no existe en lib -> lo mandamos igual pero lo loggeamos
-        if (!group) {
-          unrecognized.push({
-            file: cleanName,
-            issue: `Unknown category: ${categoryRaw}`,
-            date: new Date().toISOString(),
-          });
-
-          return {
-            // lo dejamos vivo para que el carrusel NO se rompa
-            mainName: "Inspirational & Friendship",
-            mainEmoji: "🌟",
-            mainColor: "#FFFBE5",
-            mainSlug: "inspirational",
-            object: object || "unknown",
-            category: "inspirational",
-            subcategory: "General",
-            value: value || null,
-            src: `/cards/${file}`,
-            // para que los componentes que hacen /edit/${video.slug} no fallen
-            slug: cleanName,
-          };
+    // 1️⃣ Si cumple el formato (object_category_subcategory_value)
+    if (parts.length >= 3) {
+      [object, category, subcategory] = parts;
+    } else {
+      // 2️⃣ Si no cumple formato, usar detección automática
+      let detectedSub = null;
+      for (const [phrase, mapped] of Object.entries(PHRASES)) {
+        if (normalizedName.includes(normalize(phrase))) {
+          detectedSub = mapped;
+          break;
         }
-
-        // sub válida dentro del lib?
-        const validSubs =
-          group.subcategories?.map((s) =>
-            s.toLowerCase().replace(/\s+/g, "")
-          ) || [];
-
-        const normalizedSub = subcategoryRaw
-          ? subcategoryRaw.toLowerCase().replace(/\s+/g, "")
-          : "general";
-
-        const finalSub = validSubs.includes(normalizedSub)
-          ? subcategoryRaw
-          : "General";
-
-        return {
-          mainName: group.name,
-          mainEmoji: group.emoji,
-          mainColor: group.color,
-          mainSlug: categoryKey, // 👈 lo que usa tu carrusel
-          object: object || "unknown",
-          category: categoryKey,
-          subcategory: finalSub,
-          value: value || null,
-          src: `/cards/${file}`,
-          slug: cleanName, // 👈 compatibilidad con /edit/[slug]
-        };
       }
 
-      // --------------------------------------------------
-      // CASO 2: nombre SIN formato (lo viejo)
-      // tipo: pumpkin_halloween.mp4 o mother.mp4
-      // para no dañar el home, lo mandamos a inspirational/general
-      // --------------------------------------------------
-      if (parts.length === 2) {
-        const [object, maybeCat] = parts;
-        return {
-          mainName: "Inspirational & Friendship",
-          mainEmoji: "🌟",
-          mainColor: "#FFFBE5",
-          mainSlug: "inspirational",
-          object: object || "unknown",
-          category: "inspirational",
-          subcategory: "General",
-          value: null,
-          src: `/cards/${file}`,
-          slug: cleanName,
-          // lo registramos para que sepas que este no está con el formato nuevo
-          _warning: `File ${file} has 2 parts only`,
-        };
-      }
+      const tokens = normalizedName.split(/\s+/).map((t) => SYNONYMS[t] || t);
+      const text = tokens.join(" ");
 
-      // 1 sola parte: más viejo todavía
-      return {
-        mainName: "Inspirational & Friendship",
-        mainEmoji: "🌟",
-        mainColor: "#FFFBE5",
-        mainSlug: "inspirational",
-        object: cleanName,
-        category: "inspirational",
-        subcategory: "General",
-        value: null,
-        src: `/cards/${file}`,
-        slug: cleanName,
-        _warning: `File ${file} has no parts`,
-      };
-    })
-    .filter(Boolean);
+      // Buscar categoría base
+      const matchedCat = Object.entries(MAIN_GROUPS).find(([key, g]) =>
+        g.keywords.some((kw) => text.includes(normalize(kw)))
+      );
+      category = matchedCat ? matchedCat[0] : "inspirational";
 
-  // guardamos log
+      // Buscar subcategoría dentro de esa categoría
+      const group = matchedCat ? matchedCat[1] : MAIN_GROUPS.inspirational;
+      const foundSub = group.subcategories.find((s) =>
+        text.includes(normalize(s))
+      );
+      subcategory = foundSub || detectedSub || "General";
+    }
+
+    // 3️⃣ Validar subcategoría: si no existe en el lib, asignar “General”
+    const validSubs = Object.values(MAIN_GROUPS).flatMap((g) => g.subcategories);
+    if (!validSubs.includes(subcategory)) subcategory = "General";
+
+    // 4️⃣ Extraer datos de grupo
+    const group = MAIN_GROUPS[category] || MAIN_GROUPS.inspirational;
+
+    return {
+      mainName: group.mainName,
+      mainEmoji: group.mainEmoji,
+      mainColor: group.mainColor,
+      mainSlug: category,
+      object,
+      category,
+      subcategory,
+      src: `/cards/${file}`,
+    };
+  });
+
   fs.writeFileSync(logFile, JSON.stringify(unrecognized, null, 2));
-
   return NextResponse.json({ videos });
 }
