@@ -16,6 +16,55 @@ const ALL_CATEGORIES = [
   { name: "Inspirational & Friendship", slug: "inspirational", emoji: "🌟", color: "#FFFBE5" },
 ];
 
+// 💬 Sinónimos compatibles con categorías y nombres Everwish
+const SYNONYMS = {
+  zombies: "halloween",
+  zombie: "halloween",
+  ghost: "halloween",
+  ghosts: "halloween",
+  pumpkin: "halloween",
+  pumpkins: "halloween",
+  xmas: "christmas",
+  navidad: "christmas",
+  santa: "christmas",
+  perro: "animals",
+  perros: "animals",
+  dog: "animals",
+  dogs: "animals",
+  cat: "animals",
+  cats: "animals",
+  gato: "animals",
+  gatos: "animals",
+  love: "love",
+  amor: "love",
+  pareja: "love",
+  heart: "love",
+  corazon: "love",
+  bunny: "easter",
+  easter: "easter",
+  pascua: "easter",
+  birthday: "celebrations",
+  cumple: "celebrations",
+  cumpleaños: "celebrations",
+  thanksgiving: "holidays",
+  independence: "holidays",
+  summer: "seasons",
+  winter: "seasons",
+  spring: "seasons",
+  autumn: "seasons",
+  halloween: "holidays",
+};
+
+// 🔤 Normalizador universal
+function normalizeText(str) {
+  return str
+    ?.toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
 export default function CategoriesPage() {
   const [search, setSearch] = useState("");
   const [videos, setVideos] = useState([]);
@@ -35,32 +84,46 @@ export default function CategoriesPage() {
     loadVideos();
   }, []);
 
-  // 🔍 Filtrar categorías con sinónimos reconocidos del API
+  // 🔍 Filtrar categorías con sinónimos y detección flexible
   useEffect(() => {
-    const q = search.toLowerCase().trim();
+    const q = normalizeText(search);
     if (!q) {
       setFiltered(ALL_CATEGORIES);
       return;
     }
 
-    const matchedSlugs = new Set();
-    videos.forEach((v) => {
-      const text = [v.object, v.category, v.subcategory]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
+    // Buscar equivalencia de sinónimo
+    const synonymMatch = SYNONYMS[q] || q;
 
-      if (text.includes(q)) matchedSlugs.add(v.mainSlug);
+    const matchedSlugs = new Set();
+
+    videos.forEach((v) => {
+      const text = normalizeText(
+        [v.object, v.category, v.subcategory, v.mainName].filter(Boolean).join(" ")
+      );
+
+      // Coincidencia directa o por sinónimo
+      if (text.includes(q) || text.includes(synonymMatch)) {
+        matchedSlugs.add(v.mainSlug);
+      }
     });
+
+    // Si no hay coincidencias en videos, buscar en nombres base
+    if (matchedSlugs.size === 0) {
+      ALL_CATEGORIES.forEach((cat) => {
+        const text = normalizeText(cat.name);
+        if (text.includes(q) || text.includes(synonymMatch)) {
+          matchedSlugs.add(cat.slug);
+        }
+      });
+    }
 
     const result = ALL_CATEGORIES.filter((cat) => matchedSlugs.has(cat.slug));
     setFiltered(result.length > 0 ? result : []);
   }, [search, videos]);
 
   return (
-    <main
-      className="min-h-screen bg-gradient-to-b from-pink-50 via-white to-pink-50 text-gray-800 flex flex-col items-center py-10 px-4"
-    >
+    <main className="min-h-screen bg-gradient-to-b from-pink-50 via-white to-pink-50 text-gray-800 flex flex-col items-center py-10 px-4">
       {/* 🧭 Header breadcrumb */}
       <p className="text-gray-500 text-sm mb-3">
         Home › <span className="text-pink-500 font-semibold">Categories</span>
@@ -121,4 +184,4 @@ export default function CategoriesPage() {
       </div>
     </main>
   );
-                   }
+  }
