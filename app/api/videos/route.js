@@ -9,14 +9,13 @@ const MAIN_GROUPS = {
     mainEmoji: "🥳",
     mainColor: "#FFF4E0",
     keywords: [
-      "holiday","holidays","christmas","xmas","santa",
-      "halloween","spooky","pumpkin","ghost","zombie","boo",
-      "thanksgiving","turkeyday","autumn","fall",
-      "easter","bunny","egg","spring",
-      "independenceday","july4th","4thofjuly","fireworks",
-      "newyear","celebration","party","carnival","diwali","hanukkah",
-      "stpatricksday","oktoberfest","veteransday","memorialday","laborday",
-      "mlkday","columbusday","presidentsday","dayofthedead","cincodemayo"
+      "holiday", "holidays", "christmas", "xmas", "santa",
+      "halloween", "spooky", "pumpkin", "ghost", "zombie", "boo",
+      "thanksgiving", "turkeyday", "autumn", "fall", "easter", "bunny", "egg", "spring",
+      "independenceday", "july4th", "4thofjuly", "fireworks", "newyear",
+      "celebration", "party", "carnival", "diwali", "hanukkah",
+      "stpatricksday", "oktoberfest", "veteransday", "memorialday", "laborday",
+      "mlkday", "columbusday", "presidentsday", "dayofthedead", "cincodemayo"
     ],
   },
   love: {
@@ -24,9 +23,9 @@ const MAIN_GROUPS = {
     mainEmoji: "❤️",
     mainColor: "#FFE8EE",
     keywords: [
-      "valentine","romance","anniversary","wedding","engagement",
-      "proposal","couple","relationship","sweetheart","heart",
-      "kiss","forever","date","affection","together","love"
+      "valentine", "romance", "anniversary", "wedding", "engagement",
+      "proposal", "couple", "relationship", "sweetheart", "heart",
+      "kiss", "forever", "date", "affection", "together", "love"
     ],
   },
   celebrations: {
@@ -34,9 +33,9 @@ const MAIN_GROUPS = {
     mainEmoji: "🎉",
     mainColor: "#FFE7FF",
     keywords: [
-      "birthday","graduation","mothersday","fathersday",
-      "babyshower","newbaby","retirement","congratulations",
-      "genderreveal","newhome","newjob","promotion","success","party"
+      "birthday", "graduation", "mothersday", "fathersday",
+      "babyshower", "newbaby", "retirement", "congratulations",
+      "genderreveal", "newhome", "newjob", "promotion", "success", "party"
     ],
   },
   work: {
@@ -44,10 +43,10 @@ const MAIN_GROUPS = {
     mainEmoji: "💼",
     mainColor: "#EAF4FF",
     keywords: [
-      "work","career","job","employee","promotion","bossday",
-      "achievement","teamwork","goal","dedication","mentor","leader",
-      "teacher","doctor","nurse","engineer","artist","coach",
-      "athlete","volunteer","entrepreneur","retirement","colleague","motivation"
+      "work", "career", "job", "employee", "promotion", "bossday",
+      "achievement", "teamwork", "goal", "dedication", "mentor", "leader",
+      "teacher", "doctor", "nurse", "engineer", "artist", "coach",
+      "athlete", "volunteer", "entrepreneur", "retirement", "colleague", "motivation"
     ],
   },
   condolences: {
@@ -55,9 +54,9 @@ const MAIN_GROUPS = {
     mainEmoji: "🕊️",
     mainColor: "#F8F8F8",
     keywords: [
-      "condolence","sympathy","getwell","healing","encouragement",
-      "appreciation","thankyou","remembrance","gratitude","support",
-      "recovery","loss","memory","hope","care","empathy","thanks"
+      "condolence", "sympathy", "getwell", "healing", "encouragement",
+      "appreciation", "thankyou", "remembrance", "gratitude", "support",
+      "recovery", "loss", "memory", "hope", "care", "empathy", "thanks"
     ],
   },
   animals: {
@@ -65,9 +64,10 @@ const MAIN_GROUPS = {
     mainEmoji: "🐾",
     mainColor: "#E8FFF3",
     keywords: [
-      "pets","wildlife","oceanlife","forest","farm","bird","turtle",
-      "elephant","butterfly","dolphin","cat","dog","nature","green",
-      "planet","eco","flora","fauna","garden","yeti","animal","zoo"
+      "pets", "pet", "wildlife", "oceanlife", "forest", "farm",
+      "bird", "birds", "turtle", "turtles", "elephant", "elephants",
+      "butterfly", "butterflies", "dolphin", "dolphins", "cat", "cats",
+      "dog", "dogs", "nature", "green", "planet", "eco", "flora", "fauna", "garden", "yeti", "animal", "animals", "zoo"
     ],
   },
   seasons: {
@@ -75,9 +75,9 @@ const MAIN_GROUPS = {
     mainEmoji: "🍂",
     mainColor: "#E5EDFF",
     keywords: [
-      "spring","summer","autumn","fall","winter","rainy","sunny",
-      "snow","beach","mountain","forest","sunset","travel","vacation",
-      "breeze","bloom","cold","warm"
+      "spring", "summer", "autumn", "fall", "winter", "rainy", "sunny",
+      "snow", "beach", "mountain", "forest", "sunset", "travel", "vacation",
+      "breeze", "bloom", "cold", "warm"
     ],
   },
   inspirational: {
@@ -85,20 +85,26 @@ const MAIN_GROUPS = {
     mainEmoji: "🌟",
     mainColor: "#FFFBE5",
     keywords: [
-      "inspiration","motivation","hope","faith","dream","success",
-      "happiness","peace","friendship","teamwork","goal","believe",
-      "gratitude","mindfulness","positivity","kindness","community","respect"
+      "inspiration", "motivation", "hope", "faith", "dream", "success",
+      "happiness", "peace", "friendship", "teamwork", "goal", "believe",
+      "gratitude", "mindfulness", "positivity", "kindness", "community", "respect"
     ],
   },
 };
 
-// 🧩 Normaliza texto
+// 🧩 Normaliza texto (quita caracteres y unifica)
 function normalize(str) {
   return str?.toLowerCase()
     .replace(/\s+/g, "-")
     .replace(/&/g, "and")
     .replace(/[^a-z0-9-]/g, "")
     .trim();
+}
+
+// 📘 Función para comparar con variantes (plural/singular)
+function keywordMatch(name, keyword) {
+  const pattern = new RegExp(`\\b${keyword}s?\\b`, "i");
+  return pattern.test(name);
 }
 
 // 🚀 Endpoint principal
@@ -115,9 +121,9 @@ export async function GET() {
     const category = normalize(parts[1] || "general");
     const subcategory = normalize(parts[2] || "general");
 
-    // 📍 Detecta todas las categorías posibles
+    // 📍 Detecta todas las categorías posibles (con plurales y sinónimos)
     const matchedGroups = Object.entries(MAIN_GROUPS).filter(([_, g]) =>
-      g.keywords.some((kw) => cleanName.includes(kw))
+      g.keywords.some((kw) => keywordMatch(cleanName, kw))
     );
 
     // 🪶 Si no encontró ninguna coincidencia, asigna “inspirational”
@@ -129,7 +135,7 @@ export async function GET() {
       mainName: g.mainName,
       mainEmoji: g.mainEmoji,
       mainColor: g.mainColor,
-      mainSlug: key, // 👈 el slug correcto (holidays, love, etc.)
+      mainSlug: key,
       object,
       category,
       subcategory,
@@ -137,5 +143,10 @@ export async function GET() {
     }));
   });
 
-  return NextResponse.json({ videos });
-      }
+  // 🧹 Limpia duplicados exactos
+  const uniqueVideos = Array.from(
+    new Map(videos.map((v) => [v.src + v.mainSlug, v])).values()
+  );
+
+  return NextResponse.json({ videos: uniqueVideos });
+    }
