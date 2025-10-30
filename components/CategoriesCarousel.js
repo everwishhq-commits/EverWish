@@ -13,7 +13,7 @@ const ALL_CATEGORIES = [
   { name: "Love & Romance", emoji: "❤️", slug: "love", color: "#FFE8EE" },
   { name: "Celebrations & Special Moments", emoji: "🎉", slug: "celebrations", color: "#FFF7FF" },
   { name: "Work & Professional Life", emoji: "💼", slug: "work", color: "#EAF4FF" },
-  { name: "Condolences & Support", emoji: "🕊️", slug: "condolences", color: "#F8F8F8" },
+  { name: "Condolences & Support", emoji: "🕊️", slug: "appreciation", color: "#FDE6E6" },
   { name: "Animals & Nature", emoji: "🐾", slug: "animals", color: "#E8FFF3" },
   { name: "Seasons", emoji: "🍂", slug: "seasons", color: "#FFFBE5" },
   { name: "Inspirational & Friendship", emoji: "🌟", slug: "inspirational", color: "#FFFBE5" },
@@ -21,8 +21,11 @@ const ALL_CATEGORIES = [
 
 export default function CategoriesCarousel() {
   const [search, setSearch] = useState("");
-  const [filtered, setFiltered] = useState(ALL_CATEGORIES);
   const [videos, setVideos] = useState([]);
+  const [level, setLevel] = useState("categories"); // categories → subcategories → cards
+  const [selectedCat, setSelectedCat] = useState(null);
+  const [subcategories, setSubcategories] = useState([]);
+  const [filteredVideos, setFilteredVideos] = useState([]);
 
   // 📥 Cargar videos del API
   useEffect(() => {
@@ -38,35 +41,54 @@ export default function CategoriesCarousel() {
     loadVideos();
   }, []);
 
-  // 🔍 Filtrar categorías en tiempo real
-  useEffect(() => {
+  // 🔍 Categorías que coinciden con la búsqueda
+  const filteredCategories = (() => {
     const q = search.toLowerCase().trim();
-    if (!q) {
-      setFiltered(ALL_CATEGORIES);
-      return;
-    }
+    if (!q) return ALL_CATEGORIES;
 
     const matchedSlugs = new Set();
-
     videos.forEach((v) => {
-      const searchableText = [
-        v.object,
-        v.category,
-        v.subcategory,
-        v.mainName,
-        v.mainSlug,
-      ]
+      const text = [v.object, v.category, v.subcategory]
+        .filter(Boolean)
         .join(" ")
         .toLowerCase();
-
-      if (searchableText.includes(q)) {
-        matchedSlugs.add(v.mainSlug);
+      if (text.includes(q)) {
+        v.matches?.forEach((m) => matchedSlugs.add(m.mainSlug));
       }
     });
 
-    const result = ALL_CATEGORIES.filter((cat) => matchedSlugs.has(cat.slug));
-    setFiltered(result.length > 0 ? result : []);
-  }, [search, videos]);
+    return ALL_CATEGORIES.filter((cat) => matchedSlugs.has(cat.slug));
+  })();
+
+  // 🔹 Cuando selecciona una categoría → muestra subcategorías relevantes
+  const handleCategoryClick = (slug) => {
+    setSelectedCat(slug);
+    setLevel("subcategories");
+
+    const related = new Set();
+    videos.forEach((v) => {
+      const belongs = v.matches?.some((m) => m.mainSlug === slug);
+      if (belongs) related.add(v.subcategory || "general");
+    });
+    setSubcategories([...related]);
+  };
+
+  // 🔹 Al elegir una subcategoría → muestra las tarjetas (videos)
+  const handleSubClick = (sub) => {
+    const filtered = videos.filter(
+      (v) =>
+        v.subcategory === sub &&
+        v.matches?.some((m) => m.mainSlug === selectedCat)
+    );
+    setFilteredVideos(filtered);
+    setLevel("cards");
+  };
+
+  // 🔙 Volver atrás
+  const goBack = () => {
+    if (level === "cards") setLevel("subcategories");
+    else if (level === "subcategories") setLevel("categories");
+  };
 
   return (
     <section
@@ -77,44 +99,58 @@ export default function CategoriesCarousel() {
           "linear-gradient(to bottom, #fff8fa 0%, #fff5f7 50%, #ffffff 100%)",
       }}
     >
+      {/* 🏷️ Título */}
       <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
         Explore by Category ✨
       </h2>
 
-      {/* 🔎 Barra de búsqueda */}
-      <div className="flex justify-center mb-10">
-        <input
-          type="text"
-          placeholder="Search any theme — e.g. wedding, halloween, turtle..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-80 md:w-96 px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700"
-        />
-      </div>
+      {/* 🔙 Back */}
+      {level !== "categories" && (
+        <button
+          onClick={goBack}
+          className="text-pink-500 hover:text-pink-600 font-semibold mb-6"
+        >
+          ← Back
+        </button>
+      )}
 
-      {/* 🎠 Carrusel */}
-      <Swiper
-        slidesPerView={3.2}
-        spaceBetween={16}
-        centeredSlides
-        loop
-        autoplay={{ delay: 2500, disableOnInteraction: false }}
-        speed={1000}
-        breakpoints={{
-          0: { slidesPerView: 2.3, spaceBetween: 10 },
-          640: { slidesPerView: 3.3, spaceBetween: 14 },
-          1024: { slidesPerView: 5, spaceBetween: 18 },
-        }}
-        modules={[Autoplay]}
-        className="overflow-visible"
-      >
-        {filtered.length > 0 ? (
-          filtered.map((cat, i) => (
-            <SwiperSlide key={i}>
-              <Link href={`/categories/${cat.slug}`}>
+      {/* 🔎 Barra de búsqueda */}
+      {level === "categories" && (
+        <div className="flex justify-center mb-10">
+          <input
+            type="text"
+            placeholder="Search any theme — e.g. turtle, halloween, love..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-80 md:w-96 px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700"
+          />
+        </div>
+      )}
+
+      {/* 🌸 Niveles */}
+      {level === "categories" && (
+        <Swiper
+          slidesPerView={3.2}
+          spaceBetween={16}
+          centeredSlides
+          loop
+          autoplay={{ delay: 2500, disableOnInteraction: false }}
+          speed={1000}
+          breakpoints={{
+            0: { slidesPerView: 2.3, spaceBetween: 10 },
+            640: { slidesPerView: 3.3, spaceBetween: 14 },
+            1024: { slidesPerView: 5, spaceBetween: 18 },
+          }}
+          modules={[Autoplay]}
+          className="overflow-visible"
+        >
+          {filteredCategories.length > 0 ? (
+            filteredCategories.map((cat, i) => (
+              <SwiperSlide key={i}>
                 <motion.div
                   className="flex flex-col items-center justify-center cursor-pointer"
                   whileHover={{ scale: 1.07 }}
+                  onClick={() => handleCategoryClick(cat.slug)}
                 >
                   <motion.div
                     className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md"
@@ -136,15 +172,65 @@ export default function CategoriesCarousel() {
                     {cat.name}
                   </p>
                 </motion.div>
-              </Link>
-            </SwiperSlide>
-          ))
-        ) : (
-          <p className="text-gray-500 text-sm mt-8">
-            No matching categories for “{search}”
-          </p>
-        )}
-      </Swiper>
+              </SwiperSlide>
+            ))
+          ) : (
+            <p className="text-gray-500 text-sm mt-8">
+              No matching categories for “{search}”
+            </p>
+          )}
+        </Swiper>
+      )}
+
+      {/* 🌿 Subcategorías */}
+      {level === "subcategories" && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+          {subcategories.map((sub) => (
+            <motion.div
+              key={sub}
+              whileHover={{ scale: 1.05 }}
+              onClick={() => handleSubClick(sub)}
+              className="cursor-pointer flex flex-col items-center justify-center bg-white shadow border border-pink-100 rounded-2xl py-6"
+            >
+              <p className="font-semibold text-gray-700 capitalize">
+                {sub.replace(/-/g, " ")}
+              </p>
+            </motion.div>
+          ))}
+        </div>
+      )}
+
+      {/* 🎴 Tarjetas */}
+      {level === "cards" && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8 max-w-6xl justify-items-center">
+          {filteredVideos.map((v, i) => (
+            <motion.div
+              key={i}
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.25 }}
+              className="bg-white rounded-3xl shadow-md border border-pink-100 hover:border-pink-200 hover:bg-pink-50 p-3 cursor-pointer flex flex-col items-center overflow-hidden w-[150px] sm:w-[200px]"
+            >
+              <video
+                src={v.src}
+                className="w-full h-[220px] object-cover rounded-2xl bg-gray-100"
+                playsInline
+                muted
+                loop
+                autoPlay
+                onError={(e) => (e.target.poster = "/placeholder.png")}
+              />
+              <div className="text-center mt-2">
+                <p className="text-gray-700 font-semibold text-sm truncate">
+                  {v.object}
+                </p>
+                <p className="text-xs text-gray-500 capitalize">
+                  {v.subcategory}
+                </p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
     </section>
   );
-                       }
+      }
