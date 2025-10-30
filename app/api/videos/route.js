@@ -77,7 +77,12 @@ const MAIN_GROUPS = {
 
 // 🔹 Normaliza texto
 function normalize(str) {
-  return str?.toLowerCase().replace(/\s+/g, "-").replace(/&/g, "and").replace(/[^a-z0-9-]/g, "").trim();
+  return str
+    ?.toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9-]/g, "")
+    .trim();
 }
 
 export async function GET() {
@@ -87,29 +92,68 @@ export async function GET() {
     : [];
 
   const videos = files.map((file) => {
-    const cleanName = file.replace(".mp4", "");
+    const cleanName = file.replace(".mp4", "").toLowerCase();
     const parts = cleanName.split("_");
     const object = parts[0] || "unknown";
     const category = normalize(parts[1] || "general");
     const subcategory = normalize(parts[2] || "general");
-    const match = Object.entries(MAIN_GROUPS).find(([_, g]) =>
-      g.keywords.some((kw) => cleanName.includes(kw))
-    );
-    const [key, group] = match || ["appreciation", MAIN_GROUPS.appreciation];
-    const fullCategoryName = `${group.mainName} — ${subcategory !== "general" ? subcategory : category}`.replace(/-/g, " ");
+    const variant = parts[3] || ""; // ejemplo: 1a o 1b
+
+    // 🧩 Busca si existe su par (1A ↔ 1B)
+    const pairVariant =
+      variant.toLowerCase().includes("1a") ? variant.replace("1a", "1b") :
+      variant.toLowerCase().includes("1b") ? variant.replace("1b", "1a") : null;
+
+    const pairFile = pairVariant
+      ? files.find((f) =>
+          f.toLowerCase().includes(`${object}_${category}_${subcategory}_${pairVariant}`.toLowerCase())
+        )
+      : null;
+
+    // 🧠 Buscar TODAS las categorías coincidentes
+    const allMatches = Object.entries(MAIN_GROUPS)
+      .filter(([_, g]) =>
+        g.keywords.some((kw) => cleanName.includes(kw.toLowerCase()))
+      )
+      .map(([key, g]) => ({
+        mainSlug: key,
+        mainName: g.mainName,
+        mainEmoji: g.mainEmoji,
+        mainColor: g.mainColor,
+      }));
+
+    const matches = allMatches.length
+      ? allMatches
+      : [
+          {
+            mainSlug: "appreciation",
+            mainName: MAIN_GROUPS.appreciation.mainName,
+            mainEmoji: MAIN_GROUPS.appreciation.mainEmoji,
+            mainColor: MAIN_GROUPS.appreciation.mainColor,
+          },
+        ];
+
+    // 🔸 Nombre combinado
+    const combinedName = matches
+      .map(
+        (m) =>
+          `${m.mainName} — ${
+            subcategory !== "general" ? subcategory : category
+          }`.replace(/-/g, " ")
+      )
+      .join(", ");
 
     return {
-      mainName: group.mainName,
-      mainEmoji: group.mainEmoji,
-      mainColor: group.mainColor,
       object,
       category,
       subcategory,
-      combinedName: fullCategoryName,
+      variant,
+      pair: pairFile ? `/cards/${pairFile}` : null,
+      combinedName,
       src: `/cards/${file}`,
-      mainSlug: key,
+      matches,
     };
   });
 
   return NextResponse.json({ videos });
-}
+    }
