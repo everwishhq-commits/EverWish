@@ -1,60 +1,90 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { MAIN_CATEGORIES } from "@/lib/categories.js";
 
-const SYNONYMS = {
-  zombies: "zombie", zombie: "zombie", spooky: "halloween",
-  ghosts: "ghost", ghost: "ghost",
-  pumpkin: "halloween", pumpkins: "halloween",
-  halloween: "halloween", boo: "halloween",
-  christmas: "christmas", xmas: "christmas", santa: "christmas",
-  valentine: "love", love: "love", hearts: "love",
-  easter: "easter", bunny: "easter",
-  thanksgiving: "thanksgiving", turkey: "thanksgiving",
-};
+// normalizador igual que en categories/page
+function normalize(str = "") {
+  return str
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
 
 export default function CategoryPage() {
   const { slug } = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const query = searchParams.get("q")?.toLowerCase() || "";
+  const query = normalize(searchParams.get("q") || "");
 
   const [groups, setGroups] = useState({});
   const [activeSub, setActiveSub] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const normalize = (s) =>
-    s?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-
+  // 🧠 Cargar videos desde API
   useEffect(() => {
     async function loadVideos() {
       try {
         const res = await fetch("/api/videos", { cache: "no-store" });
         const data = await res.json();
+
         const grouped = {};
-        const normalizedSlug = normalize(slug);
-        const baseQuery = SYNONYMS[normalize(query)] || normalize(query);
+        const currentCat = MAIN_CATEGORIES[slug]; // para traer sus subs predefinidas
 
         for (const v of data.videos) {
-          if (normalize(v.mainSlug) !== normalizedSlug) continue;
+          // colección de categorías del video
+          const videoCats = [
+            v.mainSlug,
+            v.categorySlug,
+            ...(v.extraCategories || []),
+          ]
+            .filter(Boolean)
+            .map((c) => normalize(c));
 
-          const text = normalize(`${v.object} ${v.category} ${v.subcategory}`);
-          const matchByQuery = !baseQuery || text.includes(baseQuery);
-          if (!matchByQuery) continue;
+          // ¿este video pertenece a esta categoría?
+          if (!videoCats.includes(normalize(slug))) continue;
 
-          const sub =
+          // ¿pasa el filtro de búsqueda?
+          const fullText = normalize(
+            [
+              v.object,
+              v.category,
+              v.subcategory,
+              v.src,
+              v.mainSlug,
+              v.categorySlug,
+            ]
+              .filter(Boolean)
+              .join(" ")
+          );
+
+          if (query && !fullText.includes(query)) {
+            // hay palabra y este video no la tiene → ignorar
+            continue;
+          }
+
+          // decidir sub
+          const rawSub =
             (v.subcategory && v.subcategory.trim()) ||
             (v.category && v.category.trim()) ||
             "General";
 
-          const cleanSub = sub
+          const cleanSub = rawSub
             .replace(/_/g, " ")
             .replace(/\b\w/g, (c) => c.toUpperCase());
 
           if (!grouped[cleanSub]) grouped[cleanSub] = [];
           grouped[cleanSub].push(v);
+        }
+
+        // 👇 si NO hay búsqueda, también mostramos las sub fijas del lib
+        if (!query && currentCat?.subcategories?.length) {
+          currentCat.subcategories.forEach((sub) => {
+            if (!grouped[sub]) grouped[sub] = [];
+          });
         }
 
         setGroups(grouped);
@@ -64,18 +94,20 @@ export default function CategoryPage() {
         setLoading(false);
       }
     }
+
     loadVideos();
   }, [slug, query]);
 
-  const subcategories = Object.keys(groups);
+  const subcategories = Object.keys(groups).sort();
   const activeVideos = activeSub ? groups[activeSub] || [] : [];
 
-  if (loading)
+  if (loading) {
     return (
       <main className="flex flex-col items-center justify-center min-h-screen bg-[#fff5f8] text-gray-600">
         <p className="animate-pulse text-lg">Loading {slug} ✨</p>
       </main>
     );
+  }
 
   return (
     <main className="min-h-screen bg-[#fff5f8] text-gray-800 flex flex-col items-center py-10 px-4">
@@ -89,6 +121,16 @@ export default function CategoryPage() {
       <h1 className="text-3xl font-extrabold text-pink-600 mb-3 capitalize text-center">
         {MAIN_CATEGORIES[slug]?.mainName || slug.replace(/-/g, " ")}
       </h1>
+
+      {query ? (
+        <p className="text-gray-500 mb-8 text-center">
+          Showing subcategories that contain <strong>“{query}”</strong>
+        </p>
+      ) : (
+        <p className="text-gray-400 mb-8 text-center">
+          Tap any subcategory to view cards ✨
+        </p>
+      )}
 
       {/* 🌸 Subcategorías */}
       {subcategories.length > 0 ? (
@@ -115,7 +157,7 @@ export default function CategoryPage() {
         </p>
       )}
 
-      {/* 💫 Modal con videos */}
+      {/* 💫 Modal con las tarjetas */}
       <AnimatePresence>
         {activeSub && (
           <>
@@ -179,4 +221,4 @@ export default function CategoryPage() {
       </AnimatePresence>
     </main>
   );
-}
+                    }
