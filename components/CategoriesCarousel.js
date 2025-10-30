@@ -6,14 +6,15 @@ import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
 import "swiper/css";
 
+// 🌸 CATEGORÍAS PRINCIPALES (100% sincronizadas con /lib/categories.js)
 const ALL_CATEGORIES = [
-  { name: "Holidays & Festivities", emoji: "🎄", slug: "holidays", color: "#FFF4E0" },
+  { name: "Holidays", emoji: "🥳", slug: "holidays", color: "#FFF4E0" },
   { name: "Love & Romance", emoji: "❤️", slug: "love", color: "#FFE8EE" },
   { name: "Celebrations & Special Moments", emoji: "🎉", slug: "celebrations", color: "#FFF7FF" },
   { name: "Work & Professional Life", emoji: "💼", slug: "work", color: "#EAF4FF" },
-  { name: "Condolences & Support", emoji: "🕊️", slug: "appreciation", color: "#FDE6E6" },
+  { name: "Condolences & Support", emoji: "🕊️", slug: "condolences", color: "#F8F8F8" },
   { name: "Animals & Nature", emoji: "🐾", slug: "animals", color: "#E8FFF3" },
-  { name: "Seasons", emoji: "🍂", slug: "seasons", color: "#FFFBE5" },
+  { name: "Seasons", emoji: "🍂", slug: "seasons", color: "#E5EDFF" },
   { name: "Inspirational & Friendship", emoji: "🌟", slug: "inspirational", color: "#FFFBE5" },
 ];
 
@@ -25,7 +26,7 @@ export default function CategoriesCarousel() {
   const [subcategories, setSubcategories] = useState([]);
   const [filteredVideos, setFilteredVideos] = useState([]);
 
-  // 📥 Cargar videos
+  // 📥 Cargar videos desde el API
   useEffect(() => {
     async function loadVideos() {
       try {
@@ -56,7 +57,7 @@ export default function CategoriesCarousel() {
     return ALL_CATEGORIES.filter((cat) => matchedSlugs.has(cat.slug));
   })();
 
-  // 🔹 Mostrar subcategorías relevantes
+  // 🔹 Mostrar subcategorías asociadas
   const handleCategoryClick = (slug) => {
     setSelectedCat(slug);
     setLevel("subcategories");
@@ -68,7 +69,7 @@ export default function CategoriesCarousel() {
     setSubcategories([...related]);
   };
 
-  // 🔹 Mostrar las tarjetas
+  // 🔹 Mostrar tarjetas de la subcategoría seleccionada
   const handleSubClick = (sub) => {
     const filtered = videos.filter(
       (v) => v.subcategory === sub && v.mainSlug === selectedCat
@@ -77,6 +78,7 @@ export default function CategoriesCarousel() {
     setLevel("cards");
   };
 
+  // 🔙 Regresar de nivel
   const goBack = () => {
     if (level === "cards") setLevel("subcategories");
     else if (level === "subcategories") setLevel("categories");
@@ -91,10 +93,12 @@ export default function CategoriesCarousel() {
           "linear-gradient(to bottom, #fff8fa 0%, #fff5f7 50%, #ffffff 100%)",
       }}
     >
+      {/* 🏷️ Título principal */}
       <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
         Explore by Category ✨
       </h2>
 
+      {/* 🔙 Botón volver */}
       {level !== "categories" && (
         <button
           onClick={goBack}
@@ -104,6 +108,7 @@ export default function CategoriesCarousel() {
         </button>
       )}
 
+      {/* 🔍 Barra de búsqueda */}
       {level === "categories" && (
         <div className="flex justify-center mb-10">
           <input
@@ -116,6 +121,7 @@ export default function CategoriesCarousel() {
         </div>
       )}
 
+      {/* 🎠 Carrusel de categorías */}
       {level === "categories" && (
         <Swiper
           slidesPerView={3.2}
@@ -170,6 +176,7 @@ export default function CategoriesCarousel() {
         </Swiper>
       )}
 
+      {/* 🌿 Subcategorías */}
       {level === "subcategories" && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
           {subcategories.map((sub) => (
@@ -187,6 +194,7 @@ export default function CategoriesCarousel() {
         </div>
       )}
 
+      {/* 🎴 Tarjetas */}
       {level === "cards" && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8 max-w-6xl justify-items-center">
           {filteredVideos.map((v, i) => (
@@ -203,7 +211,7 @@ export default function CategoriesCarousel() {
                 muted
                 loop
                 autoPlay
-                onError={(e) => (e.target.poster = "/placeholder.png")}
+                onError={(e) => (e.target.poster = '/placeholder.png')}
               />
               <div className="text-center mt-2">
                 <p className="text-gray-700 font-semibold text-sm truncate">
@@ -219,4 +227,4 @@ export default function CategoriesCarousel() {
       )}
     </section>
   );
-        }
+}
