@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -8,6 +9,7 @@ export default function Top10Carousel() {
   const [index, setIndex] = useState(0);
   const autoplayRef = useRef(null);
   const pauseRef = useRef(false);
+  const isClient = typeof window !== "undefined";
 
   // refs para touch
   const startX = useRef(0);
@@ -22,18 +24,14 @@ export default function Top10Carousel() {
   // 1. cargar desde /cards/index.json
   // ===========================
   useEffect(() => {
+    if (!isClient) return; // evita SSR
     async function loadVideos() {
       try {
-        // 👀 este archivo DEBE existir: public/cards/index.json
         const res = await fetch("/cards/index.json", { cache: "no-store" });
         const data = await res.json();
-
-        // puede venir como {videos: [...] } o como [...]
         const raw = Array.isArray(data) ? data : data.videos || [];
 
-        // nos quedamos con los 10 primeros
         const top10 = raw.slice(0, 10).map((item, i) => {
-          // aseguramos campos
           const src =
             item.src ||
             (item.slug ? `/cards/${item.slug}.mp4` : null);
@@ -62,7 +60,7 @@ export default function Top10Carousel() {
     // refresco cada 24 h
     const interval = setInterval(loadVideos, 24 * 60 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isClient]);
 
   // ===========================
   // 2. autoplay
@@ -77,9 +75,10 @@ export default function Top10Carousel() {
   };
 
   useEffect(() => {
+    if (!isClient) return;
     startAutoplay();
     return () => clearInterval(autoplayRef.current);
-  }, [videos]);
+  }, [videos, isClient]);
 
   // ===========================
   // 3. touch para tablet
@@ -103,15 +102,13 @@ export default function Top10Carousel() {
       moved.current = true;
       direction.current =
         Math.abs(dx) > Math.abs(dy) ? "horizontal" : "vertical";
-      // para que no se mueva toda la página
-      e.stopPropagation();
+      e.stopPropagation(); // previene scroll accidental
     }
   };
 
   const handleTouchEnd = (e) => {
     e.stopPropagation();
 
-    // TAP
     if (!moved.current) {
       const current = videos[index];
       if (current?.slug) handleClick(current.slug);
@@ -126,7 +123,6 @@ export default function Top10Carousel() {
       }
     }
 
-    // reanudar
     setTimeout(() => {
       pauseRef.current = false;
       startAutoplay();
@@ -134,9 +130,10 @@ export default function Top10Carousel() {
   };
 
   // ===========================
-  // 4. ir a /edit/[slug] con pantalla extendida
+  // 4. ir a /edit/[slug]
   // ===========================
   const handleClick = async (slug) => {
+    if (!isClient) return; // evita SSR
     try {
       const elem = document.documentElement;
       if (elem.requestFullscreen) await elem.requestFullscreen();
@@ -155,9 +152,8 @@ export default function Top10Carousel() {
   return (
     <div
       className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none"
-      style={{ touchAction: "pan-y" }} // deja hacer scroll vertical
+      style={{ touchAction: "pan-y" }}
     >
-      {/* título dinámico, lo puedes quitar si quieres */}
       <h2 className="text-pink-500 text-3xl font-bold mb-4">
         It&apos;s Halloween Time! 🎃
       </h2>
@@ -205,7 +201,7 @@ export default function Top10Carousel() {
         })}
       </div>
 
-      {/* dots */}
+      {/* 🔘 Dots */}
       <div className="flex mt-5 gap-2">
         {videos.map((_, i) => (
           <span
@@ -227,4 +223,4 @@ export default function Top10Carousel() {
       </div>
     </div>
   );
-          }
+                                                 }
