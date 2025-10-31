@@ -1,10 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay } from "swiper/modules";
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
+import { Autoplay } from "swiper/modules";
 import "swiper/css";
+
+// ✅ Carga Swiper SOLO en cliente (evita error de build en Vercel)
+const Swiper = dynamic(() => import("swiper/react").then((mod) => mod.Swiper), {
+  ssr: false,
+});
+const SwiperSlide = dynamic(
+  () => import("swiper/react").then((mod) => mod.SwiperSlide),
+  { ssr: false }
+);
 
 const ALL_CATEGORIES = [
   { name: "Holidays", emoji: "🥳", slug: "holidays", color: "#FFF4E0" },
@@ -27,7 +36,7 @@ export default function CategoriesCarousel() {
   const [subcategories, setSubcategories] = useState([]);
   const [filteredVideos, setFilteredVideos] = useState([]);
 
-  // 📥 Cargar videos
+  // 📥 Cargar videos desde /api/videos
   useEffect(() => {
     async function loadVideos() {
       try {
@@ -48,7 +57,13 @@ export default function CategoriesCarousel() {
 
     const matchedSlugs = new Set();
     videos.forEach((v) => {
-      const text = [v.object, v.category, v.subcategory]
+      const text = [
+        v.object,
+        v.category1,
+        v.category2,
+        v.subcategory1,
+        v.subcategory2,
+      ]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
@@ -58,7 +73,7 @@ export default function CategoriesCarousel() {
     return ALL_CATEGORIES.filter((cat) => matchedSlugs.has(cat.slug));
   })();
 
-  // 🔹 Mostrar subcategorías relevantes
+  // 🔹 Mostrar subcategorías
   const handleCategoryClick = (slug) => {
     const cat = ALL_CATEGORIES.find((c) => c.slug === slug);
     setSelectedCat(slug);
@@ -68,15 +83,15 @@ export default function CategoriesCarousel() {
 
     const related = new Set();
     videos.forEach((v) => {
-      if (v.mainSlug === slug) related.add(v.subcategory || "general");
+      if (v.mainSlug === slug) related.add(v.subcategory1 || "general");
     });
     setSubcategories([...related]);
   };
 
-  // 🔹 Mostrar las tarjetas
+  // 🔹 Mostrar tarjetas
   const handleSubClick = (sub) => {
     const filtered = videos.filter(
-      (v) => v.subcategory === sub && v.mainSlug === selectedCat
+      (v) => (v.subcategory1 === sub || v.subcategory2 === sub) && v.mainSlug === selectedCat
     );
     setFilteredVideos(filtered);
     setLevel("cards");
@@ -96,7 +111,7 @@ export default function CategoriesCarousel() {
         background: "linear-gradient(to bottom, #fff8fa 0%, #fff5f7 50%, #ffffff 100%)",
       }}
     >
-      {/* 🏷️ Título dinámico */}
+      {/* 🏷️ Título */}
       <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
         {level === "categories"
           ? "Explore by Category ✨"
@@ -113,7 +128,7 @@ export default function CategoriesCarousel() {
         </button>
       )}
 
-      {/* 🔎 Barra de búsqueda */}
+      {/* 🔎 Buscar */}
       {level === "categories" && (
         <div className="flex justify-center mb-10">
           <input
@@ -126,18 +141,18 @@ export default function CategoriesCarousel() {
         </div>
       )}
 
-      {/* 🎠 Categorías */}
+      {/* 🎠 Carrusel de Categorías */}
       {level === "categories" && (
         <Swiper
           slidesPerView={3.2}
           spaceBetween={16}
           centeredSlides
           loop
-          autoplay={{ delay: 2500, disableOnInteraction: false }}
-          speed={1000}
+          autoplay={{ delay: 2800, disableOnInteraction: false }}
+          speed={900}
           breakpoints={{
-            0: { slidesPerView: 2.3, spaceBetween: 10 },
-            640: { slidesPerView: 3.3, spaceBetween: 14 },
+            0: { slidesPerView: 2.2, spaceBetween: 10 },
+            640: { slidesPerView: 3.2, spaceBetween: 14 },
             1024: { slidesPerView: 5, spaceBetween: 18 },
           }}
           modules={[Autoplay]}
@@ -216,14 +231,14 @@ export default function CategoriesCarousel() {
                 muted
                 loop
                 autoPlay
-                onError={(e) => (e.target.poster = "/placeholder.png")}
+                poster="/placeholder.png"
               />
               <div className="text-center mt-2">
                 <p className="text-gray-700 font-semibold text-sm truncate">
                   {v.object}
                 </p>
                 <p className="text-xs text-gray-500 capitalize">
-                  {v.subcategory}
+                  {v.subcategory1}
                 </p>
               </div>
             </motion.div>
@@ -232,4 +247,4 @@ export default function CategoriesCarousel() {
       )}
     </section>
   );
-      }
+    }
