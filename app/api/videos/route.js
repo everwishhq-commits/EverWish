@@ -1,81 +1,76 @@
-import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
 export async function GET() {
-  try {
-    const cardsDir = path.join(process.cwd(), "public", "cards");
-    const files = fs.readdirSync(cardsDir).filter((f) => f.endsWith(".mp4"));
+  const dir = path.join(process.cwd(), "public/videos");
+  const files = fs.readdirSync(dir).filter(f => f.endsWith(".mp4"));
 
-    // ✅ Categorías oficiales (de tu bloque aprobado)
-    const knownCategories = [
-      "holidays",
-      "love",
-      "celebrations",
-      "work",
-      "condolences",
-      "animals",
-      "seasons",
-      "inspirational",
-    ];
+  const videos = files.map(filename => {
+    const clean = filename.replace(/\.[^/.]+$/, ""); // quitar extensión .mp4
+    const parts = clean.split("_");
 
-    const videos = files.map((file) => {
-      const name = file.replace(".mp4", "");
-      const parts = name.split("_").map((p) => p.toLowerCase());
+    // 🧱 Estructura: object_category_subcategory_value
+    const object = parts[0] || "unknown";
+    const category = parts[1] || "general";
+    const subcategory = parts[2] || "general";
+    const value = parts[3] || "1A";
 
-      const base = {
-        object: "",
-        categories: [],
-        subcategories: [],
-        mainSlug: "",
-        categorySlug: "",
-        subcategory: "",
-        file: `/cards/${file}`,
-        src: `/cards/${file}`,
-        slug: name,
-      };
+    // 🎯 Detectar categorías cruzadas (una tarjeta puede pertenecer a varias)
+    const categories = [];
 
-      // 🧠 Extraer partes
-      if (parts.length >= 2) {
-        base.object = parts[0];
+    // Categorías principales: Holidays / Celebrations / General
+    if (
+      [
+        "halloween",
+        "christmas",
+        "thanksgiving",
+        "easter",
+        "independence",
+        "newyear",
+        "veterans",
+        "winter",
+        "dayofthedead",
+        "labor",
+        "memorial",
+        "columbus",
+      ].some(word => category.includes(word))
+    ) {
+      categories.push("holidays");
+    }
 
-        // 🔍 Clasificar entre categorías y subcategorías
-        for (const p of parts) {
-          if (knownCategories.includes(p)) {
-            base.categories.push(p);
-          } else if (!["1a", "1b", "2a", "2b", "preview"].includes(p)) {
-            base.subcategories.push(p);
-          }
-        }
+    if (
+      [
+        "birthday",
+        "anniversary",
+        "graduation",
+        "wedding",
+        "promotion",
+        "baby",
+        "retirement",
+        "achievement",
+        "hugs",
+        "love",
+        "mothers",
+        "fathers",
+      ].some(word => category.includes(word))
+    ) {
+      categories.push("celebrations");
+    }
 
-        // 🎯 Lógica de asignación
-        base.mainSlug = base.categories[0] || "holidays";
-        base.categorySlug = base.categories[1] || base.mainSlug;
+    if (categories.length === 0) categories.push("general");
 
-        // 🧩 Si no hay subcategoría → crear una “general” ligada a la categoría principal
-        if (base.subcategories.length === 0) {
-          base.subcategory = "General";
-          base.subcategories = ["General"];
-        } else {
-          base.subcategory =
-            base.subcategories[0].charAt(0).toUpperCase() +
-            base.subcategories[0].slice(1);
-        }
-      } else {
-        // 🪄 Si el nombre no tiene estructura completa
-        base.object = name;
-        base.mainSlug = "holidays";
-        base.categorySlug = "holidays";
-        base.subcategory = "General";
-        base.subcategories = ["General"];
-      }
+    // 🧩 Subcategoría individual
+    const subcategories = [subcategory];
 
-      return base;
-    });
+    return {
+      object,
+      src: `/videos/${filename}`,
+      categories,
+      subcategories,
+      value,
+      slug: clean,
+    };
+  });
 
-    return NextResponse.json({ videos });
-  } catch (err) {
-    console.error("❌ Error reading cards folder:", err);
-    return NextResponse.json({ error: "Failed to load videos" }, { status: 500 });
-  }
+  return Response.json({ videos });
 }
