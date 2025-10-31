@@ -11,8 +11,14 @@ export default function CropperModal({ open, onClose, onDone }) {
   const imageRef = useRef(null);
   const lastTouch = useRef(null);
 
-  // 🚫 Evita que el scroll o zoom del navegador interfiera
+  // 🚫 Evita scroll o zoom del navegador mientras está activo el modal
   useEffect(() => {
+    const preventScroll = (e) => {
+      if (e.target.tagName !== "BUTTON" && e.target.tagName !== "INPUT") {
+        e.preventDefault();
+      }
+    };
+
     if (open) {
       document.body.style.overflow = "hidden";
       document.addEventListener("touchmove", preventScroll, { passive: false });
@@ -20,18 +26,14 @@ export default function CropperModal({ open, onClose, onDone }) {
       document.body.style.overflow = "";
       document.removeEventListener("touchmove", preventScroll);
     }
+
     return () => {
       document.body.style.overflow = "";
       document.removeEventListener("touchmove", preventScroll);
     };
   }, [open]);
 
-  const preventScroll = (e) => {
-    if (e.target.tagName !== "BUTTON" && e.target.tagName !== "INPUT") {
-      e.preventDefault(); // bloquea scroll/zoom fuera del cropper
-    }
-  };
-
+  // 🖼️ Dibuja imagen sobre canvas sin bordes negros
   useEffect(() => {
     if (!open || !imageSrc) return;
     const canvas = canvasRef.current;
@@ -46,11 +48,9 @@ export default function CropperModal({ open, onClose, onDone }) {
     const { width, height } = ctx.canvas;
     ctx.clearRect(0, 0, width, height);
 
-    // 🔧 Fondo blanco (sin bordes negros)
     ctx.fillStyle = "#fff";
     ctx.fillRect(0, 0, width, height);
 
-    // Mantener proporción al ancho y llenar todo el canvas
     const aspect = img.width / img.height;
     let scaledW = width * scale;
     let scaledH = scaledW / aspect;
@@ -66,6 +66,7 @@ export default function CropperModal({ open, onClose, onDone }) {
     ctx.drawImage(img, x, y, scaledW, scaledH);
   };
 
+  // 📂 Maneja selección de archivo
   const handleFile = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -74,6 +75,7 @@ export default function CropperModal({ open, onClose, onDone }) {
     reader.readAsDataURL(file);
   };
 
+  // ✋ Mover imagen con el dedo
   const handleTouchStart = (e) => {
     if (e.touches.length === 1) {
       lastTouch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -90,13 +92,15 @@ export default function CropperModal({ open, onClose, onDone }) {
     }
   };
 
+  // 🔍 Zoom manual
   const handleZoomIn = () => setScale((s) => Math.min(3, s + 0.1));
   const handleZoomOut = () => setScale((s) => Math.max(0.5, s - 0.1));
 
+  // ✅ Exporta imagen final
   const handleDone = () => {
     const canvas = canvasRef.current;
     const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
-    onDone(dataUrl);
+    onDone?.(dataUrl);
   };
 
   if (!open) return null;
@@ -110,7 +114,7 @@ export default function CropperModal({ open, onClose, onDone }) {
     >
       <div
         className="bg-white rounded-3xl shadow-xl p-4 w-[94%] max-w-sm flex flex-col gap-3"
-        style={{ touchAction: "none" }} // 🚫 evita scroll y zoom del navegador
+        style={{ touchAction: "none" }} // evita scroll del navegador
       >
         {!imageSrc ? (
           <input
@@ -124,13 +128,13 @@ export default function CropperModal({ open, onClose, onDone }) {
             <canvas
               ref={canvasRef}
               width={360}
-              height={270} // 🔧 relación perfecta 4:3
+              height={270}
               className="rounded-xl bg-white w-full h-auto object-contain"
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
             />
 
-            {/* Controles de Zoom */}
+            {/* 🔍 Controles de Zoom */}
             <div className="flex justify-center gap-4 mt-2">
               <button
                 onClick={handleZoomOut}
@@ -148,7 +152,7 @@ export default function CropperModal({ open, onClose, onDone }) {
           </>
         )}
 
-        {/* Botones */}
+        {/* 🟡 Botones inferiores */}
         <div className="flex justify-between gap-3 mt-2">
           <button
             onClick={onClose}
@@ -168,4 +172,4 @@ export default function CropperModal({ open, onClose, onDone }) {
       </div>
     </motion.div>
   );
-        }
+              }
