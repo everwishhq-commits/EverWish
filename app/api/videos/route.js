@@ -1,38 +1,44 @@
+export const dynamic = "force-dynamic"; // 🚫 Evita prerendering en Vercel
+
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
 export async function GET() {
   try {
-    // Ruta absoluta hacia public/cards/index.json
+    // 📂 Ruta al archivo público
     const filePath = path.join(process.cwd(), "public", "cards", "index.json");
 
-    // Si el archivo no existe
+    // ⚠️ Verificar existencia
     if (!fs.existsSync(filePath)) {
+      console.error("⚠️ Archivo no encontrado:", filePath);
       return NextResponse.json(
         { videos: [], error: "index.json not found" },
         { status: 200 }
       );
     }
 
-    // Leer el contenido
-    const fileContent = fs.readFileSync(filePath, "utf8");
-    const data = JSON.parse(fileContent);
+    // 📖 Leer y parsear contenido
+    const content = fs.readFileSync(filePath, "utf8");
+    const data = JSON.parse(content);
 
-    // Formato seguro: acepta array o { videos: [...] }
+    // 🎞️ Normalizar formato
     const videos = Array.isArray(data) ? data : data.videos || [];
 
-    // ✅ Devolver JSON correctamente
+    console.log("✅ /api/videos cargó correctamente:", videos.length, "videos");
+
+    // 📤 Respuesta correcta
     return NextResponse.json({ videos }, { status: 200 });
   } catch (error) {
+    // ❌ Captura de error sin romper build
     console.error("❌ Error en /api/videos:", error);
     return NextResponse.json(
       {
         videos: [],
-        error: "Error reading /public/cards/index.json",
-        details: String(error),
+        error: "Error reading JSON file",
+        details: error.message,
       },
-      { status: 200 } // devolver 200 evita que el build se caiga
+      { status: 200 }
     );
   }
 }
