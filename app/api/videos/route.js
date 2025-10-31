@@ -3,23 +3,26 @@ import path from "path";
 
 export async function GET() {
   try {
-    // ✅ Ruta corregida
+    // ✅ Carpeta correcta
     const dir = path.join(process.cwd(), "public/cards");
     const files = (await fs.readdir(dir)).filter(f => f.endsWith(".mp4"));
+
+    if (!files.length) {
+      console.warn("⚠️ No se encontraron archivos .mp4 en public/cards");
+    }
 
     const videos = files.map(filename => {
       const clean = filename.replace(/\.[^/.]+$/, "");
       const parts = clean.split("_");
 
-      // 🧩 Estructura: object_category_subcategory_value
+      // 🧩 Formato: object_category_subcategory_value
       const object = parts[0] || "unknown";
       const category = parts[1] || "general";
       const subcategory = parts[2] || "general";
       const value = parts[3] || "1A";
 
-      // 🎯 Detección de categorías principales
+      // 🗂️ Categorización principal
       const categories = [];
-
       if (
         [
           "halloween",
@@ -38,7 +41,6 @@ export async function GET() {
       ) {
         categories.push("holidays");
       }
-
       if (
         [
           "birthday",
@@ -57,17 +59,15 @@ export async function GET() {
       ) {
         categories.push("celebrations");
       }
-
       if (categories.length === 0) categories.push("general");
-
-      const subcategories = [subcategory];
 
       return {
         object,
-        src: `/cards/${filename}`,
-        categories,
-        subcategories,
+        category,
+        subcategory,
         value,
+        categories,
+        src: `/cards/${filename}`, // ✅ Ruta pública correcta
         slug: clean,
       };
     });
@@ -78,8 +78,8 @@ export async function GET() {
   } catch (error) {
     console.error("❌ Error reading cards:", error);
     return new Response(
-      JSON.stringify({ error: "Failed to load cards" }),
+      JSON.stringify({ error: "Failed to load cards", details: error.message }),
       { status: 500 }
     );
   }
-}
+  }
