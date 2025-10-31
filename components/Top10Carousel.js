@@ -2,90 +2,44 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-/* 🗓️ Palabras clave por mes */
+/* 🎃 Palabras clave según el mes */
 function getSeasonalKeywords() {
   const m = new Date().getMonth() + 1;
   switch (m) {
-    case 1:
-      return ["newyear", "winter", "celebration", "snow"];
-    case 2:
-      return ["valentine", "love", "heart", "romance"];
-    case 3:
-      return ["spring", "flowers", "easter", "bunny"];
-    case 4:
-      return ["easter", "bunny", "pastel", "blossom"];
-    case 5:
-      return ["mother", "graduation", "bloom", "memorial"];
-    case 6:
-      return ["father", "summer", "beach", "vacation"];
-    case 7:
-      return ["independence", "freedom", "fireworks", "summer"];
-    case 8:
-      return ["friendship", "backtoschool", "sunshine", "vacation"];
-    case 9:
-      return ["labor", "fall", "harvest", "autumn"];
-    case 10:
-      return ["halloween", "pumpkin", "zombie", "spooky"];
-    case 11:
-      return ["thanksgiving", "turkey", "harvest", "gratitude"];
-    case 12:
-      return ["christmas", "holiday", "santa", "xmas"];
-    default:
-      return ["celebration", "general", "everwish"];
+    case 1: return ["newyear", "winter", "celebration", "snow"];
+    case 2: return ["valentine", "love", "heart", "romance"];
+    case 3: return ["spring", "flowers", "easter", "bunny"];
+    case 4: return ["easter", "bunny", "pastel", "blossom"];
+    case 5: return ["mother", "graduation", "bloom", "memorial"];
+    case 6: return ["father", "summer", "beach", "vacation"];
+    case 7: return ["independence", "freedom", "fireworks", "summer"];
+    case 8: return ["friendship", "backtoschool", "sunshine", "vacation"];
+    case 9: return ["labor", "fall", "harvest", "autumn"];
+    case 10: return ["halloween", "pumpkin", "zombie", "spooky"];
+    case 11: return ["thanksgiving", "turkey", "harvest", "gratitude"];
+    case 12: return ["christmas", "holiday", "santa", "xmas"];
+    default: return ["celebration", "general", "everwish"];
   }
 }
 
-/* 🏷️ Título dinámico */
+/* ✨ Título dinámico */
 function getSeasonalTitle() {
   const m = new Date().getMonth() + 1;
   switch (m) {
-    case 1:
-      return "New Year Vibes! 🎆";
-    case 2:
-      return "Love Is in the Air ❤️";
-    case 3:
-      return "Spring Is Blooming 🌸";
-    case 4:
-      return "Easter Joy! 🐰";
-    case 5:
-      return "Moments of Gratitude 🌷";
-    case 6:
-      return "Summer Begins ☀️";
-    case 7:
-      return "Freedom & Sunshine 🇺🇸";
-    case 8:
-      return "Happy Moments Ahead 🌻";
-    case 9:
-      return "Fall Feelings 🍂";
-    case 10:
-      return "It’s Halloween Time! 🎃";
-    case 11:
-      return "Time for Thanksgiving 🦃";
-    case 12:
-      return "Holiday Magic! 🎄";
-    default:
-      return "Share Moments That Last Forever ✨";
+    case 10: return "It’s Halloween Time! 🎃";
+    case 11: return "Time for Thanksgiving 🦃";
+    case 12: return "Holiday Magic! 🎄";
+    case 1: return "New Year Vibes! 🎆";
+    case 2: return "Love Is in the Air ❤️";
+    case 3: return "Spring Is Blooming 🌸";
+    case 4: return "Easter Joy! 🐰";
+    case 5: return "Moments of Gratitude 🌷";
+    case 6: return "Summer Begins ☀️";
+    case 7: return "Freedom & Sunshine 🇺🇸";
+    case 8: return "Happy Moments Ahead 🌻";
+    case 9: return "Fall Feelings 🍂";
+    default: return "Share Moments That Last Forever ✨";
   }
-}
-
-/* 🎨 Colores de fondo por mes */
-function getSeasonalBackground() {
-  const m = new Date().getMonth() + 1;
-  const colors = {
-    1: "#F0F7FF",
-    2: "#FFF0F5",
-    3: "#EAFBF0",
-    4: "#FFF8E6",
-    5: "#FFF2F2",
-    6: "#EAF9FF",
-    7: "#FFF8E1",
-    8: "#FFF9EB",
-    9: "#FFF3E0",
-    10: "#FFF0E5",
-    11: "#FFF6E5",
-    12: "#F7F8FF",
-  };
-  return colors[m] || "#FFF8FA";
 }
 
 /* 🧩 Analiza nombres tipo object_category_subcategory_value */
@@ -100,7 +54,7 @@ function parseFilename(filename) {
   };
 }
 
-/* 🚀 Componente principal */
+/* 🚀 Carrusel principal */
 export default function Top10Carousel() {
   const router = useRouter();
   const [videos, setVideos] = useState([]);
@@ -110,11 +64,9 @@ export default function Top10Carousel() {
   const startX = useRef(0);
   const startY = useRef(0);
   const moved = useRef(false);
-
   const title = getSeasonalTitle();
-  const bgColor = getSeasonalBackground();
 
-  // 🧠 Cargar videos
+  // 🧠 Cargar videos desde API (cada 24h)
   useEffect(() => {
     async function fetchVideos() {
       try {
@@ -132,21 +84,24 @@ export default function Top10Carousel() {
         const data = await res.json();
         const list = Array.isArray(data.videos) ? data.videos : [];
 
-        const parsed = list.map((v, i) => {
-          const file = v.src?.split("/").pop() || `video-${i}.mp4`;
-          const info = parseFilename(file);
-          const lower = file.toLowerCase();
-          const isSeasonal = seasonal.some((kw) => lower.includes(kw));
-          return { id: i, src: v.src, ...info, isSeasonal };
-        });
+        // ✅ Filtra videos válidos y los analiza
+        const parsed = list
+          .filter((v) => v.src && v.src.endsWith(".mp4"))
+          .map((v, i) => {
+            const file = v.src.split("/").pop() || `video-${i}.mp4`;
+            const info = parseFilename(file);
+            const lower = file.toLowerCase();
+            const isSeasonal = seasonal.some((kw) => lower.includes(kw));
+            return { id: i, src: v.src, ...info, isSeasonal };
+          });
 
+        // ✅ Siempre debe haber 10 videos
         let seasonalVideos = parsed.filter((v) => v.isSeasonal);
-        if (seasonalVideos.length < 10) {
-          const extra = parsed.filter((v) => !v.isSeasonal);
-          seasonalVideos = [...seasonalVideos, ...extra].slice(0, 10);
-        } else {
-          seasonalVideos = seasonalVideos.slice(0, 10);
+        const extras = parsed.filter((v) => !v.isSeasonal);
+        while (seasonalVideos.length < 10 && extras.length > 0) {
+          seasonalVideos.push(extras.shift());
         }
+        seasonalVideos = seasonalVideos.slice(0, 10);
 
         setVideos(seasonalVideos);
         if (typeof window !== "undefined") {
@@ -165,7 +120,7 @@ export default function Top10Carousel() {
     return () => clearInterval(interval);
   }, []);
 
-  // 🎬 Autoplay
+  // 🕒 Autoplay
   useEffect(() => {
     clearInterval(autoplayRef.current);
     if (!pauseRef.current && videos.length > 0) {
@@ -177,7 +132,7 @@ export default function Top10Carousel() {
     return () => clearInterval(autoplayRef.current);
   }, [videos]);
 
-  // 🖐️ Swipe
+  // 🖐️ Swipe táctil
   const handleTouchStart = (e) => {
     startX.current = e.touches[0].clientX;
     startY.current = e.touches[0].clientY;
@@ -196,7 +151,7 @@ export default function Top10Carousel() {
     const dx = startX.current - e.changedTouches[0].clientX;
     if (!moved.current) {
       const current = videos[index];
-      if (current?.slug) router.push(`/edit/${current.slug}`);
+      if (current?.slug) handleClick(current.slug);
     } else if (Math.abs(dx) > 40) {
       setIndex((prev) =>
         dx > 0 ? (prev + 1) % videos.length : (prev - 1 + videos.length) % videos.length
@@ -207,15 +162,31 @@ export default function Top10Carousel() {
     }, 3000);
   };
 
+  // 🎬 Pantalla extendida + redirección
+  const handleClick = async (slug) => {
+    try {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) await elem.requestFullscreen();
+      else if (elem.webkitRequestFullscreen)
+        await elem.webkitRequestFullscreen();
+      await new Promise((r) => setTimeout(r, 150));
+      router.push(`/edit/${slug}`);
+    } catch {
+      router.push(`/edit/${slug}`);
+    }
+  };
+
+  // 🧩 Render principal
   return (
     <div
-      className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none transition-colors duration-700"
+      className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none"
       style={{
         touchAction: "pan-y",
-        backgroundColor: bgColor,
+        background:
+          "linear-gradient(to bottom, #fff8fa 0%, #fff5f7 30%, #ffffff 100%)",
       }}
     >
-      {/* 🏷️ Título dinámico */}
+      {/* 🏷️ Título del mes */}
       <h2 className="text-2xl sm:text-3xl font-bold text-pink-600 mb-4 text-center">
         {title}
       </h2>
@@ -232,6 +203,8 @@ export default function Top10Carousel() {
         )}
 
         {videos.map((video, i) => {
+          if (!video.src) return null;
+
           const offset = (i - index + videos.length) % videos.length;
           const positionClass =
             offset === 0
@@ -254,9 +227,14 @@ export default function Top10Carousel() {
                 muted
                 playsInline
                 controlsList="nodownload noplaybackrate"
-                onClick={() => router.push(`/edit/${video.slug}`)}
-                className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] rounded-3xl shadow-lg object-cover cursor-pointer transition-transform duration-500 hover:scale-[1.03] bg-white"
+                draggable="false"
+                onContextMenu={(e) => e.preventDefault()}
+                onClick={() => handleClick(video.slug)}
+                className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] rounded-3xl shadow-lg object-cover object-center bg-white transition-transform duration-500 hover:scale-[1.03]"
               />
+              <div className="text-center mt-2 text-sm text-gray-600 font-medium">
+                {video.object} • {video.categories.join(" / ")} — {video.value}
+              </div>
             </div>
           );
         })}
