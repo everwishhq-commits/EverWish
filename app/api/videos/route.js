@@ -4,7 +4,7 @@ import path from "path";
 export async function GET() {
   try {
     // 📂 Carpeta donde están los videos
-    const videosDir = path.join(process.cwd(), "public/videos");
+    const videosDir = path.join(process.cwd(), "public/cards");
 
     // 📜 Leer los archivos que terminan en .mp4
     const files = fs
