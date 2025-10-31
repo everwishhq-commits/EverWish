@@ -2,53 +2,71 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-// 🗓️ Palabras clave por mes
-function getSeasonalKeywords(month) {
-  const M = month + 1;
-  if (M === 1) return ["newyear", "winter", "snow"];
-  if (M === 2) return ["valentine", "love", "heart"];
-  if (M === 3) return ["spring", "flowers", "bunny", "easter"];
-  if (M === 4) return ["easter", "bunny", "blossom"];
-  if (M === 5) return ["mother", "mom", "flowers"];
-  if (M === 6) return ["father", "summer", "vacation"];
-  if (M === 7) return ["freedom", "fireworks", "independence"];
-  if (M === 8) return ["summer", "beach", "sun"];
-  if (M === 9) return ["fall", "autumn", "leaves"];
-  if (M === 10) return ["halloween", "pumpkin", "spooky"];
-  if (M === 11) return ["thanksgiving", "turkey", "harvest"];
-  if (M === 12) return ["christmas", "holiday", "santa"];
-  return ["general", "celebration"];
-}
-
-// 🎃 Título dinámico según el mes
-function getSeasonalTitle(month) {
-  const M = month + 1;
-  if (M === 1) return "New Year Vibes! 🎆";
-  if (M === 2) return "It’s Valentine Time! ❤️";
-  if (M === 3 || M === 4) return "Spring Time! 🌸";
-  if (M === 5) return "Happy Mother’s Month! 🌷";
-  if (M === 6) return "Father’s Day Season! 👔";
-  if (M === 7) return "Summer Celebrations! ☀️";
-  if (M === 8) return "Sunny Days & Smiles! 😎";
-  if (M === 9) return "Autumn Moments 🍁";
-  if (M === 10) return "It’s Halloween Time! 🎃";
-  if (M === 11) return "Thanksgiving Season! 🦃";
-  if (M === 12) return "Christmas Magic! 🎄";
-  return "Share Happy Moments! ✨";
-}
-
-export default function Carousel() {
+export default function Top10Carousel() {
   const router = useRouter();
   const [videos, setVideos] = useState([]);
   const [index, setIndex] = useState(0);
   const autoplayRef = useRef(null);
   const pauseRef = useRef(false);
 
-  const currentMonth = new Date().getMonth();
-  const keywords = getSeasonalKeywords(currentMonth);
-  const title = getSeasonalTitle(currentMonth);
+  // refs para touch
+  const startX = useRef(0);
+  const startY = useRef(0);
+  const moved = useRef(false);
+  const direction = useRef(null);
 
-  // 🕒 Autoplay
+  const TAP_THRESHOLD = 10;
+  const SWIPE_THRESHOLD = 40;
+
+  // ===========================
+  // 1. cargar desde /cards/index.json
+  // ===========================
+  useEffect(() => {
+    async function loadVideos() {
+      try {
+        // 👀 este archivo DEBE existir: public/cards/index.json
+        const res = await fetch("/cards/index.json", { cache: "no-store" });
+        const data = await res.json();
+
+        // puede venir como {videos: [...] } o como [...]
+        const raw = Array.isArray(data) ? data : data.videos || [];
+
+        // nos quedamos con los 10 primeros
+        const top10 = raw.slice(0, 10).map((item, i) => {
+          // aseguramos campos
+          const src =
+            item.src ||
+            (item.slug ? `/cards/${item.slug}.mp4` : null);
+
+          return {
+            id: i,
+            slug: item.slug || item.baseSlug || `video-${i}`,
+            src,
+            title:
+              item.title ||
+              item.combinedName ||
+              item.category ||
+              "Everwish card",
+          };
+        });
+
+        setVideos(top10);
+      } catch (err) {
+        console.error("❌ No se pudo leer /cards/index.json", err);
+        setVideos([]);
+      }
+    }
+
+    loadVideos();
+
+    // refresco cada 24 h
+    const interval = setInterval(loadVideos, 24 * 60 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // ===========================
+  // 2. autoplay
+  // ===========================
   const startAutoplay = () => {
     clearInterval(autoplayRef.current);
     if (!pauseRef.current && videos.length > 0) {
@@ -58,58 +76,66 @@ export default function Carousel() {
     }
   };
 
-  // 🎥 Cargar videos desde /api/videos
-  useEffect(() => {
-    async function loadVideos() {
-      try {
-        const res = await fetch("/api/videos");
-        const data = await res.json();
-        const allVideos = data.videos || [];
-
-        // 🧩 Agrupar por baseSlug (pumpkin_halloween_1A → pumpkin_halloween)
-        const grouped = {};
-        allVideos.forEach((v) => {
-          const base = v.src.split("/").pop().replace(/_\d+[A-Z]?\.mp4$/, "");
-          if (!grouped[base]) grouped[base] = [];
-          grouped[base].push(v);
-        });
-
-        // 🧠 Seleccionar una por grupo (última o más relevante)
-        let unique = Object.values(grouped).map((arr) => arr[arr.length - 1]);
-
-        // 🎯 Filtrar según temporada
-        const filtered = unique.filter((v) => {
-          const name = v.src.toLowerCase();
-          return keywords.some((k) => name.includes(k));
-        });
-
-        // 🏆 Si no hay suficientes, rellena con otras
-        if (filtered.length < 10) {
-          const extras = unique.filter(
-            (v) => !filtered.includes(v)
-          );
-          unique = [...filtered, ...extras].slice(0, 10);
-        } else {
-          unique = filtered.slice(0, 10);
-        }
-
-        setVideos(unique);
-      } catch (err) {
-        console.error("❌ Error cargando videos:", err);
-      }
-    }
-
-    loadVideos();
-    const interval = setInterval(loadVideos, 24 * 60 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
-
   useEffect(() => {
     startAutoplay();
     return () => clearInterval(autoplayRef.current);
   }, [videos]);
 
-  // 🎬 Ir al editor con pantalla extendida
+  // ===========================
+  // 3. touch para tablet
+  // ===========================
+  const handleTouchStart = (e) => {
+    const t = e.touches[0];
+    startX.current = t.clientX;
+    startY.current = t.clientY;
+    moved.current = false;
+    direction.current = null;
+    pauseRef.current = true;
+    clearInterval(autoplayRef.current);
+  };
+
+  const handleTouchMove = (e) => {
+    const t = e.touches[0];
+    const dx = t.clientX - startX.current;
+    const dy = t.clientY - startY.current;
+
+    if (Math.abs(dx) > TAP_THRESHOLD || Math.abs(dy) > TAP_THRESHOLD) {
+      moved.current = true;
+      direction.current =
+        Math.abs(dx) > Math.abs(dy) ? "horizontal" : "vertical";
+      // para que no se mueva toda la página
+      e.stopPropagation();
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    e.stopPropagation();
+
+    // TAP
+    if (!moved.current) {
+      const current = videos[index];
+      if (current?.slug) handleClick(current.slug);
+    } else if (direction.current === "horizontal") {
+      const diffX = startX.current - e.changedTouches[0].clientX;
+      if (Math.abs(diffX) > SWIPE_THRESHOLD) {
+        setIndex((prev) =>
+          diffX > 0
+            ? (prev + 1) % videos.length
+            : (prev - 1 + videos.length) % videos.length
+        );
+      }
+    }
+
+    // reanudar
+    setTimeout(() => {
+      pauseRef.current = false;
+      startAutoplay();
+    }, 3000);
+  };
+
+  // ===========================
+  // 4. ir a /edit/[slug] con pantalla extendida
+  // ===========================
   const handleClick = async (slug) => {
     try {
       const elem = document.documentElement;
@@ -118,52 +144,68 @@ export default function Carousel() {
         await elem.webkitRequestFullscreen();
       await new Promise((r) => setTimeout(r, 150));
       router.push(`/edit/${slug}`);
-    } catch {
+    } catch (e) {
       router.push(`/edit/${slug}`);
     }
   };
 
+  // ===========================
+  // 5. render
+  // ===========================
   return (
-    <div className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none">
-      {/* 🎃 Encabezado dinámico */}
-      <h2 className="text-2xl font-bold text-pink-600 mb-6 text-center">
-        {title}
+    <div
+      className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none"
+      style={{ touchAction: "pan-y" }} // deja hacer scroll vertical
+    >
+      {/* título dinámico, lo puedes quitar si quieres */}
+      <h2 className="text-pink-500 text-3xl font-bold mb-4">
+        It&apos;s Halloween Time! 🎃
       </h2>
 
-      {/* 🎠 Carrusel visible completo */}
-      <div className="relative w-full max-w-6xl flex justify-center items-center overflow-x-hidden">
-        <div
-          className="flex transition-transform duration-700 ease-in-out"
-          style={{
-            transform: `translateX(-${index * 100}%)`,
-            width: `${videos.length * 100}%`,
-          }}
-        >
-          {videos.map((video, i) => (
+      <div
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        className="relative w-full max-w-5xl flex justify-center items-center h-[440px]"
+      >
+        {videos.length === 0 && (
+          <p className="text-gray-500 text-sm">Loading cards...</p>
+        )}
+
+        {videos.map((video, i) => {
+          const offset = (i - index + videos.length) % videos.length;
+          const positionClass =
+            offset === 0
+              ? "translate-x-0 scale-100 z-20 opacity-100"
+              : offset === 1
+              ? "translate-x-full scale-90 z-10 opacity-40"
+              : offset === videos.length - 1
+              ? "-translate-x-full scale-90 z-10 opacity-40"
+              : "opacity-0 z-0";
+
+          return (
             <div
-              key={i}
-              className="flex-shrink-0 flex justify-center items-center w-full sm:w-1/2 md:w-1/3 lg:w-1/4 px-2"
+              key={video.slug || i}
+              className={`absolute transition-all duration-700 ease-in-out ${positionClass}`}
             >
-              <div className="flex flex-col items-center">
-                <video
-                  src={video.src}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  controlsList="nodownload noplaybackrate"
-                  draggable="false"
-                  onContextMenu={(e) => e.preventDefault()}
-                  onClick={() => handleClick(video.slug)}
-                  className="w-[260px] h-[380px] md:w-[320px] md:h-[420px] rounded-3xl shadow-lg object-cover bg-white transition-transform hover:scale-[1.03]"
-                />
-              </div>
+              <video
+                src={video.src}
+                autoPlay
+                loop
+                muted
+                playsInline
+                controlsList="nodownload noplaybackrate"
+                draggable="false"
+                onContextMenu={(e) => e.preventDefault()}
+                onClick={() => handleClick(video.slug)}
+                className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-3xl shadow-lg object-cover object-center bg-white overflow-hidden cursor-pointer"
+              />
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
 
-      {/* 🔘 Indicadores */}
+      {/* dots */}
       <div className="flex mt-5 gap-2">
         {videos.map((_, i) => (
           <span
@@ -177,12 +219,12 @@ export default function Carousel() {
                 startAutoplay();
               }, 3000);
             }}
-            className={`w-3 h-3 rounded-full cursor-pointer transition-all ${
+            className={`w-3 h-3 rounded-full cursor-pointer transition-all duration-300 ${
               i === index ? "bg-pink-500 scale-125" : "bg-gray-300"
             }`}
-          ></span>
+          />
         ))}
       </div>
     </div>
   );
-}
+          }
