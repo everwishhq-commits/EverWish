@@ -3,12 +3,13 @@ import path from "path";
 
 export async function GET() {
   try {
-    // 👉 Lee desde la carpeta correcta
+    // ✅ Carpeta correcta según tu estructura
     const dir = path.join(process.cwd(), "public/cards");
     const files = fs.readdirSync(dir).filter(f => f.endsWith(".mp4"));
 
+    // ✅ Misma estructura que usabas antes
     const videos = files.map(filename => {
-      const clean = filename.replace(/\.[^/.]+$/, "");
+      const clean = filename.replace(/\.[^/.]+$/, ""); // quita extensión
       const parts = clean.split("_");
       const object = parts[0] || "unknown";
       const category = parts[1] || "general";
@@ -25,13 +26,13 @@ export async function GET() {
       };
     });
 
-    // 🔥 Devuelve un array plano (como antes)
+    // ✅ Devuelve array plano
     return new Response(JSON.stringify(videos, null, 2), {
       headers: { "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {
-    console.error("❌ Error leyendo /public/cards:", error);
+    console.error("❌ Error leyendo /cards:", error);
     return new Response(JSON.stringify([]), { status: 500 });
   }
 }
