@@ -1,76 +1,81 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
-import { MAIN_CATEGORIES } from "@/lib/categories.js";
-
-// 🔹 Normaliza texto para comparación
-function normalize(str = "") {
-  return str.toLowerCase().replace(/[^\w]+/g, "_").trim();
-}
 
 export async function GET() {
   try {
-    const dir = path.join(process.cwd(), "public/cards");
-    if (!fs.existsSync(dir)) return NextResponse.json({ videos: [] });
+    const cardsDir = path.join(process.cwd(), "public", "cards");
+    const files = fs.readdirSync(cardsDir).filter((f) => f.endsWith(".mp4"));
 
-    const files = fs.readdirSync(dir).filter((f) => f.endsWith(".mp4"));
-    const videos = [];
+    // ✅ Categorías oficiales (de tu bloque aprobado)
+    const knownCategories = [
+      "holidays",
+      "love",
+      "celebrations",
+      "work",
+      "condolences",
+      "animals",
+      "seasons",
+      "inspirational",
+    ];
 
-    for (const file of files) {
-      const clean = file.replace(".mp4", "");
-      const parts = clean.split("_").map(normalize);
-      const object = parts[0] || "unknown";
-      const tokens = parts.slice(1);
+    const videos = files.map((file) => {
+      const name = file.replace(".mp4", "");
+      const parts = name.split("_").map((p) => p.toLowerCase());
 
-      // 🧠 Encontrar todas las categorías válidas en el nombre
-      const foundCategories = Object.entries(MAIN_CATEGORIES)
-        .filter(([key, cat]) => {
-          const allKeywords = [key, ...cat.keywords.map(normalize)];
-          return tokens.some((t) => allKeywords.includes(t));
-        })
-        .map(([key]) => key);
+      const base = {
+        object: "",
+        categories: [],
+        subcategories: [],
+        mainSlug: "",
+        categorySlug: "",
+        subcategory: "",
+        file: `/cards/${file}`,
+        src: `/cards/${file}`,
+        slug: name,
+      };
 
-      // Si no se detecta categoría, asignar "inspirational" por defecto
-      const categories = foundCategories.length
-        ? [...new Set(foundCategories)]
-        : ["inspirational"];
+      // 🧠 Extraer partes
+      if (parts.length >= 2) {
+        base.object = parts[0];
 
-      for (const catKey of categories) {
-        const catData = MAIN_CATEGORIES[catKey];
+        // 🔍 Clasificar entre categorías y subcategorías
+        for (const p of parts) {
+          if (knownCategories.includes(p)) {
+            base.categories.push(p);
+          } else if (!["1a", "1b", "2a", "2b", "preview"].includes(p)) {
+            base.subcategories.push(p);
+          }
+        }
 
-        // 🧩 Buscar subcategoría que pertenezca a esta categoría
-        const foundSub =
-          catData.subcategories.find((s) =>
-            tokens.includes(normalize(s))
-          ) || "General";
+        // 🎯 Lógica de asignación
+        base.mainSlug = base.categories[0] || "holidays";
+        base.categorySlug = base.categories[1] || base.mainSlug;
 
-        videos.push({
-          object,
-          mainSlug: catKey,
-          mainName: catData.mainName,
-          mainEmoji: catData.mainEmoji,
-          mainColor: catData.mainColor,
-          subcategory: foundSub,
-          src: `/cards/${file}`,
-        });
+        // 🧩 Si no hay subcategoría → crear una “general” ligada a la categoría principal
+        if (base.subcategories.length === 0) {
+          base.subcategory = "General";
+          base.subcategories = ["General"];
+        } else {
+          base.subcategory =
+            base.subcategories[0].charAt(0).toUpperCase() +
+            base.subcategories[0].slice(1);
+        }
+      } else {
+        // 🪄 Si el nombre no tiene estructura completa
+        base.object = name;
+        base.mainSlug = "holidays";
+        base.categorySlug = "holidays";
+        base.subcategory = "General";
+        base.subcategories = ["General"];
       }
-    }
 
-    // ✂️ Eliminar duplicados exactos
-    const unique = videos.filter(
-      (v, i, arr) =>
-        i ===
-        arr.findIndex(
-          (x) =>
-            x.src === v.src &&
-            x.mainSlug === v.mainSlug &&
-            x.subcategory === v.subcategory
-        )
-    );
+      return base;
+    });
 
-    return NextResponse.json({ videos: unique });
-  } catch (error) {
-    console.error("❌ Error reading videos:", error);
-    return NextResponse.json({ videos: [] });
+    return NextResponse.json({ videos });
+  } catch (err) {
+    console.error("❌ Error reading cards folder:", err);
+    return NextResponse.json({ error: "Failed to load videos" }, { status: 500 });
   }
 }
