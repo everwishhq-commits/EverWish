@@ -1,85 +1,54 @@
-import { promises as fs } from "fs";
+import fs from "fs";
 import path from "path";
 
 export async function GET() {
   try {
-    // ✅ Carpeta correcta
+    // 🗂️ Leer los archivos desde public/cards (ya no public/videos)
     const dir = path.join(process.cwd(), "public/cards");
-    const files = (await fs.readdir(dir)).filter(f => f.endsWith(".mp4"));
+    const files = fs.readdirSync(dir).filter(f => f.endsWith(".mp4"));
 
-    if (!files.length) {
-      console.warn("⚠️ No se encontraron archivos .mp4 en public/cards");
-    }
-
+    // 🧩 Analizar nombres: object_category_subcategory_value.mp4
     const videos = files.map(filename => {
-      const clean = filename.replace(/\.[^/.]+$/, "");
-      const parts = clean.split("_");
+      const clean = filename.replace(/\.[^/.]+$/, ""); // sin extensión
+      const parts = clean.split("_"); // separa por "_"
 
-      // 🧩 Formato: object_category_subcategory_value
+      // Estructura: object_category_subcategory_value
       const object = parts[0] || "unknown";
       const category = parts[1] || "general";
       const subcategory = parts[2] || "general";
       const value = parts[3] || "1A";
 
-      // 🗂️ Categorización principal
+      // Detectar categorías cruzadas (puede pertenecer a 2 principales)
       const categories = [];
-      if (
-        [
-          "halloween",
-          "christmas",
-          "thanksgiving",
-          "easter",
-          "independence",
-          "newyear",
-          "veterans",
-          "winter",
-          "dayofthedead",
-          "labor",
-          "memorial",
-          "columbus",
-        ].some(word => category.includes(word))
-      ) {
+      if (["halloween", "christmas", "thanksgiving", "easter", "newyear", "4thofjuly"].includes(category.toLowerCase())) {
         categories.push("holidays");
       }
-      if (
-        [
-          "birthday",
-          "anniversary",
-          "graduation",
-          "wedding",
-          "promotion",
-          "baby",
-          "retirement",
-          "achievement",
-          "hugs",
-          "love",
-          "mothers",
-          "fathers",
-        ].some(word => category.includes(word))
-      ) {
+      if (["birthday", "anniversary", "graduation", "baby", "love", "mother", "wedding"].includes(category.toLowerCase()) ||
+          ["birthday", "anniversary", "graduation", "baby", "love", "mother", "wedding"].includes(subcategory.toLowerCase())) {
         categories.push("celebrations");
       }
       if (categories.length === 0) categories.push("general");
 
       return {
+        name: clean,
+        file: `/cards/${filename}`,
         object,
         category,
         subcategory,
         value,
         categories,
-        src: `/cards/${filename}`, // ✅ Ruta pública correcta
-        slug: clean,
       };
     });
 
-    return new Response(JSON.stringify({ videos }), {
+    return new Response(JSON.stringify(videos, null, 2), {
       headers: { "Content-Type": "application/json" },
+      status: 200,
     });
   } catch (error) {
     console.error("❌ Error reading cards:", error);
     return new Response(
-      JSON.stringify({ error: "Failed to load cards", details: error.message }),
+      JSON.stringify({ error: "Error reading cards", details: error.message }),
       { status: 500 }
     );
   }
-  }
+}
