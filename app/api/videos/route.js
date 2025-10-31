@@ -1,4 +1,5 @@
 // app/api/videos/route.js
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -42,14 +43,12 @@ export async function GET() {
       return {
         src: `/cards/${file}`,
         filename: name,
-
         object,
         category1,
         category2,
         subcategory1,
         subcategory2,
         value,
-
         slug: normalize(name),
         mainSlug: normalize(category1 || object),
       };
