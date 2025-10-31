@@ -2,27 +2,39 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-// 🎃 Palabras clave por mes
-function getSeasonalKeywords() {
-  const m = new Date().getMonth() + 1;
-  switch (m) {
-    case 10: return ["halloween", "pumpkin", "spooky", "zombie"];
-    case 11: return ["thanksgiving", "turkey", "harvest", "fall"];
-    case 12: return ["christmas", "holiday", "santa", "xmas"];
-    case 2: return ["valentine", "love", "romance", "heart"];
-    default: return ["birthday", "celebration", "general"];
-  }
+// 🗓️ Palabras clave por mes
+function getSeasonalKeywords(month) {
+  const M = month + 1;
+  if (M === 1) return ["newyear", "winter", "snow"];
+  if (M === 2) return ["valentine", "love", "heart"];
+  if (M === 3) return ["spring", "flowers", "bunny", "easter"];
+  if (M === 4) return ["easter", "bunny", "blossom"];
+  if (M === 5) return ["mother", "mom", "flowers"];
+  if (M === 6) return ["father", "summer", "vacation"];
+  if (M === 7) return ["freedom", "fireworks", "independence"];
+  if (M === 8) return ["summer", "beach", "sun"];
+  if (M === 9) return ["fall", "autumn", "leaves"];
+  if (M === 10) return ["halloween", "pumpkin", "spooky"];
+  if (M === 11) return ["thanksgiving", "turkey", "harvest"];
+  if (M === 12) return ["christmas", "holiday", "santa"];
+  return ["general", "celebration"];
 }
 
-function getSeasonalTitle() {
-  const m = new Date().getMonth() + 1;
-  switch (m) {
-    case 10: return "It’s Halloween Time! 🎃";
-    case 11: return "Time for Thanksgiving 🦃";
-    case 12: return "Holiday Magic! 🎄";
-    case 2: return "Love Is in the Air ❤️";
-    default: return "Share Moments That Last Forever ✨";
-  }
+// 🎃 Título dinámico según el mes
+function getSeasonalTitle(month) {
+  const M = month + 1;
+  if (M === 1) return "New Year Vibes! 🎆";
+  if (M === 2) return "It’s Valentine Time! ❤️";
+  if (M === 3 || M === 4) return "Spring Time! 🌸";
+  if (M === 5) return "Happy Mother’s Month! 🌷";
+  if (M === 6) return "Father’s Day Season! 👔";
+  if (M === 7) return "Summer Celebrations! ☀️";
+  if (M === 8) return "Sunny Days & Smiles! 😎";
+  if (M === 9) return "Autumn Moments 🍁";
+  if (M === 10) return "It’s Halloween Time! 🎃";
+  if (M === 11) return "Thanksgiving Season! 🦃";
+  if (M === 12) return "Christmas Magic! 🎄";
+  return "Share Happy Moments! ✨";
 }
 
 export default function Carousel() {
@@ -31,15 +43,10 @@ export default function Carousel() {
   const [index, setIndex] = useState(0);
   const autoplayRef = useRef(null);
   const pauseRef = useRef(false);
-  const title = getSeasonalTitle();
 
-  // 🧭 Control táctil
-  const startX = useRef(0);
-  const startY = useRef(0);
-  const moved = useRef(false);
-  const direction = useRef(null);
-  const TAP_THRESHOLD = 10;
-  const SWIPE_THRESHOLD = 40;
+  const currentMonth = new Date().getMonth();
+  const keywords = getSeasonalKeywords(currentMonth);
+  const title = getSeasonalTitle(currentMonth);
 
   // 🕒 Autoplay
   const startAutoplay = () => {
@@ -51,31 +58,42 @@ export default function Carousel() {
     }
   };
 
-  // 🎥 Cargar y filtrar
+  // 🎥 Cargar videos desde /api/videos
   useEffect(() => {
     async function loadVideos() {
       try {
-        const res = await fetch("/api/videos", { cache: "no-store" });
+        const res = await fetch("/api/videos");
         const data = await res.json();
-        const all = Array.isArray(data.videos) ? data.videos : [];
+        const allVideos = data.videos || [];
 
-        const seasonal = getSeasonalKeywords();
-        const parsed = all.map((v, i) => {
-          const src = v.src || "";
-          const filename = src.split("/").pop()?.replace(".mp4", "") || `video-${i}`;
-          const slug = v.slug || filename;
-          const lower = slug.toLowerCase();
-          const isSeasonal = seasonal.some((kw) => lower.includes(kw));
-          return { ...v, slug, src, isSeasonal };
+        // 🧩 Agrupar por baseSlug (pumpkin_halloween_1A → pumpkin_halloween)
+        const grouped = {};
+        allVideos.forEach((v) => {
+          const base = v.src.split("/").pop().replace(/_\d+[A-Z]?\.mp4$/, "");
+          if (!grouped[base]) grouped[base] = [];
+          grouped[base].push(v);
         });
 
-        let seasonalVideos = parsed.filter((v) => v.isSeasonal);
-        const extras = parsed.filter((v) => !v.isSeasonal);
-        while (seasonalVideos.length < 10 && extras.length > 0) {
-          seasonalVideos.push(extras.shift());
+        // 🧠 Seleccionar una por grupo (última o más relevante)
+        let unique = Object.values(grouped).map((arr) => arr[arr.length - 1]);
+
+        // 🎯 Filtrar según temporada
+        const filtered = unique.filter((v) => {
+          const name = v.src.toLowerCase();
+          return keywords.some((k) => name.includes(k));
+        });
+
+        // 🏆 Si no hay suficientes, rellena con otras
+        if (filtered.length < 10) {
+          const extras = unique.filter(
+            (v) => !filtered.includes(v)
+          );
+          unique = [...filtered, ...extras].slice(0, 10);
+        } else {
+          unique = filtered.slice(0, 10);
         }
 
-        setVideos(seasonalVideos.slice(0, 10));
+        setVideos(unique);
       } catch (err) {
         console.error("❌ Error cargando videos:", err);
       }
@@ -91,51 +109,7 @@ export default function Carousel() {
     return () => clearInterval(autoplayRef.current);
   }, [videos]);
 
-  // 🖐️ Gestos táctiles
-  const handleTouchStart = (e) => {
-    const t = e.touches[0];
-    startX.current = t.clientX;
-    startY.current = t.clientY;
-    moved.current = false;
-    direction.current = null;
-    pauseRef.current = true;
-    clearInterval(autoplayRef.current);
-  };
-
-  const handleTouchMove = (e) => {
-    const t = e.touches[0];
-    const dx = t.clientX - startX.current;
-    const dy = t.clientY - startY.current;
-    if (Math.abs(dx) > TAP_THRESHOLD || Math.abs(dy) > TAP_THRESHOLD) {
-      moved.current = true;
-      direction.current =
-        Math.abs(dx) > Math.abs(dy) ? "horizontal" : "vertical";
-      e.stopPropagation();
-    }
-  };
-
-  const handleTouchEnd = (e) => {
-    e.stopPropagation();
-    if (!moved.current) {
-      const tapped = videos[index];
-      if (tapped?.slug) handleClick(tapped.slug);
-    } else if (direction.current === "horizontal") {
-      const diffX = startX.current - e.changedTouches[0].clientX;
-      if (Math.abs(diffX) > SWIPE_THRESHOLD) {
-        setIndex((prev) =>
-          diffX > 0
-            ? (prev + 1) % videos.length
-            : (prev - 1 + videos.length) % videos.length
-        );
-      }
-    }
-    setTimeout(() => {
-      pauseRef.current = false;
-      startAutoplay();
-    }, 3000);
-  };
-
-  // 🎬 Fullscreen + redirección
+  // 🎬 Ir al editor con pantalla extendida
   const handleClick = async (slug) => {
     try {
       const elem = document.documentElement;
@@ -149,58 +123,47 @@ export default function Carousel() {
     }
   };
 
-  // 🧩 Render
   return (
-    <div
-      className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none"
-      style={{ touchAction: "pan-y" }}
-    >
-      <h2 className="text-2xl sm:text-3xl font-bold text-pink-600 mb-4 text-center">
+    <div className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none">
+      {/* 🎃 Encabezado dinámico */}
+      <h2 className="text-2xl font-bold text-pink-600 mb-6 text-center">
         {title}
       </h2>
 
-      <div
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        className="relative w-full max-w-5xl flex justify-center items-center h-[440px]"
-      >
-        {videos.length === 0 && (
-          <p className="text-gray-400 text-sm">Loading cards...</p>
-        )}
-
-        {videos.map((video, i) => {
-          const offset = (i - index + videos.length) % videos.length;
-          const pos =
-            offset === 0
-              ? "translate-x-0 scale-100 z-20 opacity-100"
-              : offset === 1
-              ? "translate-x-full scale-90 z-10 opacity-50"
-              : offset === videos.length - 1
-              ? "-translate-x-full scale-90 z-10 opacity-50"
-              : "opacity-0 z-0";
-          return (
+      {/* 🎠 Carrusel visible completo */}
+      <div className="relative w-full max-w-6xl flex justify-center items-center overflow-x-hidden">
+        <div
+          className="flex transition-transform duration-700 ease-in-out"
+          style={{
+            transform: `translateX(-${index * 100}%)`,
+            width: `${videos.length * 100}%`,
+          }}
+        >
+          {videos.map((video, i) => (
             <div
-              key={video.slug || i}
-              className={`absolute transition-all duration-500 ease-in-out ${pos}`}
+              key={i}
+              className="flex-shrink-0 flex justify-center items-center w-full sm:w-1/2 md:w-1/3 lg:w-1/4 px-2"
             >
-              <video
-                src={video.src}
-                autoPlay
-                loop
-                muted
-                playsInline
-                controlsList="nodownload noplaybackrate"
-                draggable="false"
-                onContextMenu={(e) => e.preventDefault()}
-                onClick={() => handleClick(video.slug)}
-                className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover object-center bg-white overflow-hidden"
-              />
+              <div className="flex flex-col items-center">
+                <video
+                  src={video.src}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  controlsList="nodownload noplaybackrate"
+                  draggable="false"
+                  onContextMenu={(e) => e.preventDefault()}
+                  onClick={() => handleClick(video.slug)}
+                  className="w-[260px] h-[380px] md:w-[320px] md:h-[420px] rounded-3xl shadow-lg object-cover bg-white transition-transform hover:scale-[1.03]"
+                />
+              </div>
             </div>
-          );
-        })}
+          ))}
+        </div>
       </div>
 
+      {/* 🔘 Indicadores */}
       <div className="flex mt-5 gap-2">
         {videos.map((_, i) => (
           <span
