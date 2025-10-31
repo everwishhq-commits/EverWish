@@ -3,7 +3,8 @@ import path from "path";
 
 export async function GET() {
   try {
-    const dir = path.join(process.cwd(), "public/videos");
+    // ✅ Ruta corregida
+    const dir = path.join(process.cwd(), "public/cards");
     const files = (await fs.readdir(dir)).filter(f => f.endsWith(".mp4"));
 
     const videos = files.map(filename => {
@@ -63,7 +64,7 @@ export async function GET() {
 
       return {
         object,
-        src: `/videos/${filename}`,
+        src: `/cards/${filename}`,
         categories,
         subcategories,
         value,
@@ -75,9 +76,9 @@ export async function GET() {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("❌ Error reading videos:", error);
+    console.error("❌ Error reading cards:", error);
     return new Response(
-      JSON.stringify({ error: "Failed to load videos" }),
+      JSON.stringify({ error: "Failed to load cards" }),
       { status: 500 }
     );
   }
