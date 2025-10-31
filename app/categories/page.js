@@ -6,7 +6,7 @@ import Link from "next/link";
 
 // 🌸 CATEGORÍAS PRINCIPALES
 const ALL_CATEGORIES = [
-  { name: "Holidays", slug: "holidays", emoji: "😊", color: "#FFF4E0" },
+  { name: "Holidays", slug: "holidays", emoji: "🥳", color: "#FFF4E0" },
   { name: "Love & Romance", slug: "love", emoji: "❤️", color: "#FFE8EE" },
   { name: "Celebrations & Special Moments", slug: "celebrations", emoji: "🎉", color: "#FFF7FF" },
   { name: "Work & Professional Life", slug: "work", emoji: "💼", color: "#EAF4FF" },
