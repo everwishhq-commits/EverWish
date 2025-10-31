@@ -5,7 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { MAIN_CATEGORIES } from "@/lib/categories.js";
 
-// 🔧 Normaliza texto
+// 🔧 Normaliza texto (para comparar correctamente)
 function normalize(str = "") {
   return str
     .toLowerCase()
@@ -30,52 +30,35 @@ export default function CategoryPage() {
       try {
         const res = await fetch("/api/videos", { cache: "no-store" });
         const { videos } = await res.json();
-        const currentCategory = normalize(slug);
         const grouped = {};
+        const currentSlug = normalize(slug);
 
         for (const v of videos) {
-          const categories = (v.categories || []).map(normalize);
-          const subs = (v.subcategories || []).map(normalize);
-          const fileName = normalize(v.src || v.slug || "");
-
-          // Solo videos que pertenezcan a esta categoría
-          const inThisCategory =
-            categories.includes(currentCategory) ||
-            fileName.includes(currentCategory);
-
-          if (!inThisCategory) continue;
-
-          // Filtrar búsqueda
-          const fullText = normalize(
-            [v.object, ...(v.categories || []), ...(v.subcategories || [])].join(" ")
+          const belongsToCategory = (v.categories || []).some(
+            (cat) => normalize(cat) === currentSlug
           );
-          if (query && !fullText.includes(query)) continue;
+          if (!belongsToCategory) continue;
 
-          // Agrupar subcategorías (si no tiene → general)
-          const useSubs = subs.length > 0 ? subs : ["general"];
-          for (const sub of useSubs) {
-            if (!grouped[sub]) grouped[sub] = [];
-            grouped[sub].push(v);
-          }
+          const sub = v.subcategories?.[0] || "general";
+          const subKey = normalize(sub);
+
+          if (!grouped[subKey]) grouped[subKey] = [];
+          grouped[subKey].push(v);
         }
 
-        // 🪄 Aquí el truco: aseguramos que todas las subcategorías de MAIN_CATEGORIES existan
-        const definedSubs =
+        // 🔍 Mostrar solo las subcategorías de esta categoría
+        const allowedSubs =
           MAIN_CATEGORIES[slug]?.subcategories?.map(normalize) || [];
-
-        for (const s of definedSubs) {
-          if (!grouped[s]) grouped[s] = []; // Crear aunque esté vacía
+        for (const key of Object.keys(grouped)) {
+          if (!allowedSubs.includes(key)) delete grouped[key];
         }
 
-        // Ordenar alfabéticamente
-        const ordered = Object.keys(grouped)
-          .sort()
-          .reduce((acc, key) => {
-            acc[key] = grouped[key];
-            return acc;
-          }, {});
+        // 🪄 Asegurar que se muestren las subcategorías aunque estén vacías
+        for (const s of allowedSubs) {
+          if (!grouped[s]) grouped[s] = [];
+        }
 
-        setGroups(ordered);
+        setGroups(grouped);
       } catch (err) {
         console.error("❌ Error loading videos:", err);
       } finally {
@@ -86,7 +69,7 @@ export default function CategoryPage() {
     loadVideos();
   }, [slug, query]);
 
-  const subcategories = Object.keys(groups);
+  const subcategories = Object.keys(groups).sort();
   const activeVideos = activeSub ? groups[activeSub] || [] : [];
 
   if (loading)
@@ -98,7 +81,6 @@ export default function CategoryPage() {
 
   return (
     <main className="min-h-screen bg-[#fff5f8] text-gray-800 flex flex-col items-center py-10 px-4">
-      {/* 🔙 Back */}
       <button
         onClick={() => router.push("/categories")}
         className="text-pink-500 hover:text-pink-600 font-semibold mb-6"
@@ -106,7 +88,6 @@ export default function CategoryPage() {
         ← Back to Categories
       </button>
 
-      {/* 🏷️ Title */}
       <h1 className="text-3xl font-extrabold text-pink-600 mb-3 capitalize text-center">
         {MAIN_CATEGORIES[slug]?.mainName || slug.replace(/-/g, " ")}
       </h1>
@@ -115,7 +96,7 @@ export default function CategoryPage() {
         Tap any subcategory to view cards ✨
       </p>
 
-      {/* 🌸 Subcategorías */}
+      {/* 🔹 Subcategorías */}
       {subcategories.length > 0 ? (
         <div className="flex flex-wrap justify-center gap-4 max-w-5xl">
           {subcategories.map((sub, i) => (
@@ -128,15 +109,15 @@ export default function CategoryPage() {
                 activeSub === sub
                   ? "border-pink-300 bg-pink-50"
                   : "border-pink-100 hover:border-pink-200 hover:bg-pink-50"
-              } text-gray-700 font-semibold capitalize`}
+              } text-gray-700 font-semibold`}
             >
-              {sub}
+              {sub.replace(/_/g, " ")}
             </motion.button>
           ))}
         </div>
       ) : (
         <p className="text-gray-400 text-center mt-8 italic">
-          No subcategories found ✨
+          No subcategories found in this category ✨
         </p>
       )}
 
@@ -171,7 +152,7 @@ export default function CategoryPage() {
 
                 {activeVideos.length === 0 ? (
                   <p className="text-gray-400 text-center mt-10 italic">
-                    No cards found for this subcategory yet ✨
+                    No cards found yet ✨
                   </p>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 justify-items-center">
@@ -181,23 +162,19 @@ export default function CategoryPage() {
                         whileHover={{ scale: 1.05 }}
                         transition={{ duration: 0.3 }}
                         onClick={() =>
-                          router.push(`/edit/${normalize(video.slug || video.src)}`)
+                          router.push(`/edit/${normalize(video.slug)}`)
                         }
                         className="cursor-pointer bg-white rounded-3xl shadow-md border border-pink-100 overflow-hidden hover:shadow-lg"
                       >
                         <video
-                          src={
-                            video.src?.startsWith("/cards/")
-                              ? video.src
-                              : `/cards/${video.src}`
-                          }
+                          src={video.src}
                           className="object-cover w-full aspect-[4/5]"
                           playsInline
                           loop
                           muted
                         />
                         <div className="text-center py-2 text-gray-700 font-semibold text-sm">
-                          {video.object || "Card"}
+                          {video.object} ({video.value})
                         </div>
                       </motion.div>
                     ))}
@@ -210,4 +187,4 @@ export default function CategoryPage() {
       </AnimatePresence>
     </main>
   );
-          }
+                             }
