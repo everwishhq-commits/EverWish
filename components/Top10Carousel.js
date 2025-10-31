@@ -31,22 +31,29 @@ export default function Carousel() {
           return;
         }
 
-        // 🔹 Normaliza estructura
-        const formatted = list.map((v, i) => ({
-          id: i,
-          src: v.src,
-          slug:
-            v.slug ||
-            v.object ||
-            v.category ||
-            v.src?.split("/").pop()?.replace(".mp4", "") ||
-            `video-${i}`,
-          category: v.category || v.mainSlug || "general",
-          mainName: v.mainName || "General",
-        }));
+        // 🔹 Normaliza estructura y asegura que todos tengan slug y categoría
+        const formatted = list.map((v, i) => {
+          const filename =
+            v.src?.split("/").pop()?.replace(".mp4", "") || `video-${i}`;
+          const slug = v.slug || filename;
+          const category = v.category || v.mainSlug || "general";
+          const subcategory = v.subcategory || "general";
+          const design = v.design || filename.split("_").pop();
 
-        // 🔝 Toma los 10 primeros
-        setVideos(formatted.slice(0, 10));
+          return {
+            id: i,
+            slug,
+            src: v.src,
+            object: v.object || slug.split("_")[0] || "unknown",
+            category,
+            subcategory,
+            design,
+            mainName: v.mainName || "General",
+          };
+        });
+
+        // ✅ Muestra todos los videos, sin recortar
+        setVideos(formatted);
       } catch (err) {
         console.error("❌ Error cargando videos:", err);
       }
@@ -208,4 +215,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-      }
+    }
