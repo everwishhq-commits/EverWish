@@ -1,49 +1,46 @@
 "use client";
 
-/**
- * CheckoutModal.js
- * Muestra el resumen de pago y permite agregar o quitar Gift Card.
- */
-export default function CheckoutModal({ total, gift, onGiftChange, onGiftRemove, onClose }) {
+import { useState } from "react";
+
+export default function Checkout() {
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handlePayment = async () => {
+    try {
+      setIsProcessing(true);
+      // Aquí podrías conectar tu lógica de pago (Stripe, PayPal, etc.)
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      alert("✅ Payment successful! Thank you for supporting Everwish 💝");
+    } catch (err) {
+      console.error("❌ Error during checkout:", err);
+      alert("There was an issue processing your payment.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl p-6 shadow-2xl w-[90%] max-w-md text-center">
-        <h3 className="text-lg font-semibold mb-3 text-purple-600">💳 Checkout</h3>
-        <p className="text-gray-700 mb-2">Base Price: $5.00</p>
-        {gift && (
-          <p className="text-gray-700 mb-2">
-            Gift Card: +${gift.amount.toFixed(2)}
-          </p>
-        )}
-        <p className="text-xl font-bold text-purple-700 mb-4">
-          Total: ${(5 + (gift?.amount || 0)).toFixed(2)}
-        </p>
+    <div className="flex flex-col items-center justify-center min-h-[80vh] bg-gradient-to-b from-pink-50 via-white to-pink-100 text-gray-700 px-4 py-12">
+      <h1 className="text-3xl font-bold mb-6 text-gray-800 text-center">
+        Complete Your Everwish ✨
+      </h1>
 
-        <div className="flex justify-center gap-3">
-          {gift ? (
-            <button
-              onClick={onGiftRemove}
-              className="rounded-full bg-pink-100 px-4 py-2 text-pink-700 font-medium hover:bg-pink-200"
-            >
-              Remove Gift
-            </button>
-          ) : (
-            <button
-              onClick={onGiftChange}
-              className="rounded-full bg-pink-200 px-4 py-2 text-pink-700 font-medium hover:bg-pink-300"
-            >
-              Add Gift
-            </button>
-          )}
-        </div>
+      <p className="text-center text-gray-500 max-w-md mb-10">
+        This checkout confirms your card and sends your personalized Everwish
+        message. Once completed, you’ll receive a confirmation instantly.
+      </p>
 
-        <button
-          onClick={onClose}
-          className="mt-5 rounded-full bg-purple-500 px-6 py-2 text-white font-semibold hover:bg-purple-600"
-        >
-          Close
-        </button>
-      </div>
+      <button
+        onClick={handlePayment}
+        disabled={isProcessing}
+        className={`px-8 py-3 rounded-full text-white font-semibold shadow-lg transition-transform ${
+          isProcessing
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-pink-500 hover:bg-pink-600 active:scale-95"
+        }`}
+      >
+        {isProcessing ? "Processing..." : "Confirm & Send 💌"}
+      </button>
     </div>
   );
 }
