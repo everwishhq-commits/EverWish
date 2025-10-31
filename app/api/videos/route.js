@@ -3,33 +3,59 @@ import path from "path";
 
 export async function GET() {
   try {
-    // 📂 Carpeta correcta: public/cards (según tu GitHub)
+    // 📂 Carpeta con las tarjetas
     const dir = path.join(process.cwd(), "public/cards");
     const files = fs.readdirSync(dir).filter(f => f.endsWith(".mp4"));
 
-    // 📦 Extrae info de nombre: object_category_subcategory_value
+    // 📦 Analiza los nombres: object_category1_category2_sub1_sub2_value
     const videos = files.map(filename => {
-      const clean = filename.replace(/\.[^/.]+$/, ""); // quita .mp4
+      const clean = filename.replace(/\.[^/.]+$/, "");
       const parts = clean.split("_");
 
       const object = parts[0] || "unknown";
-      const category = parts[1] || "general";
-      const subcategory = parts[2] || "general";
-      const value = parts[3] || "1A";
+      const category1 = parts[1] || "general";
+      const category2 = parts[2] || null;
+      const sub1 = parts[3] || "general";
+      const sub2 = parts[4] || null;
+      const value = parts[5] || "1A";
+
+      // Agrupa por clasificación (no por diseño)
+      const categories = [category1, category2].filter(Boolean);
+      const subcategories = [sub1, sub2].filter(Boolean);
 
       return {
         src: `/cards/${filename}`,
         slug: clean,
         object,
-        category,
-        subcategory,
-        value,
+        categories,
+        subcategories,
+        design: value, // diseño (1A, 2A, etc.)
       };
     });
 
-    // ⚡ Devolver formato compatible con tu Carousel
+    // 🧠 Agrupa por combinación de object + categories + subcategories
+    const grouped = {};
+    videos.forEach(v => {
+      const key = `${v.object}_${v.categories.join("-")}_${v.subcategories.join("-")}`;
+      if (!grouped[key]) grouped[key] = { ...v, designs: [] };
+      grouped[key].designs.push({
+        design: v.design,
+        src: v.src,
+        slug: v.slug
+      });
+    });
+
+    // 🔹 Lista final a devolver
+    const result = Object.values(grouped).map(v => ({
+      object: v.object,
+      categories: v.categories,
+      subcategories: v.subcategories,
+      designs: v.designs
+    }));
+
+    // ✅ Devuelve con formato que tu carrusel entiende
     return new Response(
-      JSON.stringify({ videos }, null, 2),
+      JSON.stringify({ videos: result.flatMap(v => v.designs) }, null, 2),
       { headers: { "Content-Type": "application/json" }, status: 200 }
     );
 
@@ -37,4 +63,4 @@ export async function GET() {
     console.error("❌ Error leyendo /cards:", error);
     return new Response(JSON.stringify({ videos: [] }), { status: 500 });
   }
-}
+        }
