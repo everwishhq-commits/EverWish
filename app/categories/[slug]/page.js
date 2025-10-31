@@ -5,7 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { MAIN_CATEGORIES } from "@/lib/categories.js";
 
-// 🔧 Normaliza texto (para comparar correctamente)
+// 🔧 Normaliza texto para comparación segura
 function normalize(str = "") {
   return str
     .toLowerCase()
@@ -31,40 +31,54 @@ export default function CategoryPage() {
         const res = await fetch("/api/videos", { cache: "no-store" });
         const { videos } = await res.json();
         const grouped = {};
-        const currentSlug = normalize(slug);
+        const currentCategory = normalize(slug);
 
         for (const v of videos) {
-          const main = normalize(v.mainSlug);
-          const cat = normalize(v.category);
-          const sub = normalize(v.subcategory);
-          const videoSlug = normalize(v.slug || v.src || "");
+          const allCats = (v.categories || []).map((c) => normalize(c));
+          const allSubs = (v.subcategories || []).map((s) => normalize(s));
+          const fileSlug = normalize(v.slug || v.src || "");
+          const main = normalize(v.mainSlug || "");
 
-          // ✅ Coincide si pertenece a la categoría activa
+          // 🧩 Verifica si el video pertenece a esta categoría
           const belongsToCategory =
-            main === currentSlug ||
-            cat === currentSlug ||
-            sub === currentSlug ||
-            videoSlug.includes(currentSlug);
+            allCats.includes(currentCategory) ||
+            main === currentCategory ||
+            fileSlug.includes(currentCategory);
 
           if (!belongsToCategory) continue;
 
-          // ✅ Filtrar por búsqueda (si hay palabra)
+          // 🔍 Aplica búsqueda si hay texto
           const fullText = normalize(
             [v.object, v.category, v.subcategory, v.src].join(" ")
           );
           if (query && !fullText.includes(query)) continue;
 
-          // ✅ Subcategoría limpia (sin duplicados ni sufijos)
-          const subKey =
-            sub && sub !== "general"
-              ? sub.replace(/[0-9]+a?/g, "")
-              : cat || "general";
+          // 🧠 Determina la subcategoría correcta
+          let subKey = "general";
+          if (allSubs.length > 0) {
+            subKey = allSubs[0];
+          } else if (v.subcategory) {
+            subKey = normalize(v.subcategory);
+          } else if (v.category) {
+            subKey = normalize(v.category);
+          }
+
+          // ⚖️ Evita que “general” muestre cosas fuera de contexto
+          if (subKey === "general" && !allCats.includes(currentCategory)) continue;
 
           if (!grouped[subKey]) grouped[subKey] = [];
           grouped[subKey].push(v);
         }
 
-        setGroups(grouped);
+        // 🔤 Orden alfabético de subcategorías
+        const ordered = Object.keys(grouped)
+          .sort()
+          .reduce((acc, key) => {
+            acc[key] = grouped[key];
+            return acc;
+          }, {});
+
+        setGroups(ordered);
       } catch (err) {
         console.error("❌ Error loading videos:", err);
       } finally {
@@ -75,18 +89,23 @@ export default function CategoryPage() {
     loadVideos();
   }, [slug, query]);
 
-  const subcategories = Object.keys(groups).sort();
+  const subcategories = Object.keys(groups);
   const activeVideos = activeSub ? groups[activeSub] || [] : [];
 
-  if (loading)
+  // 🕓 Estado de carga
+  if (loading) {
     return (
       <main className="flex flex-col items-center justify-center min-h-screen bg-[#fff5f8] text-gray-600">
-        <p className="animate-pulse text-lg">Loading {slug} ✨</p>
+        <p className="animate-pulse text-lg">
+          Loading {slug.replace("-", " ")} ✨
+        </p>
       </main>
     );
+  }
 
   return (
     <main className="min-h-screen bg-[#fff5f8] text-gray-800 flex flex-col items-center py-10 px-4">
+      {/* 🔙 Back */}
       <button
         onClick={() => router.push("/categories")}
         className="text-pink-500 hover:text-pink-600 font-semibold mb-6"
@@ -94,6 +113,7 @@ export default function CategoryPage() {
         ← Back to Categories
       </button>
 
+      {/* 🏷️ Title */}
       <h1 className="text-3xl font-extrabold text-pink-600 mb-3 capitalize text-center">
         {MAIN_CATEGORIES[slug]?.mainName || slug.replace(/-/g, " ")}
       </h1>
@@ -108,6 +128,7 @@ export default function CategoryPage() {
         </p>
       )}
 
+      {/* 🌸 Subcategorías */}
       {subcategories.length > 0 ? (
         <div className="flex flex-wrap justify-center gap-4 max-w-5xl">
           {subcategories.map((sub, i) => (
@@ -120,9 +141,9 @@ export default function CategoryPage() {
                 activeSub === sub
                   ? "border-pink-300 bg-pink-50"
                   : "border-pink-100 hover:border-pink-200 hover:bg-pink-50"
-              } text-gray-700 font-semibold`}
+              } text-gray-700 font-semibold capitalize`}
             >
-              {sub.replace(/-/g, " ")}
+              {sub}
             </motion.button>
           ))}
         </div>
@@ -132,9 +153,11 @@ export default function CategoryPage() {
         </p>
       )}
 
+      {/* 💫 Modal con tarjetas */}
       <AnimatePresence>
         {activeSub && (
           <>
+            {/* Fondo */}
             <motion.div
               className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
               initial={{ opacity: 0 }}
@@ -142,6 +165,7 @@ export default function CategoryPage() {
               exit={{ opacity: 0 }}
               onClick={() => setActiveSub(null)}
             />
+            {/* Ventana */}
             <motion.div
               className="fixed inset-0 z-50 flex items-center justify-center p-4"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -150,16 +174,19 @@ export default function CategoryPage() {
               transition={{ duration: 0.3 }}
             >
               <div className="relative bg-white rounded-3xl shadow-xl w-[90%] max-w-5xl h-[70vh] overflow-y-auto border border-pink-100 p-6">
+                {/* ✖ Close */}
                 <button
                   onClick={() => setActiveSub(null)}
                   className="absolute top-3 right-5 text-gray-400 hover:text-pink-500 text-2xl font-bold"
                 >
                   ×
                 </button>
+
                 <h2 className="text-2xl font-bold text-pink-600 mb-4 capitalize">
                   {activeSub}
                 </h2>
 
+                {/* 🎥 Tarjetas */}
                 {activeVideos.length === 0 ? (
                   <p className="text-gray-400 text-center mt-10 italic">
                     No cards found for this subcategory yet ✨
@@ -201,4 +228,4 @@ export default function CategoryPage() {
       </AnimatePresence>
     </main>
   );
-        }
+}
