@@ -2,36 +2,25 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-/* 🔹 Palabras clave por mes (filtro automático) */
+// 🎃 Palabras clave por mes
 function getSeasonalKeywords() {
-  const month = new Date().getMonth() + 1;
-  switch (month) {
-    case 1: return ["newyear", "winter", "celebration", "snow"];
-    case 2: return ["valentine", "love", "heart", "romance"];
-    case 3: return ["spring", "flowers", "easter", "bunny"];
-    case 4: return ["easter", "bunny", "pastel", "blossom"];
-    case 5: return ["mother", "graduation", "bloom", "memorial"];
-    case 6: return ["father", "summer", "beach", "vacation"];
-    case 7: return ["independence", "freedom", "fireworks", "summer"];
-    case 8: return ["friendship", "backtoschool", "sunshine", "vacation"];
-    case 9: return ["labor", "fall", "harvest", "autumn"];
-    case 10: return ["halloween", "pumpkin", "zombie", "spooky"];
-    case 11: return ["thanksgiving", "turkey", "harvest", "gratitude"];
+  const m = new Date().getMonth() + 1;
+  switch (m) {
+    case 10: return ["halloween", "pumpkin", "spooky", "zombie"];
+    case 11: return ["thanksgiving", "turkey", "harvest", "fall"];
     case 12: return ["christmas", "holiday", "santa", "xmas"];
-    default: return ["celebration", "general", "everwish"];
+    case 2: return ["valentine", "love", "romance", "heart"];
+    default: return ["birthday", "celebration", "general"];
   }
 }
 
-/* ✨ Título de temporada */
 function getSeasonalTitle() {
-  const month = new Date().getMonth() + 1;
-  switch (month) {
+  const m = new Date().getMonth() + 1;
+  switch (m) {
     case 10: return "It’s Halloween Time! 🎃";
     case 11: return "Time for Thanksgiving 🦃";
     case 12: return "Holiday Magic! 🎄";
-    case 1: return "New Year Vibes! 🎆";
     case 2: return "Love Is in the Air ❤️";
-    case 3: return "Spring Is Blooming 🌸";
     default: return "Share Moments That Last Forever ✨";
   }
 }
@@ -44,7 +33,7 @@ export default function Carousel() {
   const pauseRef = useRef(false);
   const title = getSeasonalTitle();
 
-  // 🧭 Control de gestos
+  // 🧭 Control táctil
   const startX = useRef(0);
   const startY = useRef(0);
   const moved = useRef(false);
@@ -62,56 +51,38 @@ export default function Carousel() {
     }
   };
 
-  // 🎥 Cargar videos + filtro por mes + top10
+  // 🎥 Cargar y filtrar
   useEffect(() => {
-    async function loadAndFilter() {
+    async function loadVideos() {
       try {
-        const res = await fetch("/api/videos");
+        const res = await fetch("/api/videos", { cache: "no-store" });
         const data = await res.json();
-        const allVideos = data.videos || data || [];
-        const seasonal = getSeasonalKeywords();
+        const all = Array.isArray(data.videos) ? data.videos : [];
 
-        // 🧩 Agrupar por baseSlug
-        const grouped = {};
-        allVideos.forEach((v) => {
-          const base = v.slug?.replace(/_\d+[A-Z]?$/i, "") || "";
-          if (!grouped[base]) grouped[base] = [];
-          grouped[base].push(v);
+        const seasonal = getSeasonalKeywords();
+        const parsed = all.map((v, i) => {
+          const src = v.src || "";
+          const filename = src.split("/").pop()?.replace(".mp4", "") || `video-${i}`;
+          const slug = v.slug || filename;
+          const lower = slug.toLowerCase();
+          const isSeasonal = seasonal.some((kw) => lower.includes(kw));
+          return { ...v, slug, src, isSeasonal };
         });
 
-        // 🏆 Tomar el mejor de cada grupo
-        const uniqueVideos = Object.values(grouped).map((arr) =>
-          arr.sort((a, b) => {
-            const aDate = a.updatedAt || a.date || 0;
-            const bDate = b.updatedAt || b.date || 0;
-            const aPop = a.popularity || 0;
-            const bPop = b.popularity || 0;
-            return bPop - aPop || bDate - aDate;
-          })[0]
-        );
-
-        // 🎯 Filtro mensual (prioriza palabras del mes)
-        const monthVideos = uniqueVideos.filter((v) =>
-          seasonal.some((kw) => v.slug?.toLowerCase().includes(kw))
-        );
-
-        // 🔝 Tomar top 10: prioriza del mes, luego rellena
-        let top10 = monthVideos.slice(0, 10);
-        if (top10.length < 10) {
-          const extras = uniqueVideos.filter(
-            (v) => !monthVideos.includes(v)
-          );
-          top10 = [...top10, ...extras.slice(0, 10 - top10.length)];
+        let seasonalVideos = parsed.filter((v) => v.isSeasonal);
+        const extras = parsed.filter((v) => !v.isSeasonal);
+        while (seasonalVideos.length < 10 && extras.length > 0) {
+          seasonalVideos.push(extras.shift());
         }
 
-        setVideos(top10);
+        setVideos(seasonalVideos.slice(0, 10));
       } catch (err) {
         console.error("❌ Error cargando videos:", err);
       }
     }
 
-    loadAndFilter();
-    const interval = setInterval(loadAndFilter, 24 * 60 * 60 * 1000);
+    loadVideos();
+    const interval = setInterval(loadVideos, 24 * 60 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -133,13 +104,12 @@ export default function Carousel() {
 
   const handleTouchMove = (e) => {
     const t = e.touches[0];
-    const deltaX = t.clientX - startX.current;
-    const deltaY = t.clientY - startY.current;
-
-    if (Math.abs(deltaX) > TAP_THRESHOLD || Math.abs(deltaY) > TAP_THRESHOLD) {
+    const dx = t.clientX - startX.current;
+    const dy = t.clientY - startY.current;
+    if (Math.abs(dx) > TAP_THRESHOLD || Math.abs(dy) > TAP_THRESHOLD) {
       moved.current = true;
       direction.current =
-        Math.abs(deltaX) > Math.abs(deltaY) ? "horizontal" : "vertical";
+        Math.abs(dx) > Math.abs(dy) ? "horizontal" : "vertical";
       e.stopPropagation();
     }
   };
@@ -165,7 +135,7 @@ export default function Carousel() {
     }, 3000);
   };
 
-  // 🎬 Pantalla extendida
+  // 🎬 Fullscreen + redirección
   const handleClick = async (slug) => {
     try {
       const elem = document.documentElement;
@@ -179,26 +149,29 @@ export default function Carousel() {
     }
   };
 
+  // 🧩 Render
   return (
     <div
       className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none"
       style={{ touchAction: "pan-y" }}
     >
-      {/* 🏷️ Título de temporada */}
       <h2 className="text-2xl sm:text-3xl font-bold text-pink-600 mb-4 text-center">
         {title}
       </h2>
 
-      {/* 🎞️ Carrusel */}
       <div
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         className="relative w-full max-w-5xl flex justify-center items-center h-[440px]"
       >
+        {videos.length === 0 && (
+          <p className="text-gray-400 text-sm">Loading cards...</p>
+        )}
+
         {videos.map((video, i) => {
           const offset = (i - index + videos.length) % videos.length;
-          const positionClass =
+          const pos =
             offset === 0
               ? "translate-x-0 scale-100 z-20 opacity-100"
               : offset === 1
@@ -206,11 +179,10 @@ export default function Carousel() {
               : offset === videos.length - 1
               ? "-translate-x-full scale-90 z-10 opacity-50"
               : "opacity-0 z-0";
-
           return (
             <div
-              key={i}
-              className={`absolute transition-all duration-500 ease-in-out ${positionClass}`}
+              key={video.slug || i}
+              className={`absolute transition-all duration-500 ease-in-out ${pos}`}
             >
               <video
                 src={video.src}
@@ -221,6 +193,7 @@ export default function Carousel() {
                 controlsList="nodownload noplaybackrate"
                 draggable="false"
                 onContextMenu={(e) => e.preventDefault()}
+                onClick={() => handleClick(video.slug)}
                 className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover object-center bg-white overflow-hidden"
               />
             </div>
@@ -228,7 +201,6 @@ export default function Carousel() {
         })}
       </div>
 
-      {/* 🔘 Dots */}
       <div className="flex mt-5 gap-2">
         {videos.map((_, i) => (
           <span
@@ -250,4 +222,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-            }
+}
