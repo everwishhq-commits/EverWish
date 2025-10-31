@@ -1,12 +1,13 @@
+// app/api/videos/route.js
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
-// 🌎 CATEGORÍAS PRINCIPALES Y SUS PALABRAS CLAVE
+// 🌎 CATEGORÍAS Y SUBCATEGORÍAS COMBINADAS AUTOMÁTICAMENTE
 const MAIN_GROUPS = {
   holidays: {
     mainName: "Holidays",
-    mainEmoji: "🥳",
+    mainEmoji: "🎄",
     mainColor: "#FFF4E0",
     keywords: [
       "christmas", "halloween", "thanksgiving", "easter", "newyear",
@@ -32,7 +33,7 @@ const MAIN_GROUPS = {
     ],
   },
   celebrations: {
-    mainName: "Celebrations & Special Moments",
+    mainName: "Celebrations",
     mainEmoji: "🎉",
     mainColor: "#FFF7FF",
     keywords: [
@@ -47,10 +48,11 @@ const MAIN_GROUPS = {
     mainEmoji: "🐾",
     mainColor: "#E8FFF3",
     keywords: [
-      "pets", "dog", "cat", "puppy", "kitten", "horse", "bird",
-      "wildlife", "eagle", "forest", "nature", "butterfly", "fish",
-      "turtle", "bunny", "elephant", "lion", "tiger", "bear", "rabbit",
-      "dolphin", "animal", "zoo", "sea", "flower", "tree", "bee", "sunflower"
+      "pets", "petsandanimal", "dog", "cat", "puppy", "kitten",
+      "horse", "bird", "wildlife", "eagle", "forest", "nature",
+      "butterfly", "fish", "turtle", "bunny", "elephant", "lion",
+      "tiger", "bear", "rabbit", "dolphin", "animal", "zoo",
+      "sea", "flower", "tree", "bee", "sunflower"
     ],
   },
   seasons: {
@@ -58,8 +60,9 @@ const MAIN_GROUPS = {
     mainEmoji: "🍂",
     mainColor: "#FFF4E0",
     keywords: [
-      "spring", "summer", "autumn", "fall", "winter", "season", "rain",
-      "snow", "cold", "heat", "beach", "sunny", "sunset", "vacation"
+      "spring", "summer", "autumn", "fall", "winter", "season",
+      "rainy", "rain", "snow", "cold", "heat", "beach", "sunny",
+      "sunset", "leaves", "flowers", "vacation", "travel", "mountain"
     ],
   },
   appreciation: {
@@ -70,7 +73,8 @@ const MAIN_GROUPS = {
       "thankyou", "appreciation", "condolences", "healing", "getwell",
       "support", "care", "teacher", "nurse", "doctor", "gratitude",
       "friendship", "help", "motivational", "inspiration",
-      "encouragement", "hero", "community", "volunteer", "thanks"
+      "encouragement", "thank", "hero", "community", "worker",
+      "mentor", "helper", "volunteer", "thanks"
     ],
   },
 };
@@ -86,7 +90,9 @@ function normalize(str) {
 }
 
 export async function GET() {
+  // 👀 AQUÍ es donde realmente están tus videos
   const dir = path.join(process.cwd(), "public/cards");
+
   const files = fs.existsSync(dir)
     ? fs.readdirSync(dir).filter((f) => f.endsWith(".mp4"))
     : [];
@@ -95,36 +101,50 @@ export async function GET() {
     const cleanName = file.replace(".mp4", "");
     const parts = cleanName.split("_");
 
-    // Estructura: object_category_subcategory_value
+    // Estructura QUE TÚ ESTÁS USANDO:
+    // object_category_subcategory_value
+    // ej: pumpkin_holidays_halloween_1A.mp4
     const object = parts[0] || "unknown";
     const category = normalize(parts[1] || "general");
     const subcategory = normalize(parts[2] || "general");
-    const design = parts[3] || "1A"; // 🎨 ahora lee 1A, 2A, etc.
+    const value = parts[3] || "1A"; // 👈 aquí estaba faltando
 
-    // 🔍 Busca grupo principal por keywords
-    const match = Object.entries(MAIN_GROUPS).find(([key, group]) =>
-      group.keywords.some((kw) => cleanName.includes(kw))
+    // 🔍 Buscar a qué grupo grande pertenece
+    const match = Object.entries(MAIN_GROUPS).find(([, group]) =>
+      group.keywords.some((kw) => cleanName.toLowerCase().includes(kw))
     );
+
     const [selectedKey, selectedGroup] =
       match || ["appreciation", MAIN_GROUPS.appreciation];
 
-    // 🧠 Nombre combinado legible
-    const fullCategoryName = `${selectedGroup.mainName} — ${subcategory !== "general" ? subcategory : category}`.replace(/-/g, " ");
+    // 🧠 Nombre bonito que le mandabas al front
+    const fullCategoryName = `${selectedGroup.mainName} — ${
+      subcategory !== "general" ? subcategory : category
+    }`.replace(/-/g, " ");
 
     return {
+      // datos de grupo
       mainName: selectedGroup.mainName,
       mainEmoji: selectedGroup.mainEmoji,
       mainColor: selectedGroup.mainColor,
+
+      // datos tuyos
       object,
       category,
       subcategory,
-      design, // 🎨 versión o variación del mismo tipo
+      value, // 👈 ahora sí
       combinedName: fullCategoryName,
+
+      // ruta real del video
       src: `/cards/${file}`,
+
+      // 👇 esto era lo que te estaba haciendo falta para `/edit/[slug]`
+      slug: cleanName, // ej: pumpkin_holidays_halloween_1A
+
+      // por si filtras por grupo arriba
       mainSlug: selectedKey,
     };
   });
 
-  // ✅ Compatible con tu carrusel
   return NextResponse.json({ videos });
-      }
+    }
