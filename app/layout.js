@@ -1,5 +1,10 @@
 import "./globals.css";
 
+// ⚙️ Fuerza renderizado solo en cliente
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
+
 export const metadata = {
   title: "Everwish – Share Moments That Last Forever 💌",
   description:
@@ -45,4 +50,4 @@ export default function RootLayout({ children }) {
       </body>
     </html>
   );
-            }
+        }
