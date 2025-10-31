@@ -2,6 +2,38 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
+// 🗓️ Define temas según el mes
+function getSeasonalKeywords() {
+  const month = new Date().getMonth() + 1;
+  if (month === 10) return ["halloween", "spooky", "pumpkin", "zombie"];
+  if (month === 11) return ["thanksgiving", "turkey", "harvest", "fall"];
+  if (month === 12) return ["christmas", "holiday", "santa", "xmas"];
+  if (month === 2) return ["valentine", "love", "romance", "heart"];
+  return ["birthday", "celebration", "general"];
+}
+
+// 🔧 Analiza nombre del archivo (nuevo formato)
+function parseFilename(filename) {
+  const parts = filename.replace(".mp4", "").split("_");
+
+  // Estructura: object_category1_category2_subcategory1_subcategory2_value
+  const object = parts[0] || "unknown";
+  const category1 = parts[1] || "general";
+  const category2 = parts[2] || null;
+  const subcategory1 = parts[3] || null;
+  const subcategory2 = parts[4] || null;
+  const value = parts[5] || "1A";
+
+  return {
+    object,
+    category1,
+    category2,
+    subcategory1,
+    subcategory2,
+    value,
+  };
+}
+
 export default function Carousel() {
   const router = useRouter();
   const [videos, setVideos] = useState([]);
@@ -9,57 +41,73 @@ export default function Carousel() {
   const autoplayRef = useRef(null);
   const pauseRef = useRef(false);
 
-  // 🧭 Control táctil
-  const startX = useRef(0);
-  const startY = useRef(0);
-  const moved = useRef(false);
-  const direction = useRef(null);
-
   const TAP_THRESHOLD = 10;
   const SWIPE_THRESHOLD = 40;
 
-  // 🎥 Cargar videos desde el API principal
+  // 🧠 Cargar videos desde API y filtrar según el mes actual
   useEffect(() => {
     async function fetchVideos() {
       try {
+        const today = new Date().toISOString().split("T")[0];
+        const cacheKey = `everwish_videos_${today}`;
+        const cached = localStorage.getItem(cacheKey);
+        const seasonal = getSeasonalKeywords();
+
+        if (cached) {
+          console.log("📦 Cargando videos desde cache diario");
+          setVideos(JSON.parse(cached));
+          return;
+        }
+
+        console.log("🌐 Cargando videos desde /api/videos");
         const res = await fetch("/api/videos", { cache: "no-store" });
         const data = await res.json();
         const list = Array.isArray(data.videos) ? data.videos : [];
 
-        if (list.length === 0) {
-          console.warn("⚠️ No se encontraron videos en /api/videos");
-          return;
-        }
-
-        // 🔹 Normaliza estructura y asegura que todos tengan slug y categoría
-        const formatted = list.map((v, i) => {
+        // 📂 Convertir nombres de archivos con formato nuevo
+        const parsed = list.map((v, i) => {
           const filename =
             v.src?.split("/").pop()?.replace(".mp4", "") || `video-${i}`;
-          const slug = v.slug || filename;
-          const category = v.category || v.mainSlug || "general";
-          const subcategory = v.subcategory || "general";
-          const design = v.design || filename.split("_").pop();
+          const info = parseFilename(filename);
+          const allText = filename.toLowerCase();
 
           return {
             id: i,
-            slug,
+            slug: `${filename}-${i}`,
             src: v.src,
-            object: v.object || slug.split("_")[0] || "unknown",
-            category,
-            subcategory,
-            design,
+            ...info,
             mainName: v.mainName || "General",
+            matchScore: seasonal.some((kw) => allText.includes(kw)) ? 1 : 0,
           };
         });
 
-        // ✅ Muestra todos los videos, sin recortar
-        setVideos(formatted);
+        // 🎯 Filtrar por temporada primero
+        let seasonalVideos = parsed.filter((v) => v.matchScore === 1);
+
+        // Si hay menos de 10, rellena con otros
+        if (seasonalVideos.length < 10) {
+          const extra = parsed.filter((v) => !seasonalVideos.includes(v));
+          seasonalVideos = [...seasonalVideos, ...extra].slice(0, 10);
+        } else {
+          seasonalVideos = seasonalVideos.slice(0, 10);
+        }
+
+        setVideos(seasonalVideos);
+        localStorage.setItem(cacheKey, JSON.stringify(seasonalVideos));
+
+        // 🧹 Limpia caches anteriores
+        Object.keys(localStorage)
+          .filter((k) => k.startsWith("everwish_videos_") && k !== cacheKey)
+          .forEach((k) => localStorage.removeItem(k));
       } catch (err) {
         console.error("❌ Error cargando videos:", err);
       }
     }
 
     fetchVideos();
+    // Actualiza cada 24 horas
+    const interval = setInterval(fetchVideos, 24 * 60 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   // 🕒 Autoplay
@@ -78,6 +126,11 @@ export default function Carousel() {
   }, [videos]);
 
   // 🖐️ Control táctil (swipe)
+  const startX = useRef(0);
+  const startY = useRef(0);
+  const moved = useRef(false);
+  const direction = useRef(null);
+
   const handleTouchStart = (e) => {
     const t = e.touches[0];
     startX.current = t.clientX;
@@ -124,7 +177,7 @@ export default function Carousel() {
     }, 3000);
   };
 
-  // 🎬 Abrir editor
+  // 🎬 Navegar al editor
   const handleClick = async (slug) => {
     try {
       const elem = document.documentElement;
@@ -138,7 +191,7 @@ export default function Carousel() {
     }
   };
 
-  // 🧩 Render principal
+  // 🎨 Render principal
   return (
     <div
       className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none"
@@ -148,7 +201,6 @@ export default function Carousel() {
           "linear-gradient(to bottom, #fff8fa 0%, #fff5f7 30%, #ffffff 100%)",
       }}
     >
-      {/* 🎞️ Contenedor de videos */}
       <div
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -156,7 +208,7 @@ export default function Carousel() {
         className="relative w-full max-w-5xl flex justify-center items-center h-[440px]"
       >
         {videos.length === 0 && (
-          <p className="text-gray-500 text-sm">Loading cards...</p>
+          <p className="text-gray-500 text-sm">Loading seasonal cards...</p>
         )}
 
         {videos.map((video, i) => {
@@ -172,7 +224,7 @@ export default function Carousel() {
 
           return (
             <div
-              key={video.slug || i}
+              key={video.slug}
               className={`absolute transition-all duration-700 ease-in-out ${positionClass}`}
             >
               <video
@@ -186,12 +238,17 @@ export default function Carousel() {
                 onContextMenu={(e) => e.preventDefault()}
                 className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-3xl shadow-lg object-cover object-center bg-white overflow-hidden transition-transform duration-500 hover:scale-[1.03]"
               />
+              <div className="text-center mt-2 text-sm text-gray-600 font-medium">
+                {video.object} • {video.category1}
+                {video.category2 ? ` / ${video.category2}` : ""} —{" "}
+                {video.value}
+              </div>
             </div>
           );
         })}
       </div>
 
-      {/* 🔘 Dots de navegación */}
+      {/* 🔘 Dots */}
       <div className="flex mt-6 gap-2">
         {videos.map((_, i) => (
           <span
@@ -215,4 +272,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-    }
+          }
