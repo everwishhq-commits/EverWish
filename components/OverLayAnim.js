@@ -3,12 +3,22 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { getAnimationsForSlug } from "@/lib/animations";
+
 export default function Overlayanim({ slug = "", animation = "✨ Sparkles" }) {
   const [particles, setParticles] = useState([]);
 
   useEffect(() => {
-    const { emojis, direction, density, speed } = getAnimationSet(slug, animation);
+    // ✅ Obtener animación según slug o tipo
+    const config = getAnimationsForSlug(slug, animation);
 
+    const {
+      emojis = ["✨"],
+      direction = "up",
+      density = 20,
+      speed = 4,
+    } = config || {};
+
+    // ✅ Crear partículas iniciales
     const newParticles = Array.from({ length: density }, (_, i) => ({
       id: i,
       emoji: emojis[Math.floor(Math.random() * emojis.length)],
@@ -37,9 +47,9 @@ export default function Overlayanim({ slug = "", animation = "✨ Sparkles" }) {
 /* ✨ Subcomponente individual */
 function Particle({ emoji, left, top, delay, duration, size, animationType }) {
   const lower = animationType.toLowerCase();
-
-  // Movimiento distinto por tipo
   let animate = {};
+
+  // 🌈 Movimiento según tipo
   if (lower.includes("confetti") || lower.includes("snow") || lower.includes("candy")) {
     animate = { y: [top - 20, top + 80], opacity: [0.9, 1, 0], rotate: [0, 360] };
   } else if (lower.includes("paw") || lower.includes("spark") || lower.includes("bloom")) {
@@ -57,9 +67,9 @@ function Particle({ emoji, left, top, delay, duration, size, animationType }) {
       initial={{ opacity: 0, scale: 0.8 }}
       animate={animate}
       transition={{
-        duration: duration,
+        duration,
         repeat: Infinity,
-        delay: delay,
+        delay,
         ease: "easeInOut",
       }}
       style={{
@@ -67,7 +77,8 @@ function Particle({ emoji, left, top, delay, duration, size, animationType }) {
         left: `${left}%`,
         top: `${top}%`,
         fontSize: `${size}px`,
-        filter: "blur(0.2px)",
+        filter: "blur(0.3px)",
+        transformOrigin: "center center",
       }}
     >
       {emoji}
