@@ -1,62 +1,35 @@
-// app/api/videos/route.js
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
-// función de limpieza básica
-function normalize(str = "") {
-  return str
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/&/g, "and")
-    .replace(/[^a-z0-9-]/g, "")
-    .trim();
-}
-
-// lee y clasifica nombres del tipo:
-// object_categoria1_categoria2_subcategoria1_subcategoria2_value.mp4
 export async function GET() {
   try {
-    const dir = path.join(process.cwd(), "public", "cards");
-    if (!fs.existsSync(dir)) {
-      return NextResponse.json({ videos: [] });
+    // 📍Ruta absoluta del JSON
+    const filePath = path.join(process.cwd(), "public", "cards", "index.json");
+
+    // 📂 Validar existencia
+    if (!fs.existsSync(filePath)) {
+      return NextResponse.json({ videos: [], error: "index.json not found" });
     }
 
-    const files = fs
-      .readdirSync(dir)
-      .filter((f) => f.toLowerCase().endsWith(".mp4"));
+    // 📖 Leer archivo
+    const fileContent = fs.readFileSync(filePath, "utf8");
+    const data = JSON.parse(fileContent);
 
-    const videos = files.map((file) => {
-      const name = file.replace(".mp4", "");
-      const parts = name.split("_");
+    // 📦 Aceptar ambos formatos: {videos: [...]} o [...]
+    const videos = Array.isArray(data) ? data : data.videos || [];
 
-      const object = parts[0] || "";
-      const category1 = parts[1] || "";
-      const category2 = parts[2] || "";
-      const subcategory1 = parts[3] || "";
-      const subcategory2 = parts[4] || "";
-      const value = parts[5] || "";
-
-      return {
-        src: `/cards/${file}`,
-        filename: name,
-        object,
-        category1,
-        category2,
-        subcategory1,
-        subcategory2,
-        value,
-        slug: normalize(name),
-        mainSlug: normalize(category1 || object),
-      };
-    });
-
+    // ✅ Respuesta segura
     return NextResponse.json({ videos });
   } catch (err) {
-    console.error("Error leyendo videos:", err);
-    return NextResponse.json({ videos: [], error: err.message });
+    console.error("❌ Error en /api/videos:", err);
+    return NextResponse.json(
+      {
+        error: "Error loading videos",
+        details: String(err),
+        videos: [],
+      },
+      { status: 200 }
+    );
   }
 }
