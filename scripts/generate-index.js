@@ -2,15 +2,16 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
-// Asegura que funcione tanto en local como en Vercel
+// Asegura compatibilidad en local y en Vercel
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const cardsDir = path.join(process.cwd(), "public", "cards");
-const indexPath = path.join(cardsDir, "index.json");
+// 📂 Directorio base
+const videosDir = path.join(process.cwd(), "public", "videos");
+const indexPath = path.join(videosDir, "index.json");
 
 // 🧠 Función que interpreta el nombre del archivo
-function parseCardFilename(filename) {
+function parseVideoFilename(filename) {
   const name = filename.replace(".mp4", "");
   const parts = name.split("_");
 
@@ -23,17 +24,18 @@ function parseCardFilename(filename) {
   };
 }
 
+// ⚙️ Generar index.json dinámico
 function generateIndex() {
-  if (!fs.existsSync(cardsDir)) {
-    console.error("❌ No existe /public/cards");
+  if (!fs.existsSync(videosDir)) {
+    console.error("❌ No existe /public/videos");
     return;
   }
 
-  const files = fs.readdirSync(cardsDir).filter(f => f.endsWith(".mp4"));
+  const files = fs.readdirSync(videosDir).filter(f => f.endsWith(".mp4"));
 
   const videos = files.map(file => {
-    const parsed = parseCardFilename(file);
-    return { ...parsed, src: `/cards/${file}` };
+    const parsed = parseVideoFilename(file);
+    return { ...parsed, src: `/videos/${file}` };
   });
 
   const payload = {
@@ -44,7 +46,8 @@ function generateIndex() {
   };
 
   fs.writeFileSync(indexPath, JSON.stringify(payload, null, 2));
-  console.log(`✅ Generado /public/cards/index.json con ${videos.length} videos`);
+  console.log(`✅ Generado /public/videos/index.json con ${videos.length} videos`);
 }
 
+// 🚀 Ejecutar al construir
 generateIndex();
