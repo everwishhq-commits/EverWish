@@ -8,19 +8,22 @@
 import fs from "fs";
 import path from "path";
 
+// 🔧 Evita cacheo de Vercel (muy importante para builds dinámicos)
+export const dynamic = "force-dynamic";
+
 // 📍 Rutas base
 const videosRoot = path.join(process.cwd(), "public/videos");
 const indexFile = path.join(videosRoot, "index.json");
 const subcategoryMapPath = path.join(process.cwd(), "public/data/subcategories.json");
 
-// 🧩 Función auxiliar
+// 🧩 Función auxiliar para formatear nombres
 function formatWord(word) {
   return word
     ? word.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
     : "";
 }
 
-// 🧠 Detectar categoría/subcategoría según palabras
+// 🧠 Detectar categoría/subcategoría
 function detectCategory(words, subcategoryMap) {
   const lower = words.map((w) => w.toLowerCase());
   for (const [mainCat, subs] of Object.entries(subcategoryMap)) {
@@ -43,21 +46,22 @@ function getAllMp4Files(dir) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   return entries.flatMap((entry) => {
     const fullPath = path.join(dir, entry.name);
-    return entry.isDirectory()
-      ? getAllMp4Files(fullPath)
-      : entry.name.toLowerCase().endsWith(".mp4")
-      ? [fullPath]
-      : [];
+    if (entry.isDirectory()) return getAllMp4Files(fullPath);
+    return entry.name.toLowerCase().endsWith(".mp4") ? [fullPath] : [];
   });
 }
 
-// ⚙️ Generar índice si no existe
+// ⚙️ Generar índice dinámico
 function generateIndex() {
   console.log("⚙️ Generando index.json dinámicamente...");
 
   let subcategoryMap = {};
   try {
-    subcategoryMap = JSON.parse(fs.readFileSync(subcategoryMapPath, "utf-8"));
+    if (fs.existsSync(subcategoryMapPath)) {
+      subcategoryMap = JSON.parse(fs.readFileSync(subcategoryMapPath, "utf-8"));
+    } else {
+      console.warn("⚠️ No se encontró subcategories.json, usando categorías genéricas.");
+    }
   } catch (err) {
     console.error("⚠️ No se pudo cargar subcategories.json:", err);
   }
@@ -97,28 +101,37 @@ function generateIndex() {
   return index;
 }
 
-// 📡 Endpoint GET
+// 📡 Endpoint principal
 export async function GET() {
   try {
-    // Si el archivo ya existe, leerlo directamente
+    // ✅ Si ya existe, leerlo directamente
     if (fs.existsSync(indexFile)) {
       const data = fs.readFileSync(indexFile, "utf-8");
       return new Response(data, {
-        headers: { "Content-Type": "application/json" },
         status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store, max-age=0",
+        },
       });
     }
 
-    // Si no existe, generarlo
+    // ⚙️ Si no existe, generarlo automáticamente
     const index = generateIndex();
     return new Response(JSON.stringify(index, null, 2), {
-      headers: { "Content-Type": "application/json" },
       status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store, max-age=0",
+      },
     });
   } catch (err) {
     console.error("❌ Error en API /api/videos:", err);
     return new Response(
-      JSON.stringify({ error: "Failed to load or generate index", details: err.message }),
+      JSON.stringify({
+        error: "Failed to load or generate index",
+        details: err.message,
+      }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
