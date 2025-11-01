@@ -9,7 +9,7 @@ export default function Carousel() {
   const autoplayRef = useRef(null);
   const pauseRef = useRef(false);
 
-  // 🧭 Variables de control de gesto
+  // 📱 Variables de control de gesto
   const startX = useRef(0);
   const startY = useRef(0);
   const moved = useRef(false);
@@ -28,27 +28,29 @@ export default function Carousel() {
     }
   };
 
-  // 🎥 Cargar videos desde API con agrupación, top 10 y actualización diaria
+  // 🎥 Cargar videos desde el API
   useEffect(() => {
     async function loadAndFilter() {
       try {
-        const res = await fetch("/api/videos");
+        const res = await fetch("/api/videos", { cache: "no-store" });
         const data = await res.json();
-        const allVideos = data.videos || []; // ✅ el nuevo formato del API devuelve { videos: [...] }
+        const allVideos = Array.isArray(data) ? data : data.videos || [];
 
-        // 🧩 Agrupar por baseSlug (ej: pumpkin_halloween_1A → pumpkin_halloween)
-        const grouped = {};
-        allVideos.forEach((v) => {
-          const base = v.name?.replace(/_\d+[A-Z]?$/i, "") || "";
-          if (!grouped[base]) grouped[base] = [];
-          grouped[base].push(v);
-        });
+        // 🧩 Asegurar estructura mínima
+        const validVideos = allVideos
+          .filter((v) => v && (v.file || v.src))
+          .map((v) => ({
+            slug: v.slug || v.name || "",
+            src: typeof v.file === "string" ? v.file : v.src,
+            date: v.date || 0,
+            popularity: v.popularity || 0,
+          }));
 
-        // 🏆 Tomar el primero de cada grupo
-        const uniqueVideos = Object.values(grouped).map((arr) => arr[0]);
+        // 🏆 Filtrar top 10 (por fecha o popularidad)
+        const top10 = validVideos
+          .sort((a, b) => b.popularity - a.popularity || b.date - a.date)
+          .slice(0, 10);
 
-        // 🔝 Limitar a los 10 mejores
-        const top10 = uniqueVideos.slice(0, 10);
         setVideos(top10);
       } catch (err) {
         console.error("❌ Error cargando videos:", err);
@@ -56,8 +58,6 @@ export default function Carousel() {
     }
 
     loadAndFilter();
-
-    // ⏰ Actualizar automáticamente cada 24 horas
     const interval = setInterval(loadAndFilter, 24 * 60 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
@@ -67,7 +67,7 @@ export default function Carousel() {
     return () => clearInterval(autoplayRef.current);
   }, [videos]);
 
-  // 🖐️ Control táctil con bloqueo vertical
+  // 🖐️ Control táctil
   const handleTouchStart = (e) => {
     const t = e.touches[0];
     startX.current = t.clientX;
@@ -87,19 +87,18 @@ export default function Carousel() {
       moved.current = true;
       direction.current =
         Math.abs(deltaX) > Math.abs(deltaY) ? "horizontal" : "vertical";
-      e.stopPropagation(); // 🚫 Bloquea propagación si hay movimiento
+      e.stopPropagation();
     }
   };
 
   const handleTouchEnd = (e) => {
-    e.stopPropagation(); // 🚫 Evita que suba a la página
+    e.stopPropagation();
 
     if (!moved.current) {
       // TAP → abrir fullscreen
       const tapped = videos[index];
-      if (tapped?.name) handleClick(tapped.name);
+      if (tapped?.slug) handleClick(tapped.slug);
     } else if (direction.current === "horizontal") {
-      // Swipe horizontal → cambia tarjeta
       const diffX = startX.current - e.changedTouches[0].clientX;
       if (Math.abs(diffX) > SWIPE_THRESHOLD) {
         setIndex((prev) =>
@@ -116,7 +115,7 @@ export default function Carousel() {
     }, 3000);
   };
 
-  // 🎬 Pantalla extendida
+  // 🎬 Abrir tarjeta en pantalla completa
   const handleClick = async (slug) => {
     try {
       const elem = document.documentElement;
@@ -130,11 +129,21 @@ export default function Carousel() {
     }
   };
 
+  // 🚫 Protección: si no hay videos aún
+  if (videos.length === 0) {
+    return (
+      <div className="w-full text-center text-gray-400 py-12">
+        Loading cards...
+      </div>
+    );
+  }
+
   return (
     <div
       className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none"
-      style={{ touchAction: "pan-y" }} // ✅ permite scroll vertical global
+      style={{ touchAction: "pan-y" }}
     >
+      {/* 🎞️ Contenedor de videos */}
       <div
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -154,11 +163,11 @@ export default function Carousel() {
 
           return (
             <div
-              key={i}
+              key={video.slug || i}
               className={`absolute transition-all duration-500 ease-in-out ${positionClass}`}
             >
               <video
-                src={video.file} // ✅ usa la propiedad `file` del JSON
+                src={video.src}
                 autoPlay
                 loop
                 muted
@@ -173,7 +182,7 @@ export default function Carousel() {
         })}
       </div>
 
-      {/* 🔘 Dots */}
+      {/* 🔘 Indicadores (dots) */}
       <div className="flex mt-5 gap-2">
         {videos.map((_, i) => (
           <span
@@ -195,4 +204,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-}
+    }
