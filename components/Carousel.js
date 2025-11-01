@@ -9,7 +9,7 @@ export default function Carousel() {
   const autoplayRef = useRef(null);
   const pauseRef = useRef(false);
 
-  // 📱 Variables de control de gesto
+  // 📱 Control de gestos
   const startX = useRef(0);
   const startY = useRef(0);
   const moved = useRef(false);
@@ -36,7 +36,7 @@ export default function Carousel() {
         const data = await res.json();
         const allVideos = Array.isArray(data) ? data : data.videos || [];
 
-        // 🧩 Asegurar estructura mínima
+        // 🧩 Validar estructura mínima
         const validVideos = allVideos
           .filter((v) => v && (v.file || v.src))
           .map((v) => ({
@@ -46,7 +46,7 @@ export default function Carousel() {
             popularity: v.popularity || 0,
           }));
 
-        // 🏆 Filtrar top 10 (por fecha o popularidad)
+        // 🏆 Filtrar top 10 (por popularidad o fecha)
         const top10 = validVideos
           .sort((a, b) => b.popularity - a.popularity || b.date - a.date)
           .slice(0, 10);
@@ -95,7 +95,6 @@ export default function Carousel() {
     e.stopPropagation();
 
     if (!moved.current) {
-      // TAP → abrir fullscreen
       const tapped = videos[index];
       if (tapped?.slug) handleClick(tapped.slug);
     } else if (direction.current === "horizontal") {
@@ -117,6 +116,7 @@ export default function Carousel() {
 
   // 🎬 Abrir tarjeta en pantalla completa
   const handleClick = async (slug) => {
+    if (!slug) return; // 🔒 Protección adicional
     try {
       const elem = document.documentElement;
       if (elem.requestFullscreen) await elem.requestFullscreen();
@@ -129,7 +129,7 @@ export default function Carousel() {
     }
   };
 
-  // 🚫 Protección: si no hay videos aún
+  // 🚫 Si no hay videos aún
   if (videos.length === 0) {
     return (
       <div className="w-full text-center text-gray-400 py-12">
@@ -151,6 +151,8 @@ export default function Carousel() {
         className="relative w-full max-w-5xl flex justify-center items-center h-[440px]"
       >
         {videos.map((video, i) => {
+          if (!video?.src) return null; // 🚫 Previene crash por video vacío
+
           const offset = (i - index + videos.length) % videos.length;
           const positionClass =
             offset === 0
@@ -182,7 +184,7 @@ export default function Carousel() {
         })}
       </div>
 
-      {/* 🔘 Indicadores (dots) */}
+      {/* 🔘 Indicadores */}
       <div className="flex mt-5 gap-2">
         {videos.map((_, i) => (
           <span
@@ -204,4 +206,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-    }
+          }
