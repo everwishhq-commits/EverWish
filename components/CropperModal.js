@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 export default function CropperModal({ open, onClose, onDone }) {
@@ -11,8 +11,10 @@ export default function CropperModal({ open, onClose, onDone }) {
   const imageRef = useRef(null);
   const lastTouch = useRef(null);
 
-  // 🚫 Evita que el scroll o zoom del navegador interfiera
+  // 🚫 Bloquear scroll y zoom nativo mientras el modal está abierto
   useEffect(() => {
+    const preventScroll = (e) => e.preventDefault();
+
     if (open) {
       document.body.style.overflow = "hidden";
       document.addEventListener("touchmove", preventScroll, { passive: false });
@@ -20,18 +22,14 @@ export default function CropperModal({ open, onClose, onDone }) {
       document.body.style.overflow = "";
       document.removeEventListener("touchmove", preventScroll);
     }
+
     return () => {
       document.body.style.overflow = "";
       document.removeEventListener("touchmove", preventScroll);
     };
   }, [open]);
 
-  const preventScroll = (e) => {
-    if (e.target.tagName !== "BUTTON" && e.target.tagName !== "INPUT") {
-      e.preventDefault(); // bloquea scroll/zoom fuera del cropper
-    }
-  };
-
+  // 🎨 Redibuja la imagen al actualizar zoom u offset
   useEffect(() => {
     if (!open || !imageSrc) return;
     const canvas = canvasRef.current;
@@ -45,12 +43,9 @@ export default function CropperModal({ open, onClose, onDone }) {
   const draw = (ctx, img, scale, offset) => {
     const { width, height } = ctx.canvas;
     ctx.clearRect(0, 0, width, height);
-
-    // 🔧 Fondo blanco (sin bordes negros)
     ctx.fillStyle = "#fff";
     ctx.fillRect(0, 0, width, height);
 
-    // Mantener proporción al ancho y llenar todo el canvas
     const aspect = img.width / img.height;
     let scaledW = width * scale;
     let scaledH = scaledW / aspect;
@@ -109,8 +104,8 @@ export default function CropperModal({ open, onClose, onDone }) {
       transition={{ duration: 0.25 }}
     >
       <div
-        className="bg-white rounded-3xl shadow-xl p-4 w-[94%] max-w-sm flex flex-col gap-3"
-        style={{ touchAction: "none" }} // 🚫 evita scroll y zoom del navegador
+        className="bg-white rounded-3xl shadow-xl p-4 w-[94%] max-w-sm flex flex-col gap-3 select-none"
+        style={{ touchAction: "none" }}
       >
         {!imageSrc ? (
           <input
@@ -124,13 +119,11 @@ export default function CropperModal({ open, onClose, onDone }) {
             <canvas
               ref={canvasRef}
               width={360}
-              height={270} // 🔧 relación perfecta 4:3
+              height={270}
               className="rounded-xl bg-white w-full h-auto object-contain"
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
             />
-
-            {/* Controles de Zoom */}
             <div className="flex justify-center gap-4 mt-2">
               <button
                 onClick={handleZoomOut}
@@ -148,8 +141,7 @@ export default function CropperModal({ open, onClose, onDone }) {
           </>
         )}
 
-        {/* Botones */}
-        <div className="flex justify-between gap-3 mt-2">
+        <div className="flex justify-between gap-3 mt-3">
           <button
             onClick={onClose}
             className="flex-1 rounded-full bg-gray-200 py-2 font-medium text-gray-700 hover:bg-gray-300"
@@ -168,4 +160,4 @@ export default function CropperModal({ open, onClose, onDone }) {
       </div>
     </motion.div>
   );
-        }
+               }
