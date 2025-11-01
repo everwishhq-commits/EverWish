@@ -11,17 +11,23 @@ export default function Header() {
   const [user, setUser] = useState(null);
   const pathname = usePathname();
 
+  // 🪶 Control del scroll
   useEffect(() => {
+    if (typeof window === "undefined") return;
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // 📦 Cargar usuario local
   useEffect(() => {
+    if (typeof window === "undefined") return;
     try {
       const stored = localStorage.getItem("everwishUser");
       if (stored) setUser(JSON.parse(stored));
-    } catch {}
+    } catch (err) {
+      console.warn("⚠️ Error leyendo usuario local:", err);
+    }
   }, []);
 
   const isActive = (path) => pathname === path;
@@ -33,10 +39,10 @@ export default function Header() {
       } bg-white pt-[1rem] sm:pt-[0.6rem] md:pt-[0.75rem]`}
     >
       <div className="w-full max-w-7xl mx-auto flex items-center justify-between px-3 md:px-6 h-full">
-        {/* 🔹 Logo centrado con espacio superior ajustado */}
+        {/* 🔹 Logo Everwish */}
         <motion.div
           initial={{ scale: 1 }}
-          animate={{ scale: isScrolled ? 0.85 : .90 }}
+          animate={{ scale: isScrolled ? 0.85 : 0.9 }}
           transition={{ duration: 0.3 }}
           className="cursor-pointer flex items-center justify-center py-[0.45rem] sm:py-[0.6rem] md:py-[0.75rem]"
           style={{ alignSelf: "center" }}
@@ -53,7 +59,7 @@ export default function Header() {
           </Link>
         </motion.div>
 
-        {/* 🔹 Menú */}
+        {/* 🔹 Navegación */}
         <nav className="flex items-center gap-3 md:gap-6 text-gray-800 font-bold text-xs md:text-base">
           <Link
             href="/categories"
@@ -76,12 +82,13 @@ export default function Header() {
 
       <div className="h-2 md:h-3" />
 
-      {/* 🔸 POPUP */}
+      {/* 🔸 Popup del espacio personal */}
       {showPopup && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[999] p-4">
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.25 }}
             className="bg-white rounded-3xl w-full max-w-md p-6 text-center relative shadow-2xl"
           >
             <button
@@ -101,28 +108,16 @@ export default function Header() {
                 </p>
 
                 <div className="flex flex-col gap-3 text-sm font-semibold">
-                  <Link
-                    href="/my-cards"
-                    className="bg-purple-500 hover:bg-purple-600 text-white py-2 rounded-full"
-                  >
+                  <Link href="/my-cards" className="bg-purple-500 hover:bg-purple-600 text-white py-2 rounded-full">
                     My Cards 💌
                   </Link>
-                  <Link
-                    href="/received"
-                    className="bg-indigo-500 hover:bg-indigo-600 text-white py-2 rounded-full"
-                  >
+                  <Link href="/received" className="bg-indigo-500 hover:bg-indigo-600 text-white py-2 rounded-full">
                     Received Cards 🎁
                   </Link>
-                  <Link
-                    href="/plans"
-                    className="bg-pink-400 hover:bg-pink-500 text-white py-2 rounded-full"
-                  >
+                  <Link href="/plans" className="bg-pink-400 hover:bg-pink-500 text-white py-2 rounded-full">
                     Plans & Promos ⭐
                   </Link>
-                  <Link
-                    href="/settings"
-                    className="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 rounded-full"
-                  >
+                  <Link href="/settings" className="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 rounded-full">
                     Settings ⚙️
                   </Link>
                   <button
@@ -199,7 +194,6 @@ export default function Header() {
                   </button>
                 </form>
 
-                {/* 🔸 Ver tarjetas sin tener cuenta */}
                 <button
                   onClick={() => setShowPopup(false)}
                   className="text-pink-500 font-semibold mt-4 text-sm hover:underline"
@@ -213,4 +207,4 @@ export default function Header() {
       )}
     </header>
   );
-          }
+              }
