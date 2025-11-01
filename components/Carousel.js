@@ -1,11 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import dynamic from "next/dynamic";
+
+// 🌀 Importa framer-motion dinámicamente solo en cliente
+const MotionDiv = dynamic(
+  async () => (await import("framer-motion")).motion.div,
+  { ssr: false }
+);
 
 export default function Carousel() {
-  // 🎞️ Datos de prueba embebidos (sin API)
-  const [videos, setVideos] = useState([
+  const [videos] = useState([
     {
       slug: "pumpkin_halloween_1A",
       src: "/videos/pumpkin_halloween_1A.mp4",
@@ -48,12 +53,13 @@ export default function Carousel() {
     return () => clearInterval(interval);
   }, [videos.length]);
 
-  if (!videos || videos.length === 0) return null;
+  // 🧩 Evita render en build SSR
+  if (typeof window === "undefined") return null;
 
   return (
     <div className="relative w-full max-w-4xl mx-auto overflow-hidden rounded-3xl shadow-lg bg-white">
       {videos.map((video, index) => (
-        <motion.div
+        <MotionDiv
           key={video.slug}
           className={`absolute inset-0 transition-opacity duration-1000 ${
             index === current ? "opacity-100" : "opacity-0"
@@ -71,8 +77,8 @@ export default function Carousel() {
             <p className="font-semibold">{video.name}</p>
             <p className="text-sm text-gray-500">{video.category}</p>
           </div>
-        </motion.div>
+        </MotionDiv>
       ))}
     </div>
   );
-        }
+              }
