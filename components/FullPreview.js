@@ -1,11 +1,11 @@
 "use client";
 import { useEffect } from "react";
 
-export default function fullpreview({ src, onclose }) {
+export default function FullPreview({ src, onClose }) {
   useEffect(() => {
-    const timer = setTimeout(onclose, 4000); // ⏱️ 4 s y vuelve
+    const timer = setTimeout(onClose, 4000); // ⏱️ vuelve en 4 segundos
     return () => clearTimeout(timer);
-  }, [onclose]);
+  }, [onClose]);
 
   return (
     <div
@@ -27,4 +27,4 @@ export default function fullpreview({ src, onclose }) {
       />
     </div>
   );
-}
+          }
