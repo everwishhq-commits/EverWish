@@ -8,14 +8,8 @@ import Categories from "../components/Categories";
 import Footer from "../components/Footer";
 import Splash from "../components/Splash";
 
-// 🧠 Mover metadata aquí (ya no en layout.js)
-export const metadata = {
-  title: "Everwish",
-  description: "Everwish digital cards",
-};
-
 export default function Page() {
-  const [loading, setLoading] = useState(false); // splash desactivado temporalmente
+  const [loading, setLoading] = useState(false);
 
   return (
     <>
@@ -25,7 +19,6 @@ export default function Page() {
         <>
           <Header />
 
-          {/* 🌸 Fondo rosado → blanco extendido hasta el footer */}
           <main
             className="flex flex-col items-center justify-start min-h-screen text-gray-700 pt-20 px-4"
             style={{
@@ -40,12 +33,10 @@ export default function Page() {
               With <b>Everwish</b>, every card becomes a memory you can relive.
             </p>
 
-            {/* 🎞️ Carrusel */}
             <div className="w-full max-w-4xl mb-12">
               <Carousel />
             </div>
 
-            {/* 📦 Contenedor blanco con sombra */}
             <div className="w-full bg-white rounded-3xl shadow-lg px-2 py-4 mb-10 border border-pink-100">
               <h2 className="text-2xl font-semibold mb-4 text-gray-800 text-center">
                 Explore categories
@@ -59,4 +50,4 @@ export default function Page() {
       )}
     </>
   );
-            }
+}
