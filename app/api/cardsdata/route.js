@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 
-export const dynamic = "force-dynamic"; // evita el caché en Vercel
+export const dynamic = "force-dynamic"; // 🚀 asegura que no se cachee
 
 export async function GET() {
   try {
@@ -28,7 +28,7 @@ export async function GET() {
   } catch (error) {
     console.error("❌ Error interno en /api/cardsdata:", error);
     return new Response(
-      JSON.stringify({ ok: false, error: "Error interno del servidor" }),
+      JSON.stringify({ ok: false, error: error.message }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
