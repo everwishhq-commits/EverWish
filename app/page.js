@@ -8,6 +8,12 @@ import Categories from "../components/Categories";
 import Footer from "../components/Footer";
 import Splash from "../components/Splash";
 
+// 🧠 Mover metadata aquí (ya no en layout.js)
+export const metadata = {
+  title: "Everwish",
+  description: "Everwish digital cards",
+};
+
 export default function Page() {
   const [loading, setLoading] = useState(false); // splash desactivado temporalmente
 
