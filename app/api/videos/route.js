@@ -104,10 +104,11 @@ function generateIndex() {
 // 📡 Endpoint principal
 export async function GET() {
   try {
-    // ✅ Si ya existe, leerlo directamente
     if (fs.existsSync(indexFile)) {
       const data = fs.readFileSync(indexFile, "utf-8");
-      return new Response(data, {
+      const parsed = JSON.parse(data);
+
+      return new Response(JSON.stringify({ videos: parsed }), {
         status: 200,
         headers: {
           "Content-Type": "application/json",
@@ -116,9 +117,8 @@ export async function GET() {
       });
     }
 
-    // ⚙️ Si no existe, generarlo automáticamente
     const index = generateIndex();
-    return new Response(JSON.stringify(index, null, 2), {
+    return new Response(JSON.stringify({ videos: index }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
@@ -135,4 +135,4 @@ export async function GET() {
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
-}
+        }
