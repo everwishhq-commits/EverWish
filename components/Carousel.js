@@ -34,26 +34,18 @@ export default function Carousel() {
       try {
         const res = await fetch("/api/videos");
         const data = await res.json();
-        const allVideos = data.videos || data || [];
+        const allVideos = data.videos || []; // ✅ el nuevo formato del API devuelve { videos: [...] }
 
         // 🧩 Agrupar por baseSlug (ej: pumpkin_halloween_1A → pumpkin_halloween)
         const grouped = {};
         allVideos.forEach((v) => {
-          const base = v.slug.replace(/_\d+[A-Z]?$/i, "");
+          const base = v.name?.replace(/_\d+[A-Z]?$/i, "") || "";
           if (!grouped[base]) grouped[base] = [];
           grouped[base].push(v);
         });
 
-        // 🏆 Tomar el video más reciente o más popular de cada grupo
-        const uniqueVideos = Object.values(grouped).map((arr) =>
-          arr.sort((a, b) => {
-            const aDate = a.updatedAt || a.date || 0;
-            const bDate = b.updatedAt || b.date || 0;
-            const aPop = a.popularity || 0;
-            const bPop = b.popularity || 0;
-            return bPop - aPop || bDate - aDate;
-          })[0]
-        );
+        // 🏆 Tomar el primero de cada grupo
+        const uniqueVideos = Object.values(grouped).map((arr) => arr[0]);
 
         // 🔝 Limitar a los 10 mejores
         const top10 = uniqueVideos.slice(0, 10);
@@ -105,7 +97,7 @@ export default function Carousel() {
     if (!moved.current) {
       // TAP → abrir fullscreen
       const tapped = videos[index];
-      if (tapped?.slug) handleClick(tapped.slug);
+      if (tapped?.name) handleClick(tapped.name);
     } else if (direction.current === "horizontal") {
       // Swipe horizontal → cambia tarjeta
       const diffX = startX.current - e.changedTouches[0].clientX;
@@ -166,7 +158,7 @@ export default function Carousel() {
               className={`absolute transition-all duration-500 ease-in-out ${positionClass}`}
             >
               <video
-                src={video.src}
+                src={video.file} // ✅ usa la propiedad `file` del JSON
                 autoPlay
                 loop
                 muted
@@ -203,4 +195,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-  }
+}
