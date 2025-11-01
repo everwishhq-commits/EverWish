@@ -7,9 +7,9 @@ import {
   AnimationOverlay,
 } from "@/lib/animations";
 import { getMessageForSlug } from "@/lib/messages";
-import GiftCardPopup from "@/components/giftcard";
-import CheckoutModal from "@/components/checkout";
-import CropperModal from "@/components/croppermodal";
+import GiftCardPopup from "@/components/GiftCard";
+import CheckoutModal from "@/components/CheckOut";
+import CropperModal from "@/components/CropperModal";
 
 export default function EditPage({ params }) {
   const slug = params.slug;
