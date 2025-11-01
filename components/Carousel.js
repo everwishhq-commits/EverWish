@@ -32,11 +32,23 @@ export default function Carousel() {
   useEffect(() => {
     async function loadAndFilter() {
       try {
+        console.log("🎞️ Intentando cargar videos desde /api/videos...");
         const res = await fetch("/api/videos", { cache: "no-store" });
+
+        if (!res.ok) {
+          alert("⚠️ Error cargando /api/videos: " + res.status);
+          throw new Error("Respuesta no válida del servidor");
+        }
+
         const data = await res.json();
+        console.log("📦 Datos recibidos:", data);
+
         const allVideos = Array.isArray(data) ? data : data.videos || [];
 
-        // 🧩 Validar estructura mínima
+        if (allVideos.length === 0) {
+          alert("⚠️ No se encontraron videos en /api/videos");
+        }
+
         const validVideos = allVideos
           .filter((v) => v && (v.file || v.src))
           .map((v) => ({
@@ -46,14 +58,15 @@ export default function Carousel() {
             popularity: v.popularity || 0,
           }));
 
-        // 🏆 Filtrar top 10 (por popularidad o fecha)
         const top10 = validVideos
           .sort((a, b) => b.popularity - a.popularity || b.date - a.date)
           .slice(0, 10);
 
+        console.log("✅ Videos válidos:", top10);
         setVideos(top10);
       } catch (err) {
         console.error("❌ Error cargando videos:", err);
+        alert("❌ Error al cargar videos: " + err.message);
       }
     }
 
@@ -114,10 +127,10 @@ export default function Carousel() {
     }, 3000);
   };
 
-  // 🎬 Abrir tarjeta en pantalla completa
+  // 🎬 Abrir tarjeta
   const handleClick = async (slug) => {
-    if (!slug) return; // 🔒 Protección adicional
     try {
+      alert("🎬 Abriendo tarjeta: " + slug);
       const elem = document.documentElement;
       if (elem.requestFullscreen) await elem.requestFullscreen();
       else if (elem.webkitRequestFullscreen)
@@ -129,7 +142,6 @@ export default function Carousel() {
     }
   };
 
-  // 🚫 Si no hay videos aún
   if (videos.length === 0) {
     return (
       <div className="w-full text-center text-gray-400 py-12">
@@ -143,7 +155,6 @@ export default function Carousel() {
       className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none"
       style={{ touchAction: "pan-y" }}
     >
-      {/* 🎞️ Contenedor de videos */}
       <div
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -151,7 +162,7 @@ export default function Carousel() {
         className="relative w-full max-w-5xl flex justify-center items-center h-[440px]"
       >
         {videos.map((video, i) => {
-          if (!video?.src) return null; // 🚫 Previene crash por video vacío
+          if (!video?.src) return null;
 
           const offset = (i - index + videos.length) % videos.length;
           const positionClass =
@@ -184,7 +195,6 @@ export default function Carousel() {
         })}
       </div>
 
-      {/* 🔘 Indicadores */}
       <div className="flex mt-5 gap-2">
         {videos.map((_, i) => (
           <span
@@ -206,4 +216,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-          }
+        }
