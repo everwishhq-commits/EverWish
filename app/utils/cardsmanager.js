@@ -1,16 +1,24 @@
 /**
- * Card Manager - versión segura para navegador (Next.js / Vercel)
- * Lee datos desde /data/cards.json y simula las funciones del servidor
+ * 🪄 Card Manager - versión compatible con navegador y Vercel
+ * Lee datos desde /data/cards.json con ruta absoluta o relativa según el entorno
  */
 
 export async function getAllCards() {
   try {
-    const res = await fetch("/data/cards.json");
-    if (!res.ok) throw new Error("Error al cargar las tarjetas");
+    const base =
+      typeof window === "undefined"
+        ? process.env.NEXT_PUBLIC_SITE_URL || "https://everwish.vercel.app"
+        : "";
+
+    const res = await fetch(`${base}/data/cards.json`, { cache: "no-store" });
+
+    if (!res.ok) throw new Error(`Error al cargar tarjetas (${res.status})`);
     const data = await res.json();
 
-    // Ordenar más recientes primero
-    return data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    // 🔄 Ordenar las tarjetas más recientes primero
+    return Array.isArray(data)
+      ? data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      : [];
   } catch (err) {
     console.error("⚠️ Error getAllCards:", err);
     return [];
@@ -18,7 +26,7 @@ export async function getAllCards() {
 }
 
 /**
- * Actualiza el top 10 virtualmente (solo para mostrar en cliente)
+ * 🔝 Devuelve las 10 tarjetas más recientes
  */
 export async function updateTop10() {
   const all = await getAllCards();
@@ -26,14 +34,14 @@ export async function updateTop10() {
 }
 
 /**
- * Busca tarjetas por texto (nombre o categoría)
+ * 🔍 Busca tarjetas por nombre o categoría
  */
 export async function searchCards(query) {
   const all = await getAllCards();
   const q = query.toLowerCase();
   return all.filter(
     (c) =>
-      c.name.toLowerCase().includes(q) ||
-      c.category.toLowerCase().includes(q)
+      c.name?.toLowerCase().includes(q) ||
+      c.category?.toLowerCase().includes(q)
   );
 }
