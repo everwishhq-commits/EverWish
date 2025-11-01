@@ -1,7 +1,9 @@
 import "./globals.css";
-import { metadata } from "./metadata";
 
-export { metadata };
+export const metadata = {
+  title: "Everwish",
+  description: "Everwish digital cards",
+};
 
 export default function RootLayout({ children }) {
   return (
