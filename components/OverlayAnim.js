@@ -3,12 +3,21 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { getAnimationsForSlug } from "@/lib/animations";
+
+/**
+ * 🌟 Overlayanim
+ * Capa de partículas animadas (emojis o efectos visuales)
+ * sobre las tarjetas o videos de Everwish.
+ */
 export default function Overlayanim({ slug = "", animation = "✨ Sparkles" }) {
   const [particles, setParticles] = useState([]);
 
   useEffect(() => {
-    const { emojis, direction, density, speed } = getAnimationSet(slug, animation);
+    // 🔹 Obtener configuración de animación según slug
+    const { emojis, direction, density, speed } =
+      getAnimationsForSlug(slug, animation);
 
+    // 🔹 Generar partículas aleatorias
     const newParticles = Array.from({ length: density }, (_, i) => ({
       id: i,
       emoji: emojis[Math.floor(Math.random() * emojis.length)],
@@ -34,11 +43,11 @@ export default function Overlayanim({ slug = "", animation = "✨ Sparkles" }) {
   );
 }
 
-/* ✨ Subcomponente individual */
+/* ✨ Subcomponente individual (una partícula animada) */
 function Particle({ emoji, left, top, delay, duration, size, animationType }) {
   const lower = animationType.toLowerCase();
 
-  // Movimiento distinto por tipo
+  // 🌀 Movimiento personalizado según tipo de animación
   let animate = {};
   if (lower.includes("confetti") || lower.includes("snow") || lower.includes("candy")) {
     animate = { y: [top - 20, top + 80], opacity: [0.9, 1, 0], rotate: [0, 360] };
@@ -57,9 +66,9 @@ function Particle({ emoji, left, top, delay, duration, size, animationType }) {
       initial={{ opacity: 0, scale: 0.8 }}
       animate={animate}
       transition={{
-        duration: duration,
+        duration,
         repeat: Infinity,
-        delay: delay,
+        delay,
         ease: "easeInOut",
       }}
       style={{
@@ -68,6 +77,7 @@ function Particle({ emoji, left, top, delay, duration, size, animationType }) {
         top: `${top}%`,
         fontSize: `${size}px`,
         filter: "blur(0.2px)",
+        pointerEvents: "none",
       }}
     >
       {emoji}
