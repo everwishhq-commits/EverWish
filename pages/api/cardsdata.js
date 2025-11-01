@@ -3,24 +3,28 @@ import path from "path";
 
 export default function handler(req, res) {
   try {
+    // 📁 Ruta absoluta al archivo JSON
     const filePath = path.join(process.cwd(), "public", "cards", "index.json");
 
+    // 🚫 Si no existe, devolver error 404
     if (!fs.existsSync(filePath)) {
       return res
         .status(404)
         .json({ ok: false, error: "index.json no encontrado" });
     }
 
+    // 📖 Leer el archivo y convertirlo a objeto JSON
     const data = fs.readFileSync(filePath, "utf8");
     const json = JSON.parse(data);
 
-    res.status(200).json({
+    // ✅ Devolver respuesta correcta
+    return res.status(200).json({
       ok: true,
       total: json.videos?.length || 0,
       videos: json.videos || [],
     });
   } catch (error) {
     console.error("❌ Error interno en /api/cardsdata:", error);
-    res.status(500).json({ ok: false, error: error.message });
+    return res.status(500).json({ ok: false, error: error.message });
   }
 }
