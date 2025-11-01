@@ -1,33 +1,44 @@
-import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+
+export const dynamic = "force-dynamic"; // evita cache en Vercel
 
 export async function GET() {
   try {
     const filePath = path.join(process.cwd(), "public", "videos", "index.json");
 
-    // 🧩 Verifica existencia
+    // ⚠️ Si el archivo no existe
     if (!fs.existsSync(filePath)) {
       console.error("❌ No se encontró index.json en:", filePath);
-      return NextResponse.json(
-        { error: "index.json no encontrado" },
-        { status: 404 }
+      return new Response(
+        JSON.stringify({ error: "index.json no encontrado" }),
+        {
+          status: 404,
+          headers: { "Content-Type": "application/json" },
+        }
       );
     }
 
-    // 📦 Leer y parsear
+    // 📦 Leer contenido
     const jsonData = fs.readFileSync(filePath, "utf-8");
-    const data = JSON.parse(jsonData);
+    const parsed = JSON.parse(jsonData);
 
     // ✅ Validar estructura
-    if (!data || !Array.isArray(data.videos)) {
-      console.warn("⚠️ index.json no contiene 'videos'");
-      return NextResponse.json({ videos: [] }, { status: 200 });
-    }
+    const videos = Array.isArray(parsed.videos)
+      ? parsed.videos
+      : Array.isArray(parsed)
+      ? parsed
+      : [];
 
-    return NextResponse.json({ videos: data.videos }, { status: 200 });
-  } catch (error) {
-    console.error("❌ Error leyendo index.json:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return new Response(JSON.stringify({ videos }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (err) {
+    console.error("❌ Error en /api/videos:", err);
+    return new Response(
+      JSON.stringify({ error: err.message }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
   }
 }
