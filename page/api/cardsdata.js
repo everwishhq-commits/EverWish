@@ -6,7 +6,9 @@ export default function handler(req, res) {
     const filePath = path.join(process.cwd(), "public", "cards", "index.json");
 
     if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ ok: false, error: "index.json no encontrado" });
+      return res
+        .status(404)
+        .json({ ok: false, error: "index.json no encontrado" });
     }
 
     const data = fs.readFileSync(filePath, "utf8");
