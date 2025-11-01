@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * 🪄 Card Manager - versión compatible con navegador y Vercel
  * Lee datos desde /data/cards.json con ruta absoluta o relativa según el entorno
