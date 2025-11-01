@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay } from "swiper/modules";
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import "swiper/css";
+
+// 🌀 Import dinámico de Swiper solo en cliente (para evitar errores en Vercel SSR)
+const Swiper = dynamic(() => import("swiper/react").then((mod) => mod.Swiper), { ssr: false });
+const SwiperSlide = dynamic(() => import("swiper/react").then((mod) => mod.SwiperSlide), { ssr: false });
+import { Autoplay } from "swiper/modules";
 
 const allCategories = [
   { name: "Seasonal & Global Celebrations", emoji: "🎉", slug: "seasonal-global-celebrations", color: "#FFE0E9" },
@@ -54,10 +58,10 @@ export default function Categories() {
 
     videos.forEach((item) => {
       const searchableText = [
-        item.slug,
+        item.name,
         item.category,
         item.subcategory,
-        item.title,
+        ...(item.tags || []),
       ]
         .join(" ")
         .toLowerCase();
@@ -94,61 +98,63 @@ export default function Categories() {
       </div>
 
       {/* 🎠 Carrusel de categorías */}
-      <Swiper
-        slidesPerView={3.2}
-        spaceBetween={16}
-        centeredSlides={true}
-        loop={true}
-        autoplay={{
-          delay: 2500,
-          disableOnInteraction: false,
-        }}
-        speed={1000}
-        breakpoints={{
-          0: { slidesPerView: 2.3, spaceBetween: 10 },
-          640: { slidesPerView: 3.4, spaceBetween: 14 },
-          1024: { slidesPerView: 5, spaceBetween: 18 },
-        }}
-        modules={[Autoplay]}
-        className="overflow-visible"
-      >
-        {filtered.length > 0 ? (
-          filtered.map((cat, i) => (
-            <SwiperSlide key={i}>
-              <Link href={`/category/${cat.slug}`}>
-                <motion.div
-                  className="flex flex-col items-center justify-center cursor-pointer"
-                  whileHover={{ scale: 1.07 }}
-                >
+      {typeof window !== "undefined" && (
+        <Swiper
+          slidesPerView={3.2}
+          spaceBetween={16}
+          centeredSlides={true}
+          loop={true}
+          autoplay={{
+            delay: 2500,
+            disableOnInteraction: false,
+          }}
+          speed={1000}
+          breakpoints={{
+            0: { slidesPerView: 2.3, spaceBetween: 10 },
+            640: { slidesPerView: 3.4, spaceBetween: 14 },
+            1024: { slidesPerView: 5, spaceBetween: 18 },
+          }}
+          modules={[Autoplay]}
+          className="overflow-visible"
+        >
+          {filtered.length > 0 ? (
+            filtered.map((cat, i) => (
+              <SwiperSlide key={i}>
+                <Link href={`/category/${cat.slug}`}>
                   <motion.div
-                    className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md"
-                    style={{ backgroundColor: cat.color }}
+                    className="flex flex-col items-center justify-center cursor-pointer"
+                    whileHover={{ scale: 1.07 }}
                   >
-                    <motion.span
-                      className="text-4xl sm:text-5xl"
-                      animate={{ y: [0, -5, 0] }}
-                      transition={{
-                        duration: 3,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }}
+                    <motion.div
+                      className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md"
+                      style={{ backgroundColor: cat.color }}
                     >
-                      {cat.emoji}
-                    </motion.span>
+                      <motion.span
+                        className="text-4xl sm:text-5xl"
+                        animate={{ y: [0, -5, 0] }}
+                        transition={{
+                          duration: 3,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      >
+                        {cat.emoji}
+                      </motion.span>
+                    </motion.div>
+                    <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
+                      {cat.name}
+                    </p>
                   </motion.div>
-                  <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
-                    {cat.name}
-                  </p>
-                </motion.div>
-              </Link>
-            </SwiperSlide>
-          ))
-        ) : (
-          <p className="text-gray-500 text-sm mt-8">
-            No matching categories for “{search}”
-          </p>
-        )}
-      </Swiper>
+                </Link>
+              </SwiperSlide>
+            ))
+          ) : (
+            <p className="text-gray-500 text-sm mt-8">
+              No matching categories for “{search}”
+            </p>
+          )}
+        </Swiper>
+      )}
     </section>
   );
-        }
+                                               }
