@@ -37,7 +37,9 @@ export default function Page() {
             </div>
 
             <div className="w-full bg-white rounded-3xl shadow-lg px-2 py-4 mb-10 border border-pink-100">
-              <h2 className="text-2xl font-semibold mb-4 text-gray-800 text-center"></h2>
+              <h2 className="text-2xl font-semibold mb-4 text-gray-800 text-center">
+                Explore our categories
+              </h2>
               <Categories />
             </div>
           </main>
@@ -47,4 +49,4 @@ export default function Page() {
       )}
     </>
   );
-        }
+              }
