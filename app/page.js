@@ -18,7 +18,6 @@ export default function Page() {
       ) : (
         <>
           <Header />
-
           <main
             className="flex flex-col items-center justify-start min-h-screen text-gray-700 pt-20 px-4"
             style={{
@@ -44,10 +43,9 @@ export default function Page() {
               <Categories />
             </div>
           </main>
-
           <Footer />
         </>
       )}
     </>
   );
-            }
+        }
