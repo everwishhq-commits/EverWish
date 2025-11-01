@@ -25,7 +25,7 @@ function parseCardFilename(filename) {
 
 function generateIndex() {
   if (!fs.existsSync(cardsDir)) {
-    console.error("❌ No existe /public/videos");
+    console.error("❌ No existe /public/cards");
     return;
   }
 
