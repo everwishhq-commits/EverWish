@@ -1,7 +1,8 @@
 /**
- * 🧩 checkClientExports.js
- * Valida que los componentes del frontend tengan "use client" (solo advertencias).
- * Ignora las rutas API y no detiene el build.
+ * ✅ checkClientExports.js — versión segura
+ * - Ignora /api (no revisa rutas)
+ * - Solo avisa si faltan "use client" en componentes visuales
+ * - No detiene el build de Vercel
  */
 
 import fs from "fs";
@@ -10,8 +11,6 @@ import path from "path";
 console.log("\n🔍 Escaneando /components y /app\n");
 
 const rootDirs = ["components", "app"];
-const apiPath = path.join(process.cwd(), "app", "api");
-
 const issues = [];
 
 function scanDir(dir) {
@@ -22,27 +21,20 @@ function scanDir(dir) {
     const stat = fs.statSync(filePath);
 
     if (stat.isDirectory()) {
-      // ❌ Ignorar rutas API
-      if (filePath.startsWith(apiPath)) continue;
+      // 🔒 Ignorar rutas API
+      if (filePath.includes("/api/")) continue;
       scanDir(filePath);
       continue;
     }
 
-    if (file.endsWith(".js") || file.endsWith(".jsx") || file.endsWith(".ts") || file.endsWith(".tsx")) {
+    // Solo revisar archivos JS/TS visibles
+    if (/\.(js|jsx|ts|tsx)$/.test(file)) {
       const content = fs.readFileSync(filePath, "utf8");
 
-      // Ignorar layout.tsx de Next automáticamente (manejado por el sistema)
-      if (file === "layout.js" || file === "layout.tsx") {
-        if (!content.includes('"use client"') && !content.includes("'use client'")) {
-          issues.push(`⚠️ Falta 'use client' en ${filePath}`);
-        }
-        continue;
-      }
-
-      // Ignorar archivos de rutas API
+      // 🧩 Ignorar server components o route handlers
       if (filePath.includes("/api/")) continue;
 
-      // ⚠️ Revisar si falta "use client"
+      // ⚠️ Revisar uso de "use client"
       if (!content.includes('"use client"') && !content.includes("'use client'")) {
         issues.push(`⚠️ Falta 'use client' en ${filePath}`);
       }
@@ -61,4 +53,4 @@ if (issues.length > 0) {
   console.log("✅ Todos los archivos están correctos.");
 }
 
-console.log("\n💡 Este script solo muestra advertencias (no detiene el build).\n");
+console.log("\n💡 Solo advertencias — no se detiene el build.\n");
