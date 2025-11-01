@@ -1,76 +1,56 @@
 "use client";
-import { useEffect, useState } from "react";
+export const dynamic = "force-dynamic";
 
-export default function HomePage() {
-  const [cards, setCards] = useState([]);
+import { useState } from "react";
+import Header from "@/components/Header";
+import Top10Carousel from "@/components/Top10Carousel";
+import CategoriesCarousel from "@/components/CategoriesCarousel";
+import Footer from "@/components/Footer";
+import Splash from "@/components/Splash";
+
+export default function Page() {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  // 🔄 Cargar las tarjetas desde el API
-  useEffect(() => {
-    async function fetchCards() {
-      try {
-        const res = await fetch("/api/cardsdata");
-        if (!res.ok) throw new Error("No se pudo cargar cardsdata");
-
-        const data = await res.json();
-
-        // Validar respuesta
-        if (!data || !Array.isArray(data.videos)) {
-          console.warn("⚠️ Respuesta inesperada:", data);
-          setCards([]);
-        } else {
-          setCards(data.videos);
-        }
-      } catch (err) {
-        console.error("❌ Error cargando tarjetas:", err);
-        setError("No se pudieron cargar las tarjetas 😢");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchCards();
-  }, []);
-
-  // 💬 Mensajes de estado
-  if (loading) return <p className="text-center mt-10">Cargando tarjetas...</p>;
-  if (error)
-    return (
-      <p className="text-center mt-10 text-red-500">
-        {error}
-      </p>
-    );
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold text-center mb-4">
-        Everwish Cards
-      </h1>
+    <>
+      {loading && <Splash onFinish={() => setLoading(false)} />}
+      {!loading && (
+        <>
+          <Header />
 
-      {cards && cards.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {cards.map((card, i) => (
-            <div
-              key={i}
-              className="bg-white rounded-xl shadow-md p-3 hover:scale-105 transition cursor-pointer"
-            >
-              <video
-                src={card.src}
-                controls
-                className="w-full h-32 object-cover rounded-lg"
-              />
-              <p className="mt-2 font-semibold text-gray-800 text-sm">
-                {card.slug}
-              </p>
+          {/* 🌸 Fondo rosado → blanco extendido hasta el footer */}
+          <main
+            className="flex flex-col items-center justify-start min-h-screen text-gray-700 pt-20 px-4"
+            style={{
+              background:
+                "linear-gradient(to bottom, #fff5f7 0%, #fff8f9 40%, #ffffff 100%)",
+            }}
+          >
+            {/* ✨ Mensaje principal */}
+            <h1 className="text-3xl font-bold mb-3 text-gray-800 text-center">
+              Share moments that last forever 💫
+            </h1>
+            <p className="text-gray-500 mb-10 text-center">
+              With <b>Everwish</b>, every card becomes a memory you can relive.
+            </p>
+
+            {/* 🎞️ Carrusel principal */}
+            <div className="w-full max-w-4xl mb-12">
+              <Top10Carousel />
             </div>
-          ))}
-        </div>
-      ) : (
-        <p className="text-center text-gray-500 mt-10">
-          No hay tarjetas disponibles 😅
-        </p>
+
+            {/* 📦 Contenedor de categorías */}
+            <div className="w-full bg-white rounded-3xl shadow-lg px-2 py-4 mb-10 border border-pink-100">
+              <h2 className="text-2xl font-semibold mb-4 text-gray-800 text-center">
+                Explore Categories
+              </h2>
+              <CategoriesCarousel />
+            </div>
+          </main>
+
+          <Footer />
+        </>
       )}
-    </div>
+    </>
   );
-                  }
+}
