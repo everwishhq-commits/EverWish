@@ -1,4 +1,3 @@
-// checkClientExports.js
 import fs from "fs";
 import path from "path";
 
@@ -58,4 +57,4 @@ if (!hasErrors) {
   console.log("✅ Todo está correcto: los componentes exportan bien y tienen 'use client' cuando corresponde.\n");
 } else {
   console.log("💡 Corrige los archivos listados arriba antes de volver a desplegar.\n");
-  }
+}
