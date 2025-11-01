@@ -2,11 +2,11 @@
 export const dynamic = "force-dynamic";
 
 import { useState } from "react";
-import Header from "@/components/header";
-import Carousel from "@/components/carousel";
-import Categories from "@/components/categories";
-import Footer from "@/components/footer";
-import Splash from "@/components/splash";
+import Header from "@/components/Header";
+import Carousel from "@/components/Carousel";
+import Categories from "@/components/Categories";
+import Footer from "@/components/Footer";
+import Splash from "@/components/Splash";
 
 export default function Page() {
   const [loading, setLoading] = useState(true);
