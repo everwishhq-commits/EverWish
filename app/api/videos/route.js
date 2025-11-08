@@ -8,71 +8,90 @@ import fs from "fs";
 import path from "path";
 
 // 📚 Mapeo de palabras → categorías principales
+// Basado en los nombres de archivos reales del proyecto
 const CATEGORY_MAP = {
+  // Holidays (Seasonal & Global Celebrations)
+  holidays: "Seasonal & Global Celebrations",
   halloween: "Seasonal & Global Celebrations",
   christmas: "Seasonal & Global Celebrations",
   xmas: "Seasonal & Global Celebrations",
   thanksgiving: "Seasonal & Global Celebrations",
   easter: "Seasonal & Global Celebrations",
+  independenceday: "Seasonal & Global Celebrations",
   july4: "Seasonal & Global Celebrations",
-  independence: "Seasonal & Global Celebrations",
   newyear: "Seasonal & Global Celebrations",
-  holiday: "Seasonal & Global Celebrations",
   
+  // Love & Romance
   love: "Love, Weddings & Anniversaries",
   valentine: "Love, Weddings & Anniversaries",
   valentines: "Love, Weddings & Anniversaries",
   wedding: "Love, Weddings & Anniversaries",
   anniversary: "Love, Weddings & Anniversaries",
+  hugs: "Love, Weddings & Anniversaries",
   
+  // Birthdays & Celebrations
   birthday: "Birthdays & Celebrations",
   bday: "Birthdays & Celebrations",
   celebration: "Birthdays & Celebrations",
+  celebrations: "Birthdays & Celebrations",
   party: "Birthdays & Celebrations",
   
+  // Family & Friendship
   mother: "Family & Friendship",
+  mothers: "Family & Friendship",
   mom: "Family & Friendship",
   father: "Family & Friendship",
   dad: "Family & Friendship",
   family: "Family & Friendship",
   friend: "Family & Friendship",
   
+  // Babies & Parenting
   baby: "Babies & Parenting",
   newborn: "Babies & Parenting",
   
+  // Pets & Animals
   pet: "Pets & Animal Lovers",
   pets: "Pets & Animal Lovers",
   dog: "Pets & Animal Lovers",
+  dogcat: "Pets & Animal Lovers",
   cat: "Pets & Animal Lovers",
   turtle: "Pets & Animal Lovers",
   fish: "Pets & Animal Lovers",
   bird: "Pets & Animal Lovers",
   animal: "Pets & Animal Lovers",
   animals: "Pets & Animal Lovers",
+  animalsandnature: "Pets & Animal Lovers",
   
+  // Support, Healing & Care
   condolence: "Support, Healing & Care",
   sympathy: "Support, Healing & Care",
   getwell: "Support, Healing & Care",
   
+  // Everyday & Appreciation
   thank: "Everyday & Appreciation",
   thanks: "Everyday & Appreciation",
   congrats: "Everyday & Appreciation",
   general: "Everyday & Appreciation",
   
+  // Creativity & Expression
   art: "Creativity & Expression",
   music: "Creativity & Expression",
   
+  // Diversity & Connection
   unity: "Diversity & Connection",
   diversity: "Diversity & Connection",
   
+  // Kids & Teens
   kids: "Kids & Teens",
   teen: "Kids & Teens",
   
+  // Wellness & Mindful Living
   wellness: "Wellness & Mindful Living",
   meditation: "Wellness & Mindful Living",
   peace: "Wellness & Mindful Living",
   nature: "Wellness & Mindful Living",
   
+  // Life Journeys & Transitions
   graduation: "Life Journeys & Transitions",
   travel: "Life Journeys & Transitions",
 };
@@ -230,4 +249,4 @@ export async function GET() {
       }
     );
   }
-}
+  }
