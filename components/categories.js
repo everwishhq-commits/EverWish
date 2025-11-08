@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import "swiper/css";
 
 const allCategories = [
@@ -17,22 +17,24 @@ const allCategories = [
   { name: "Animal Lovers", emoji: "🐾", slug: "pets-animal-lovers", color: "#FFF3E0" },
   { name: "Support, Healing & Care", emoji: "🕊️", slug: "support-healing-care", color: "#F3F3F3" }, 
   { name: "Diversity & Connection", emoji: "🧩", slug: "diversity-connection", color: "#E7E9FF" },
-  { name: "Sports", emoji: "🏟️", slug: "Sports", color: "#FFE6FA" },
+  { name: "Sports", emoji: "🏟️", slug: "sports", color: "#FFE6FA" },
   { name: "Wellness & Mindful Living", emoji: "🕯️", slug: "wellness-mindful-living", color: "#EDEAFF" },
-  { name: "Nature & Life Journeys & Transitions", emoji: "🏕️", slug: "life-journeys-transitions", color: "#E8FFF3" },
+  { name: "Nature & Life Journeys", emoji: "🏕️", slug: "life-journeys-transitions", color: "#E8FFF3" },
 ];
 
 export default function Categories() {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [filtered, setFiltered] = useState(allCategories);
   const [videos, setVideos] = useState([]);
 
-  // 📥 Cargar videos reales desde el API
+  // 📥 Cargar videos desde API
   useEffect(() => {
     async function loadVideos() {
       try {
         const res = await fetch("/api/videos", { cache: "no-store" });
         const data = await res.json();
+        console.log("📹 Videos cargados:", data.videos?.length || 0);
         setVideos(data.videos || []);
       } catch (err) {
         console.error("❌ Error cargando /api/videos:", err);
@@ -41,39 +43,73 @@ export default function Categories() {
     loadVideos();
   }, []);
 
-  // 🔍 Buscar coincidencias (por categoría o subcategoría)
+  // 🔍 Filtrar categorías según palabra buscada
   useEffect(() => {
     const q = search.toLowerCase().trim();
+    
+    // Sin búsqueda → mostrar todas
     if (!q) {
       setFiltered(allCategories);
       return;
     }
 
-    const foundCategories = new Set();
+    console.log("🔍 Buscando:", q);
 
-    videos.forEach((item) => {
+    // Encontrar categorías que tienen videos con la palabra buscada
+    const categoriesWithMatch = new Set();
+
+    videos.forEach((video) => {
+      // Buscar en: object, nombre del archivo, categoría, subcategoría
       const searchableText = [
-        item.slug,
-        item.category,
-        item.subcategory,
-        item.title,
+        video.name,
+        video.object,
+        video.category,
+        video.subcategory,
+        video.slug,
       ]
+        .filter(Boolean)
         .join(" ")
         .toLowerCase();
 
       if (searchableText.includes(q)) {
-        if (item.category) foundCategories.add(item.category.trim());
+        // Agregar categoría encontrada
+        if (video.category) {
+          categoriesWithMatch.add(video.category.toLowerCase().trim());
+        }
       }
     });
 
-    const matches = allCategories.filter((cat) =>
-      [...foundCategories].some((f) =>
-        f.toLowerCase().includes(cat.name.toLowerCase().split("&")[0].trim())
-      )
-    );
+    console.log("📦 Categorías con coincidencias:", [...categoriesWithMatch]);
 
+    // Filtrar solo las categorías del array base que tienen coincidencias
+    const matches = allCategories.filter((cat) => {
+      // Normalizar nombre de categoría
+      const catName = cat.name.toLowerCase();
+      
+      return [...categoriesWithMatch].some((matchCat) => {
+        // Comparar considerando sinónimos
+        return (
+          matchCat.includes(catName.split("&")[0].trim()) ||
+          catName.includes(matchCat) ||
+          cat.slug.includes(matchCat.replace(/\s+/g, "-"))
+        );
+      });
+    });
+
+    console.log("✅ Categorías filtradas:", matches.map(m => m.name));
     setFiltered(matches.length > 0 ? matches : []);
   }, [search, videos]);
+
+  // 🎯 Navegar a categoría con query de búsqueda
+  const handleCategoryClick = (cat) => {
+    if (search.trim()) {
+      // Si hay búsqueda, pasar como parámetro
+      router.push(`/category/${cat.slug}?q=${encodeURIComponent(search)}`);
+    } else {
+      // Navegación normal
+      router.push(`/category/${cat.slug}`);
+    }
+  };
 
   return (
     <section id="categories" className="text-center py-10 px-3 overflow-hidden">
@@ -85,7 +121,7 @@ export default function Categories() {
       <div className="flex justify-center mb-10">
         <input
           type="text"
-          placeholder="Search any theme — e.g. love, new year, turtle..."
+          placeholder="Search any theme — e.g. zombie, turtle, love..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-80 md:w-96 px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700"
@@ -97,7 +133,7 @@ export default function Categories() {
         slidesPerView={3.2}
         spaceBetween={16}
         centeredSlides={true}
-        loop={true}
+        loop={filtered.length > 3}
         autoplay={{
           delay: 2500,
           disableOnInteraction: false,
@@ -114,7 +150,7 @@ export default function Categories() {
         {filtered.length > 0 ? (
           filtered.map((cat, i) => (
             <SwiperSlide key={i}>
-              <Link href={`/category/${cat.slug}`}>
+              <div onClick={() => handleCategoryClick(cat)}>
                 <motion.div
                   className="flex flex-col items-center justify-center cursor-pointer"
                   whileHover={{ scale: 1.07 }}
@@ -139,15 +175,17 @@ export default function Categories() {
                     {cat.name}
                   </p>
                 </motion.div>
-              </Link>
+              </div>
             </SwiperSlide>
           ))
         ) : (
-          <p className="text-gray-500 text-sm mt-8">
-            No matching categories for “{search}”
-          </p>
+          <div className="w-full flex justify-center">
+            <p className="text-gray-500 text-sm mt-8">
+              No matching categories for "{search}"
+            </p>
+          </div>
         )}
       </Swiper>
     </section>
   );
-        }
+                        }
