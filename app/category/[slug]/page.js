@@ -296,4 +296,4 @@ function getEmojiForSubcategory(name) {
   }
   
   return map.general;
-      }
+        }
