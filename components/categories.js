@@ -59,21 +59,26 @@ export default function Categories() {
     const categoriesWithMatch = new Set();
 
     videos.forEach((video) => {
-      // Buscar en: object, nombre del archivo, categoría, subcategoría
+      // Buscar en: object, nombre, tags, categorías, subcategoría
       const searchableText = [
         video.name,
         video.object,
-        video.category,
+        ...(video.categories || [video.category]),
         video.subcategory,
         video.slug,
+        ...(video.tags || []),
       ]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
 
       if (searchableText.includes(q)) {
-        // Agregar categoría encontrada
-        if (video.category) {
+        // Agregar TODAS las categorías del video
+        if (video.categories && Array.isArray(video.categories)) {
+          video.categories.forEach(cat => {
+            categoriesWithMatch.add(cat.toLowerCase().trim());
+          });
+        } else if (video.category) {
           categoriesWithMatch.add(video.category.toLowerCase().trim());
         }
       }
@@ -81,17 +86,18 @@ export default function Categories() {
 
     console.log("📦 Categorías con coincidencias:", [...categoriesWithMatch]);
 
-    // Filtrar solo las categorías del array base que tienen coincidencias
+    // Filtrar categorías base
     const matches = allCategories.filter((cat) => {
-      // Normalizar nombre de categoría
       const catName = cat.name.toLowerCase();
+      const catSlug = cat.slug.toLowerCase();
       
       return [...categoriesWithMatch].some((matchCat) => {
-        // Comparar considerando sinónimos
+        const normalized = matchCat.replace(/&/g, "and").replace(/\s+/g, "-");
         return (
-          matchCat.includes(catName.split("&")[0].trim()) ||
-          catName.includes(matchCat) ||
-          cat.slug.includes(matchCat.replace(/\s+/g, "-"))
+          normalized.includes(catSlug) ||
+          catSlug.includes(normalized) ||
+          matchCat.includes(catName) ||
+          catName.includes(matchCat)
         );
       });
     });
@@ -103,10 +109,8 @@ export default function Categories() {
   // 🎯 Navegar a categoría con query de búsqueda
   const handleCategoryClick = (cat) => {
     if (search.trim()) {
-      // Si hay búsqueda, pasar como parámetro
       router.push(`/category/${cat.slug}?q=${encodeURIComponent(search)}`);
     } else {
-      // Navegación normal
       router.push(`/category/${cat.slug}`);
     }
   };
@@ -188,4 +192,4 @@ export default function Categories() {
       </Swiper>
     </section>
   );
-                        }
+                       }
