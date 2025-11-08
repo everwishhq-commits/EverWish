@@ -7,7 +7,7 @@ export default function CategoryPage() {
   const { slug } = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const searchTerm = searchParams.get("q"); // palabra desde el buscador (ej. zombie)
+  const searchTerm = searchParams.get("q");
   
   const [groups, setGroups] = useState({});
   const [activeSub, setActiveSub] = useState(null);
@@ -21,6 +21,7 @@ export default function CategoryPage() {
 
         console.log("📦 Categoría actual:", slug);
         console.log("🔍 Término buscado:", searchTerm);
+        console.log("📹 Total videos recibidos:", data.videos?.length || 0);
 
         const normalize = (str) =>
           str?.toLowerCase().replace(/&/g, "and").replace(/\s+/g, "-").trim();
@@ -34,7 +35,7 @@ export default function CategoryPage() {
                  currentCategory.includes(videoCategory);
         });
 
-        console.log(`📹 Videos en ${slug}:`, filtered.length);
+        console.log(`📹 Videos en categoría ${slug}:`, filtered.length);
 
         // 🔍 Si hay término de búsqueda, filtrar aún más
         if (searchTerm) {
@@ -73,6 +74,8 @@ export default function CategoryPage() {
         }
 
         console.log("📂 Subcategorías encontradas:", Object.keys(grouped));
+        console.log("📊 Videos por subcategoría:", Object.entries(grouped).map(([k,v]) => `${k}: ${v.length}`));
+        
         setGroups(grouped);
 
         // 🎯 Si hay búsqueda y solo una subcategoría, abrirla automáticamente
@@ -135,7 +138,11 @@ export default function CategoryPage() {
           {subcategories.map((sub, i) => (
             <motion.button
               key={i}
-              onClick={() => setActiveSub(sub)}
+              onClick={() => {
+                console.log("🎯 Abriendo subcategoría:", sub);
+                console.log("📹 Videos en esta sub:", groups[sub]?.length);
+                setActiveSub(sub);
+              }}
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.2 }}
               className={`px-5 py-3 rounded-full bg-white shadow-sm border ${
@@ -147,7 +154,7 @@ export default function CategoryPage() {
               <span className="text-lg">{getEmojiForSubcategory(sub)}</span>
               <span className="capitalize">{sub}</span>
               <span className="text-xs text-gray-400">
-                ({groups[sub].length})
+                ({groups[sub]?.length || 0})
               </span>
             </motion.button>
           ))}
@@ -167,7 +174,10 @@ export default function CategoryPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setActiveSub(null)}
+              onClick={() => {
+                console.log("❌ Cerrando modal");
+                setActiveSub(null);
+              }}
             />
             <motion.div
               className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -178,7 +188,10 @@ export default function CategoryPage() {
             >
               <div className="relative bg-white rounded-3xl shadow-xl w-[90%] max-w-5xl h-[70vh] overflow-y-auto border border-pink-100 p-6">
                 <button
-                  onClick={() => setActiveSub(null)}
+                  onClick={() => {
+                    console.log("❌ Cerrando modal (botón X)");
+                    setActiveSub(null);
+                  }}
                   className="absolute top-3 right-5 text-gray-400 hover:text-pink-500 text-2xl font-bold"
                 >
                   ×
@@ -195,40 +208,55 @@ export default function CategoryPage() {
                 )}
 
                 {activeVideos.length === 0 ? (
-                  <p className="text-gray-500 text-center mt-10">
-                    No cards found for this subcategory.
-                  </p>
+                  <div className="text-gray-500 text-center mt-10">
+                    <p>No cards found for this subcategory.</p>
+                    <p className="text-xs mt-2">Debug: {JSON.stringify(activeSub)}</p>
+                  </div>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 justify-items-center">
-                    {activeVideos.map((video, i) => (
-                      <motion.div
-                        key={i}
-                        whileHover={{ scale: 1.05 }}
-                        transition={{ duration: 0.3 }}
-                        onClick={() => {
-                          const slugToUse = video.slug || video.name;
-                          console.log("🎯 Navegando a:", slugToUse);
-                          router.push(`/edit/${slugToUse}`);
-                        }}
-                        className="cursor-pointer bg-white rounded-3xl shadow-md border border-pink-100 overflow-hidden hover:shadow-lg"
-                      >
-                        <video
-                          src={video.file}
-                          className="object-cover w-full aspect-[4/5]"
-                          playsInline
-                          loop
-                          muted
-                          onMouseEnter={(e) => e.target.play()}
-                          onMouseLeave={(e) => {
-                            e.target.pause();
-                            e.target.currentTime = 0;
+                    {activeVideos.map((video, i) => {
+                      const slugToUse = video.name || video.slug;
+                      console.log(`🎬 Video ${i}:`, {
+                        name: video.name,
+                        slug: video.slug,
+                        file: video.file,
+                        object: video.object,
+                        slugToUse
+                      });
+
+                      return (
+                        <motion.div
+                          key={i}
+                          whileHover={{ scale: 1.05 }}
+                          transition={{ duration: 0.3 }}
+                          onClick={() => {
+                            console.log("🎯 Navegando a:", slugToUse);
+                            console.log("📹 Video completo:", video);
+                            router.push(`/edit/${slugToUse}`);
                           }}
-                        />
-                        <div className="text-center py-2 text-gray-700 font-semibold text-sm">
-                          {video.object || video.name}
-                        </div>
-                      </motion.div>
-                    ))}
+                          className="cursor-pointer bg-white rounded-3xl shadow-md border border-pink-100 overflow-hidden hover:shadow-lg"
+                        >
+                          <video
+                            src={video.file}
+                            className="object-cover w-full aspect-[4/5]"
+                            playsInline
+                            loop
+                            muted
+                            onMouseEnter={(e) => e.target.play()}
+                            onMouseLeave={(e) => {
+                              e.target.pause();
+                              e.target.currentTime = 0;
+                            }}
+                            onError={(e) => {
+                              console.error("❌ Error cargando video:", video.file);
+                            }}
+                          />
+                          <div className="text-center py-2 text-gray-700 font-semibold text-sm">
+                            {video.object || video.name}
+                          </div>
+                        </motion.div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -263,10 +291,9 @@ function getEmojiForSubcategory(name) {
   };
   const key = name?.toLowerCase() || "";
   
-  // Buscar coincidencia parcial
   for (const [keyword, emoji] of Object.entries(map)) {
     if (key.includes(keyword)) return emoji;
   }
   
   return map.general;
-        }
+      }
