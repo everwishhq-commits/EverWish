@@ -44,7 +44,6 @@ export default function EditPage({ params }) {
     const now = Date.now();
     const day = 24 * 60 * 60 * 1000;
 
-    // Si han pasado 24 horas, forzamos recarga de la lista
     if (!lastCheck || now - parseInt(lastCheck, 10) > day) {
       localStorage.setItem("everwish_videos_lastCheck", now.toString());
       fetch("/api/videos?refresh=" + now)
@@ -56,29 +55,42 @@ export default function EditPage({ params }) {
     }
   }, []);
 
-  // 🎬 Inicializa datos y busca video
+  // 🎬 Inicializa datos y busca video - CORREGIDO
   useEffect(() => {
     async function loadVideo() {
       try {
-        // 🔍 Busca primero en caché local para velocidad
+        console.log("🔍 Buscando video para slug:", slug);
+        
+        // 🔍 Busca primero en caché local
         const cached = localStorage.getItem("everwish_videos_cache");
         let data = cached ? JSON.parse(cached) : null;
 
         if (!data) {
+          console.log("📡 Cargando desde API...");
           const res = await fetch("/api/videos");
           data = await res.json();
           localStorage.setItem("everwish_videos_cache", JSON.stringify(data));
         }
 
-        const match =
-          Array.isArray(data)
-            ? data.find((v) => v.slug === slug)
-            : data?.videos?.find?.((v) => v.slug === slug);
+        console.log("📦 Datos recibidos:", data);
+
+        // ✅ CORRECCIÓN: Buscar en data.videos y usar el campo 'file' (no 'src')
+        const videosList = data.videos || data || [];
+        const match = videosList.find((v) => {
+          const videoSlug = v.slug || v.name;
+          return videoSlug === slug || videoSlug === slug.toLowerCase();
+        });
+
+        console.log("🎯 Video encontrado:", match);
 
         if (match) {
-          setVideoSrc(match.src || `/videos/${slug}.mp4`);
+          // ✅ Usar 'file' en lugar de 'src'
+          const videoPath = match.file || match.src || `/videos/${slug}.mp4`;
+          console.log("✅ Usando ruta:", videoPath);
+          setVideoSrc(videoPath);
           setVideoFound(true);
         } else {
+          console.warn("⚠️ No se encontró match, usando fallback");
           setVideoSrc(`/videos/${slug}.mp4`);
           setVideoFound(false);
         }
@@ -162,10 +174,20 @@ export default function EditPage({ params }) {
               loop
               muted
               playsInline
+              onError={(e) => {
+                console.error("❌ Error al cargar video:", videoSrc);
+                console.error("Error details:", e);
+                setVideoFound(false);
+              }}
+              onLoadedData={() => {
+                console.log("✅ Video cargado exitosamente:", videoSrc);
+              }}
             />
           ) : (
             <div className="text-gray-500 text-center">
               ⚠️ Video not found: {slug}.mp4
+              <br />
+              <small className="text-xs">Ruta intentada: {videoSrc}</small>
             </div>
           )}
           <div className="absolute bottom-8 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
@@ -200,7 +222,7 @@ export default function EditPage({ params }) {
           >
             {/* 🖼 Tarjeta */}
             <div
-              className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50"
+              className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50 cursor-pointer"
               onClick={handleCardClick}
             >
               {videoFound ? (
@@ -211,10 +233,16 @@ export default function EditPage({ params }) {
                   loop
                   muted
                   playsInline
+                  onError={(e) => {
+                    console.error("❌ Error en preview:", videoSrc);
+                    setVideoFound(false);
+                  }}
                 />
               ) : (
-                <div className="w-full h-[380px] flex items-center justify-center text-gray-400 text-sm">
-                  ⚠️ This card’s video is missing or not uploaded yet.
+                <div className="w-full h-[380px] flex flex-col items-center justify-center text-gray-400 text-sm p-4">
+                  <p>⚠️ This card's video is missing or not uploaded yet.</p>
+                  <p className="text-xs mt-2">Slug: {slug}</p>
+                  <p className="text-xs">Path: {videoSrc}</p>
                 </div>
               )}
             </div>
@@ -409,4 +437,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-  }
+}
