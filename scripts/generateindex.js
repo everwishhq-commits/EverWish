@@ -1,7 +1,12 @@
 /**
- * 🧩 Everwish Smart Index Generator
- * Lee nombres de archivos y clasifica automáticamente
+ * 🧩 Everwish Smart Index Generator - AUTOMÁTICO
+ * Lee nombres de archivos y clasifica automáticamente EN TIEMPO REAL
  * Formato: object_categoria1_categoria2_subcategoria_variante.mp4
+ * 
+ * Se ejecuta automáticamente:
+ * 1. Durante build (npm run build)
+ * 2. Durante dev (npm run dev)
+ * 3. Desde /api/videos en cada request
  */
 
 import fs from "fs";
