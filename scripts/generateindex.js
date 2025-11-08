@@ -1,161 +1,243 @@
 /**
- * 🧩 everwish smart index generator (auto categories + subcategories)
- * busca todos los .mp4 en /public/videos/** y crea /public/videos/index.json
+ * 🧩 Everwish Smart Index Generator
+ * Lee nombres de archivos y clasifica automáticamente
+ * Formato: object_categoria1_categoria2_subcategoria_variante.mp4
  */
 
 import fs from "fs";
 import path from "path";
 
-const videos_root = path.join(process.cwd(), "public/videos");
-const index_file = path.join(videos_root, "index.json");
+const videosRoot = path.join(process.cwd(), "public/videos");
+const indexFile = path.join(videosRoot, "index.json");
 
-// 📚 mapa de palabras clave -> categorías
-const category_map = {
-  // seasonal
-  halloween: "seasonal & holidays",
-  christmas: "seasonal & holidays",
-  thanksgiving: "seasonal & holidays",
-  easter: "seasonal & holidays",
-  july4th: "seasonal & holidays",
-  independence: "seasonal & holidays",
-  newyear: "seasonal & holidays",
-
-  // birthdays
-  birthday: "birthdays & celebrations",
-
-  // love
-  love: "love, weddings & anniversaries",
-  valentines: "love, weddings & anniversaries",
-  wedding: "love, weddings & anniversaries",
-  anniversary: "love, weddings & anniversaries",
-
-  // family
-  mother: "family & friendship",
-  mothersday: "family & friendship",
-  father: "family & friendship",
-  fathersday: "family & friendship",
-  family: "family & friendship",
-  friend: "family & friendship",
-  friendship: "family & friendship",
-
-  // babies
-  baby: "babies & parenting",
-  newborn: "babies & parenting",
-
-  // pets
-  pet: "pets & animal lovers",
-  dog: "pets & animal lovers",
-  cat: "pets & animal lovers",
-  turtle: "pets & animal lovers",
-  fish: "pets & animal lovers",
-  bird: "pets & animal lovers",
-
-  // support
-  condolence: "support, healing & care",
-  sympathy: "support, healing & care",
-  getwell: "support, healing & care",
-
-  // everyday
-  general: "everyday & appreciation",
-  thank: "everyday & appreciation",
-  motivational: "everyday & appreciation",
-  congratulations: "everyday & appreciation",
-
-  // creativity
-  art: "creativity & expression",
-  design: "creativity & expression",
-  music: "creativity & expression",
-  festival: "creativity & expression",
-
-  // diversity
-  unity: "diversity & connection",
-  respect: "diversity & connection",
-  humanity: "diversity & connection",
-
-  // kids
-  cartoon: "kids & teens",
-  adventure: "kids & teens",
-  fantasy: "kids & teens",
-  learning: "kids & teens",
-
-  // wellness
-  faith: "wellness & mindful living",
-  peace: "wellness & mindful living",
-  meditation: "wellness & mindful living",
-  healing: "wellness & mindful living",
-  nature: "wellness & mindful living",
-
-  // journeys
-  graduation: "life journeys & transitions",
-  travel: "life journeys & transitions",
-  retirement: "life journeys & transitions",
-  home: "life journeys & transitions"
+// 📚 Mapeo completo de palabras → categorías principales
+const CATEGORY_MAP = {
+  // Seasonal & Holidays
+  halloween: "Seasonal & Global Celebrations",
+  christmas: "Seasonal & Global Celebrations",
+  xmas: "Seasonal & Global Celebrations",
+  thanksgiving: "Seasonal & Global Celebrations",
+  easter: "Seasonal & Global Celebrations",
+  july4: "Seasonal & Global Celebrations",
+  independence: "Seasonal & Global Celebrations",
+  newyear: "Seasonal & Global Celebrations",
+  "new-year": "Seasonal & Global Celebrations",
+  holiday: "Seasonal & Global Celebrations",
+  
+  // Love & Romance
+  love: "Love, Weddings & Anniversaries",
+  valentine: "Love, Weddings & Anniversaries",
+  valentines: "Love, Weddings & Anniversaries",
+  wedding: "Love, Weddings & Anniversaries",
+  anniversary: "Love, Weddings & Anniversaries",
+  romance: "Love, Weddings & Anniversaries",
+  
+  // Birthdays
+  birthday: "Birthdays & Celebrations",
+  bday: "Birthdays & Celebrations",
+  celebration: "Birthdays & Celebrations",
+  party: "Birthdays & Celebrations",
+  
+  // Family & Friendship
+  mother: "Family & Friendship",
+  mom: "Family & Friendship",
+  father: "Family & Friendship",
+  dad: "Family & Friendship",
+  family: "Family & Friendship",
+  friend: "Family & Friendship",
+  friendship: "Family & Friendship",
+  
+  // Babies
+  baby: "Babies & Parenting",
+  newborn: "Babies & Parenting",
+  shower: "Babies & Parenting",
+  
+  // Pets & Animals
+  pet: "Pets & Animal Lovers",
+  pets: "Pets & Animal Lovers",
+  dog: "Pets & Animal Lovers",
+  cat: "Pets & Animal Lovers",
+  turtle: "Pets & Animal Lovers",
+  fish: "Pets & Animal Lovers",
+  bird: "Pets & Animal Lovers",
+  animal: "Pets & Animal Lovers",
+  animals: "Pets & Animal Lovers",
+  
+  // Support & Care
+  condolence: "Support, Healing & Care",
+  sympathy: "Support, Healing & Care",
+  getwell: "Support, Healing & Care",
+  healing: "Support, Healing & Care",
+  
+  // Everyday
+  thank: "Everyday & Appreciation",
+  thanks: "Everyday & Appreciation",
+  congrats: "Everyday & Appreciation",
+  congratulations: "Everyday & Appreciation",
+  general: "Everyday & Appreciation",
+  
+  // Creativity
+  art: "Creativity & Expression",
+  music: "Creativity & Expression",
+  design: "Creativity & Expression",
+  
+  // Diversity
+  unity: "Diversity & Connection",
+  diversity: "Diversity & Connection",
+  
+  // Kids
+  kids: "Kids & Teens",
+  teen: "Kids & Teens",
+  cartoon: "Kids & Teens",
+  
+  // Wellness
+  wellness: "Wellness & Mindful Living",
+  meditation: "Wellness & Mindful Living",
+  peace: "Wellness & Mindful Living",
+  nature: "Wellness & Mindful Living",
+  
+  // Life Journeys
+  graduation: "Life Journeys & Transitions",
+  travel: "Life Journeys & Transitions",
+  retirement: "Life Journeys & Transitions",
+  home: "Life Journeys & Transitions",
 };
 
-// 🧠 normalizar texto
-function normalize(str) {
-  return str?.toLowerCase().replace(/_/g, " ").trim() || "";
-}
+// 🎃 Mapeo de subcategorías
+const SUBCATEGORY_MAP = {
+  halloween: "Halloween",
+  christmas: "Christmas",
+  thanksgiving: "Thanksgiving",
+  easter: "Easter",
+  july4: "Independence Day",
+  newyear: "New Year",
+  valentine: "Valentine's Day",
+  birthday: "Birthday",
+  wedding: "Wedding",
+  anniversary: "Anniversary",
+  baby: "Baby",
+  pet: "Pets",
+  love: "Love",
+  scary: "Scary",
+  funny: "Funny",
+  cute: "Cute",
+  zombie: "Zombie",
+  ghost: "Ghost",
+  general: "General",
+};
 
-// 🐾 buscar todos los mp4 recursivamente
-function get_all_mp4_files(dir) {
+// 🔍 Función: Buscar recursivamente archivos .mp4
+function getAllMp4Files(dir) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
-  return entries.flatMap(entry => {
-    const full = path.join(dir, entry.name);
+  return entries.flatMap((entry) => {
+    const fullPath = path.join(dir, entry.name);
     return entry.isDirectory()
-      ? get_all_mp4_files(full)
+      ? getAllMp4Files(fullPath)
       : entry.name.toLowerCase().endsWith(".mp4")
-      ? [full]
+      ? [fullPath]
       : [];
   });
 }
 
-// 🧩 detectar categoría automáticamente
-function detect_category(words) {
-  for (const w of words) {
-    if (category_map[w]) return category_map[w];
+// 🧠 Función: Detectar categorías desde palabras
+function detectCategories(words) {
+  const categories = new Set();
+  
+  for (const word of words) {
+    const normalized = word.toLowerCase().trim();
+    if (CATEGORY_MAP[normalized]) {
+      categories.add(CATEGORY_MAP[normalized]);
+    }
   }
-  return "everyday & appreciation";
+  
+  // Si no encuentra ninguna, usar "Everyday & Appreciation"
+  if (categories.size === 0) {
+    categories.add("Everyday & Appreciation");
+  }
+  
+  return Array.from(categories);
 }
 
-// 🧩 detectar subcategoría automáticamente
-function detect_subcategory(words) {
-  return words
-    .filter(w => !["mp4", "video"].includes(w))
-    .slice(1)
-    .join(" ") || "general";
+// 🎯 Función: Detectar subcategoría desde palabras
+function detectSubcategory(words) {
+  for (const word of words) {
+    const normalized = word.toLowerCase().trim();
+    if (SUBCATEGORY_MAP[normalized]) {
+      return SUBCATEGORY_MAP[normalized];
+    }
+  }
+  return "General";
 }
 
-// 🪄 generar index.json
-function generate_index() {
-  if (!fs.existsSync(videos_root)) {
-    console.error("⚠️ no existe la carpeta public/videos/");
+// 🔧 Función: Normalizar texto
+function normalize(str) {
+  return str
+    ?.toLowerCase()
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .trim() || "";
+}
+
+// 🪄 Función principal: Generar index.json
+function generateIndex() {
+  console.log("⚙️ Generando index.json...");
+
+  if (!fs.existsSync(videosRoot)) {
+    console.error("❌ No existe la carpeta public/videos/");
     return;
   }
 
-  const files = get_all_mp4_files(videos_root);
-  const data = files.map(file_path => {
-    const relative = path.relative(videos_root, file_path).replace(/\\/g, "/");
-    const base = path.basename(file_path, ".mp4");
-    const parts = base.split("_").map(normalize);
+  const files = getAllMp4Files(videosRoot);
+  console.log(`📹 Encontrados ${files.length} archivos .mp4`);
 
-    const object = parts[0] || "unknown";
-    const category = detect_category(parts);
-    const subcategory = detect_subcategory(parts);
+  const videos = files.map((filePath) => {
+    const relative = path.relative(videosRoot, filePath).replace(/\\/g, "/");
+    const basename = path.basename(filePath, ".mp4");
+    
+    // Separar por guión bajo
+    const parts = basename.split("_");
+    
+    // Extraer componentes
+    const object = normalize(parts[0] || "Unknown");
+    const categories = detectCategories(parts);
+    const subcategory = detectSubcategory(parts);
+    const variant = parts[parts.length - 1]?.match(/\d+[A-Z]+/i)?.[0] || "1A";
+    
+    // Tags para búsqueda
+    const tags = Array.from(
+      new Set([
+        ...parts.map(p => p.toLowerCase()),
+        object.toLowerCase(),
+        ...categories.map(c => c.toLowerCase()),
+        subcategory.toLowerCase(),
+      ])
+    );
 
-    return {
-      name: base,
+    const video = {
+      name: basename,
       file: `/videos/${relative}`,
       object,
-      category,
+      category: categories[0], // categoría principal
+      categories, // todas las categorías detectadas
       subcategory,
-      slug: base.toLowerCase().replace(/\s+/g, "-"),
-      tags: Array.from(new Set([...parts, object, category, subcategory]))
+      variant,
+      slug: basename.toLowerCase().replace(/\s+/g, "-"),
+      tags,
     };
+
+    console.log(`✅ ${basename}`);
+    console.log(`   Categories: ${categories.join(", ")}`);
+    console.log(`   Subcategory: ${subcategory}`);
+
+    return video;
   });
 
-  fs.writeFileSync(index_file, JSON.stringify({ videos: data }, null, 2));
-  console.log(`✅ index.json actualizado con ${data.length} archivos.`);
+  // Guardar
+  const output = { videos };
+  fs.writeFileSync(indexFile, JSON.stringify(output, null, 2), "utf-8");
+  
+  console.log(`\n✅ Index actualizado con ${videos.length} videos.`);
+  console.log(`📂 Guardado en: ${indexFile}`);
 }
 
-generate_index();
+generateIndex();
