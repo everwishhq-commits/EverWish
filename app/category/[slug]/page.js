@@ -7,7 +7,8 @@ export default function CategoryPage() {
   const { slug } = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const searchTerm = searchParams.get("q"); // palabra desde el buscador (ej. yeti)
+  const searchTerm = searchParams.get("q"); // palabra desde el buscador (ej. zombie)
+  
   const [groups, setGroups] = useState({});
   const [activeSub, setActiveSub] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -18,15 +19,42 @@ export default function CategoryPage() {
         const res = await fetch("/api/videos", { cache: "no-store" });
         const data = await res.json();
 
+        console.log("📦 Categoría actual:", slug);
+        console.log("🔍 Término buscado:", searchTerm);
+
         const normalize = (str) =>
           str?.toLowerCase().replace(/&/g, "and").replace(/\s+/g, "-").trim();
 
         const currentCategory = normalize(slug);
 
         // ✅ Filtrar videos de la categoría actual
-        const filtered = (data.videos || []).filter(
-          (v) => normalize(v.category) === currentCategory
-        );
+        let filtered = (data.videos || []).filter((v) => {
+          const videoCategory = normalize(v.category);
+          return videoCategory.includes(currentCategory) || 
+                 currentCategory.includes(videoCategory);
+        });
+
+        console.log(`📹 Videos en ${slug}:`, filtered.length);
+
+        // 🔍 Si hay término de búsqueda, filtrar aún más
+        if (searchTerm) {
+          const q = searchTerm.toLowerCase();
+          filtered = filtered.filter((v) => {
+            const searchable = [
+              v.name,
+              v.object,
+              v.slug,
+              v.subcategory,
+            ]
+              .filter(Boolean)
+              .join(" ")
+              .toLowerCase();
+            
+            return searchable.includes(q);
+          });
+
+          console.log(`🎯 Videos con "${searchTerm}":`, filtered.length);
+        }
 
         // ✅ Agrupar por subcategoría
         const grouped = {};
@@ -35,23 +63,21 @@ export default function CategoryPage() {
             (v.subcategory && v.subcategory.trim()) ||
             (v.category && v.category.trim()) ||
             "General";
+          
           const clean = sub
             .replace(/_/g, " ")
             .replace(/\b\w/g, (c) => c.toUpperCase());
+          
           if (!grouped[clean]) grouped[clean] = [];
           grouped[clean].push(v);
         }
 
+        console.log("📂 Subcategorías encontradas:", Object.keys(grouped));
         setGroups(grouped);
 
-        // 🎯 Si hay un término buscado, abrir la subcategoría que lo contiene
-        if (searchTerm) {
-          const matchSub = Object.keys(grouped).find((key) =>
-            grouped[key].some((v) =>
-              v.object?.toLowerCase().includes(searchTerm.toLowerCase())
-            )
-          );
-          if (matchSub) setActiveSub(matchSub);
+        // 🎯 Si hay búsqueda y solo una subcategoría, abrirla automáticamente
+        if (searchTerm && Object.keys(grouped).length === 1) {
+          setActiveSub(Object.keys(grouped)[0]);
         }
       } catch (err) {
         console.error("❌ Error loading videos:", err);
@@ -90,8 +116,17 @@ export default function CategoryPage() {
       <h1 className="text-4xl font-extrabold text-pink-600 mb-3 capitalize text-center">
         {slug.replace(/-/g, " ")}
       </h1>
+
+      {searchTerm && (
+        <p className="text-gray-500 mb-10 text-center text-sm italic">
+          Showing results for "<b>{searchTerm}</b>"
+        </p>
+      )}
+
       <p className="text-gray-600 mb-10 text-center max-w-lg">
-        Explore the celebrations and life moments in this category ✨
+        {searchTerm
+          ? "Select a subcategory related to your search ✨"
+          : "Explore the celebrations and life moments in this category ✨"}
       </p>
 
       {/* 🌸 Subcategories */}
@@ -111,11 +146,16 @@ export default function CategoryPage() {
             >
               <span className="text-lg">{getEmojiForSubcategory(sub)}</span>
               <span className="capitalize">{sub}</span>
+              <span className="text-xs text-gray-400">
+                ({groups[sub].length})
+              </span>
             </motion.button>
           ))}
         </div>
       ) : (
-        <p className="text-gray-500 text-center">No subcategories found.</p>
+        <p className="text-gray-500 text-center">
+          No matching subcategories found.
+        </p>
       )}
 
       {/* 💫 Modal */}
@@ -148,6 +188,12 @@ export default function CategoryPage() {
                   {getEmojiForSubcategory(activeSub)} {activeSub}
                 </h2>
 
+                {searchTerm && (
+                  <p className="text-sm text-gray-500 mb-4">
+                    Cards matching "<b>{searchTerm}</b>"
+                  </p>
+                )}
+
                 {activeVideos.length === 0 ? (
                   <p className="text-gray-500 text-center mt-10">
                     No cards found for this subcategory.
@@ -159,18 +205,27 @@ export default function CategoryPage() {
                         key={i}
                         whileHover={{ scale: 1.05 }}
                         transition={{ duration: 0.3 }}
-                        onClick={() => router.push(`/edit/${video.slug}`)}
+                        onClick={() => {
+                          const slugToUse = video.slug || video.name;
+                          console.log("🎯 Navegando a:", slugToUse);
+                          router.push(`/edit/${slugToUse}`);
+                        }}
                         className="cursor-pointer bg-white rounded-3xl shadow-md border border-pink-100 overflow-hidden hover:shadow-lg"
                       >
                         <video
-                          src={video.src}
+                          src={video.file}
                           className="object-cover w-full aspect-[4/5]"
                           playsInline
                           loop
                           muted
+                          onMouseEnter={(e) => e.target.play()}
+                          onMouseLeave={(e) => {
+                            e.target.pause();
+                            e.target.currentTime = 0;
+                          }}
                         />
                         <div className="text-center py-2 text-gray-700 font-semibold text-sm">
-                          {video.object}
+                          {video.object || video.name}
                         </div>
                       </motion.div>
                     ))}
@@ -203,7 +258,15 @@ function getEmojiForSubcategory(name) {
     art: "🎨",
     wellness: "🕯️",
     diversity: "🧩",
+    zombie: "🧟",
+    general: "✨",
   };
   const key = name?.toLowerCase() || "";
-  return map[key] || "✨";
-              }
+  
+  // Buscar coincidencia parcial
+  for (const [keyword, emoji] of Object.entries(map)) {
+    if (key.includes(keyword)) return emoji;
+  }
+  
+  return map.general;
+        }
