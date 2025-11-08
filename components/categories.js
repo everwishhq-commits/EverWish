@@ -34,7 +34,24 @@ export default function Categories() {
       try {
         const res = await fetch("/api/videos", { cache: "no-store" });
         const data = await res.json();
-        console.log("📹 Videos cargados:", data.videos?.length || 0);
+        
+        console.log("📹 Total videos cargados:", data.videos?.length || 0);
+        console.log("📦 Estructura de datos:", data);
+        
+        // Debug: mostrar primeros 3 videos
+        if (data.videos && data.videos.length > 0) {
+          console.log("🎬 Primeros 3 videos de ejemplo:");
+          data.videos.slice(0, 3).forEach((v, i) => {
+            console.log(`  ${i + 1}.`, {
+              name: v.name,
+              category: v.category,
+              categories: v.categories,
+              subcategory: v.subcategory,
+              tags: v.tags
+            });
+          });
+        }
+        
         setVideos(data.videos || []);
       } catch (err) {
         console.error("❌ Error cargando /api/videos:", err);
@@ -54,9 +71,11 @@ export default function Categories() {
     }
 
     console.log("🔍 Buscando:", q);
+    console.log("📹 Total videos disponibles:", videos.length);
 
     // Encontrar categorías que tienen videos con la palabra buscada
     const categoriesWithMatch = new Set();
+    let videosFound = 0;
 
     videos.forEach((video) => {
       // Buscar en: object, nombre, tags, categorías, subcategoría
@@ -73,6 +92,14 @@ export default function Categories() {
         .toLowerCase();
 
       if (searchableText.includes(q)) {
+        videosFound++;
+        console.log(`  ✅ Match encontrado en:`, {
+          name: video.name,
+          categories: video.categories || [video.category],
+          subcategory: video.subcategory,
+          searchable: searchableText
+        });
+        
         // Agregar TODAS las categorías del video
         if (video.categories && Array.isArray(video.categories)) {
           video.categories.forEach(cat => {
@@ -84,6 +111,7 @@ export default function Categories() {
       }
     });
 
+    console.log(`🎯 Videos encontrados: ${videosFound}`);
     console.log("📦 Categorías con coincidencias:", [...categoriesWithMatch]);
 
     // Filtrar categorías base
@@ -192,4 +220,4 @@ export default function Categories() {
       </Swiper>
     </section>
   );
-                       }
+          }
