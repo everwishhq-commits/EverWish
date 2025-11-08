@@ -36,10 +36,18 @@ export default function Carousel() {
         const data = await res.json();
         const allVideos = data.videos || data || [];
 
+        // 🔍 DEBUG: Ver qué está llegando
+        console.log("📹 Videos recibidos de la API:", allVideos.length);
+        if (allVideos.length > 0) {
+          console.log("📹 Primer video ejemplo:", allVideos[0]);
+        }
+
         // 🧩 Agrupar por baseSlug (ej: pumpkin_halloween_1A → pumpkin_halloween)
         const grouped = {};
         allVideos.forEach((v) => {
-          const base = v.slug.replace(/_\d+[A-Z]?$/i, "");
+          // Usar 'name' como slug si no existe 'slug'
+          const slugToUse = v.slug || v.name;
+          const base = slugToUse.replace(/_\d+[A-Z]?$/i, "");
           if (!grouped[base]) grouped[base] = [];
           grouped[base].push(v);
         });
@@ -57,6 +65,7 @@ export default function Carousel() {
 
         // 🔝 Limitar a los 10 mejores
         const top10 = uniqueVideos.slice(0, 10);
+        console.log("✅ Videos filtrados para carrusel:", top10.length);
         setVideos(top10);
       } catch (err) {
         console.error("❌ Error cargando videos:", err);
@@ -95,17 +104,19 @@ export default function Carousel() {
       moved.current = true;
       direction.current =
         Math.abs(deltaX) > Math.abs(deltaY) ? "horizontal" : "vertical";
-      e.stopPropagation(); // 🚫 Bloquea propagación si hay movimiento
+      e.stopPropagation();
     }
   };
 
   const handleTouchEnd = (e) => {
-    e.stopPropagation(); // 🚫 Evita que suba a la página
+    e.stopPropagation();
 
     if (!moved.current) {
       // TAP → abrir fullscreen
       const tapped = videos[index];
-      if (tapped?.slug) handleClick(tapped.slug);
+      // Usar 'name' como slug si no existe 'slug'
+      const slugToUse = tapped?.slug || tapped?.name;
+      if (slugToUse) handleClick(slugToUse);
     } else if (direction.current === "horizontal") {
       // Swipe horizontal → cambia tarjeta
       const diffX = startX.current - e.changedTouches[0].clientX;
@@ -138,10 +149,19 @@ export default function Carousel() {
     }
   };
 
+  // 🔄 Mostrar indicador de carga si no hay videos
+  if (videos.length === 0) {
+    return (
+      <div className="w-full flex justify-center items-center h-[440px]">
+        <p className="text-gray-400 text-lg">Loading videos...</p>
+      </div>
+    );
+  }
+
   return (
     <div
       className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none"
-      style={{ touchAction: "pan-y" }} // ✅ permite scroll vertical global
+      style={{ touchAction: "pan-y" }}
     >
       <div
         onTouchStart={handleTouchStart}
@@ -166,7 +186,7 @@ export default function Carousel() {
               className={`absolute transition-all duration-500 ease-in-out ${positionClass}`}
             >
               <video
-                src={video.src}
+                src={video.file}  // ✅ CORREGIDO: era video.src, ahora es video.file
                 autoPlay
                 loop
                 muted
@@ -174,6 +194,9 @@ export default function Carousel() {
                 controlsList="nodownload noplaybackrate"
                 draggable="false"
                 onContextMenu={(e) => e.preventDefault()}
+                onError={(e) => {
+                  console.error("❌ Error cargando video:", video.file);
+                }}
                 className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover object-center bg-white overflow-hidden"
               />
             </div>
@@ -203,4 +226,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-  }
+      }
