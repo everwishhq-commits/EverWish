@@ -157,13 +157,7 @@ export default function EditPage({ params }) {
                 console.log("✅ Video cargado exitosamente:", videoSrc);
               }}
             />
-          ) : (
-            <div className="text-center text-gray-500 px-6">
-              <p className="text-lg mb-2">⚠️ Video not found</p>
-              <p className="text-sm">Looking for: <b>{slug}</b></p>
-              <p className="text-xs text-gray-400 mt-2">Path: {videoSrc}</p>
-            </div>
-          )}
+          ) : null}
           <div className="absolute bottom-8 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
             <motion.div
               className="h-full bg-pink-500"
@@ -212,13 +206,7 @@ export default function EditPage({ params }) {
                     setVideoFound(false);
                   }}
                 />
-              ) : (
-                <div className="w-full h-[380px] flex flex-col items-center justify-center text-gray-400 text-sm p-4">
-                  <p className="mb-2">⚠️ This card's video is missing or not uploaded yet.</p>
-                  <p className="text-xs">Slug: <b>{slug}</b></p>
-                  <p className="text-xs mt-1">Path: {videoSrc}</p>
-                </div>
-              )}
+              ) : null}
             </div>
 
             {/* 💌 Mensaje */}
@@ -411,4 +399,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-                }
+        }
