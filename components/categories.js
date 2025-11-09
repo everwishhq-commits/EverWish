@@ -5,8 +5,56 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { videoMatchesSearch } from "@/utils/searchUtils";
 import "swiper/css";
+
+// 🔍 BÚSQUEDA INTELIGENTE INTEGRADA
+function normalizeForSearch(text) {
+  if (!text) return "";
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function toSingular(word) {
+  const normalized = normalizeForSearch(word);
+  if (normalized.endsWith("ies")) return normalized.slice(0, -3) + "y";
+  if (normalized.endsWith("es")) return normalized.slice(0, -2);
+  if (normalized.endsWith("s") && !normalized.endsWith("ss")) {
+    return normalized.slice(0, -1);
+  }
+  return normalized;
+}
+
+function getSearchVariations(word) {
+  const normalized = normalizeForSearch(word);
+  const variations = new Set([normalized]);
+  const singular = toSingular(normalized);
+  variations.add(singular);
+  if (!normalized.endsWith("s")) variations.add(normalized + "s");
+  if (!normalized.endsWith("es")) variations.add(normalized + "es");
+  return [...variations];
+}
+
+function videoMatchesSearch(video, searchTerm) {
+  if (!video || !searchTerm) return false;
+  const searchableFields = [
+    video.name,
+    video.object,
+    video.subcategory,
+    video.category,
+    ...(video.categories || []),
+    ...(video.tags || []),
+  ].filter(Boolean);
+  
+  const variations = getSearchVariations(searchTerm);
+  return searchableFields.some(field => {
+    const normalizedField = normalizeForSearch(field);
+    return variations.some(v => normalizedField.includes(v));
+  });
+}
 
 const allCategories = [
   { name: "Holidays", emoji: "🎉", slug: "seasonal-global-celebrations", color: "#FFE0E9" },
@@ -30,13 +78,11 @@ export default function Categories() {
   const [videos, setVideos] = useState([]);
   const [searchResults, setSearchResults] = useState(null);
 
-  // 📥 Cargar videos desde API
   useEffect(() => {
     async function loadVideos() {
       try {
         const res = await fetch("/api/videos", { cache: "no-store" });
         const data = await res.json();
-        
         console.log("📹 Total videos cargados:", data.videos?.length || 0);
         setVideos(data.videos || []);
       } catch (err) {
@@ -46,11 +92,9 @@ export default function Categories() {
     loadVideos();
   }, []);
 
-  // 🔍 Filtrar categorías según búsqueda
   useEffect(() => {
     const q = search.toLowerCase().trim();
     
-    // Sin búsqueda → mostrar todas
     if (!q) {
       setFiltered(allCategories);
       setSearchResults(null);
@@ -58,13 +102,9 @@ export default function Categories() {
     }
 
     console.log("🔍 Buscando:", q);
-
-    // Buscar videos que coincidan usando utilidad inteligente
     const matchingVideos = videos.filter(v => videoMatchesSearch(v, q));
-
     console.log(`🎯 Videos encontrados: ${matchingVideos.length}`);
 
-    // Extraer categorías únicas de los videos encontrados
     const categoriesSet = new Set();
     matchingVideos.forEach((v) => {
       if (v.categories && Array.isArray(v.categories)) {
@@ -80,37 +120,23 @@ export default function Categories() {
 
     console.log("📂 Categorías con resultados:", [...categoriesSet]);
 
-    // Filtrar categorías principales que tienen videos
     const matchedCategories = allCategories.filter((cat) => {
       const catName = cat.name.toLowerCase();
       const catSlug = cat.slug.toLowerCase();
       
-      // Buscar si alguna categoría del video coincide
       return [...categoriesSet].some((matchCat) => {
         const normalized = matchCat.replace(/&/g, "and").replace(/\s+/g, "-");
         const mcWords = matchCat.toLowerCase().split(/\s+|&/);
         const catWords = catName.toLowerCase().split(/\s+|&/);
         
-        // Coincidencia por slug
-        if (normalized.includes(catSlug) || catSlug.includes(normalized)) {
-          return true;
-        }
+        if (normalized.includes(catSlug) || catSlug.includes(normalized)) return true;
+        if (matchCat.includes(catName) || catName.includes(matchCat)) return true;
         
-        // Coincidencia por nombre
-        if (matchCat.includes(catName) || catName.includes(matchCat)) {
-          return true;
-        }
-        
-        // Coincidencia por palabras clave
         const hasWordMatch = mcWords.some(word => 
           catWords.some(cw => cw.includes(word) || word.includes(cw))
         );
+        if (hasWordMatch) return true;
         
-        if (hasWordMatch) {
-          return true;
-        }
-        
-        // Mapeo especial
         const specialMaps = {
           "seasonal": ["holidays"],
           "celebrations": ["celebrations", "birthdays"],
@@ -133,14 +159,12 @@ export default function Categories() {
     setSearchResults({
       query: search,
       videosFound: matchingVideos.length,
-      categoriesFound: matchedCategories.length, // ✅ Solo las filtradas
+      categoriesFound: matchedCategories.length,
     });
   }, [search, videos]);
 
-  // 🎯 Navegar con query de búsqueda
   const handleCategoryClick = (cat) => {
     if (search.trim()) {
-      // Si hay búsqueda, pasar el término en la URL
       router.push(`/category/${cat.slug}?q=${encodeURIComponent(search)}`);
     } else {
       router.push(`/category/${cat.slug}`);
@@ -153,7 +177,6 @@ export default function Categories() {
         Categories
       </h2>
 
-      {/* 🔎 Barra de búsqueda mejorada */}
       <div className="flex flex-col items-center mb-10">
         <input
           type="text"
@@ -163,7 +186,6 @@ export default function Categories() {
           className="w-80 md:w-96 px-4 py-3 rounded-full border-2 border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-pink-400 text-gray-700 text-center transition-all"
         />
         
-        {/* Resultados de búsqueda */}
         {searchResults && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -184,17 +206,13 @@ export default function Categories() {
         )}
       </div>
 
-      {/* 🎠 Carrusel de categorías */}
       {filtered.length > 0 ? (
         <Swiper
           slidesPerView={3.2}
           spaceBetween={16}
           centeredSlides={true}
           loop={filtered.length > 3}
-          autoplay={{
-            delay: 2500,
-            disableOnInteraction: false,
-          }}
+          autoplay={{ delay: 2500, disableOnInteraction: false }}
           speed={1000}
           breakpoints={{
             0: { slidesPerView: 2.3, spaceBetween: 10 },
@@ -219,24 +237,15 @@ export default function Categories() {
                     <motion.span
                       className="text-4xl sm:text-5xl"
                       animate={{ y: [0, -5, 0] }}
-                      transition={{
-                        duration: 3,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }}
+                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                     >
                       {cat.emoji}
                     </motion.span>
                     
-                    {/* Badge en la esquina superior derecha */}
                     {search && (() => {
                       const count = videos.filter(v => {
-                        // Verificar si coincide con la búsqueda usando utilidad inteligente
                         if (!videoMatchesSearch(v, search)) return false;
-                        
-                        // Verificar si pertenece a esta categoría
                         const catSlug = cat.slug.toLowerCase();
-                        
                         if (v.categories && Array.isArray(v.categories)) {
                           const hasMatch = v.categories.some(c => {
                             const normalized = c.toLowerCase().replace(/&/g, "and").replace(/\s+/g, "-");
@@ -244,14 +253,10 @@ export default function Categories() {
                           });
                           if (hasMatch) return true;
                         }
-                        
                         if (v.category) {
                           const normalized = v.category.toLowerCase().replace(/&/g, "and").replace(/\s+/g, "-");
-                          if (normalized.includes(catSlug) || catSlug.includes(normalized)) {
-                            return true;
-                          }
+                          if (normalized.includes(catSlug) || catSlug.includes(normalized)) return true;
                         }
-                        
                         return false;
                       }).length;
                       
@@ -285,4 +290,4 @@ export default function Categories() {
       )}
     </section>
   );
-              }
+  }
