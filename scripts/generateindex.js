@@ -22,6 +22,8 @@ const CATEGORY_MAP = {
   holidays: "Seasonal & Global Celebrations",
   july4: "Seasonal & Global Celebrations",
   independenceday: "Seasonal & Global Celebrations",
+  independence: "Seasonal & Global Celebrations",
+  eagle: "Seasonal & Global Celebrations",
   newyear: "Seasonal & Global Celebrations",
   
   // Love & Romance
@@ -38,6 +40,7 @@ const CATEGORY_MAP = {
   celebration: "Birthdays & Celebrations",
   celebrations: "Birthdays & Celebrations",
   celebr: "Birthdays & Celebrations",
+  zombie: "Birthdays & Celebrations",
   
   // Family & Friendship
   mother: "Family & Friendship",
@@ -75,6 +78,9 @@ const SUBCATEGORY_MAP = {
   thanksgiving: "Thanksgiving",
   easter: "Easter",
   july4: "Independence Day",
+  independenceday: "Independence Day",
+  independence: "Independence Day",
+  eagle: "Independence Day",
   newyear: "New Year",
   valentine: "Valentine's Day",
   birthday: "Birthday",
@@ -89,6 +95,7 @@ const SUBCATEGORY_MAP = {
   general: "General",
   scary: "Scary",
   cute: "Cute",
+  zombie: "Zombie",
 };
 
 function getAllMp4Files(dir) {
