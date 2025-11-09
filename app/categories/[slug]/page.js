@@ -186,7 +186,7 @@ export default function CategoryPage() {
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="relative bg-white rounded-3xl shadow-xl w-[90%] max-w-5xl h-[70vh] overflow-y-auto border border-pink-100 p-6">
+              <div className="relative bg-white rounded-3xl shadow-xl w-[95%] max-w-6xl h-[85vh] overflow-y-auto border border-pink-100 p-6">
                 <button
                   onClick={() => {
                     console.log("❌ Cerrando modal (botón X)");
@@ -311,4 +311,4 @@ function getEmojiForSubcategory(name) {
   }
   
   return map.general;
-      }
+}
