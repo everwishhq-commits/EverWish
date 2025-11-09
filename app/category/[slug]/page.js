@@ -3,10 +3,10 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Grupos de subcategorías por categoría
+// 🗂️ Grupos de subcategorías por categoría
 const SUBCATEGORY_GROUPS = {
   "seasonal-global-celebrations": {
-    "Seasons": ["New Year", "Spring", "Summer", "Fall", "Winter"],
+    "Seasons": ["Spring", "Summer", "Fall", "Winter"],
     "Cultural Celebrations": ["Lunar New Year", "Valentine's Day", "St. Patrick's Day", "Carnival", "Cinco de Mayo", "Oktoberfest", "Day of the Dead"],
     "Family Days": ["Mother's Day", "Father's Day", "Grandparents Day", "Easter"],
     "Holiday Season": ["Halloween", "Thanksgiving", "Christmas", "Hanukkah", "Kwanzaa"],
@@ -84,6 +84,8 @@ export default function CategoryPage() {
         const res = await fetch("/api/videos", { cache: "no-store" });
         const data = await res.json();
 
+        console.log("📦 Data recibida:", data);
+
         const normalize = (str) =>
           str?.toLowerCase().replace(/&/g, "and").replace(/\s+/g, "-").trim();
 
@@ -105,6 +107,7 @@ export default function CategoryPage() {
           return false;
         });
 
+        console.log(`✅ Videos filtrados para ${slug}:`, filtered.length);
         setAllVideos(filtered);
       } catch (err) {
         console.error("❌ Error loading videos:", err);
@@ -119,9 +122,17 @@ export default function CategoryPage() {
   const groups = SUBCATEGORY_GROUPS[slug] || {};
   const groupNames = Object.keys(groups);
 
+  // Filtrar videos por subcategoría seleccionada
   const activeVideos = activeSub
-    ? allVideos.filter(v => v.subcategory === activeSub)
+    ? allVideos.filter(v => {
+        const vSub = v.subcategory?.toLowerCase().trim();
+        const targetSub = activeSub.toLowerCase().trim();
+        return vSub === targetSub || vSub?.includes(targetSub) || targetSub?.includes(vSub);
+      })
     : [];
+
+  console.log(`🎯 Subcategoría activa: ${activeSub}`);
+  console.log(`📹 Videos encontrados:`, activeVideos.length);
 
   if (loading) {
     return (
@@ -144,6 +155,7 @@ export default function CategoryPage() {
         {slug.replace(/-/g, " ")}
       </h1>
 
+      {/* Mostrar grupos si no hay grupo activo */}
       {!activeGroup && (
         <div className="flex flex-wrap justify-center gap-4 max-w-5xl">
           {groupNames.map((groupName, i) => (
@@ -159,6 +171,7 @@ export default function CategoryPage() {
         </div>
       )}
 
+      {/* Mostrar subcategorías del grupo activo */}
       {activeGroup && !activeSub && (
         <>
           <button
@@ -174,7 +187,10 @@ export default function CategoryPage() {
             {groups[activeGroup].map((subName, i) => (
               <motion.button
                 key={i}
-                onClick={() => setActiveSub(subName)}
+                onClick={() => {
+                  console.log("🎯 Seleccionando subcategoría:", subName);
+                  setActiveSub(subName);
+                }}
                 whileHover={{ scale: 1.05 }}
                 className="px-5 py-3 rounded-full bg-white shadow-sm border border-pink-100 hover:border-pink-200 hover:bg-pink-50 text-gray-700 font-semibold"
               >
@@ -185,6 +201,7 @@ export default function CategoryPage() {
         </>
       )}
 
+      {/* Modal con videos */}
       <AnimatePresence>
         {activeSub && (
           <>
@@ -212,14 +229,17 @@ export default function CategoryPage() {
                 <h2 className="text-2xl font-bold text-pink-600 mb-4">{activeSub}</h2>
 
                 {activeVideos.length === 0 ? (
-                  <p className="text-gray-500 text-center mt-10">No cards found.</p>
+                  <p className="text-gray-500 text-center mt-10">No cards found for this subcategory.</p>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
                     {activeVideos.map((video, i) => (
                       <motion.div
                         key={i}
                         whileHover={{ scale: 1.05 }}
-                        onClick={() => router.push(`/edit/${video.name}`)}
+                        onClick={() => {
+                          console.log("🎬 Navegando a:", video.name);
+                          router.push(`/edit/${video.name}`);
+                        }}
                         className="cursor-pointer bg-white rounded-3xl shadow-md border border-pink-100 overflow-hidden hover:shadow-lg"
                       >
                         <video
@@ -248,4 +268,4 @@ export default function CategoryPage() {
       </AnimatePresence>
     </main>
   );
-          }
+                    }
