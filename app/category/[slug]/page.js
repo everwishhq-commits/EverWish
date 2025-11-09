@@ -85,30 +85,54 @@ export default function CategoryPage() {
         const data = await res.json();
 
         console.log("📦 API Response:", data);
+        const allVids = data.videos || [];
+        console.log("📹 Total videos:", allVids.length);
 
-        const normalize = (str) =>
-          str?.toLowerCase().replace(/&/g, "and").replace(/\s+/g, "-").trim();
-
-        const currentCategory = normalize(slug);
-
-        const filtered = (data.videos || []).filter((v) => {
-          const mainMatch = normalize(v.category).includes(currentCategory) || 
-                           currentCategory.includes(normalize(v.category));
+        // 🔥 FILTRADO MEJORADO - Busca en category Y categories
+        const filtered = allVids.filter((v) => {
+          // Normalizar el slug de la categoría actual
+          const currentSlug = slug.toLowerCase().replace(/&/g, "and").replace(/\s+/g, "-");
           
-          if (mainMatch) return true;
+          // 1. Buscar en category principal
+          const mainCat = (v.category || "").toLowerCase().replace(/&/g, "and").replace(/\s+/g, "-");
+          if (mainCat.includes(currentSlug) || currentSlug.includes(mainCat)) {
+            console.log(`✅ Match en category: ${v.name}`);
+            return true;
+          }
           
+          // 2. Buscar en el array categories (si existe)
           if (v.categories && Array.isArray(v.categories)) {
-            return v.categories.some(cat => {
-              const normCat = normalize(cat);
-              return normCat.includes(currentCategory) || currentCategory.includes(normCat);
+            const hasMatch = v.categories.some(cat => {
+              const normCat = (cat || "").toLowerCase().replace(/&/g, "and").replace(/\s+/g, "-");
+              const match = normCat.includes(currentSlug) || currentSlug.includes(normCat);
+              if (match) {
+                console.log(`✅ Match en categories[]: ${v.name} (${cat})`);
+              }
+              return match;
             });
+            if (hasMatch) return true;
+          }
+          
+          // 3. Buscar palabras clave en el nombre
+          const fileName = (v.name || "").toLowerCase();
+          const keywords = {
+            "seasonal-global-celebrations": ["halloween", "christmas", "thanksgiving", "easter", "july4", "valentine", "holiday"],
+            "love-weddings-anniversaries": ["love", "wedding", "anniversary", "valentine", "hugs"],
+            "birthdays-celebrations": ["birthday", "celebration"],
+            "pets-animal-lovers": ["pet", "dog", "cat", "turtle", "animal"],
+          };
+          
+          const catKeywords = keywords[currentSlug] || [];
+          const hasKeyword = catKeywords.some(kw => fileName.includes(kw));
+          if (hasKeyword) {
+            console.log(`✅ Match por keyword: ${v.name}`);
+            return true;
           }
           
           return false;
         });
 
-        console.log(`✅ Videos filtrados para ${slug}:`, filtered.length);
-        console.log("📹 Videos:", filtered);
+        console.log(`✅ Videos filtrados para "${slug}":`, filtered.length);
         setAllVideos(filtered);
       } catch (err) {
         console.error("❌ Error loading videos:", err);
@@ -123,37 +147,37 @@ export default function CategoryPage() {
   const groups = SUBCATEGORY_GROUPS[slug] || {};
   const groupNames = Object.keys(groups);
 
-  // 🎯 FILTRADO MEJORADO - Busca en múltiples campos
+  // 🎯 FILTRADO DE SUBCATEGORÍA - MUY FLEXIBLE
   const activeVideos = activeSub
     ? allVideos.filter(v => {
         const searchTerm = activeSub.toLowerCase().replace(/\s+/g, "");
         
-        // 1. Buscar en el nombre del archivo
+        // 1. Nombre del archivo
         const fileName = (v.name || "").toLowerCase().replace(/_/g, "");
         if (fileName.includes(searchTerm)) {
           console.log(`✅ Match por nombre: ${v.name}`);
           return true;
         }
         
-        // 2. Buscar en subcategoría
+        // 2. Subcategoría
         const vSub = (v.subcategory || "").toLowerCase().replace(/\s+/g, "");
-        if (vSub.includes(searchTerm) || searchTerm.includes(vSub)) {
-          console.log(`✅ Match por subcategoría: ${v.name} (${v.subcategory})`);
+        if (vSub === searchTerm || vSub.includes(searchTerm) || searchTerm.includes(vSub)) {
+          console.log(`✅ Match por subcategoría: ${v.name}`);
           return true;
         }
         
-        // 3. Buscar en objeto
+        // 3. Objeto
         const vObj = (v.object || "").toLowerCase().replace(/\s+/g, "");
-        if (vObj.includes(searchTerm) || searchTerm.includes(vObj)) {
-          console.log(`✅ Match por objeto: ${v.name} (${v.object})`);
+        if (vObj === searchTerm || vObj.includes(searchTerm) || searchTerm.includes(vObj)) {
+          console.log(`✅ Match por objeto: ${v.name}`);
           return true;
         }
         
-        // 4. Buscar en tags
+        // 4. Tags
         if (v.tags && Array.isArray(v.tags)) {
           const hasTag = v.tags.some(tag => {
             const normalizedTag = tag.toLowerCase().replace(/\s+/g, "");
-            return normalizedTag.includes(searchTerm) || searchTerm.includes(normalizedTag);
+            return normalizedTag === searchTerm || normalizedTag.includes(searchTerm) || searchTerm.includes(normalizedTag);
           });
           if (hasTag) {
             console.log(`✅ Match por tag: ${v.name}`);
@@ -161,10 +185,10 @@ export default function CategoryPage() {
           }
         }
         
-        // 5. Buscar palabra clave en el nombre (ej: "halloween" en "ghost_halloween_love_1A")
+        // 5. Partes del nombre
         const nameParts = (v.name || "").toLowerCase().split("_");
-        if (nameParts.some(part => part === searchTerm || part.includes(searchTerm) || searchTerm.includes(part))) {
-          console.log(`✅ Match por parte del nombre: ${v.name}`);
+        if (nameParts.some(part => part === searchTerm || part.includes(searchTerm))) {
+          console.log(`✅ Match por parte: ${v.name}`);
           return true;
         }
         
@@ -172,16 +196,9 @@ export default function CategoryPage() {
       })
     : [];
 
-  console.log(`🎯 Subcategoría seleccionada: "${activeSub}"`);
-  console.log(`📊 Total videos en categoría: ${allVideos.length}`);
-  console.log(`🎬 Videos encontrados para "${activeSub}": ${activeVideos.length}`);
-  
-  if (activeVideos.length > 0) {
-    console.log("📹 Videos que coinciden:");
-    activeVideos.forEach((v, i) => {
-      console.log(`  ${i + 1}. ${v.name} - ${v.subcategory} - ${v.object}`);
-    });
-  }
+  console.log(`🎯 Subcategoría: "${activeSub}"`);
+  console.log(`📊 Total en categoría: ${allVideos.length}`);
+  console.log(`🎬 Videos encontrados: ${activeVideos.length}`);
 
   if (loading) {
     return (
@@ -204,7 +221,12 @@ export default function CategoryPage() {
         {slug.replace(/-/g, " ")}
       </h1>
 
-      {/* Mostrar grupos si no hay grupo activo */}
+      {/* Debug info */}
+      <p className="text-xs text-gray-400 mb-4">
+        Videos in this category: {allVideos.length}
+      </p>
+
+      {/* Mostrar grupos */}
       {!activeGroup && (
         <div className="flex flex-wrap justify-center gap-4 max-w-5xl">
           {groupNames.map((groupName, i) => (
@@ -220,7 +242,7 @@ export default function CategoryPage() {
         </div>
       )}
 
-      {/* Mostrar subcategorías del grupo activo */}
+      {/* Mostrar subcategorías */}
       {activeGroup && !activeSub && (
         <>
           <button
@@ -237,7 +259,7 @@ export default function CategoryPage() {
               <motion.button
                 key={i}
                 onClick={() => {
-                  console.log("🎯 Seleccionando subcategoría:", subName);
+                  console.log("🎯 Seleccionando:", subName);
                   setActiveSub(subName);
                 }}
                 whileHover={{ scale: 1.05 }}
@@ -250,7 +272,7 @@ export default function CategoryPage() {
         </>
       )}
 
-      {/* Modal con videos - MEJORADO */}
+      {/* Modal con videos */}
       <AnimatePresence>
         {activeSub && (
           <>
@@ -269,7 +291,6 @@ export default function CategoryPage() {
               transition={{ duration: 0.3 }}
             >
               <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto border-2 border-pink-200 p-4 sm:p-6">
-                {/* Botón cerrar */}
                 <button
                   onClick={() => setActiveSub(null)}
                   className="sticky top-0 right-0 float-right bg-pink-100 hover:bg-pink-200 text-pink-600 rounded-full w-10 h-10 flex items-center justify-center text-2xl font-bold shadow-md z-10"
@@ -285,50 +306,45 @@ export default function CategoryPage() {
                   <div className="text-center py-20">
                     <p className="text-gray-500 text-lg mb-2">No cards found for this subcategory.</p>
                     <p className="text-gray-400 text-sm">Try another option</p>
-                    <div className="mt-4 text-xs text-gray-400">
-                      <p>Debug info:</p>
+                    <div className="mt-4 text-xs text-gray-400 bg-gray-50 p-4 rounded">
+                      <p><b>Debug:</b></p>
                       <p>Category: {slug}</p>
                       <p>Subcategory: {activeSub}</p>
-                      <p>Total videos in category: {allVideos.length}</p>
+                      <p>Total in category: {allVideos.length}</p>
                     </div>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 pb-4">
-                    {activeVideos.map((video, i) => {
-                      return (
-                        <motion.div
-                          key={i}
-                          whileHover={{ scale: 1.05, y: -5 }}
-                          transition={{ duration: 0.2 }}
-                          onClick={() => {
-                            console.log("🎬 Navegando a:", video.name);
-                            router.push(`/edit/${video.name}`);
+                    {activeVideos.map((video, i) => (
+                      <motion.div
+                        key={i}
+                        whileHover={{ scale: 1.05, y: -5 }}
+                        transition={{ duration: 0.2 }}
+                        onClick={() => {
+                          console.log("🎬 Navegando a:", video.name);
+                          router.push(`/edit/${video.name}`);
+                        }}
+                        className="cursor-pointer bg-white rounded-2xl shadow-md border-2 border-pink-100 overflow-hidden hover:shadow-xl hover:border-pink-300"
+                      >
+                        <video
+                          src={video.file}
+                          className="object-cover w-full aspect-[4/5] bg-pink-50"
+                          playsInline
+                          loop
+                          muted
+                          onMouseEnter={(e) => e.target.play().catch(() => {})}
+                          onMouseLeave={(e) => {
+                            e.target.pause();
+                            e.target.currentTime = 0;
                           }}
-                          className="cursor-pointer bg-white rounded-2xl shadow-md border-2 border-pink-100 overflow-hidden hover:shadow-xl hover:border-pink-300"
-                        >
-                          <video
-                            src={video.file}
-                            className="object-cover w-full aspect-[4/5] bg-pink-50"
-                            playsInline
-                            loop
-                            muted
-                            onMouseEnter={(e) => e.target.play().catch(() => {})}
-                            onMouseLeave={(e) => {
-                              e.target.pause();
-                              e.target.currentTime = 0;
-                            }}
-                            onError={(e) => {
-                              console.error("❌ Error cargando:", video.file);
-                            }}
-                          />
-                          <div className="text-center py-3 px-2 bg-gradient-to-t from-pink-50 to-white">
-                            <p className="text-gray-700 font-semibold text-sm line-clamp-2">
-                              {video.object || video.name}
-                            </p>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
+                        />
+                        <div className="text-center py-3 px-2 bg-gradient-to-t from-pink-50 to-white">
+                          <p className="text-gray-700 font-semibold text-sm line-clamp-2">
+                            {video.object || video.name}
+                          </p>
+                        </div>
+                      </motion.div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -338,4 +354,4 @@ export default function CategoryPage() {
       </AnimatePresence>
     </main>
   );
-    }
+        }
