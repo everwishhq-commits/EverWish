@@ -49,7 +49,7 @@ const SUBCATEGORY_GROUPS = {
     "Support": ["Thinking of You", "Stay Strong"],
     "Loss": ["Sympathy", "Condolences"],
   },
-  "connection": {
+  "hear-every-heart": {
     "All voices": ["Love in Every Form", "All Welcome", "Dreams Without Borders", "Multicultural"],
     "Values": ["Kindness", "Strength in Kindness", "Courage to Be", "Peace", "Unity", "Colors of the Heart"],
   },
