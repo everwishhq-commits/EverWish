@@ -38,77 +38,35 @@ export default function EditPage({ params }) {
   const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
   const [animKey, setAnimKey] = useState(0);
 
-  // 🧭 Verificación de actualización cada 24 h
-  useEffect(() => {
-    const lastCheck = localStorage.getItem("everwish_videos_lastCheck");
-    const now = Date.now();
-    const day = 24 * 60 * 60 * 1000;
-
-    if (!lastCheck || now - parseInt(lastCheck, 10) > day) {
-      localStorage.setItem("everwish_videos_lastCheck", now.toString());
-      fetch("/api/videos?refresh=" + now)
-        .then((r) => r.json())
-        .then((data) => {
-          localStorage.setItem("everwish_videos_cache", JSON.stringify(data));
-        })
-        .catch((e) => console.warn("⚠️ No se pudo actualizar videos:", e));
-    }
-  }, []);
-
-  // 🎬 Inicializa datos y busca video - CORREGIDO
+  // 🎬 CORREGIDO: Buscar video en el index.json
   useEffect(() => {
     async function loadVideo() {
       try {
         console.log("🔍 Buscando video para slug:", slug);
         
-        // 🔍 Busca primero en caché local
-        const cached = localStorage.getItem("everwish_videos_cache");
-        let data = cached ? JSON.parse(cached) : null;
+        const res = await fetch("/api/videos", { cache: "no-store" });
+        const data = await res.json();
+        const allVideos = data.videos || data || [];
 
-        if (!data) {
-          console.log("📡 Cargando desde API...");
-          const res = await fetch("/api/videos");
-          data = await res.json();
-          localStorage.setItem("everwish_videos_cache", JSON.stringify(data));
-        }
+        console.log("📦 Total videos disponibles:", allVideos.length);
 
-        console.log("📦 Datos recibidos:", data);
-
-        // ✅ Buscar en data.videos usando el campo 'name' (no 'slug')
-        const videosList = data.videos || data || [];
-        
-        // Normalizar para comparación
-        const normalizeSlug = (str) => str?.toLowerCase().trim();
-        const targetSlug = normalizeSlug(slug);
-        
-        console.log("🎯 Buscando:", targetSlug);
-        
-        const match = videosList.find((v) => {
-          const videoName = normalizeSlug(v.name);
-          const videoSlug = normalizeSlug(v.slug);
-          
-          // Comparar con name y slug
-          const matches = videoName === targetSlug || videoSlug === targetSlug;
-          
-          if (matches) {
-            console.log("✅ Match encontrado:", v.name);
-          }
-          
-          return matches;
+        // Buscar coincidencia exacta por nombre
+        let match = allVideos.find((v) => {
+          const videoName = v.name || v.slug;
+          return videoName === slug || videoName.toLowerCase() === slug.toLowerCase();
         });
 
-        console.log("🎯 Video encontrado:", match);
-
         if (match) {
-          // ✅ Usar 'file' que contiene la ruta completa
-          const videoPath = match.file;
-          console.log("✅ Usando ruta:", videoPath);
-          setVideoSrc(videoPath);
+          console.log("✅ Video encontrado:", match.name);
+          console.log("📹 Ruta del archivo:", match.file);
+          setVideoSrc(match.file);
           setVideoFound(true);
         } else {
-          console.warn("⚠️ No se encontró match para:", slug);
-          console.warn("💡 Videos disponibles:", videosList.map(v => v.name).slice(0, 5));
-          setVideoSrc(`/videos/${slug}.mp4`);
+          // Fallback: intentar con la ruta directa
+          console.warn("⚠️ No se encontró en index.json, usando fallback");
+          const fallbackPath = `/videos/${slug}.mp4`;
+          console.log("🔄 Intentando ruta fallback:", fallbackPath);
+          setVideoSrc(fallbackPath);
           setVideoFound(false);
         }
       } catch (err) {
@@ -192,8 +150,7 @@ export default function EditPage({ params }) {
               muted
               playsInline
               onError={(e) => {
-                console.error("❌ Error al cargar video:", videoSrc);
-                console.error("Error details:", e);
+                console.error("❌ Error al cargar video en splash:", videoSrc);
                 setVideoFound(false);
               }}
               onLoadedData={() => {
@@ -201,10 +158,10 @@ export default function EditPage({ params }) {
               }}
             />
           ) : (
-            <div className="text-gray-500 text-center p-6">
-              <p className="text-xl mb-2">⚠️ Video not found</p>
-              <p className="text-sm">Looking for: <strong>{slug}</strong></p>
-              <p className="text-xs mt-2 text-gray-400">Path: {videoSrc}</p>
+            <div className="text-center text-gray-500 px-6">
+              <p className="text-lg mb-2">⚠️ Video not found</p>
+              <p className="text-sm">Looking for: <b>{slug}</b></p>
+              <p className="text-xs text-gray-400 mt-2">Path: {videoSrc}</p>
             </div>
           )}
           <div className="absolute bottom-8 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
@@ -257,9 +214,9 @@ export default function EditPage({ params }) {
                 />
               ) : (
                 <div className="w-full h-[380px] flex flex-col items-center justify-center text-gray-400 text-sm p-4">
-                  <p>⚠️ This card's video is missing or not uploaded yet.</p>
-                  <p className="text-xs mt-2">Slug: {slug}</p>
-                  <p className="text-xs">Path: {videoSrc}</p>
+                  <p className="mb-2">⚠️ This card's video is missing or not uploaded yet.</p>
+                  <p className="text-xs">Slug: <b>{slug}</b></p>
+                  <p className="text-xs mt-1">Path: {videoSrc}</p>
                 </div>
               )}
             </div>
@@ -454,4 +411,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-                               }
+        }
