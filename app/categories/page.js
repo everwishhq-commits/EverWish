@@ -1,106 +1,190 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { BASE_CATEGORIES, searchVideos, groupVideosByBaseCategory } from "@/lib/search-system";
 
 export default function CategoriesPage() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [videos, setVideos] = useState([]);
+  const [displayCategories, setDisplayCategories] = useState([]);
   const [results, setResults] = useState(null);
 
-  const allCats = [
-    { name: "Holidays", emoji: "🎉", slug: "seasonal-global-celebrations" },
-    { name: "Celebrations", emoji: "🎂", slug: "birthdays-celebrations" },
-    { name: "Love & Romance", emoji: "💝", slug: "love-weddings-anniversaries" },
-    { name: "Animal Lovers", emoji: "🐾", slug: "pets-animal-lovers" },
-  ];
-
+  // Cargar videos
   useEffect(() => {
-    fetch("/api/videos").then(r => r.json()).then(d => setVideos(d.videos || []));
+    async function loadVideos() {
+      try {
+        const res = await fetch("/api/videos");
+        const data = await res.json();
+        const allVideos = data.videos || [];
+        setVideos(allVideos);
+        
+        // Contar videos por categoría
+        const grouped = groupVideosByBaseCategory(allVideos);
+        const categoriesWithCounts = BASE_CATEGORIES.map(cat => ({
+          ...cat,
+          count: grouped[cat.slug]?.length || 0
+        }));
+        
+        setDisplayCategories(categoriesWithCounts);
+        console.log(`📦 ${allVideos.length} videos cargados`);
+        console.log(`📊 12 categorías inicializadas`);
+      } catch (err) {
+        console.error("❌ Error loading videos:", err);
+        setDisplayCategories(BASE_CATEGORIES.map(cat => ({ ...cat, count: 0 })));
+      }
+    }
+    loadVideos();
   }, []);
 
+  // Procesar búsqueda
   useEffect(() => {
     if (!search.trim()) {
+      // Sin búsqueda: mostrar TODAS las 12 categorías con contadores
+      if (videos.length > 0) {
+        const grouped = groupVideosByBaseCategory(videos);
+        const categoriesWithCounts = BASE_CATEGORIES.map(cat => ({
+          ...cat,
+          count: grouped[cat.slug]?.length || 0
+        }));
+        setDisplayCategories(categoriesWithCounts);
+      }
       setResults(null);
       return;
     }
 
-    // Buscar videos - MUY SIMPLE
-    const q = search.toLowerCase();
-    const found = videos.filter(v => {
-      const text = `${v.name} ${v.object} ${v.category} ${(v.categories || []).join(" ")} ${(v.tags || []).join(" ")}`.toLowerCase();
-      // Buscar singular y plural
-      return text.includes(q) || text.includes(q + "s") || text.includes(q.slice(0, -1));
-    });
+    console.log(`🔍 Buscando: "${search}"`);
 
-    // Extraer categorías
-    const cats = new Set();
-    found.forEach(v => {
-      if (v.categories) v.categories.forEach(c => cats.add(c.toLowerCase()));
-      else if (v.category) cats.add(v.category.toLowerCase());
+    // Con búsqueda: filtrar videos y mostrar solo categorías con resultados
+    const matchedVideos = searchVideos(videos, search);
+    console.log(`✅ ${matchedVideos.length} videos encontrados`);
+    
+    const grouped = groupVideosByBaseCategory(matchedVideos);
+    
+    // Solo mostrar categorías con resultados en búsqueda
+    const categoriesWithResults = BASE_CATEGORIES
+      .map(cat => ({
+        ...cat,
+        count: grouped[cat.slug]?.length || 0
+      }))
+      .filter(cat => cat.count > 0);
+    
+    console.log(`📊 ${categoriesWithResults.length} categorías con resultados`);
+    
+    setDisplayCategories(categoriesWithResults);
+    setResults({
+      found: matchedVideos.length,
+      categoriesCount: categoriesWithResults.length
     });
-
-    // Filtrar categorías base
-    const filtered = allCats.filter(c => {
-      const slug = c.slug.toLowerCase();
-      return [...cats].some(cat => cat.includes(slug) || slug.includes(cat) || cat.includes("seasonal") && slug.includes("seasonal") || cat.includes("birthday") && slug.includes("birthday"));
-    });
-
-    setResults({ found: found.length, cats: filtered });
   }, [search, videos]);
 
+  const handleCategoryClick = (cat) => {
+    const url = search.trim() 
+      ? `/category/${cat.slug}?q=${encodeURIComponent(search)}`
+      : `/category/${cat.slug}`;
+    
+    console.log(`🎯 Navegando a: ${url}`);
+    router.push(url);
+  };
+
   return (
-    <div className="min-h-screen bg-pink-50 p-4">
-      <h1 className="text-3xl font-bold text-pink-600 text-center mb-6">Categories</h1>
-      
-      <div className="max-w-md mx-auto mb-8">
-        <input
-          type="text"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Search: zombie, turtle, love..."
-          className="w-full px-4 py-3 rounded-full border-2 text-center"
-        />
-        {search && <button onClick={() => setSearch("")} className="mt-2 text-pink-500">× Clear</button>}
-      </div>
-
-      {results && (
-        <p className="text-center mb-6 font-bold">
-          {results.found > 0 ? (
-            <span className="text-green-600">✨ Found {results.found} cards in {results.cats.length} categories</span>
-          ) : (
-            <span className="text-gray-500">No results for "{search}"</span>
-          )}
+    <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white p-4">
+      <div className="max-w-5xl mx-auto">
+        <h1 className="text-4xl font-bold text-pink-600 text-center mb-2 mt-6">
+          Categories
+        </h1>
+        <p className="text-gray-500 text-center mb-8 text-sm">
+          Explore all our greeting card categories
         </p>
-      )}
-
-      <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto">
-        {(results ? results.cats : allCats).map((c, i) => {
-          const count = search ? videos.filter(v => {
-            const text = `${v.name} ${v.object} ${(v.categories || []).join(" ")}`.toLowerCase();
-            const q = search.toLowerCase();
-            const matches = text.includes(q) || text.includes(q + "s") || text.includes(q.slice(0, -1));
-            const inCat = (v.categories || []).some(cat => cat.toLowerCase().includes(c.slug.toLowerCase()));
-            return matches && inCat;
-          }).length : null;
-
-          return (
-            <div
-              key={i}
-              onClick={() => router.push(`/category/${c.slug}${search ? `?q=${search}` : ""}`)}
-              className="bg-white p-6 rounded-2xl shadow cursor-pointer hover:shadow-lg relative"
+        
+        {/* Barra de búsqueda */}
+        <div className="max-w-md mx-auto mb-8">
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search: zombie, turtle, love, mother..."
+            className="w-full px-4 py-3 rounded-full border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-center shadow-sm transition-all"
+          />
+          {search && (
+            <button 
+              onClick={() => setSearch("")} 
+              className="mt-2 text-pink-500 hover:text-pink-600 font-semibold block mx-auto"
             >
-              <div className="text-5xl text-center mb-2">{c.emoji}</div>
-              <div className="text-center font-bold">{c.name}</div>
-              {count > 0 && (
-                <span className="absolute top-2 right-2 bg-pink-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
-                  {count}
-                </span>
-              )}
-            </div>
-          );
-        })}
+              × Clear search
+            </button>
+          )}
+        </div>
+
+        {/* Resultados de búsqueda */}
+        {results && (
+          <div className="text-center mb-6">
+            {results.found > 0 ? (
+              <p className="text-gray-600">
+                ✨ Found <span className="font-bold text-pink-600">{results.found}</span> cards 
+                in <span className="font-bold text-pink-600">{results.categoriesCount}</span>{" "}
+                {results.categoriesCount === 1 ? 'category' : 'categories'}
+              </p>
+            ) : (
+              <p className="text-gray-400">
+                No results for "<span className="font-semibold">{search}</span>"
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Grid de categorías */}
+        {displayCategories.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
+            {displayCategories.map((cat, i) => (
+              <div
+                key={i}
+                onClick={() => handleCategoryClick(cat)}
+                className="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl cursor-pointer transition-all transform hover:scale-105 relative border-2 border-pink-100 hover:border-pink-300"
+              >
+                <div className="text-5xl text-center mb-3 animate-bounce-slow">
+                  {cat.emoji}
+                </div>
+                <div className="text-center font-semibold text-gray-800 text-sm leading-tight">
+                  {cat.name}
+                </div>
+                
+                {cat.count > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-pink-500 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold shadow-lg border-2 border-white">
+                    {cat.count}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 bg-white rounded-3xl shadow-lg max-w-md mx-auto">
+            <p className="text-gray-500 text-lg mb-4">
+              {search 
+                ? `No categories match "${search}"`
+                : "Loading categories..."}
+            </p>
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="text-pink-500 hover:text-pink-600 font-semibold"
+              >
+                ← Clear search and see all
+              </button>
+            )}
+          </div>
+        )}
       </div>
+
+      <style jsx>{`
+        @keyframes bounce-slow {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-5px); }
+        }
+        .animate-bounce-slow {
+          animation: bounce-slow 3s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
-        }
+                             }
