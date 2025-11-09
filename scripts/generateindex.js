@@ -1,7 +1,6 @@
 /**
- * 🧩 Everwish Video Index Generator - VERSIÓN FINAL
- * Se ejecuta automáticamente en build y dev
- * Clasificación múltiple basada en nombre de archivo
+ * 🧩 Everwish Video Index Generator - VERSIÓN CORREGIDA
+ * Usa los nombres EXACTOS de la UI
  */
 
 import fs from "fs";
@@ -10,37 +9,37 @@ import path from "path";
 const videosRoot = path.join(process.cwd(), "public/videos");
 const indexFile = path.join(videosRoot, "index.json");
 
-// 📚 MAPEO COMPLETO: palabra → categoría principal
+// 📚 MAPEO COMPLETO con los nombres EXACTOS de la UI
 const CATEGORY_MAP = {
-  // Seasonal & Holidays - TODAS LAS VARIANTES
-  halloween: "Seasonal & Global Celebrations",
-  christmas: "Seasonal & Global Celebrations",
-  xmas: "Seasonal & Global Celebrations",
-  navidad: "Seasonal & Global Celebrations",
-  thanksgiving: "Seasonal & Global Celebrations",
-  easter: "Seasonal & Global Celebrations",
-  holidays: "Seasonal & Global Celebrations",
-  july4: "Seasonal & Global Celebrations",
-  independenceday: "Seasonal & Global Celebrations",
-  independence: "Seasonal & Global Celebrations",
-  eagle: "Seasonal & Global Celebrations",
-  newyear: "Seasonal & Global Celebrations",
+  // Holidays (era "Seasonal & Global Celebrations")
+  halloween: "Holidays",
+  christmas: "Holidays",
+  xmas: "Holidays",
+  navidad: "Holidays",
+  thanksgiving: "Holidays",
+  easter: "Holidays",
+  holidays: "Holidays",
+  july4: "Holidays",
+  independenceday: "Holidays",
+  independence: "Holidays",
+  eagle: "Holidays",
+  newyear: "Holidays",
   
-  // Love & Romance
-  love: "Love, Weddings & Anniversaries",
-  valentine: "Love, Weddings & Anniversaries",
-  valentines: "Love, Weddings & Anniversaries",
-  wedding: "Love, Weddings & Anniversaries",
-  anniversary: "Love, Weddings & Anniversaries",
-  hugs: "Love, Weddings & Anniversaries",
+  // Love & Romance (era "Love, Weddings & Anniversaries")
+  love: "Love & Romance",
+  valentine: "Love & Romance",
+  valentines: "Love & Romance",
+  wedding: "Love & Romance",
+  anniversary: "Love & Romance",
+  hugs: "Love & Romance",
   
-  // Birthdays & Celebrations
-  birthday: "Birthdays & Celebrations",
-  bday: "Birthdays & Celebrations",
-  celebration: "Birthdays & Celebrations",
-  celebrations: "Birthdays & Celebrations",
-  celebr: "Birthdays & Celebrations",
-  zombie: "Birthdays & Celebrations",
+  // Celebrations (era "Birthdays & Celebrations")
+  birthday: "Celebrations",
+  bday: "Celebrations",
+  celebration: "Celebrations",
+  celebrations: "Celebrations",
+  celebr: "Celebrations",
+  zombie: "Celebrations",
   
   // Family & Friendship
   mother: "Family & Friendship",
@@ -54,17 +53,17 @@ const CATEGORY_MAP = {
   // Babies & Parenting
   baby: "Babies & Parenting",
   
-  // Pets & Animal Lovers - IMPORTANTE
-  pet: "Pets & Animal Lovers",
-  pets: "Pets & Animal Lovers",
-  dog: "Pets & Animal Lovers",
-  dogcat: "Pets & Animal Lovers",
-  cat: "Pets & Animal Lovers",
-  turtle: "Pets & Animal Lovers", // ← AÑADIDO
-  animals: "Pets & Animal Lovers",
-  animalsandnature: "Pets & Animal Lovers",
+  // Animal Lovers (era "Pets & Animal Lovers")
+  pet: "Animal Lovers",
+  pets: "Animal Lovers",
+  dog: "Animal Lovers",
+  dogcat: "Animal Lovers",
+  cat: "Animal Lovers",
+  turtle: "Animal Lovers",
+  animals: "Animal Lovers",
+  animalsandnature: "Animal Lovers",
   
-  // Everyday
+  // Otros
   general: "Everyday & Appreciation",
   thank: "Everyday & Appreciation",
   thanks: "Everyday & Appreciation",
@@ -105,102 +104,140 @@ function getAllMp4Files(dir) {
     const fullPath = path.join(dir, entry.name);
     return entry.isDirectory()
       ? getAllMp4Files(fullPath)
-      : entry.name.toLowerCase().endsWith(".mp4")
+      : entry.name.endsWith(".mp4")
       ? [fullPath]
       : [];
   });
 }
 
-function detectCategories(parts) {
-  const categories = new Set();
+function extractInfoFromFilename(filename) {
+  const basename = path.basename(filename, ".mp4");
+  const parts = basename.split("_");
   
-  // Revisar TODAS las partes del nombre
-  for (const part of parts) {
-    const normalized = part.toLowerCase().trim();
-    if (CATEGORY_MAP[normalized]) {
-      categories.add(CATEGORY_MAP[normalized]);
+  const object = parts[0] || "Unknown";
+  const lastPart = parts[parts.length - 1] || "";
+  const versionMatch = lastPart.match(/^(\d+)([A-Z]?)$/);
+  const version = versionMatch ? versionMatch[0] : "1A";
+  
+  const middleParts = parts.slice(1, -1);
+  
+  return { object, middleParts, version, basename };
+}
+
+function classifyVideo(info) {
+  const { object, middleParts, basename } = info;
+  const allParts = [object, ...middleParts].map(p => p.toLowerCase());
+  
+  const categoriesSet = new Set();
+  let subcategory = "General";
+  
+  // Clasificar por cada palabra del nombre
+  allParts.forEach(part => {
+    // Buscar categoría
+    if (CATEGORY_MAP[part]) {
+      categoriesSet.add(CATEGORY_MAP[part]);
+    }
+    
+    // Buscar subcategoría (la primera que encuentre)
+    if (SUBCATEGORY_MAP[part] && subcategory === "General") {
+      subcategory = SUBCATEGORY_MAP[part];
+    }
+  });
+  
+  // Si no encontró categorías, asignar por defecto
+  if (categoriesSet.size === 0) {
+    categoriesSet.add("Everyday & Appreciation");
+  }
+  
+  return {
+    categories: Array.from(categoriesSet),
+    category: Array.from(categoriesSet)[0], // Primera categoría como principal
+    subcategory,
+  };
+}
+
+function generateTags(info) {
+  const { object, middleParts, basename } = info;
+  const tags = [object.toLowerCase()];
+  
+  middleParts.forEach(part => {
+    if (part.toLowerCase() !== object.toLowerCase()) {
+      tags.push(part.toLowerCase());
+    }
+  });
+  
+  // Agregar las categorías como tags
+  const classification = classifyVideo(info);
+  classification.categories.forEach(cat => {
+    const tagVersion = cat.toLowerCase().replace(/\s+/g, " ");
+    if (!tags.includes(tagVersion)) {
+      tags.push(tagVersion);
+    }
+  });
+  
+  // Agregar subcategoría
+  if (classification.subcategory !== "General") {
+    const subTag = classification.subcategory.toLowerCase().replace(/\s+/g, " ");
+    if (!tags.includes(subTag)) {
+      tags.push(subTag);
     }
   }
   
-  if (categories.size === 0) {
-    categories.add("Everyday & Appreciation");
-  }
-  
-  return Array.from(categories);
+  return [...new Set(tags)];
 }
 
-function detectSubcategory(parts) {
-  // Buscar en orden de prioridad
-  for (let i = 1; i < parts.length; i++) {
-    const normalized = parts[i].toLowerCase().trim();
-    if (SUBCATEGORY_MAP[normalized]) {
-      return SUBCATEGORY_MAP[normalized];
-    }
-  }
-  return "General";
-}
-
-function normalize(str) {
+function capitalizeWords(str) {
   return str
-    ?.replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase())
-    .trim() || "";
+    .split(/[\s_-]+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
 }
 
 function generateIndex() {
-  console.log("\n🎬 EVERWISH INDEX GENERATOR");
-  console.log("=" .repeat(50));
-
-  if (!fs.existsSync(videosRoot)) {
-    console.error("❌ Carpeta public/videos/ no existe");
-    return;
-  }
-
-  const files = getAllMp4Files(videosRoot);
-  console.log(`📹 Archivos encontrados: ${files.length}\n`);
-
-  const videos = files.map((filePath) => {
-    const relative = path.relative(videosRoot, filePath).replace(/\\/g, "/");
-    const basename = path.basename(filePath, ".mp4");
-    const parts = basename.split("_");
+  console.log("🎬 Generando index.json con nombres de UI...\n");
+  
+  const mp4Files = getAllMp4Files(videosRoot);
+  console.log(`📁 Archivos encontrados: ${mp4Files.length}\n`);
+  
+  const videos = mp4Files.map(filePath => {
+    const relativePath = path.relative(path.join(process.cwd(), "public"), filePath);
+    const urlPath = "/" + relativePath.replace(/\\/g, "/");
     
-    const object = normalize(parts[0] || "Unknown");
-    const categories = detectCategories(parts);
-    const subcategory = detectSubcategory(parts);
-    const variant = parts[parts.length - 1]?.match(/\d+[A-Z]+/i)?.[0] || "1A";
+    const info = extractInfoFromFilename(filePath);
+    const classification = classifyVideo(info);
+    const tags = generateTags(info);
     
-    const tags = Array.from(new Set([
-      ...parts.map(p => p.toLowerCase()),
-      object.toLowerCase(),
-      ...categories.map(c => c.toLowerCase()),
-      subcategory.toLowerCase(),
-    ]));
-
-    console.log(`✅ ${basename}`);
-    console.log(`   📂 Categories: ${categories.join(", ")}`);
-    console.log(`   🏷️  Subcategory: ${subcategory}`);
-    console.log(`   🎨 Variant: ${variant}\n`);
-
-    return {
-      name: basename,
-      file: `/videos/${relative}`,
-      object,
-      category: categories[0],
-      categories,
-      subcategory,
-      variant,
-      slug: basename.toLowerCase(),
-      tags,
+    const videoData = {
+      name: info.basename,
+      file: urlPath,
+      object: capitalizeWords(info.object),
+      category: classification.category,
+      categories: classification.categories,
+      subcategory: classification.subcategory,
+      tags: tags,
+      version: info.version,
     };
+    
+    // Log detallado
+    console.log(`✅ ${videoData.name}`);
+    console.log(`   📂 Categories: ${classification.categories.join(", ")}`);
+    console.log(`   🏷️  Subcategory: ${classification.subcategory}`);
+    console.log(`   🎯 Object: ${videoData.object}\n`);
+    
+    return videoData;
   });
-
-  fs.writeFileSync(indexFile, JSON.stringify({ videos }, null, 2), "utf-8");
   
-  console.log("=" .repeat(50));
-  console.log(`✅ Index generado: ${videos.length} videos`);
-  console.log(`📂 Ubicación: ${indexFile}\n`);
+  const indexData = {
+    videos,
+    generated: new Date().toISOString(),
+    total: videos.length,
+  };
   
-  // Resumen
+  fs.writeFileSync(indexFile, JSON.stringify(indexData, null, 2), "utf8");
+  console.log(`✅ Index generado: ${indexFile}`);
+  console.log(`📊 Total de videos: ${videos.length}\n`);
+  
+  // Resumen de categorías
   const categoryCount = {};
   videos.forEach(v => {
     v.categories.forEach(cat => {
@@ -208,14 +245,17 @@ function generateIndex() {
     });
   });
   
-  console.log("📊 RESUMEN POR CATEGORÍA:");
-  console.log("-".repeat(50));
-  Object.entries(categoryCount)
-    .sort((a, b) => b[1] - a[1])
-    .forEach(([cat, count]) => {
-      console.log(`   ${cat}: ${count}`);
-    });
-  console.log("=" .repeat(50) + "\n");
+  console.log("📊 Resumen por categoría:");
+  Object.entries(categoryCount).forEach(([cat, count]) => {
+    console.log(`   ${cat}: ${count} videos`);
+  });
 }
 
-generateIndex();
+// Ejecutar
+try {
+  generateIndex();
+  process.exit(0);
+} catch (error) {
+  console.error("❌ Error:", error);
+  process.exit(1);
+}
