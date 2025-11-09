@@ -48,9 +48,9 @@ const SUBCATEGORY_GROUPS = {
     "Support": ["Thinking of You", "Stay Strong"],
     "Loss": ["Sympathy", "Condolences"],
   },
-  "diversity-connection": {
-    "Inclusion": ["Diversity", "All Welcome", "Multicultural"],
-    "Values": ["Kindness", "Peace", "Unity"],
+  "connection": {
+    "All voices": ["Love in Every Form", "All Welcome", "Dreams Without Borders", "Multicultural"],
+    "Values": ["Kindness", "Strength in Kindness", "Courage to Be", "Peace", "Unity", "Colors of the Heart"],
   },
   "sports": {
     "Team Sports": ["Soccer", "Basketball", "Football"],
