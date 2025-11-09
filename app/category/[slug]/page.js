@@ -13,6 +13,7 @@ const SUBCATEGORY_GROUPS = {
     "American Holidays": ["MLK Day", "Presidents' Day", "Memorial Day", "Independence Day", "Labor Day", "Veterans Day", "Columbus Day", "Juneteenth"],
   },
   "birthdays-celebrations": {
+    "Birthday": ["Every Candle, Every Wish"],
     "Ages": ["Baby", "Kids", "Teens", "Adult"],
     "Milestones": ["Sweet 16", "18th", "21st", "30th", "40th", "50th"],
     "Styles": ["Funny", "Belated", "Surprise",],
