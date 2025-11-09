@@ -74,23 +74,40 @@ export default function EditPage({ params }) {
 
         console.log("📦 Datos recibidos:", data);
 
-        // ✅ CORRECCIÓN: Buscar en data.videos y usar el campo 'file' (no 'src')
+        // ✅ Buscar en data.videos usando el campo 'name' (no 'slug')
         const videosList = data.videos || data || [];
+        
+        // Normalizar para comparación
+        const normalizeSlug = (str) => str?.toLowerCase().trim();
+        const targetSlug = normalizeSlug(slug);
+        
+        console.log("🎯 Buscando:", targetSlug);
+        
         const match = videosList.find((v) => {
-          const videoSlug = v.slug || v.name;
-          return videoSlug === slug || videoSlug === slug.toLowerCase();
+          const videoName = normalizeSlug(v.name);
+          const videoSlug = normalizeSlug(v.slug);
+          
+          // Comparar con name y slug
+          const matches = videoName === targetSlug || videoSlug === targetSlug;
+          
+          if (matches) {
+            console.log("✅ Match encontrado:", v.name);
+          }
+          
+          return matches;
         });
 
         console.log("🎯 Video encontrado:", match);
 
         if (match) {
-          // ✅ Usar 'file' en lugar de 'src'
-          const videoPath = match.file || match.src || `/videos/${slug}.mp4`;
+          // ✅ Usar 'file' que contiene la ruta completa
+          const videoPath = match.file;
           console.log("✅ Usando ruta:", videoPath);
           setVideoSrc(videoPath);
           setVideoFound(true);
         } else {
-          console.warn("⚠️ No se encontró match, usando fallback");
+          console.warn("⚠️ No se encontró match para:", slug);
+          console.warn("💡 Videos disponibles:", videosList.map(v => v.name).slice(0, 5));
           setVideoSrc(`/videos/${slug}.mp4`);
           setVideoFound(false);
         }
@@ -184,10 +201,10 @@ export default function EditPage({ params }) {
               }}
             />
           ) : (
-            <div className="text-gray-500 text-center">
-              ⚠️ Video not found: {slug}.mp4
-              <br />
-              <small className="text-xs">Ruta intentada: {videoSrc}</small>
+            <div className="text-gray-500 text-center p-6">
+              <p className="text-xl mb-2">⚠️ Video not found</p>
+              <p className="text-sm">Looking for: <strong>{slug}</strong></p>
+              <p className="text-xs mt-2 text-gray-400">Path: {videoSrc}</p>
             </div>
           )}
           <div className="absolute bottom-8 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
@@ -437,4 +454,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-}
+                               }
