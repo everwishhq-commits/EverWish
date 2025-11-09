@@ -81,8 +81,12 @@ export default function Categories() {
     const categoriesSet = new Set();
     matchingVideos.forEach((v) => {
       if (v.categories && Array.isArray(v.categories)) {
-        v.categories.forEach(cat => categoriesSet.add(cat.toLowerCase()));
+        v.categories.forEach(cat => {
+          console.log(`  📂 Categoría encontrada: "${cat}"`);
+          categoriesSet.add(cat.toLowerCase());
+        });
       } else if (v.category) {
+        console.log(`  📂 Categoría encontrada: "${v.category}"`);
         categoriesSet.add(v.category.toLowerCase());
       }
     });
@@ -97,12 +101,42 @@ export default function Categories() {
       // Buscar si alguna categoría del video coincide
       return [...categoriesSet].some((matchCat) => {
         const normalized = matchCat.replace(/&/g, "and").replace(/\s+/g, "-");
-        return (
-          normalized.includes(catSlug) ||
-          catSlug.includes(normalized) ||
-          matchCat.includes(catName) ||
-          catName.includes(matchCat)
+        const mcWords = matchCat.toLowerCase().split(/\s+|&/);
+        const catWords = catName.toLowerCase().split(/\s+|&/);
+        
+        // Coincidencia por slug
+        if (normalized.includes(catSlug) || catSlug.includes(normalized)) {
+          return true;
+        }
+        
+        // Coincidencia por nombre
+        if (matchCat.includes(catName) || catName.includes(matchCat)) {
+          return true;
+        }
+        
+        // Coincidencia por palabras clave
+        const hasWordMatch = mcWords.some(word => 
+          catWords.some(cw => cw.includes(word) || word.includes(cw))
         );
+        
+        if (hasWordMatch) {
+          return true;
+        }
+        
+        // Mapeo especial
+        const specialMaps = {
+          "seasonal": ["holidays"],
+          "celebrations": ["celebrations", "birthdays"],
+          "birthdays": ["celebrations"],
+        };
+        
+        for (const [key, values] of Object.entries(specialMaps)) {
+          if (matchCat.includes(key) && values.some(v => catName.includes(v) || catSlug.includes(v))) {
+            return true;
+          }
+        }
+        
+        return false;
       });
     });
 
@@ -241,4 +275,4 @@ export default function Categories() {
       )}
     </section>
   );
-                 }
+                                         }
