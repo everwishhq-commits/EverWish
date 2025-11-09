@@ -3,363 +3,218 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
-// 🗂️ Grupos de subcategorías por categoría
-const SUBCATEGORY_GROUPS = {
-  "seasonal-global-celebrations": {
-    "Seasons": ["Spring", "Summer", "Fall", "Winter"],
-    "Cultural Celebrations": ["Lunar New Year", "Valentine's Day", "St. Patrick's Day", "Carnival", "Cinco de Mayo", "Oktoberfest", "Day of the Dead"],
-    "Family Days": ["Mother's Day", "Father's Day", "Grandparents Day", "Easter"],
-    "Holiday Season": ["Halloween", "Thanksgiving", "Christmas", "Hanukkah", "Kwanzaa"],
-    "American Holidays": ["MLK Day", "Presidents' Day", "Memorial Day", "Independence Day", "Labor Day", "Veterans Day", "Columbus Day", "Juneteenth"],
-  },
-  "birthdays-celebrations": {
-    "Birthday": ["Every Candle, Every Wish"],
-    "Ages": ["Baby", "Kids", "Teens", "Adult"],
-    "Milestones": ["Sweet 16", "18th", "21st", "30th", "40th", "50th"],
-    "Styles": ["Funny", "Belated", "Surprise",],
-  },
-  "love-weddings-anniversaries": {
-    "Romance": ["Love", "I Love You", "Miss You", "Hugs"],
-    "Wedding": ["Wedding", "Engagement", "Proposal"],
-    "Anniversary": ["Anniversary", "1 Year", "5 Years", "10 Years"],
-  },
-  "family-friendship": {
-    "Friendship": ["Best Friends", "Friend"],
-    "Parents": ["Mom", "Dad"],
-    "Siblings": ["Sister", "Brother"],
-    "Extended Family": ["Grandparents", "Aunt", "Uncle"],
-  },
-  "work": {
-    "Achievements": ["New Job", "Promotion", "New Business"],
-    "Graduation": ["Graduation", "College", "High School"],
-    "Professions": ["Teacher", "Nurse", "Firefighter", "Police", "Military"],
-    "Appreciation": ["Coworker", "Boss", "Team"],
-  },
-  "babies-parenting": {
-    "Arrival": ["Pregnancy", "Baby Shower", "Newborn", "Twins"],
-    "Parents": ["New Parents", "Mom Life", "Dad Life"],
-  },
-  "pets-animal-lovers": {
-    "Dogs": ["Dog", "Puppy"],
-    "Cats": ["Cat", "Kitten"],
-    "Other": ["Pet", "Cute", "Funny"],
-  },
-  "support-healing-care": {
-    "Health": ["Get Well", "Recovery", "Hospital"],
-    "Support": ["Thinking of You", "Stay Strong"],
-    "Loss": ["Sympathy", "Condolences"],
-  },
-  "hear-every-heart": {
-    "All voices": ["Love in Every Form", "All Welcome", "Dreams Without Borders", "Multicultural"],
-    "Values": ["Kindness", "Strength in Kindness", "Courage to Be", "Peace", "Unity", "Colors of the Heart"],
-  },
-  "sports": {
-    "Team Sports": ["Soccer", "Basketball", "Football"],
-    "Fitness": ["Gym", "Yoga"],
-  },
-  "wellness-mindful-living": {
-    "Wellness": ["Self-Care", "Meditation", "Gratitude"],
-    "Lifestyle": ["Healthy Living", "Nature"],
-  },
-  "life-journeys-transitions": {
-    "Achievements": ["Congratulations", "Good Luck"],
-    "Moving": ["New Home", "Housewarming"],
-    "Everyday": ["Just Because", "Thank You"],
-  },
-};
+// 🔍 Normalizar
+const norm = (s) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+
+// 🎯 Filtrar videos por categoría
+function filterByCategory(videos, categorySlug) {
+  const normSlug = norm(categorySlug);
+  return videos.filter(v => {
+    const cats = v.categories || [v.category];
+    return cats.some(c => {
+      const normCat = norm(c);
+      return normCat.includes(normSlug) || normSlug.includes(normCat);
+    });
+  });
+}
+
+// 🗂️ Extraer subcategorías únicas
+function getSubcategories(videos) {
+  const subs = new Set();
+  videos.forEach(v => {
+    if (v.subcategory && v.subcategory !== "General") {
+      subs.add(v.subcategory);
+    }
+  });
+  return Array.from(subs).sort();
+}
+
+// 🎯 Filtrar por subcategoría
+function filterBySub(videos, sub) {
+  const normSub = norm(sub);
+  return videos.filter(v => {
+    const vSub = norm(v.subcategory);
+    const vName = norm(v.name);
+    const vObj = norm(v.object);
+    const vTags = (v.tags || []).map(t => norm(t));
+    
+    return vSub === normSub || vSub.includes(normSub) || normSub.includes(vSub) ||
+           vName.includes(normSub) || vObj.includes(normSub) || vTags.includes(normSub);
+  });
+}
 
 export default function CategoryPage() {
   const { slug } = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const searchTerm = searchParams.get("q");
+  const q = searchParams.get("q");
   
   const [allVideos, setAllVideos] = useState([]);
-  const [activeGroup, setActiveGroup] = useState(null);
+  const [categoryVideos, setCategoryVideos] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
   const [activeSub, setActiveSub] = useState(null);
+  const [modalVideos, setModalVideos] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Cargar videos
   useEffect(() => {
-    async function loadVideos() {
+    async function load() {
       try {
         const res = await fetch("/api/videos", { cache: "no-store" });
         const data = await res.json();
-
-        console.log("📦 API Response:", data);
-        const allVids = data.videos || [];
-        console.log("📹 Total videos:", allVids.length);
-
-        // 🔥 FILTRADO MEJORADO - Busca en category Y categories
-        const filtered = allVids.filter((v) => {
-          // Normalizar el slug de la categoría actual
-          const currentSlug = slug.toLowerCase().replace(/&/g, "and").replace(/\s+/g, "-");
-          
-          // 1. Buscar en category principal
-          const mainCat = (v.category || "").toLowerCase().replace(/&/g, "and").replace(/\s+/g, "-");
-          if (mainCat.includes(currentSlug) || currentSlug.includes(mainCat)) {
-            console.log(`✅ Match en category: ${v.name}`);
-            return true;
-          }
-          
-          // 2. Buscar en el array categories (si existe)
-          if (v.categories && Array.isArray(v.categories)) {
-            const hasMatch = v.categories.some(cat => {
-              const normCat = (cat || "").toLowerCase().replace(/&/g, "and").replace(/\s+/g, "-");
-              const match = normCat.includes(currentSlug) || currentSlug.includes(normCat);
-              if (match) {
-                console.log(`✅ Match en categories[]: ${v.name} (${cat})`);
-              }
-              return match;
-            });
-            if (hasMatch) return true;
-          }
-          
-          // 3. Buscar palabras clave en el nombre
-          const fileName = (v.name || "").toLowerCase();
-          const keywords = {
-            "seasonal-global-celebrations": ["halloween", "christmas", "thanksgiving", "easter", "july4", "independence", "independenceday", "eagle", "valentine", "holiday", "newyear"],
-            "love-weddings-anniversaries": ["love", "wedding", "anniversary", "valentine", "hugs"],
-            "birthdays-celebrations": ["birthday", "celebration", "zombie"],
-            "pets-animal-lovers": ["pet", "dog", "cat", "turtle", "animal"],
-          };
-          
-          const catKeywords = keywords[currentSlug] || [];
-          const hasKeyword = catKeywords.some(kw => fileName.includes(kw));
-          if (hasKeyword) {
-            console.log(`✅ Match por keyword: ${v.name}`);
-            return true;
-          }
-          
-          return false;
-        });
-
-        console.log(`✅ Videos filtrados para "${slug}":`, filtered.length);
-        setAllVideos(filtered);
+        const all = data.videos || [];
+        
+        // Filtrar por categoría
+        const filtered = filterByCategory(all, slug);
+        
+        // Si hay búsqueda, filtrar más
+        const final = q 
+          ? filtered.filter(v => {
+              const text = [v.name, v.object, v.subcategory, ...(v.tags || [])].join(" ");
+              return norm(text).includes(norm(q));
+            })
+          : filtered;
+        
+        setAllVideos(all);
+        setCategoryVideos(final);
+        
+        // Extraer subcategorías
+        const subs = getSubcategories(final);
+        setSubcategories(subs);
+        
+        console.log(`✅ ${slug}: ${final.length} videos, ${subs.length} subcategorías`);
       } catch (err) {
-        console.error("❌ Error loading videos:", err);
+        console.error("❌ Error:", err);
       } finally {
         setLoading(false);
       }
     }
+    load();
+  }, [slug, q]);
 
-    loadVideos();
-  }, [slug, searchTerm]);
+  // Abrir modal con videos de subcategoría
+  const openModal = (sub) => {
+    const videos = filterBySub(categoryVideos, sub);
+    console.log(`🎯 ${sub}: ${videos.length} videos`);
+    setModalVideos(videos);
+    setActiveSub(sub);
+  };
 
-  const groups = SUBCATEGORY_GROUPS[slug] || {};
-  const groupNames = Object.keys(groups);
-
-  // 🎯 FILTRADO DE SUBCATEGORÍA - MUY FLEXIBLE
-  const activeVideos = activeSub
-    ? allVideos.filter(v => {
-        const searchTerm = activeSub.toLowerCase().replace(/\s+/g, "");
-        
-        // 1. Nombre del archivo
-        const fileName = (v.name || "").toLowerCase().replace(/_/g, "");
-        if (fileName.includes(searchTerm)) {
-          console.log(`✅ Match por nombre: ${v.name}`);
-          return true;
-        }
-        
-        // 2. Subcategoría
-        const vSub = (v.subcategory || "").toLowerCase().replace(/\s+/g, "");
-        if (vSub === searchTerm || vSub.includes(searchTerm) || searchTerm.includes(vSub)) {
-          console.log(`✅ Match por subcategoría: ${v.name}`);
-          return true;
-        }
-        
-        // 3. Objeto
-        const vObj = (v.object || "").toLowerCase().replace(/\s+/g, "");
-        if (vObj === searchTerm || vObj.includes(searchTerm) || searchTerm.includes(vObj)) {
-          console.log(`✅ Match por objeto: ${v.name}`);
-          return true;
-        }
-        
-        // 4. Tags
-        if (v.tags && Array.isArray(v.tags)) {
-          const hasTag = v.tags.some(tag => {
-            const normalizedTag = tag.toLowerCase().replace(/\s+/g, "");
-            return normalizedTag === searchTerm || normalizedTag.includes(searchTerm) || searchTerm.includes(normalizedTag);
-          });
-          if (hasTag) {
-            console.log(`✅ Match por tag: ${v.name}`);
-            return true;
-          }
-        }
-        
-        // 5. Partes del nombre
-        const nameParts = (v.name || "").toLowerCase().split("_");
-        if (nameParts.some(part => part === searchTerm || part.includes(searchTerm))) {
-          console.log(`✅ Match por parte: ${v.name}`);
-          return true;
-        }
-        
-        return false;
-      })
-    : [];
-
-  console.log(`🎯 Subcategoría: "${activeSub}"`);
-  console.log(`📊 Total en categoría: ${allVideos.length}`);
-  console.log(`🎬 Videos encontrados: ${activeVideos.length}`);
+  const closeModal = () => {
+    setActiveSub(null);
+    setModalVideos([]);
+  };
 
   if (loading) {
     return (
-      <main className="flex flex-col items-center justify-center min-h-screen bg-[#fff5f8] text-gray-600">
-        <p className="animate-pulse text-lg">Loading...</p>
+      <main className="flex items-center justify-center min-h-screen bg-[#fff5f8]">
+        <p className="text-lg text-gray-600 animate-pulse">Loading...</p>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#fff5f8] text-gray-800 flex flex-col items-center py-10 px-4">
-      <button
-        onClick={() => router.push("/categories")}
-        className="text-pink-500 hover:text-pink-600 font-semibold mb-6"
-      >
+    <main className="min-h-screen bg-[#fff5f8] py-10 px-4">
+      <button onClick={() => router.push("/categories")} className="text-pink-500 hover:text-pink-600 font-semibold mb-6">
         ← Back to Main Categories
       </button>
 
-      <h1 className="text-4xl font-extrabold text-pink-600 mb-3 capitalize text-center">
+      <h1 className="text-4xl font-extrabold text-pink-600 mb-3 text-center capitalize">
         {slug.replace(/-/g, " ")}
       </h1>
 
-      {/* Debug info */}
-      <p className="text-xs text-gray-400 mb-4">
-        Videos in this category: {allVideos.length}
-      </p>
+      {q && (
+        <p className="text-sm text-gray-500 text-center mb-8">
+          Results for "<b>{q}</b>"
+        </p>
+      )}
 
-      {/* Mostrar grupos */}
-      {!activeGroup && (
-        <div className="flex flex-wrap justify-center gap-4 max-w-5xl">
-          {groupNames.map((groupName, i) => (
-            <motion.button
-              key={i}
-              onClick={() => setActiveGroup(groupName)}
-              whileHover={{ scale: 1.05 }}
-              className="px-5 py-3 rounded-full bg-white shadow-sm border border-pink-100 hover:border-pink-200 hover:bg-pink-50 text-gray-700 font-semibold"
-            >
-              {groupName}
-            </motion.button>
-          ))}
+      {subcategories.length > 0 ? (
+        <div className="flex flex-wrap justify-center gap-4 max-w-5xl mx-auto">
+          {subcategories.map((sub, i) => {
+            const count = filterBySub(categoryVideos, sub).length;
+            return (
+              <motion.button
+                key={i}
+                onClick={() => openModal(sub)}
+                whileHover={{ scale: 1.05 }}
+                className="px-5 py-3 rounded-full bg-white shadow-sm border border-pink-100 hover:border-pink-300 hover:bg-pink-50 font-semibold flex items-center gap-2"
+              >
+                <span>{sub}</span>
+                <span className="text-xs bg-pink-100 px-2 py-1 rounded-full">{count}</span>
+              </motion.button>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="text-center py-20">
+          <p className="text-gray-500 text-lg">No subcategories found</p>
+          {q && (
+            <button onClick={() => router.push(`/category/${slug}`)} className="mt-4 text-pink-500 font-semibold">
+              ← Clear search
+            </button>
+          )}
         </div>
       )}
 
-      {/* Mostrar subcategorías */}
-      {activeGroup && !activeSub && (
-        <>
-          <button
-            onClick={() => setActiveGroup(null)}
-            className="text-pink-500 hover:text-pink-600 font-semibold mb-4"
-          >
-            ← Back to Groups
-          </button>
-          
-          <h2 className="text-2xl font-bold text-pink-600 mb-6">{activeGroup}</h2>
-          
-          <div className="flex flex-wrap justify-center gap-4 max-w-5xl">
-            {groups[activeGroup].map((subName, i) => (
-              <motion.button
-                key={i}
-                onClick={() => {
-                  console.log("🎯 Seleccionando:", subName);
-                  setActiveSub(subName);
-                }}
-                whileHover={{ scale: 1.05 }}
-                className="px-5 py-3 rounded-full bg-white shadow-sm border border-pink-100 hover:border-pink-200 hover:bg-pink-50 text-gray-700 font-semibold"
-              >
-                {subName}
-              </motion.button>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* Modal con videos */}
+      {/* 💫 Modal con videos */}
       <AnimatePresence>
         {activeSub && (
           <>
             <motion.div
-              className="fixed inset-0 z-[9998] bg-black/50 backdrop-blur-sm"
+              className="fixed inset-0 z-[9998] bg-black/50"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setActiveSub(null)}
+              onClick={closeModal}
             />
             <motion.div
-              className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4"
+              className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.3 }}
             >
-              <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto border-2 border-pink-200 p-4 sm:p-6">
+              <div className="bg-white rounded-3xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto p-6">
                 <button
-                  onClick={() => setActiveSub(null)}
-                  className="sticky top-0 right-0 float-right bg-pink-100 hover:bg-pink-200 text-pink-600 rounded-full w-10 h-10 flex items-center justify-center text-2xl font-bold shadow-md z-10"
+                  onClick={closeModal}
+                  className="float-right bg-pink-100 hover:bg-pink-200 text-pink-600 rounded-full w-10 h-10 flex items-center justify-center text-2xl font-bold"
                 >
                   ×
                 </button>
 
-                <h2 className="text-3xl font-bold text-pink-600 mb-6 text-center clear-both pt-2">
+                <h2 className="text-3xl font-bold text-pink-600 mb-6 text-center clear-both">
                   {activeSub}
                 </h2>
 
-                {activeVideos.length === 0 ? (
-                  <div className="text-center py-20">
-                    <p className="text-gray-500 text-lg mb-2">No cards found for this subcategory.</p>
-                    <p className="text-gray-400 text-sm">Try another option</p>
-                    <div className="mt-4 text-xs text-gray-400 bg-gray-50 p-4 rounded">
-                      <p><b>Debug:</b></p>
-                      <p>Category: {slug}</p>
-                      <p>Subcategory: {activeSub}</p>
-                      <p>Total in category: {allVideos.length}</p>
-                    </div>
-                  </div>
+                {modalVideos.length === 0 ? (
+                  <p className="text-center text-gray-500 py-20">No cards found</p>
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 pb-4">
-                    {activeVideos.map((video, i) => (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    {modalVideos.map((video, i) => (
                       <motion.div
                         key={i}
                         whileHover={{ scale: 1.05, y: -5 }}
-                        transition={{ duration: 0.2 }}
                         onClick={async () => {
-                          console.log("🎬 Navegando a:", video.name);
-                          
-                          // 🎯 Entrar en fullscreen antes de navegar
                           try {
                             const elem = document.documentElement;
-                            if (elem.requestFullscreen) {
-                              await elem.requestFullscreen();
-                            } else if (elem.webkitRequestFullscreen) {
-                              await elem.webkitRequestFullscreen();
-                            } else if (elem.mozRequestFullScreen) {
-                              await elem.mozRequestFullScreen();
-                            } else if (elem.msRequestFullscreen) {
-                              await elem.msRequestFullscreen();
-                            }
-                            // Esperar un momento para que el fullscreen se active
-                            await new Promise((resolve) => setTimeout(resolve, 150));
-                          } catch (err) {
-                            console.log("Fullscreen no disponible:", err);
-                          }
-                          
+                            if (elem.requestFullscreen) await elem.requestFullscreen();
+                            await new Promise(r => setTimeout(r, 150));
+                          } catch {}
                           router.push(`/edit/${video.name}`);
                         }}
-                        className="cursor-pointer bg-white rounded-2xl shadow-md border-2 border-pink-100 overflow-hidden hover:shadow-xl hover:border-pink-300"
+                        className="cursor-pointer bg-white rounded-2xl shadow-md border-2 border-pink-100 hover:border-pink-300 overflow-hidden"
                       >
                         <video
                           src={video.file}
-                          className="object-cover w-full aspect-[4/5] bg-pink-50"
+                          className="w-full aspect-[4/5] object-cover bg-pink-50"
                           playsInline
                           loop
                           muted
-                          onMouseEnter={(e) => e.target.play().catch(() => {})}
-                          onMouseLeave={(e) => {
-                            e.target.pause();
-                            e.target.currentTime = 0;
-                          }}
+                          onMouseEnter={e => e.target.play().catch(() => {})}
+                          onMouseLeave={e => { e.target.pause(); e.target.currentTime = 0; }}
                         />
-                        <div className="text-center py-3 px-2 bg-gradient-to-t from-pink-50 to-white">
-                          <p className="text-gray-700 font-semibold text-sm line-clamp-2">
+                        <div className="text-center py-3 px-2">
+                          <p className="text-sm font-semibold text-gray-700 line-clamp-2">
                             {video.object || video.name}
                           </p>
                         </div>
@@ -374,4 +229,4 @@ export default function CategoryPage() {
       </AnimatePresence>
     </main>
   );
-        }
+                  }
