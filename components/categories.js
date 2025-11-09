@@ -29,22 +29,19 @@ export default function Categories() {
   const [videos, setVideos] = useState([]);
   const [searchResults, setSearchResults] = useState(null);
 
-  // Cargar videos
   useEffect(() => {
     async function loadVideos() {
       try {
         const res = await fetch("/api/videos", { cache: "no-store" });
         const data = await res.json();
-        console.log("📹 Videos cargados:", data.videos?.length || 0);
         setVideos(data.videos || []);
       } catch (err) {
-        console.error("❌ Error cargando videos:", err);
+        console.error("❌ Error:", err);
       }
     }
     loadVideos();
   }, []);
 
-  // Búsqueda
   useEffect(() => {
     const q = search.toLowerCase().trim();
     
@@ -54,9 +51,6 @@ export default function Categories() {
       return;
     }
 
-    console.log("🔍 Buscando:", q);
-
-    // 1. Buscar videos que contengan la palabra
     const matchingVideos = videos.filter(v => {
       const searchable = [
         v.name,
@@ -64,13 +58,9 @@ export default function Categories() {
         v.subcategory,
         ...(v.tags || []),
       ].filter(Boolean).join(" ").toLowerCase();
-      
       return searchable.includes(q);
     });
 
-    console.log(`📹 Videos encontrados: ${matchingVideos.length}`);
-
-    // 2. Extraer TODAS las categorías de esos videos
     const categoriesInVideos = new Set();
     matchingVideos.forEach(v => {
       if (v.categories && Array.isArray(v.categories)) {
@@ -80,9 +70,6 @@ export default function Categories() {
       }
     });
 
-    console.log("📂 Categorías encontradas:", [...categoriesInVideos]);
-
-    // 3. Filtrar categorías de la UI que coincidan
     const matchedCategories = allCategories.filter(cat => {
       return [...categoriesInVideos].some(videoCat => {
         const normalized = videoCat.toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -91,9 +78,6 @@ export default function Categories() {
       });
     });
 
-    console.log("✅ Categorías filtradas:", matchedCategories.map(c => c.name));
-
-    // 4. Calcular conteo por categoría
     const counts = {};
     matchedCategories.forEach(cat => {
       counts[cat.name] = matchingVideos.filter(v => {
@@ -152,9 +136,7 @@ export default function Categories() {
                 in <b className="text-pink-600">{searchResults.categoriesFound}</b> {searchResults.categoriesFound === 1 ? 'category' : 'categories'}
               </p>
             ) : (
-              <p className="text-gray-400">
-                No results for "<b>{searchResults.query}</b>"
-              </p>
+              <p className="text-gray-400">No results for "<b>{searchResults.query}</b>"</p>
             )}
           </motion.div>
         )}
@@ -225,4 +207,4 @@ export default function Categories() {
       )}
     </section>
   );
-                                         }
+    }
