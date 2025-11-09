@@ -5,6 +5,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { videoMatchesSearch } from "@/utils/searchUtils";
 import "swiper/css";
 
 const allCategories = [
@@ -58,22 +59,8 @@ export default function Categories() {
 
     console.log("🔍 Buscando:", q);
 
-    // Buscar videos que coincidan
-    const matchingVideos = videos.filter((v) => {
-      const searchable = [
-        v.name,
-        v.object,
-        v.subcategory,
-        v.category,
-        ...(v.categories || []),
-        ...(v.tags || []),
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      
-      return searchable.includes(q);
-    });
+    // Buscar videos que coincidan usando utilidad inteligente
+    const matchingVideos = videos.filter(v => videoMatchesSearch(v, q));
 
     console.log(`🎯 Videos encontrados: ${matchingVideos.length}`);
 
@@ -244,11 +231,10 @@ export default function Categories() {
                     {/* Badge en la esquina superior derecha */}
                     {search && (() => {
                       const count = videos.filter(v => {
-                        const searchable = [v.name, v.object, v.subcategory, v.category, ...(v.categories || []), ...(v.tags || [])].filter(Boolean).join(" ").toLowerCase();
-                        const matchesSearch = searchable.includes(search.toLowerCase());
+                        // Verificar si coincide con la búsqueda usando utilidad inteligente
+                        if (!videoMatchesSearch(v, search)) return false;
                         
-                        if (!matchesSearch) return false;
-                        
+                        // Verificar si pertenece a esta categoría
                         const catSlug = cat.slug.toLowerCase();
                         
                         if (v.categories && Array.isArray(v.categories)) {
@@ -299,4 +285,4 @@ export default function Categories() {
       )}
     </section>
   );
-            }
+              }
