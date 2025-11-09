@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
@@ -27,6 +27,7 @@ export default function Categories() {
   const [search, setSearch] = useState("");
   const [filtered, setFiltered] = useState(allCategories);
   const [videos, setVideos] = useState([]);
+  const [searchResults, setSearchResults] = useState(null);
 
   // 📥 Cargar videos desde API
   useEffect(() => {
@@ -36,22 +37,6 @@ export default function Categories() {
         const data = await res.json();
         
         console.log("📹 Total videos cargados:", data.videos?.length || 0);
-        console.log("📦 Estructura de datos:", data);
-        
-        // Debug: mostrar primeros 3 videos
-        if (data.videos && data.videos.length > 0) {
-          console.log("🎬 Primeros 3 videos de ejemplo:");
-          data.videos.slice(0, 3).forEach((v, i) => {
-            console.log(`  ${i + 1}.`, {
-              name: v.name,
-              category: v.category,
-              categories: v.categories,
-              subcategory: v.subcategory,
-              tags: v.tags
-            });
-          });
-        }
-        
         setVideos(data.videos || []);
       } catch (err) {
         console.error("❌ Error cargando /api/videos:", err);
@@ -60,66 +45,57 @@ export default function Categories() {
     loadVideos();
   }, []);
 
-  // 🔍 Filtrar categorías según palabra buscada
+  // 🔍 Filtrar categorías según búsqueda
   useEffect(() => {
     const q = search.toLowerCase().trim();
     
     // Sin búsqueda → mostrar todas
     if (!q) {
       setFiltered(allCategories);
+      setSearchResults(null);
       return;
     }
 
     console.log("🔍 Buscando:", q);
-    console.log("📹 Total videos disponibles:", videos.length);
 
-    // Encontrar categorías que tienen videos con la palabra buscada
-    const categoriesWithMatch = new Set();
-    let videosFound = 0;
-
-    videos.forEach((video) => {
-      // Buscar en: object, nombre, tags, categorías, subcategoría
-      const searchableText = [
-        video.name,
-        video.object,
-        ...(video.categories || [video.category]),
-        video.subcategory,
-        video.slug,
-        ...(video.tags || []),
+    // Buscar videos que coincidan
+    const matchingVideos = videos.filter((v) => {
+      const searchable = [
+        v.name,
+        v.object,
+        v.subcategory,
+        v.category,
+        ...(v.categories || []),
+        ...(v.tags || []),
       ]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
+      
+      return searchable.includes(q);
+    });
 
-      if (searchableText.includes(q)) {
-        videosFound++;
-        console.log(`  ✅ Match encontrado en:`, {
-          name: video.name,
-          categories: video.categories || [video.category],
-          subcategory: video.subcategory,
-          searchable: searchableText
-        });
-        
-        // Agregar TODAS las categorías del video
-        if (video.categories && Array.isArray(video.categories)) {
-          video.categories.forEach(cat => {
-            categoriesWithMatch.add(cat.toLowerCase().trim());
-          });
-        } else if (video.category) {
-          categoriesWithMatch.add(video.category.toLowerCase().trim());
-        }
+    console.log(`🎯 Videos encontrados: ${matchingVideos.length}`);
+
+    // Extraer categorías únicas de los videos encontrados
+    const categoriesSet = new Set();
+    matchingVideos.forEach((v) => {
+      if (v.categories && Array.isArray(v.categories)) {
+        v.categories.forEach(cat => categoriesSet.add(cat.toLowerCase()));
+      } else if (v.category) {
+        categoriesSet.add(v.category.toLowerCase());
       }
     });
 
-    console.log(`🎯 Videos encontrados: ${videosFound}`);
-    console.log("📦 Categorías con coincidencias:", [...categoriesWithMatch]);
+    console.log("📂 Categorías con resultados:", [...categoriesSet]);
 
-    // Filtrar categorías base
-    const matches = allCategories.filter((cat) => {
+    // Filtrar categorías principales que tienen videos
+    const matchedCategories = allCategories.filter((cat) => {
       const catName = cat.name.toLowerCase();
       const catSlug = cat.slug.toLowerCase();
       
-      return [...categoriesWithMatch].some((matchCat) => {
+      // Buscar si alguna categoría del video coincide
+      return [...categoriesSet].some((matchCat) => {
         const normalized = matchCat.replace(/&/g, "and").replace(/\s+/g, "-");
         return (
           normalized.includes(catSlug) ||
@@ -130,13 +106,20 @@ export default function Categories() {
       });
     });
 
-    console.log("✅ Categorías filtradas:", matches.map(m => m.name));
-    setFiltered(matches.length > 0 ? matches : []);
+    console.log("✅ Categorías filtradas:", matchedCategories.map(c => c.name));
+
+    setFiltered(matchedCategories);
+    setSearchResults({
+      query: search,
+      videosFound: matchingVideos.length,
+      categoriesFound: matchedCategories.length,
+    });
   }, [search, videos]);
 
-  // 🎯 Navegar a categoría con query de búsqueda
+  // 🎯 Navegar con query de búsqueda
   const handleCategoryClick = (cat) => {
     if (search.trim()) {
+      // Si hay búsqueda, pasar el término en la URL
       router.push(`/category/${cat.slug}?q=${encodeURIComponent(search)}`);
     } else {
       router.push(`/category/${cat.slug}`);
@@ -149,46 +132,67 @@ export default function Categories() {
         Categories
       </h2>
 
-      {/* 🔎 Barra de búsqueda */}
-      <div className="flex justify-center mb-10">
+      {/* 🔎 Barra de búsqueda mejorada */}
+      <div className="flex flex-col items-center mb-10">
         <input
           type="text"
           placeholder="Search any theme — e.g. zombie, turtle, love..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-80 md:w-96 px-4 py-2 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-300 text-gray-700"
+          className="w-80 md:w-96 px-4 py-3 rounded-full border-2 border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-pink-400 text-gray-700 text-center transition-all"
         />
+        
+        {/* Resultados de búsqueda */}
+        {searchResults && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-3 text-sm text-gray-600"
+          >
+            {searchResults.videosFound > 0 ? (
+              <p>
+                ✨ Found <b className="text-pink-600">{searchResults.videosFound}</b> cards 
+                in <b className="text-pink-600">{searchResults.categoriesFound}</b> {searchResults.categoriesFound === 1 ? 'category' : 'categories'}
+              </p>
+            ) : (
+              <p className="text-gray-400">
+                No results for "<b>{searchResults.query}</b>"
+              </p>
+            )}
+          </motion.div>
+        )}
       </div>
 
       {/* 🎠 Carrusel de categorías */}
-      <Swiper
-        slidesPerView={3.2}
-        spaceBetween={16}
-        centeredSlides={true}
-        loop={filtered.length > 3}
-        autoplay={{
-          delay: 2500,
-          disableOnInteraction: false,
-        }}
-        speed={1000}
-        breakpoints={{
-          0: { slidesPerView: 2.3, spaceBetween: 10 },
-          640: { slidesPerView: 3.4, spaceBetween: 14 },
-          1024: { slidesPerView: 5, spaceBetween: 18 },
-        }}
-        modules={[Autoplay]}
-        className="overflow-visible"
-      >
-        {filtered.length > 0 ? (
-          filtered.map((cat, i) => (
+      {filtered.length > 0 ? (
+        <Swiper
+          slidesPerView={3.2}
+          spaceBetween={16}
+          centeredSlides={true}
+          loop={filtered.length > 3}
+          autoplay={{
+            delay: 2500,
+            disableOnInteraction: false,
+          }}
+          speed={1000}
+          breakpoints={{
+            0: { slidesPerView: 2.3, spaceBetween: 10 },
+            640: { slidesPerView: 3.4, spaceBetween: 14 },
+            1024: { slidesPerView: 5, spaceBetween: 18 },
+          }}
+          modules={[Autoplay]}
+          className="overflow-visible"
+        >
+          {filtered.map((cat, i) => (
             <SwiperSlide key={i}>
               <div onClick={() => handleCategoryClick(cat)}>
                 <motion.div
                   className="flex flex-col items-center justify-center cursor-pointer"
                   whileHover={{ scale: 1.07 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   <motion.div
-                    className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md"
+                    className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md hover:shadow-lg transition-shadow"
                     style={{ backgroundColor: cat.color }}
                   >
                     <motion.span
@@ -206,18 +210,35 @@ export default function Categories() {
                   <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
                     {cat.name}
                   </p>
+                  
+                  {/* Mostrar cantidad de resultados si hay búsqueda */}
+                  {search && (
+                    <p className="text-xs text-pink-500 mt-1">
+                      {videos.filter(v => {
+                        const searchable = [v.name, v.object, v.subcategory, v.category, ...(v.categories || []), ...(v.tags || [])].filter(Boolean).join(" ").toLowerCase();
+                        const inThisCat = v.categories?.some(c => c.toLowerCase().includes(cat.slug.toLowerCase())) || v.category?.toLowerCase().includes(cat.slug.toLowerCase());
+                        return searchable.includes(search.toLowerCase()) && inThisCat;
+                      }).length} cards
+                    </p>
+                  )}
                 </motion.div>
               </div>
             </SwiperSlide>
-          ))
-        ) : (
-          <div className="w-full flex justify-center">
-            <p className="text-gray-500 text-sm mt-8">
-              No matching categories for "{search}"
-            </p>
-          </div>
-        )}
-      </Swiper>
+          ))}
+        </Swiper>
+      ) : (
+        <div className="text-center py-10">
+          <p className="text-gray-500 text-sm">
+            No matching categories for "<b>{search}</b>"
+          </p>
+          <button
+            onClick={() => setSearch("")}
+            className="mt-4 text-pink-500 hover:text-pink-600 font-semibold text-sm"
+          >
+            ← Clear search
+          </button>
+        </div>
+      )}
     </section>
   );
-          }
+                 }
