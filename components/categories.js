@@ -146,7 +146,7 @@ export default function Categories() {
     setSearchResults({
       query: search,
       videosFound: matchingVideos.length,
-      categoriesFound: matchedCategories.length,
+      categoriesFound: matchedCategories.length, // ✅ Solo las filtradas
     });
   }, [search, videos]);
 
@@ -221,12 +221,12 @@ export default function Categories() {
             <SwiperSlide key={i}>
               <div onClick={() => handleCategoryClick(cat)}>
                 <motion.div
-                  className="flex flex-col items-center justify-center cursor-pointer"
+                  className="flex flex-col items-center justify-center cursor-pointer relative"
                   whileHover={{ scale: 1.07 }}
                   whileTap={{ scale: 0.95 }}
                 >
                   <motion.div
-                    className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md hover:shadow-lg transition-shadow"
+                    className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md hover:shadow-lg transition-shadow relative"
                     style={{ backgroundColor: cat.color }}
                   >
                     <motion.span
@@ -240,21 +240,45 @@ export default function Categories() {
                     >
                       {cat.emoji}
                     </motion.span>
+                    
+                    {/* Badge en la esquina superior derecha */}
+                    {search && (() => {
+                      const count = videos.filter(v => {
+                        const searchable = [v.name, v.object, v.subcategory, v.category, ...(v.categories || []), ...(v.tags || [])].filter(Boolean).join(" ").toLowerCase();
+                        const matchesSearch = searchable.includes(search.toLowerCase());
+                        
+                        if (!matchesSearch) return false;
+                        
+                        const catSlug = cat.slug.toLowerCase();
+                        
+                        if (v.categories && Array.isArray(v.categories)) {
+                          const hasMatch = v.categories.some(c => {
+                            const normalized = c.toLowerCase().replace(/&/g, "and").replace(/\s+/g, "-");
+                            return normalized.includes(catSlug) || catSlug.includes(normalized);
+                          });
+                          if (hasMatch) return true;
+                        }
+                        
+                        if (v.category) {
+                          const normalized = v.category.toLowerCase().replace(/&/g, "and").replace(/\s+/g, "-");
+                          if (normalized.includes(catSlug) || catSlug.includes(normalized)) {
+                            return true;
+                          }
+                        }
+                        
+                        return false;
+                      }).length;
+                      
+                      return count > 0 ? (
+                        <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg border-2 border-white">
+                          {count}
+                        </span>
+                      ) : null;
+                    })()}
                   </motion.div>
                   <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base">
                     {cat.name}
                   </p>
-                  
-                  {/* Mostrar cantidad de resultados si hay búsqueda */}
-                  {search && (
-                    <p className="text-xs text-pink-500 mt-1">
-                      {videos.filter(v => {
-                        const searchable = [v.name, v.object, v.subcategory, v.category, ...(v.categories || []), ...(v.tags || [])].filter(Boolean).join(" ").toLowerCase();
-                        const inThisCat = v.categories?.some(c => c.toLowerCase().includes(cat.slug.toLowerCase())) || v.category?.toLowerCase().includes(cat.slug.toLowerCase());
-                        return searchable.includes(search.toLowerCase()) && inThisCat;
-                      }).length} cards
-                    </p>
-                  )}
                 </motion.div>
               </div>
             </SwiperSlide>
@@ -275,4 +299,4 @@ export default function Categories() {
       )}
     </section>
   );
-                                         }
+            }
