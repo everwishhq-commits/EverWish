@@ -35,35 +35,35 @@ const SUB = {
   independenceday: "Independence Day",
   july4: "Independence Day",
   newyear: "New Year",
-  
+
   // Love & Romance
   valentine: "Valentine's Day",
   love: "Love",
   hugs: "Hugs",
-  
+
   // Celebrations
   birthday: "Birthday",
   celebration: "Celebrations",
   celebrations: "Celebrations",
-  
+
   // Family
   mother: "Mother's Day",
   mothers: "Mother's Day",
   mothersday: "Mother's Day",
   father: "Father's Day",
-  
+
   // Animals & Nature
   pets: "Pets",
   animals: "Animals",
   animalsandnature: "Animals & Nature",
   dogcat: "Dogs & Cats",
   turtle: "Turtle",
-  
+
   // Moods
   scary: "Scary",
   funny: "Funny",
   cute: "Cute",
-  
+
   // General
   general: "General",
   celebr: "Celebrations",
@@ -93,13 +93,16 @@ export async function GET() {
   try {
     const root = path.join(process.cwd(), "public", "videos");
     const files = findMp4(root);
-    
-    const videos = files.map(file => {
+
+    const videos = files.map((file) => {
       const rel = path.relative(root, file).replace(/\\/g, "/");
       const base = path.basename(file, ".mp4");
       const parts = base.split("_");
-      
-      // Detectar categorías
+
+      // 🧠 Detectar el value (1A, 2A, etc.)
+      const value = parts.find((p) => /^[0-9]+[A-Za-z]*$/.test(p)) || "1A";
+
+      // 🏷️ Detectar categorías
       const cats = [];
       for (const p of parts) {
         const key = p.toLowerCase();
@@ -108,8 +111,8 @@ export async function GET() {
         }
       }
       if (cats.length === 0) cats.push("Everyday & Appreciation");
-      
-      // Detectar subcategoría
+
+      // 🗂️ Detectar subcategoría
       let sub = "General";
       for (const p of parts) {
         const key = p.toLowerCase();
@@ -118,19 +121,22 @@ export async function GET() {
           break;
         }
       }
-      
-      // Object (primera palabra capitalizada)
-      const obj = parts[0] ? 
-        parts[0].replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()) : 
-        "Unknown";
-      
-      // Tags
-      const tags = Array.from(new Set([
-        ...parts.map(p => p.toLowerCase()),
-        obj.toLowerCase(),
-        ...cats.map(c => c.toLowerCase()),
-        sub.toLowerCase()
-      ]));
+
+      // 🧍 Object (primera palabra)
+      const obj = parts[0]
+        ? parts[0].replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+        : "Unknown";
+
+      // 🪶 Tags
+      const tags = Array.from(
+        new Set([
+          ...parts.map((p) => p.toLowerCase()),
+          obj.toLowerCase(),
+          ...cats.map((c) => c.toLowerCase()),
+          sub.toLowerCase(),
+          value.toLowerCase(),
+        ])
+      );
 
       return {
         name: base,
@@ -140,18 +146,21 @@ export async function GET() {
         categories: cats,
         subcategory: sub,
         slug: base.toLowerCase(),
-        tags: tags
+        value, // <-- agregado aquí
+        tags,
       };
     });
-    
+
     console.log(`✅ API responded with ${videos.length} videos`);
-    
-    return NextResponse.json({ videos }, {
-      headers: {
-        "Cache-Control": "no-store, max-age=0"
+
+    return NextResponse.json(
+      { videos },
+      {
+        headers: {
+          "Cache-Control": "no-store, max-age=0",
+        },
       }
-    });
-    
+    );
   } catch (err) {
     console.error("❌ Error in /api/videos:", err);
     return NextResponse.json(
@@ -159,4 +168,4 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+    }
