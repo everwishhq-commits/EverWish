@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { videoMatchesSearch } from "@/utils/searchUtils";
 
 const allCategories = [
   { name: "Holidays", emoji: "🎉", slug: "seasonal-global-celebrations", color: "#FFE0E9" },
@@ -51,22 +52,8 @@ export default function CategoriesGridPage() {
     setLoading(true);
     const term = search.toLowerCase().trim();
 
-    // 🔍 Buscar en todos los campos
-    const matches = videos.filter(v => {
-      const searchable = [
-        v.name,
-        v.object,
-        v.subcategory,
-        v.category,
-        ...(v.categories || []),
-        ...(v.tags || []),
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      
-      return searchable.includes(term);
-    });
+    // 🔍 Buscar usando utilidad inteligente
+    const matches = videos.filter(v => videoMatchesSearch(v, term));
 
     console.log(`🔍 "${term}": ${matches.length} videos encontrados`);
 
@@ -147,12 +134,13 @@ export default function CategoriesGridPage() {
   const getVideoCount = (cat) => {
     if (!search.trim()) return null;
     
-    const term = search.toLowerCase();
     return videos.filter(v => {
-      const searchable = [v.name, v.object, v.subcategory, ...(v.categories || [v.category]), ...(v.tags || [])].filter(Boolean).join(" ").toLowerCase();
-      const matchesSearch = searchable.includes(term);
+      // Usar utilidad inteligente de búsqueda
+      if (!videoMatchesSearch(v, search)) return false;
+      
+      // Verificar si pertenece a la categoría
       const inCategory = v.categories?.some(c => c.toLowerCase().includes(cat.slug.toLowerCase())) || v.category?.toLowerCase().includes(cat.slug.toLowerCase());
-      return matchesSearch && inCategory;
+      return inCategory;
     }).length;
   };
 
@@ -276,4 +264,4 @@ export default function CategoriesGridPage() {
       )}
     </main>
   );
-                }
+      }
