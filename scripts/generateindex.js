@@ -1,6 +1,7 @@
 /**
- * 🧩 Everwish Video Index Generator - VERSIÓN CORREGIDA
+ * 🧩 Everwish Video Index Generator - VERSIÓN FINAL CORREGIDA
  * Usa los nombres EXACTOS de la UI
+ * Soporta MÚLTIPLES CATEGORÍAS por video
  */
 
 import fs from "fs";
@@ -10,64 +11,67 @@ const videosRoot = path.join(process.cwd(), "public/videos");
 const indexFile = path.join(videosRoot, "index.json");
 
 // 📚 MAPEO COMPLETO con los nombres EXACTOS de la UI
+// NOTA: Algunas palabras pueden estar en MÚLTIPLES categorías (array)
 const CATEGORY_MAP = {
   // Holidays (era "Seasonal & Global Celebrations")
-  halloween: "Holidays",
-  christmas: "Holidays",
-  xmas: "Holidays",
-  navidad: "Holidays",
-  thanksgiving: "Holidays",
-  easter: "Holidays",
-  holidays: "Holidays",
-  july4: "Holidays",
-  independenceday: "Holidays",
-  independence: "Holidays",
-  eagle: "Holidays",
-  newyear: "Holidays",
+  halloween: ["Holidays"],
+  christmas: ["Holidays"],
+  xmas: ["Holidays"],
+  navidad: ["Holidays"],
+  thanksgiving: ["Holidays"],
+  easter: ["Holidays"],
+  holidays: ["Holidays"],
+  july4: ["Holidays"],
+  independenceday: ["Holidays"],
+  independence: ["Holidays"],
+  eagle: ["Holidays"],
+  newyear: ["Holidays"],
   
   // Love & Romance (era "Love, Weddings & Anniversaries")
-  love: "Love & Romance",
-  valentine: "Love & Romance",
-  valentines: "Love & Romance",
-  wedding: "Love & Romance",
-  anniversary: "Love & Romance",
-  hugs: "Love & Romance",
+  love: ["Love & Romance"],
+  valentine: ["Love & Romance"],
+  valentines: ["Love & Romance"],
+  wedding: ["Love & Romance"],
+  anniversary: ["Love & Romance"],
+  hugs: ["Love & Romance"],
   
   // Celebrations (era "Birthdays & Celebrations")
-  birthday: "Celebrations",
-  bday: "Celebrations",
-  celebration: "Celebrations",
-  celebrations: "Celebrations",
-  celebr: "Celebrations",
-  zombie: "Celebrations",
+  birthday: ["Celebrations"],
+  bday: ["Celebrations"],
+  celebration: ["Celebrations"],
+  celebrations: ["Celebrations"],
+  celebr: ["Celebrations"],
+  
+  // 🎃 ZOMBIE: Está en Halloween (Holidays) Y en Celebrations
+  zombie: ["Holidays", "Celebrations"],
   
   // Family & Friendship
-  mother: "Family & Friendship",
-  mothers: "Family & Friendship",
-  mothersday: "Family & Friendship",
-  father: "Family & Friendship",
-  fathers: "Family & Friendship",
-  fathersday: "Family & Friendship",
-  family: "Family & Friendship",
+  mother: ["Family & Friendship"],
+  mothers: ["Family & Friendship"],
+  mothersday: ["Family & Friendship"],
+  father: ["Family & Friendship"],
+  fathers: ["Family & Friendship"],
+  fathersday: ["Family & Friendship"],
+  family: ["Family & Friendship"],
   
   // Babies & Parenting
-  baby: "Babies & Parenting",
+  baby: ["Babies & Parenting"],
   
   // Animal Lovers (era "Pets & Animal Lovers")
-  pet: "Animal Lovers",
-  pets: "Animal Lovers",
-  dog: "Animal Lovers",
-  dogcat: "Animal Lovers",
-  cat: "Animal Lovers",
-  turtle: "Animal Lovers",
-  animals: "Animal Lovers",
-  animalsandnature: "Animal Lovers",
+  pet: ["Animal Lovers"],
+  pets: ["Animal Lovers"],
+  dog: ["Animal Lovers"],
+  dogcat: ["Animal Lovers"],
+  cat: ["Animal Lovers"],
+  turtle: ["Animal Lovers"],
+  animals: ["Animal Lovers"],
+  animalsandnature: ["Animal Lovers"],
   
   // Otros
-  general: "Everyday & Appreciation",
-  thank: "Everyday & Appreciation",
-  thanks: "Everyday & Appreciation",
-  congrats: "Everyday & Appreciation",
+  general: ["Everyday & Appreciation"],
+  thank: ["Everyday & Appreciation"],
+  thanks: ["Everyday & Appreciation"],
+  congrats: ["Everyday & Appreciation"],
 };
 
 // 🎯 SUBCATEGORÍAS
@@ -133,9 +137,14 @@ function classifyVideo(info) {
   
   // Clasificar por cada palabra del nombre
   allParts.forEach(part => {
-    // Buscar categoría
+    // Buscar categoría (ahora puede retornar un array)
     if (CATEGORY_MAP[part]) {
-      categoriesSet.add(CATEGORY_MAP[part]);
+      const cats = CATEGORY_MAP[part];
+      if (Array.isArray(cats)) {
+        cats.forEach(cat => categoriesSet.add(cat));
+      } else {
+        categoriesSet.add(cats);
+      }
     }
     
     // Buscar subcategoría (la primera que encuentre)
@@ -194,7 +203,7 @@ function capitalizeWords(str) {
 }
 
 function generateIndex() {
-  console.log("🎬 Generando index.json con nombres de UI...\n");
+  console.log("🎬 Generando index.json con nombres de UI y múltiples categorías...\n");
   
   const mp4Files = getAllMp4Files(videosRoot);
   console.log(`📁 Archivos encontrados: ${mp4Files.length}\n`);
@@ -258,4 +267,4 @@ try {
 } catch (error) {
   console.error("❌ Error:", error);
   process.exit(1);
-        }
+  }
