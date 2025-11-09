@@ -52,16 +52,13 @@ export default function Categories() {
   // Procesar búsqueda
   useEffect(() => {
     if (!search.trim()) {
-      // Sin búsqueda: mostrar TODAS las categorías con sus contadores
-      if (videos.length > 0) {
-        const grouped = groupVideosByBaseCategory(videos);
-        const categoriesWithCounts = BASE_CATEGORIES.map((cat, i) => ({
-          ...cat,
-          color: COLORS[i % COLORS.length],
-          count: grouped[cat.slug]?.length || 0
-        }));
-        setDisplayCategories(categoriesWithCounts);
-      }
+      // Sin búsqueda: mostrar TODAS las categorías SIN contadores
+      setDisplayCategories(
+        BASE_CATEGORIES.map((cat, i) => ({ 
+          ...cat, 
+          color: COLORS[i % COLORS.length]
+        }))
+      );
       setSearchResults(null);
       return;
     }
@@ -185,7 +182,7 @@ export default function Categories() {
                       {cat.emoji}
                     </motion.span>
                     
-                    {cat.count > 0 && (
+                    {cat.count > 0 && searchResults && (
                       <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg border-2 border-white z-10">
                         {cat.count}
                       </span>
@@ -218,4 +215,4 @@ export default function Categories() {
       )}
     </section>
   );
-              }
+          }
