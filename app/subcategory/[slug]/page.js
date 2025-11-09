@@ -17,21 +17,57 @@ export default function SubcategoryPage() {
         const data = await res.json();
         const list = data.videos || data || [];
 
-        // Normalizador
-        const normalize = (s) =>
-          s?.toLowerCase().replace(/\s+/g, "-").replace(/_/g, "-").trim();
+        console.log("🔍 Buscando subcategoría:", slug);
+        console.log("📦 Total videos:", list.length);
 
-        // ✅ Filtrar coincidencias amplias (no exactas)
+        // Normalizador mejorado
+        const normalize = (s) =>
+          s?.toLowerCase()
+            .replace(/&/g, "and")
+            .replace(/\s+/g, "-")
+            .replace(/_/g, "-")
+            .trim();
+
+        const targetSlug = normalize(slug);
+        
+        console.log("🎯 Slug normalizado:", targetSlug);
+
+        // ✅ Búsqueda flexible: coincidencia en subcategory, name, tags o categories
         const filtered = list.filter((v) => {
           const sub = normalize(v.subcategory);
           const name = normalize(v.name);
-          return (
-            sub === slug ||
-            name.includes(slug) ||
-            slug.includes(sub)
-          );
+          const categories = (v.categories || [v.category]).map(c => normalize(c));
+          const tags = (v.tags || []).map(t => normalize(t));
+          
+          // Coincidencia directa en subcategoría
+          if (sub === targetSlug) return true;
+          
+          // Coincidencia parcial en subcategoría
+          if (sub.includes(targetSlug) || targetSlug.includes(sub)) return true;
+          
+          // Coincidencia en el nombre del archivo
+          if (name.includes(targetSlug)) return true;
+          
+          // Coincidencia en tags
+          if (tags.some(tag => tag === targetSlug || tag.includes(targetSlug) || targetSlug.includes(tag))) return true;
+          
+          // Coincidencia en categorías
+          if (categories.some(cat => cat === targetSlug || cat.includes(targetSlug) || targetSlug.includes(cat))) return true;
+          
+          return false;
         });
 
+        console.log(`✅ Videos encontrados: ${filtered.length}`);
+        
+        if (filtered.length > 0) {
+          console.log("📹 Primeros 3 videos:");
+          filtered.slice(0, 3).forEach(v => {
+            console.log(`  - ${v.name}`);
+            console.log(`    Sub: ${v.subcategory}`);
+            console.log(`    Categories: ${v.categories?.join(", ")}`);
+          });
+        }
+        
         setVideos(filtered);
       } catch (err) {
         console.error("❌ Error loading videos:", err);
@@ -47,12 +83,11 @@ export default function SubcategoryPage() {
   if (loading) {
     return (
       <main className="flex flex-col items-center justify-center min-h-screen bg-[#fff5f8] text-gray-600">
-        <p className="animate-pulse text-lg">Loading {slug} cards...</p>
+        <p className="animate-pulse text-lg">Loading {slug.replace(/-/g, " ")} cards...</p>
       </main>
     );
   }
 
-  // Render principal
   return (
     <main className="min-h-screen bg-[#fff5f8] flex flex-col items-center py-10 px-4">
       {/* Botón de regreso */}
@@ -68,9 +103,29 @@ export default function SubcategoryPage() {
         {slug.replace(/-/g, " ")}
       </h1>
 
+      {/* Debug info (solo en desarrollo) */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200 max-w-2xl">
+          <p className="text-sm text-gray-600">
+            <strong>Debug:</strong> Buscando "{slug}" en {videos.length} videos
+          </p>
+        </div>
+      )}
+
       {/* Contenido */}
       {videos.length === 0 ? (
-        <p className="text-gray-500">No cards found for this subcategory.</p>
+        <div className="text-center max-w-md">
+          <p className="text-gray-500 mb-4">No cards found for this subcategory.</p>
+          <p className="text-sm text-gray-400">
+            Searched for: "{slug.replace(/-/g, " ")}"
+          </p>
+          <button
+            onClick={() => router.push("/categories")}
+            className="mt-6 px-6 py-3 bg-pink-500 text-white rounded-full font-semibold hover:bg-pink-600"
+          >
+            Browse All Categories
+          </button>
+        </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 justify-items-center max-w-5xl">
           {videos.map((v, i) => (
@@ -78,7 +133,10 @@ export default function SubcategoryPage() {
               key={i}
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.3 }}
-              onClick={() => router.push(`/edit/${v.name}`)}
+              onClick={() => {
+                console.log("🎬 Navegando a:", v.name);
+                router.push(`/edit/${v.name}`);
+              }}
               className="cursor-pointer bg-white rounded-3xl shadow-md border border-pink-100 overflow-hidden hover:shadow-lg"
             >
               <video
@@ -92,10 +150,13 @@ export default function SubcategoryPage() {
                   e.target.pause();
                   e.target.currentTime = 0;
                 }}
-                onTouchStart={(e) => e.target.play()} // móvil
+                onTouchStart={(e) => e.target.play()}
                 onTouchEnd={(e) => {
                   e.target.pause();
                   e.target.currentTime = 0;
+                }}
+                onError={(e) => {
+                  console.error("❌ Error cargando video:", v.file);
                 }}
               />
               <div className="text-center py-2 text-gray-700 font-semibold text-sm">
@@ -107,4 +168,4 @@ export default function SubcategoryPage() {
       )}
     </main>
   );
-          }
+}
