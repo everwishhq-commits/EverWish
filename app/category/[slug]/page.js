@@ -320,8 +320,27 @@ export default function CategoryPage() {
                         key={i}
                         whileHover={{ scale: 1.05, y: -5 }}
                         transition={{ duration: 0.2 }}
-                        onClick={() => {
+                        onClick={async () => {
                           console.log("🎬 Navegando a:", video.name);
+                          
+                          // 🎯 Entrar en fullscreen antes de navegar
+                          try {
+                            const elem = document.documentElement;
+                            if (elem.requestFullscreen) {
+                              await elem.requestFullscreen();
+                            } else if (elem.webkitRequestFullscreen) {
+                              await elem.webkitRequestFullscreen();
+                            } else if (elem.mozRequestFullScreen) {
+                              await elem.mozRequestFullScreen();
+                            } else if (elem.msRequestFullscreen) {
+                              await elem.msRequestFullscreen();
+                            }
+                            // Esperar un momento para que el fullscreen se active
+                            await new Promise((resolve) => setTimeout(resolve, 150));
+                          } catch (err) {
+                            console.log("Fullscreen no disponible:", err);
+                          }
+                          
                           router.push(`/edit/${video.name}`);
                         }}
                         className="cursor-pointer bg-white rounded-2xl shadow-md border-2 border-pink-100 overflow-hidden hover:shadow-xl hover:border-pink-300"
