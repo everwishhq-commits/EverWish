@@ -6,11 +6,10 @@ import { motion, AnimatePresence } from "framer-motion";
 // 🗂️ Grupos de subcategorías por categoría
 const SUBCATEGORY_GROUPS = {
   "seasonal-global-celebrations": {
-    "Seasons": ["Spring", "Summer", "Fall", "Winter"],
-    "Cultural Celebrations": ["Lunar New Year", "Valentine's Day", "St. Patrick's Day", "Carnival", "Cinco de Mayo", "Oktoberfest", "Day of the Dead"],
-    "Family Days": ["Mother's Day", "Father's Day", "Grandparents Day", "Easter"],
     "Holiday Season": ["Halloween", "Thanksgiving", "Christmas", "Hanukkah", "Kwanzaa"],
-    "American Holidays": ["MLK Day", "Presidents' Day", "Memorial Day", "Independence Day", "Labor Day", "Veterans Day", "Columbus Day", "Juneteenth"],
+    "Spring & Summer": ["Easter", "Independence Day", "Memorial Day", "Labor Day"],
+    "Cultural Celebrations": ["Lunar New Year", "Valentine's Day", "St. Patrick's Day", "Cinco de Mayo", "Day of the Dead"],
+    "Family Days": ["Mother's Day", "Father's Day", "Grandparents Day"],
   },
   "birthdays-celebrations": {
     "Ages": ["Baby", "Kids", "Teens", "Adult"],
@@ -41,7 +40,7 @@ const SUBCATEGORY_GROUPS = {
   "pets-animal-lovers": {
     "Dogs": ["Dog", "Puppy"],
     "Cats": ["Cat", "Kitten"],
-    "Other": ["Pet", "Cute", "Funny"],
+    "Other": ["Pet", "Turtle", "Fish", "Bird"],
   },
   "support-healing-care": {
     "Health": ["Get Well", "Recovery", "Hospital"],
@@ -122,7 +121,14 @@ export default function CategoryPage() {
   const groups = SUBCATEGORY_GROUPS[slug] || {};
   const groupNames = Object.keys(groups);
 
-  // Filtrar videos por subcategoría seleccionada
+  // Función para navegar a subcategoría
+  const handleSubcategoryClick = (subName) => {
+    console.log("🎯 Navegando a subcategoría:", subName);
+    const subSlug = subName.toLowerCase().replace(/\s+/g, "-");
+    router.push(`/subcategory/${subSlug}`);
+  };
+
+  // Filtrar videos por subcategoría seleccionada (para el modal)
   const activeVideos = activeSub
     ? allVideos.filter(v => {
         const vSub = v.subcategory?.toLowerCase().trim();
@@ -130,9 +136,6 @@ export default function CategoryPage() {
         return vSub === targetSub || vSub?.includes(targetSub) || targetSub?.includes(vSub);
       })
     : [];
-
-  console.log(`🎯 Subcategoría activa: ${activeSub}`);
-  console.log(`📹 Videos encontrados:`, activeVideos.length);
 
   if (loading) {
     return (
@@ -187,10 +190,7 @@ export default function CategoryPage() {
             {groups[activeGroup].map((subName, i) => (
               <motion.button
                 key={i}
-                onClick={() => {
-                  console.log("🎯 Seleccionando subcategoría:", subName);
-                  setActiveSub(subName);
-                }}
+                onClick={() => handleSubcategoryClick(subName)}
                 whileHover={{ scale: 1.05 }}
                 className="px-5 py-3 rounded-full bg-white shadow-sm border border-pink-100 hover:border-pink-200 hover:bg-pink-50 text-gray-700 font-semibold"
               >
@@ -201,7 +201,7 @@ export default function CategoryPage() {
         </>
       )}
 
-      {/* Modal con videos */}
+      {/* Modal con videos (opcional, si quieres preview antes de navegar) */}
       <AnimatePresence>
         {activeSub && (
           <>
@@ -268,4 +268,4 @@ export default function CategoryPage() {
       </AnimatePresence>
     </main>
   );
-                    }
+}
