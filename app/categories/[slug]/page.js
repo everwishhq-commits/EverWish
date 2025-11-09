@@ -210,18 +210,20 @@ export default function CategoryPage() {
                 {activeVideos.length === 0 ? (
                   <div className="text-gray-500 text-center mt-10">
                     <p>No cards found for this subcategory.</p>
-                    <p className="text-xs mt-2">Debug: {JSON.stringify(activeSub)}</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 justify-items-center">
                     {activeVideos.map((video, i) => {
                       const slugToUse = video.name || video.slug;
+                      const videoSrc = video.file;
+                      
                       console.log(`🎬 Video ${i}:`, {
                         name: video.name,
                         slug: video.slug,
                         file: video.file,
                         object: video.object,
-                        slugToUse
+                        slugToUse,
+                        videoSrc
                       });
 
                       return (
@@ -232,25 +234,38 @@ export default function CategoryPage() {
                           onClick={() => {
                             console.log("🎯 Navegando a:", slugToUse);
                             console.log("📹 Video completo:", video);
-                            router.push(`/edit/${slugToUse}`);
+                            router.push(`/edit/${encodeURIComponent(slugToUse)}`);
                           }}
                           className="cursor-pointer bg-white rounded-3xl shadow-md border border-pink-100 overflow-hidden hover:shadow-lg"
                         >
-                          <video
-                            src={video.file}
-                            className="object-cover w-full aspect-[4/5]"
-                            playsInline
-                            loop
-                            muted
-                            onMouseEnter={(e) => e.target.play()}
-                            onMouseLeave={(e) => {
-                              e.target.pause();
-                              e.target.currentTime = 0;
-                            }}
-                            onError={(e) => {
-                              console.error("❌ Error cargando video:", video.file);
-                            }}
-                          />
+                          {/* ✅ Thumbnail con poster para carga inmediata */}
+                          <div className="relative w-full aspect-[4/5] bg-gray-100">
+                            <video
+                              src={videoSrc}
+                              className="absolute inset-0 w-full h-full object-cover"
+                              playsInline
+                              loop
+                              muted
+                              preload="metadata"
+                              poster={videoSrc + "#t=0.1"}
+                              onMouseEnter={(e) => {
+                                e.target.play().catch(err => console.log("Play prevented:", err));
+                              }}
+                              onMouseLeave={(e) => {
+                                e.target.pause();
+                                e.target.currentTime = 0;
+                              }}
+                              onError={(e) => {
+                                console.error("❌ Error cargando video:", videoSrc);
+                                e.target.style.display = 'none';
+                              }}
+                            />
+                            {/* Fallback si el video no carga */}
+                            <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">
+                              <span className="opacity-0">Loading...</span>
+                            </div>
+                          </div>
+                          
                           <div className="text-center py-2 text-gray-700 font-semibold text-sm">
                             {video.object || video.name}
                           </div>
@@ -296,4 +311,4 @@ function getEmojiForSubcategory(name) {
   }
   
   return map.general;
-                                }
+      }
