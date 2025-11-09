@@ -152,30 +152,35 @@ export default function SubcategoryPage() {
               transition={{ duration: 0.3 }}
               onClick={() => {
                 console.log("🎬 Navegando a:", v.name);
-                router.push(`/edit/${v.name}`);
+                router.push(`/edit/${encodeURIComponent(v.name)}`);
               }}
               className="cursor-pointer bg-white rounded-3xl shadow-md border border-pink-100 overflow-hidden hover:shadow-lg"
             >
-              <video
-                src={v.file}
-                className="object-cover w-full aspect-[4/5]"
-                playsInline
-                muted
-                preload="metadata"
-                onMouseEnter={(e) => e.target.play()}
-                onMouseLeave={(e) => {
-                  e.target.pause();
-                  e.target.currentTime = 0;
-                }}
-                onTouchStart={(e) => e.target.play()}
-                onTouchEnd={(e) => {
-                  e.target.pause();
-                  e.target.currentTime = 0;
-                }}
-                onError={(e) => {
-                  console.error("❌ Error cargando video:", v.file);
-                }}
-              />
+              <div className="relative w-full aspect-[4/5] bg-gray-100">
+                <video
+                  src={v.file}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  playsInline
+                  muted
+                  preload="metadata"
+                  poster={v.file + "#t=0.1"}
+                  onMouseEnter={(e) => {
+                    e.target.play().catch(err => console.log("Play prevented:", err));
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.pause();
+                    e.target.currentTime = 0;
+                  }}
+                  onTouchStart={(e) => e.target.play().catch(() => {})}
+                  onTouchEnd={(e) => {
+                    e.target.pause();
+                    e.target.currentTime = 0;
+                  }}
+                  onError={(e) => {
+                    console.error("❌ Error cargando video:", v.file);
+                  }}
+                />
+              </div>
               <div className="text-center py-2 text-gray-700 font-semibold text-sm">
                 {v.object || v.name}
               </div>
@@ -185,4 +190,4 @@ export default function SubcategoryPage() {
       )}
     </main>
   );
-      }
+          }
