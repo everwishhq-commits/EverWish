@@ -18,41 +18,65 @@ export default function SubcategoryPage() {
         const list = data.videos || data || [];
 
         console.log("🔍 Buscando subcategoría:", slug);
-        console.log("📦 Total videos:", list.length);
+        console.log("📦 Total videos disponibles:", list.length);
 
-        // Normalizador mejorado
-        const normalize = (s) =>
-          s?.toLowerCase()
-            .replace(/&/g, "and")
-            .replace(/\s+/g, "-")
-            .replace(/_/g, "-")
-            .trim();
+        // Función de normalización simple
+        const normalize = (str) => {
+          if (!str) return "";
+          return str
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9]/g, ""); // elimina todo excepto letras y números
+        };
 
-        const targetSlug = normalize(slug);
-        
-        console.log("🎯 Slug normalizado:", targetSlug);
+        const targetNormalized = normalize(slug);
+        console.log("🎯 Slug normalizado:", targetNormalized);
 
-        // ✅ Búsqueda flexible: coincidencia en subcategory, name, tags o categories
+        // Búsqueda flexible
         const filtered = list.filter((v) => {
-          const sub = normalize(v.subcategory);
-          const name = normalize(v.name);
-          const categories = (v.categories || [v.category]).map(c => normalize(c));
-          const tags = (v.tags || []).map(t => normalize(t));
+          // Normalizar todos los campos del video
+          const subNorm = normalize(v.subcategory);
+          const nameNorm = normalize(v.name);
+          const categoryNorm = normalize(v.category);
           
-          // Coincidencia directa en subcategoría
-          if (sub === targetSlug) return true;
+          // Normalizar arrays
+          const categoriesNorm = (v.categories || []).map(c => normalize(c));
+          const tagsNorm = (v.tags || []).map(t => normalize(t));
           
-          // Coincidencia parcial en subcategoría
-          if (sub.includes(targetSlug) || targetSlug.includes(sub)) return true;
+          // Debug para el primer video
+          if (list.indexOf(v) === 0) {
+            console.log("📹 Ejemplo de normalización:");
+            console.log("  Original subcategory:", v.subcategory, "→", subNorm);
+            console.log("  Original name:", v.name, "→", nameNorm);
+          }
           
-          // Coincidencia en el nombre del archivo
-          if (name.includes(targetSlug)) return true;
+          // Coincidencia en subcategoría (exacta o parcial)
+          if (subNorm === targetNormalized) {
+            console.log("✅ Match en subcategory:", v.name);
+            return true;
+          }
+          if (subNorm.includes(targetNormalized) || targetNormalized.includes(subNorm)) {
+            console.log("✅ Match parcial en subcategory:", v.name);
+            return true;
+          }
+          
+          // Coincidencia en nombre
+          if (nameNorm.includes(targetNormalized)) {
+            console.log("✅ Match en name:", v.name);
+            return true;
+          }
           
           // Coincidencia en tags
-          if (tags.some(tag => tag === targetSlug || tag.includes(targetSlug) || targetSlug.includes(tag))) return true;
+          if (tagsNorm.some(tag => tag === targetNormalized || tag.includes(targetNormalized))) {
+            console.log("✅ Match en tags:", v.name);
+            return true;
+          }
           
           // Coincidencia en categorías
-          if (categories.some(cat => cat === targetSlug || cat.includes(targetSlug) || targetSlug.includes(cat))) return true;
+          if (categoriesNorm.some(cat => cat === targetNormalized || cat.includes(targetNormalized))) {
+            console.log("✅ Match en categories:", v.name);
+            return true;
+          }
           
           return false;
         });
@@ -60,12 +84,13 @@ export default function SubcategoryPage() {
         console.log(`✅ Videos encontrados: ${filtered.length}`);
         
         if (filtered.length > 0) {
-          console.log("📹 Primeros 3 videos:");
-          filtered.slice(0, 3).forEach(v => {
-            console.log(`  - ${v.name}`);
-            console.log(`    Sub: ${v.subcategory}`);
-            console.log(`    Categories: ${v.categories?.join(", ")}`);
+          console.log("📹 Videos encontrados:");
+          filtered.forEach(v => {
+            console.log(`  - ${v.name} (${v.subcategory})`);
           });
+        } else {
+          console.log("⚠️ No se encontraron videos");
+          console.log("💡 Verifica que el slug coincida con alguna subcategoría");
         }
         
         setVideos(filtered);
@@ -79,7 +104,6 @@ export default function SubcategoryPage() {
     load();
   }, [slug]);
 
-  // Estado de carga
   if (loading) {
     return (
       <main className="flex flex-col items-center justify-center min-h-screen bg-[#fff5f8] text-gray-600">
@@ -103,25 +127,18 @@ export default function SubcategoryPage() {
         {slug.replace(/-/g, " ")}
       </h1>
 
-      {/* Debug info (solo en desarrollo) */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200 max-w-2xl">
-          <p className="text-sm text-gray-600">
-            <strong>Debug:</strong> Buscando "{slug}" en {videos.length} videos
-          </p>
-        </div>
-      )}
-
       {/* Contenido */}
       {videos.length === 0 ? (
-        <div className="text-center max-w-md">
-          <p className="text-gray-500 mb-4">No cards found for this subcategory.</p>
-          <p className="text-sm text-gray-400">
-            Searched for: "{slug.replace(/-/g, " ")}"
+        <div className="text-center max-w-md bg-white rounded-2xl p-8 shadow-lg">
+          <p className="text-gray-500 mb-4 text-lg">
+            No cards found for this subcategory.
+          </p>
+          <p className="text-sm text-gray-400 mb-6">
+            Searched for: "<strong>{slug.replace(/-/g, " ")}</strong>"
           </p>
           <button
             onClick={() => router.push("/categories")}
-            className="mt-6 px-6 py-3 bg-pink-500 text-white rounded-full font-semibold hover:bg-pink-600"
+            className="px-6 py-3 bg-pink-500 text-white rounded-full font-semibold hover:bg-pink-600 shadow-md"
           >
             Browse All Categories
           </button>
@@ -141,7 +158,7 @@ export default function SubcategoryPage() {
             >
               <video
                 src={v.file}
-                className="object-cover w-full aspect-[4/5] rounded-3xl"
+                className="object-cover w-full aspect-[4/5]"
                 playsInline
                 muted
                 preload="metadata"
@@ -168,4 +185,4 @@ export default function SubcategoryPage() {
       )}
     </main>
   );
-}
+      }
