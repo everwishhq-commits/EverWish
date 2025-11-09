@@ -216,6 +216,9 @@ export default function CategoryPage() {
                           muted
                           preload="metadata"
                           poster={video.file + "#t=0.1"}
+                          controlsList="nodownload"
+                          disablePictureInPicture
+                          onContextMenu={(e) => e.preventDefault()}
                           onMouseEnter={e => e.target.play().catch(() => {})}
                           onMouseLeave={e => { 
                             e.target.pause(); 
@@ -238,4 +241,4 @@ export default function CategoryPage() {
       </AnimatePresence>
     </main>
   );
-          }
+  }
