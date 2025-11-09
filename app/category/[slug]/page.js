@@ -15,7 +15,7 @@ const SUBCATEGORY_GROUPS = {
   "birthdays-celebrations": {
     "Ages": ["Baby", "Kids", "Teens", "Adult"],
     "Milestones": ["Sweet 16", "18th", "21st", "30th", "40th", "50th"],
-    "Styles": ["Funny", "Belated", "Surprise"],
+    "Styles": ["Funny", "Belated", "Surprise", "Zombie"],
   },
   "love-weddings-anniversaries": {
     "Romance": ["Love", "I Love You", "Miss You", "Hugs"],
@@ -116,9 +116,9 @@ export default function CategoryPage() {
           // 3. Buscar palabras clave en el nombre
           const fileName = (v.name || "").toLowerCase();
           const keywords = {
-            "seasonal-global-celebrations": ["halloween", "christmas", "thanksgiving", "easter", "july4", "valentine", "holiday"],
+            "seasonal-global-celebrations": ["halloween", "christmas", "thanksgiving", "easter", "july4", "independence", "independenceday", "eagle", "valentine", "holiday", "newyear"],
             "love-weddings-anniversaries": ["love", "wedding", "anniversary", "valentine", "hugs"],
-            "birthdays-celebrations": ["birthday", "celebration"],
+            "birthdays-celebrations": ["birthday", "celebration", "zombie"],
             "pets-animal-lovers": ["pet", "dog", "cat", "turtle", "animal"],
           };
           
