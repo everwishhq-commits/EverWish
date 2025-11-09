@@ -138,7 +138,7 @@ export default function CategoriesGridPage() {
     setSearchStats({
       query: search,
       totalVideos: matches.length,
-      totalCategories: dynamicFiltered.length,
+      totalCategories: dynamicFiltered.length, // ✅ Solo las filtradas
     });
     setLoading(false);
   }, [search, videos]);
@@ -276,4 +276,4 @@ export default function CategoriesGridPage() {
       )}
     </main>
   );
-          }
+                }
