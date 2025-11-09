@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
-export default function subcategorypage() {
+export default function SubcategoryPage() {
   const { slug } = useParams();
   const router = useRouter();
   const [videos, setVideos] = useState([]);
@@ -16,13 +16,25 @@ export default function subcategorypage() {
         const res = await fetch("/api/videos", { cache: "no-store" });
         const data = await res.json();
         const list = data.videos || data || [];
-        const normalize = (s) => s?.toLowerCase().replace(/\s+/g, "-").trim();
 
-        // filtrar solo videos de la subcategoría actual
-        const filtered = list.filter((v) => normalize(v.subcategory) === slug);
+        // Normalizador
+        const normalize = (s) =>
+          s?.toLowerCase().replace(/\s+/g, "-").replace(/_/g, "-").trim();
+
+        // ✅ Filtrar coincidencias amplias (no exactas)
+        const filtered = list.filter((v) => {
+          const sub = normalize(v.subcategory);
+          const name = normalize(v.name);
+          return (
+            sub === slug ||
+            name.includes(slug) ||
+            slug.includes(sub)
+          );
+        });
+
         setVideos(filtered);
       } catch (err) {
-        console.error("❌ error loading videos:", err);
+        console.error("❌ Error loading videos:", err);
       } finally {
         setLoading(false);
       }
@@ -31,29 +43,34 @@ export default function subcategorypage() {
     load();
   }, [slug]);
 
+  // Estado de carga
   if (loading) {
     return (
       <main className="flex flex-col items-center justify-center min-h-screen bg-[#fff5f8] text-gray-600">
-        <p className="animate-pulse text-lg">loading {slug} cards...</p>
+        <p className="animate-pulse text-lg">Loading {slug} cards...</p>
       </main>
     );
   }
 
+  // Render principal
   return (
     <main className="min-h-screen bg-[#fff5f8] flex flex-col items-center py-10 px-4">
+      {/* Botón de regreso */}
       <button
         onClick={() => router.back()}
         className="text-pink-500 hover:text-pink-600 font-semibold mb-6"
       >
-        ← back
+        ← Back
       </button>
 
+      {/* Título */}
       <h1 className="text-4xl font-extrabold text-pink-600 mb-6 capitalize text-center">
         {slug.replace(/-/g, " ")}
       </h1>
 
+      {/* Contenido */}
       {videos.length === 0 ? (
-        <p className="text-gray-500">no cards found for this subcategory.</p>
+        <p className="text-gray-500">No cards found for this subcategory.</p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 justify-items-center max-w-5xl">
           {videos.map((v, i) => (
@@ -75,7 +92,7 @@ export default function subcategorypage() {
                   e.target.pause();
                   e.target.currentTime = 0;
                 }}
-                onTouchStart={(e) => e.target.play()} // para móvil
+                onTouchStart={(e) => e.target.play()} // móvil
                 onTouchEnd={(e) => {
                   e.target.pause();
                   e.target.currentTime = 0;
