@@ -15,7 +15,7 @@ const SUBCATEGORY_GROUPS = {
   "birthdays-celebrations": {
     "Ages": ["Baby", "Kids", "Teens", "Adult"],
     "Milestones": ["Sweet 16", "18th", "21st", "30th", "40th", "50th"],
-    "Styles": ["Funny", "Belated", "Surprise", "Zombie"],
+    "Styles": ["Funny", "Belated", "Surprise",],
   },
   "love-weddings-anniversaries": {
     "Romance": ["Love", "I Love You", "Miss You", "Hugs"],
