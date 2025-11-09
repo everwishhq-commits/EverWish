@@ -74,27 +74,65 @@ export default function CategoriesGridPage() {
     const matchedCatsSet = new Set();
     matches.forEach((v) => {
       if (v.categories && Array.isArray(v.categories)) {
-        v.categories.forEach(cat => matchedCatsSet.add(cat.toLowerCase()));
+        v.categories.forEach(cat => {
+          console.log(`  📂 Video "${v.name}" tiene categoría: "${cat}"`);
+          matchedCatsSet.add(cat.toLowerCase());
+        });
       } else if (v.category) {
+        console.log(`  📂 Video "${v.name}" tiene categoría: "${v.category}"`);
         matchedCatsSet.add(v.category.toLowerCase());
       }
     });
 
+    console.log("📂 Set de categorías:", [...matchedCatsSet]);
     // Filtrar categorías base
     const dynamicFiltered = allCategories.filter(cat => {
       const catName = cat.name.toLowerCase();
       const catSlug = cat.slug.toLowerCase();
       
+      // Buscar coincidencias más flexibles
       return [...matchedCatsSet].some(mc => {
         const normalized = mc.replace(/&/g, "and").replace(/\s+/g, "-");
-        return (
-          normalized.includes(catSlug) ||
-          catSlug.includes(normalized) ||
-          mc.includes(catName) ||
-          catName.includes(mc)
+        const mcWords = mc.toLowerCase().split(/\s+|&/);
+        const catWords = catName.toLowerCase().split(/\s+|&/);
+        
+        // Coincidencia por slug
+        if (normalized.includes(catSlug) || catSlug.includes(normalized)) {
+          return true;
+        }
+        
+        // Coincidencia por nombre
+        if (mc.includes(catName) || catName.includes(mc)) {
+          return true;
+        }
+        
+        // Coincidencia por palabras clave
+        const hasWordMatch = mcWords.some(word => 
+          catWords.some(cw => cw.includes(word) || word.includes(cw))
         );
+        
+        if (hasWordMatch) {
+          return true;
+        }
+        
+        // Mapeo especial para casos conocidos
+        const specialMaps = {
+          "seasonal": ["holidays"],
+          "celebrations": ["celebrations", "birthdays"],
+          "birthdays": ["celebrations"],
+        };
+        
+        for (const [key, values] of Object.entries(specialMaps)) {
+          if (mc.includes(key) && values.some(v => catName.includes(v) || catSlug.includes(v))) {
+            return true;
+          }
+        }
+        
+        return false;
       });
     });
+
+    console.log("✅ Categorías filtradas:", dynamicFiltered.map(c => c.name));
 
     setFilteredCategories(dynamicFiltered);
     setSearchStats({
@@ -238,4 +276,4 @@ export default function CategoriesGridPage() {
       )}
     </main>
   );
-              }
+          }
