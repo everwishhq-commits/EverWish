@@ -19,19 +19,13 @@ export default function CategoriesPage() {
         const allVideos = data.videos || [];
         setVideos(allVideos);
         
-        // Contar videos por categoría
-        const grouped = groupVideosByBaseCategory(allVideos);
-        const categoriesWithCounts = BASE_CATEGORIES.map(cat => ({
-          ...cat,
-          count: grouped[cat.slug]?.length || 0
-        }));
-        
-        setDisplayCategories(categoriesWithCounts);
+        // Inicializar con las 12 categorías SIN contadores
+        setDisplayCategories(BASE_CATEGORIES);
         console.log(`📦 ${allVideos.length} videos cargados`);
         console.log(`📊 12 categorías inicializadas`);
       } catch (err) {
         console.error("❌ Error loading videos:", err);
-        setDisplayCategories(BASE_CATEGORIES.map(cat => ({ ...cat, count: 0 })));
+        setDisplayCategories(BASE_CATEGORIES);
       }
     }
     loadVideos();
@@ -40,28 +34,21 @@ export default function CategoriesPage() {
   // Procesar búsqueda
   useEffect(() => {
     if (!search.trim()) {
-      // Sin búsqueda: mostrar TODAS las 12 categorías con contadores
-      if (videos.length > 0) {
-        const grouped = groupVideosByBaseCategory(videos);
-        const categoriesWithCounts = BASE_CATEGORIES.map(cat => ({
-          ...cat,
-          count: grouped[cat.slug]?.length || 0
-        }));
-        setDisplayCategories(categoriesWithCounts);
-      }
+      // Sin búsqueda: mostrar TODAS las 12 categorías SIN contadores
+      setDisplayCategories(BASE_CATEGORIES);
       setResults(null);
       return;
     }
 
     console.log(`🔍 Buscando: "${search}"`);
 
-    // Con búsqueda: filtrar videos y mostrar solo categorías con resultados
+    // Con búsqueda: filtrar videos y mostrar contadores
     const matchedVideos = searchVideos(videos, search);
     console.log(`✅ ${matchedVideos.length} videos encontrados`);
     
     const grouped = groupVideosByBaseCategory(matchedVideos);
     
-    // Solo mostrar categorías con resultados en búsqueda
+    // Solo mostrar categorías con resultados + contadores
     const categoriesWithResults = BASE_CATEGORIES
       .map(cat => ({
         ...cat,
@@ -116,7 +103,7 @@ export default function CategoriesPage() {
           )}
         </div>
 
-        {/* Resultados de búsqueda */}
+        {/* Resultados de búsqueda - SOLO cuando hay búsqueda */}
         {results && (
           <div className="text-center mb-6">
             {results.found > 0 ? (
@@ -149,7 +136,8 @@ export default function CategoriesPage() {
                   {cat.name}
                 </div>
                 
-                {cat.count > 0 && (
+                {/* Contador SOLO cuando hay búsqueda */}
+                {cat.count > 0 && search && (
                   <span className="absolute -top-2 -right-2 bg-pink-500 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold shadow-lg border-2 border-white">
                     {cat.count}
                   </span>
@@ -160,18 +148,14 @@ export default function CategoriesPage() {
         ) : (
           <div className="text-center py-20 bg-white rounded-3xl shadow-lg max-w-md mx-auto">
             <p className="text-gray-500 text-lg mb-4">
-              {search 
-                ? `No categories match "${search}"`
-                : "Loading categories..."}
+              No categories match "<span className="font-semibold">{search}</span>"
             </p>
-            {search && (
-              <button
-                onClick={() => setSearch("")}
-                className="text-pink-500 hover:text-pink-600 font-semibold"
-              >
-                ← Clear search and see all
-              </button>
-            )}
+            <button
+              onClick={() => setSearch("")}
+              className="text-pink-500 hover:text-pink-600 font-semibold"
+            >
+              ← Clear search and see all
+            </button>
           </div>
         )}
       </div>
@@ -187,4 +171,4 @@ export default function CategoriesPage() {
       `}</style>
     </div>
   );
-                             }
+                      }
