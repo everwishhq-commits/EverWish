@@ -2,7 +2,55 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { videoMatchesSearch } from "@/utils/searchUtils";
+
+// 🔍 BÚSQUEDA INTELIGENTE INTEGRADA
+function normalizeForSearch(text) {
+  if (!text) return "";
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function toSingular(word) {
+  const normalized = normalizeForSearch(word);
+  if (normalized.endsWith("ies")) return normalized.slice(0, -3) + "y";
+  if (normalized.endsWith("es")) return normalized.slice(0, -2);
+  if (normalized.endsWith("s") && !normalized.endsWith("ss")) {
+    return normalized.slice(0, -1);
+  }
+  return normalized;
+}
+
+function getSearchVariations(word) {
+  const normalized = normalizeForSearch(word);
+  const variations = new Set([normalized]);
+  const singular = toSingular(normalized);
+  variations.add(singular);
+  if (!normalized.endsWith("s")) variations.add(normalized + "s");
+  if (!normalized.endsWith("es")) variations.add(normalized + "es");
+  return [...variations];
+}
+
+function videoMatchesSearch(video, searchTerm) {
+  if (!video || !searchTerm) return false;
+  const searchableFields = [
+    video.name,
+    video.object,
+    video.subcategory,
+    video.category,
+    ...(video.categories || []),
+    ...(video.tags || []),
+  ].filter(Boolean);
+  
+  const variations = getSearchVariations(searchTerm);
+  return searchableFields.some(field => {
+    const normalizedField = normalizeForSearch(field);
+    return variations.some(v => normalizedField.includes(v));
+  });
+}
 
 const allCategories = [
   { name: "Holidays", emoji: "🎉", slug: "seasonal-global-celebrations", color: "#FFE0E9" },
@@ -27,7 +75,6 @@ export default function CategoriesGridPage() {
   const [loading, setLoading] = useState(false);
   const [searchStats, setSearchStats] = useState(null);
 
-  // Cargar videos al inicio
   useEffect(() => {
     async function loadVideos() {
       try {
@@ -42,7 +89,6 @@ export default function CategoriesGridPage() {
   }, []);
 
   useEffect(() => {
-    // Si no hay texto, mostrar todas las categorías
     if (!search.trim()) {
       setFilteredCategories(allCategories);
       setSearchStats(null);
@@ -51,13 +97,9 @@ export default function CategoriesGridPage() {
 
     setLoading(true);
     const term = search.toLowerCase().trim();
-
-    // 🔍 Buscar usando utilidad inteligente
     const matches = videos.filter(v => videoMatchesSearch(v, term));
-
     console.log(`🔍 "${term}": ${matches.length} videos encontrados`);
 
-    // Extraer categorías únicas
     const matchedCatsSet = new Set();
     matches.forEach((v) => {
       if (v.categories && Array.isArray(v.categories)) {
@@ -72,37 +114,24 @@ export default function CategoriesGridPage() {
     });
 
     console.log("📂 Set de categorías:", [...matchedCatsSet]);
-    // Filtrar categorías base
+
     const dynamicFiltered = allCategories.filter(cat => {
       const catName = cat.name.toLowerCase();
       const catSlug = cat.slug.toLowerCase();
       
-      // Buscar coincidencias más flexibles
       return [...matchedCatsSet].some(mc => {
         const normalized = mc.replace(/&/g, "and").replace(/\s+/g, "-");
         const mcWords = mc.toLowerCase().split(/\s+|&/);
         const catWords = catName.toLowerCase().split(/\s+|&/);
         
-        // Coincidencia por slug
-        if (normalized.includes(catSlug) || catSlug.includes(normalized)) {
-          return true;
-        }
+        if (normalized.includes(catSlug) || catSlug.includes(normalized)) return true;
+        if (mc.includes(catName) || catName.includes(mc)) return true;
         
-        // Coincidencia por nombre
-        if (mc.includes(catName) || catName.includes(mc)) {
-          return true;
-        }
-        
-        // Coincidencia por palabras clave
         const hasWordMatch = mcWords.some(word => 
           catWords.some(cw => cw.includes(word) || word.includes(cw))
         );
+        if (hasWordMatch) return true;
         
-        if (hasWordMatch) {
-          return true;
-        }
-        
-        // Mapeo especial para casos conocidos
         const specialMaps = {
           "seasonal": ["holidays"],
           "celebrations": ["celebrations", "birthdays"],
@@ -125,20 +154,15 @@ export default function CategoriesGridPage() {
     setSearchStats({
       query: search,
       totalVideos: matches.length,
-      totalCategories: dynamicFiltered.length, // ✅ Solo las filtradas
+      totalCategories: dynamicFiltered.length,
     });
     setLoading(false);
   }, [search, videos]);
 
-  // Calcular cuántos videos por categoría
   const getVideoCount = (cat) => {
     if (!search.trim()) return null;
-    
     return videos.filter(v => {
-      // Usar utilidad inteligente de búsqueda
       if (!videoMatchesSearch(v, search)) return false;
-      
-      // Verificar si pertenece a la categoría
       const inCategory = v.categories?.some(c => c.toLowerCase().includes(cat.slug.toLowerCase())) || v.category?.toLowerCase().includes(cat.slug.toLowerCase());
       return inCategory;
     }).length;
@@ -146,18 +170,11 @@ export default function CategoriesGridPage() {
 
   return (
     <main className="min-h-screen bg-[#fff5f8] flex flex-col items-center py-10 px-4">
-      {/* Breadcrumb */}
       <nav className="text-sm text-gray-500 mb-6">
-        <span
-          onClick={() => router.push("/")}
-          className="cursor-pointer hover:text-pink-500"
-        >
-          Home
-        </span>{" "}
-        › <span className="text-gray-700">Categories</span>
+        <span onClick={() => router.push("/")} className="cursor-pointer hover:text-pink-500">Home</span>
+        {" "} › <span className="text-gray-700">Categories</span>
       </nav>
 
-      {/* Título */}
       <h1 className="text-4xl font-extrabold text-pink-600 mb-3 text-center">
         Explore Main Categories 💌
       </h1>
@@ -165,7 +182,6 @@ export default function CategoriesGridPage() {
         Discover every Everwish theme, celebration, and life moment ✨
       </p>
 
-      {/* 🔍 Barra de búsqueda mejorada */}
       <div className="flex flex-col items-center justify-center mb-12 w-full">
         <div className="relative w-80 md:w-96">
           <input
@@ -185,13 +201,8 @@ export default function CategoriesGridPage() {
           )}
         </div>
         
-        {/* Estadísticas de búsqueda */}
         {searchStats && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-4 text-center"
-          >
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mt-4 text-center">
             {searchStats.totalVideos > 0 ? (
               <div className="bg-green-50 border border-green-200 rounded-full px-6 py-2">
                 <p className="text-green-700 font-semibold">
@@ -210,7 +221,6 @@ export default function CategoriesGridPage() {
         )}
       </div>
 
-      {/* Grid de categorías */}
       {loading ? (
         <p className="text-gray-500 animate-pulse">Searching...</p>
       ) : filteredCategories.length > 0 ? (
@@ -220,10 +230,7 @@ export default function CategoriesGridPage() {
             return (
               <motion.div
                 key={i}
-                whileHover={{
-                  scale: 1.06,
-                  boxShadow: "0 8px 20px rgba(255,182,193,0.35)",
-                }}
+                whileHover={{ scale: 1.06, boxShadow: "0 8px 20px rgba(255,182,193,0.35)" }}
                 whileTap={{ scale: 0.98 }}
                 transition={{ type: "spring", stiffness: 300 }}
                 onClick={() => {
@@ -239,7 +246,6 @@ export default function CategoriesGridPage() {
                 <span className="text-5xl mb-3">{cat.emoji}</span>
                 <span className="text-sm md:text-base text-center">{cat.name}</span>
                 
-                {/* Mostrar cantidad si hay búsqueda */}
                 {count !== null && count > 0 && (
                   <span className="absolute top-2 right-2 bg-pink-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
                     {count}
@@ -254,14 +260,11 @@ export default function CategoriesGridPage() {
           <p className="text-gray-500 text-sm mb-4">
             No matching categories for "<b>{search}</b>"
           </p>
-          <button
-            onClick={() => setSearch("")}
-            className="text-pink-500 hover:text-pink-600 font-semibold"
-          >
+          <button onClick={() => setSearch("")} className="text-pink-500 hover:text-pink-600 font-semibold">
             ← Clear search
           </button>
         </div>
       )}
     </main>
   );
-      }
+    }
