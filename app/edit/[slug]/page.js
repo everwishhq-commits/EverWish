@@ -123,8 +123,6 @@ export default function EditPage({ params }) {
   const AnimationPanel = () => {
     // Extraer el emoji de la animación actual
     const currentEmoji = isAnimationActive ? animation.split(' ')[0] : '✨';
-    // Extraer solo el nombre sin emoji
-    const animationName = isAnimationActive ? animation.split(' ').slice(1).join(' ') : '';
     
     return (
       <div
@@ -173,18 +171,19 @@ export default function EditPage({ params }) {
           {!isAnimationActive ? (
             <option value="">Select Animation</option>
           ) : (
-            <option value={animation}>{animationName}</option>
+            <>
+              {animationOptions
+                .filter((a) => !a.includes("None"))
+                .map((a) => {
+                  const name = a.split(' ').slice(1).join(' ');
+                  return (
+                    <option key={a} value={a}>
+                      {name}
+                    </option>
+                  );
+                })}
+            </>
           )}
-          {animationOptions
-            .filter((a) => !a.includes("None") && a !== animation)
-            .map((a) => {
-              const name = a.split(' ').slice(1).join(' ');
-              return (
-                <option key={a} value={a}>
-                  {name}
-                </option>
-              );
-            })}
         </select>
 
         <div className="flex items-center gap-2 ml-2">
@@ -387,12 +386,12 @@ export default function EditPage({ params }) {
           ) : (
             /* LAYOUT SIN FOTO - todo visible, bien distribuido */
             <div className="relative z-[200] w-full max-w-md h-[100vh] px-3 py-4 flex flex-col">
-              {/* 1. VIDEO - más grande */}
+              {/* 1. VIDEO */}
               <div
                 className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none flex-shrink-0"
                 onClick={handleCardClick}
                 onContextMenu={(e) => e.preventDefault()}
-                style={{ height: "48vh" }}
+                style={{ height: "46vh" }}
               >
                 {videoFound ? (
                   <video
@@ -416,21 +415,21 @@ export default function EditPage({ params }) {
                 )}
               </div>
 
-              {/* 2. MENSAJE - más grande */}
-              <div className="flex flex-col gap-2 flex-shrink-0 mt-3">
+              {/* 2. MENSAJE - más abajo y más grande */}
+              <div className="flex flex-col gap-2 flex-shrink-0 mt-4">
                 <h3 className="text-center text-sm font-semibold text-gray-700">
                   ✨ Customize your message ✨
                 </h3>
                 <textarea
                   className="w-full rounded-2xl border p-4 text-center text-base text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400 resize-none"
-                  rows={3}
+                  rows={4}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                 />
               </div>
 
-              {/* 3. BOTÓN ADD IMAGE - más cerca */}
-              <div className="flex items-center justify-center flex-shrink-0 py-3">
+              {/* 3. BOTÓN ADD IMAGE - más abajo */}
+              <div className="flex items-center justify-center flex-shrink-0 py-4">
                 <button
                   onClick={() => setShowCrop(true)}
                   className="flex items-center gap-2 rounded-full bg-yellow-400 px-6 py-2.5 text-sm font-semibold text-[#3b2b1f] hover:bg-yellow-300 transition-all shadow-md"
@@ -439,12 +438,12 @@ export default function EditPage({ params }) {
                 </button>
               </div>
 
-              {/* 4. PANEL - compacto */}
-              <div className="flex-shrink-0">
+              {/* 4. PANEL - más abajo */}
+              <div className="flex-shrink-0 mt-1">
                 <AnimationPanel />
               </div>
 
-              {/* 5. BOTONES - menos espacio arriba */}
+              {/* 5. BOTONES */}
               <div className="flex gap-2 flex-shrink-0 mt-auto pt-2 pb-3">
                 <button
                   onClick={() => setShowGift(true)}
@@ -506,4 +505,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-}
+              }
