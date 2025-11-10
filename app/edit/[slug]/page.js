@@ -70,4 +70,4 @@ export default function EditPage() {
       </div>
     </motion.div>
   );
-      }
+}
