@@ -92,6 +92,15 @@ export default function EditPage({ params }) {
     setAnimKey(Date.now());
   }, [animation, category, intensity, emojiCount]);
 
+  // bloquear clic derecho global
+  useEffect(() => {
+    const preventContextMenu = (e) => {
+      e.preventDefault();
+    };
+    document.addEventListener("contextmenu", preventContextMenu);
+    return () => document.removeEventListener("contextmenu", preventContextMenu);
+  }, []);
+
   // bloquear guardar
   const handleCardClick = () => {
     alert("🔒 This card is protected. Purchase to download!");
@@ -108,16 +117,44 @@ export default function EditPage({ params }) {
     setTotal(5);
   };
 
-  // bloquear clic derecho global
-  useEffect(() => {
-    const preventContextMenu = (e) => {
-      e.preventDefault();
-    };
-    document.addEventListener("contextmenu", preventContextMenu);
-    return () => document.removeEventListener("contextmenu", preventContextMenu);
-  }, []);
+  // Panel de animación
+  const isAnimationActive = animation && !animation.startsWith("✨ None");
+  
+  const toggleAnimation = () => {
+    if (isAnimationActive) {
+      // Desactivar: guardar la actual y poner None
+      setLastActiveAnimation(animation);
+      const noneOption = animationOptions.find((a) => a.includes("None"));
+      if (noneOption) setAnimation(noneOption);
+    } else {
+      // Activar: restaurar la última
+      if (lastActiveAnimation) {
+        setAnimation(lastActiveAnimation);
+      } else {
+        const firstActive = animationOptions.find((a) => !a.includes("None"));
+        if (firstActive) setAnimation(firstActive);
+      }
+    }
+  };
 
-ate"
+  const AnimationPanel = () => (
+    <div
+      className={`flex items-center justify-between w-full rounded-xl ${
+        isAnimationActive
+          ? "bg-gradient-to-r from-pink-100 via-purple-100 to-yellow-100 text-gray-800 shadow-sm"
+          : "bg-gray-100 text-gray-400"
+      }`}
+      style={{ height: "50px", padding: "0 12px" }}
+    >
+      <select
+        value={animation}
+        onChange={(e) => {
+          setAnimation(e.target.value);
+          if (!e.target.value.includes("None")) {
+            setLastActiveAnimation(e.target.value);
+          }
+        }}
+        className="flex-1 text-xs font-medium bg-transparent focus:outline-none cursor-pointer truncate"
       >
         {animationOptions
           .filter((a) => !a.includes("None"))
@@ -156,6 +193,18 @@ ate"
           <option value="normal">Normal</option>
           <option value="vivid">Vivid</option>
         </select>
+
+        {/* Botón X para activar/desactivar */}
+        <button
+          onClick={toggleAnimation}
+          className={`w-7 h-7 rounded-md flex items-center justify-center font-bold text-base transition-all ${
+            isAnimationActive
+              ? "bg-white text-red-500 hover:bg-red-50"
+              : "bg-white text-gray-400 hover:bg-gray-50"
+          }`}
+        >
+          ✕
+        </button>
       </div>
     </div>
   );
@@ -220,7 +269,7 @@ ate"
                 className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none flex-shrink-0"
                 onClick={handleCardClick}
                 onContextMenu={(e) => e.preventDefault()}
-                style={{ height: "38vh" }}
+                style={{ height: "40vh" }}
               >
                 {videoFound ? (
                   <video
@@ -309,7 +358,7 @@ ate"
                 className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none flex-shrink-0"
                 onClick={handleCardClick}
                 onContextMenu={(e) => e.preventDefault()}
-                style={{ height: "38vh" }}
+                style={{ height: "45vh" }}
               >
                 {videoFound ? (
                   <video
@@ -334,20 +383,20 @@ ate"
               </div>
 
               {/* 2. MENSAJE */}
-              <div className="flex flex-col gap-2 flex-shrink-0 mt-3">
+              <div className="flex flex-col gap-2 flex-shrink-0 mt-2">
                 <h3 className="text-center text-sm font-semibold text-gray-700">
                   ✨ Customize your message ✨
                 </h3>
                 <textarea
                   className="w-full rounded-2xl border p-3 text-center text-base text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400 resize-none"
-                  rows={3}
+                  rows={2}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                 />
               </div>
 
               {/* 3. BOTÓN ADD IMAGE */}
-              <div className="flex items-center justify-center flex-shrink-0 py-4">
+              <div className="flex items-center justify-center flex-shrink-0 py-3">
                 <button
                   onClick={() => setShowCrop(true)}
                   className="flex items-center gap-2 rounded-full bg-yellow-400 px-6 py-2.5 text-sm font-semibold text-[#3b2b1f] hover:bg-yellow-300 transition-all shadow-md"
@@ -357,12 +406,12 @@ ate"
               </div>
 
               {/* 4. PANEL */}
-              <div className="flex-shrink-0 mt-2">
+              <div className="flex-shrink-0 mt-1">
                 <AnimationPanel />
               </div>
 
               {/* 5. BOTONES - abajo con espacio */}
-              <div className="flex gap-2 flex-shrink-0 mt-auto pt-4 pb-3">
+              <div className="flex gap-2 flex-shrink-0 mt-auto pt-3 pb-3">
                 <button
                   onClick={() => setShowGift(true)}
                   className="flex-1 rounded-full bg-pink-200 py-2.5 text-sm font-semibold text-pink-700 hover:bg-pink-300 transition-all"
