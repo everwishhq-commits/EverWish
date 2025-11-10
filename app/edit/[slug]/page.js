@@ -121,7 +121,6 @@ export default function EditPage({ params }) {
   const isAnimationActive = animation && !animation.startsWith("✨ None");
 
   const AnimationPanel = () => {
-    // Extraer el emoji de la animación actual
     const currentEmoji = isAnimationActive ? animation.split(' ')[0] : '✨';
     
     return (
@@ -133,11 +132,9 @@ export default function EditPage({ params }) {
         }`}
         style={{ height: "50px", padding: "0 12px" }}
       >
-        {/* Botón emoji - activa la animación SOLO si está desactivada */}
         <button
           onClick={() => {
             if (!isAnimationActive) {
-              // Activar: restaurar la última animación
               if (lastActiveAnimation) {
                 setAnimation(lastActiveAnimation);
               } else {
@@ -218,11 +215,9 @@ export default function EditPage({ params }) {
             <option value="vivid">Vivid</option>
           </select>
 
-          {/* Botón X para SOLO desactivar */}
           <button
             onClick={() => {
               if (isAnimationActive) {
-                // Solo desactiva, no reactiva
                 setLastActiveAnimation(animation);
                 const noneOption = animationOptions.find((a) => a.includes("None"));
                 if (noneOption) setAnimation(noneOption);
@@ -244,7 +239,6 @@ export default function EditPage({ params }) {
 
   return (
     <div className="relative h-[100vh] max-h-[100vh] bg-[#fff7f5] flex items-center justify-center overflow-hidden">
-      {/* pantalla de carga - CORREGIDA PARA MOSTRAR VIDEO COMPLETO */}
       {stage === "expanded" && (
         <motion.div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-[#fff7f5]"
@@ -284,7 +278,6 @@ export default function EditPage({ params }) {
 
       {stage === "editor" && (
         <>
-          {/* capa de emojis */}
           <AnimationOverlay
             key={animKey}
             slug={slug}
@@ -294,10 +287,8 @@ export default function EditPage({ params }) {
             emojiCount={emojiCount}
           />
 
-          {/* LAYOUT CON FOTO - scrolleable */}
           {userImage ? (
             <div className="relative z-[200] w-full max-w-md h-[100vh] px-3 pt-4 pb-24 overflow-y-auto flex flex-col gap-3">
-              {/* 1. VIDEO - CORREGIDO: muestra video completo */}
               <div
                 className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none flex-shrink-0 flex items-center justify-center"
                 onClick={handleCardClick}
@@ -326,7 +317,6 @@ export default function EditPage({ params }) {
                 )}
               </div>
 
-              {/* 2. MENSAJE */}
               <div className="flex flex-col gap-2 flex-shrink-0">
                 <h3 className="text-center text-sm font-semibold text-gray-700">
                   ✨ Customize your message ✨
@@ -339,7 +329,6 @@ export default function EditPage({ params }) {
                 />
               </div>
 
-              {/* 3. FOTO - CORREGIDA: ajustada para verse completa sin salirse */}
               <div className="relative flex-shrink-0" style={{ height: "38vh" }}>
                 <div
                   className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-[#fff7f5] h-full cursor-pointer flex items-center justify-center p-2"
@@ -359,7 +348,6 @@ export default function EditPage({ params }) {
                   />
                 </div>
 
-                {/* BOTONES flotantes encima de la foto */}
                 <div className="absolute bottom-3 left-0 right-0 px-3 z-10">
                   <div className="flex gap-2">
                     <button
@@ -384,15 +372,12 @@ export default function EditPage({ params }) {
                 </div>
               </div>
 
-              {/* 4. PANEL - fuera de vista, necesita scroll */}
               <div className="flex-shrink-0 mt-2 mb-4">
                 <AnimationPanel />
               </div>
             </div>
           ) : (
-            /* LAYOUT SIN FOTO - todo visible, bien distribuido */}
             <div className="relative z-[200] w-full max-w-md h-[100vh] px-3 py-4 flex flex-col">
-              {/* 1. VIDEO - CORREGIDO: muestra video completo */}
               <div
                 className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none flex-shrink-0 flex items-center justify-center"
                 onClick={handleCardClick}
@@ -421,7 +406,6 @@ export default function EditPage({ params }) {
                 )}
               </div>
 
-              {/* 2. MENSAJE - más abajo y más grande */}
               <div className="flex flex-col gap-2 flex-shrink-0 mt-4">
                 <h3 className="text-center text-sm font-semibold text-gray-700">
                   ✨ Customize your message ✨
@@ -434,7 +418,6 @@ export default function EditPage({ params }) {
                 />
               </div>
 
-              {/* 3. BOTÓN ADD IMAGE - más abajo */}
               <div className="flex items-center justify-center flex-shrink-0 py-4">
                 <button
                   onClick={() => setShowCrop(true)}
@@ -444,12 +427,10 @@ export default function EditPage({ params }) {
                 </button>
               </div>
 
-              {/* 4. PANEL - más abajo */}
               <div className="flex-shrink-0 mt-1">
                 <AnimationPanel />
               </div>
 
-              {/* 5. BOTONES */}
               <div className="flex gap-2 flex-shrink-0 mt-auto pt-2 pb-3">
                 <button
                   onClick={() => setShowGift(true)}
@@ -469,7 +450,6 @@ export default function EditPage({ params }) {
         </>
       )}
 
-      {/* modales */}
       <div className="fixed inset-0 pointer-events-none z-[10050]">
         {showGift && (
           <div className="pointer-events-auto relative">
@@ -511,4 +491,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-      }
+              }
