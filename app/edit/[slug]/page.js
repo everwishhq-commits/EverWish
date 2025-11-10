@@ -13,7 +13,7 @@ export default function EditPage() {
     <motion.div
       className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#fff7f5] overflow-hidden"
       style={{
-        height: "108vh", // 🔹 un poco más alto que la pantalla
+        height: "115vh", // 🔹 un poco más alto que la pantalla
         paddingTop: "0vh", // 🔹 espacio arriba
         paddingBottom: "0vh", // 🔹 espacio abajo
       }}
