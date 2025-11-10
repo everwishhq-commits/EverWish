@@ -38,52 +38,43 @@ export default function EditPage({ params }) {
   const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
   const [animKey, setAnimKey] = useState(0);
 
-  // 🧭 Verificación de actualización cada 24 h
-  useEffect(() => {
-    const lastCheck = localStorage.getItem("everwish_videos_lastCheck");
-    const now = Date.now();
-    const day = 24 * 60 * 60 * 1000;
-
-    // Si han pasado 24 horas, forzamos recarga de la lista
-    if (!lastCheck || now - parseInt(lastCheck, 10) > day) {
-      localStorage.setItem("everwish_videos_lastCheck", now.toString());
-      fetch("/api/videos?refresh=" + now)
-        .then((r) => r.json())
-        .then((data) => {
-          localStorage.setItem("everwish_videos_cache", JSON.stringify(data));
-        })
-        .catch((e) => console.warn("⚠️ No se pudo actualizar videos:", e));
-    }
-  }, []);
-
-  // 🎬 Inicializa datos y busca video
+  // 🎬 CARGAR VIDEO - CORRECCIÓN CRÍTICA
   useEffect(() => {
     async function loadVideo() {
       try {
-        // 🔍 Busca primero en caché local para velocidad
-        const cached = localStorage.getItem("everwish_videos_cache");
-        let data = cached ? JSON.parse(cached) : null;
+        console.log("🔍 Buscando video para:", slug);
+        
+        const res = await fetch("/api/videos", { cache: "no-store" });
+        const data = await res.json();
+        const videos = data.videos || data || [];
+        
+        console.log(`📦 Videos disponibles: ${videos.length}`);
 
-        if (!data) {
-          const res = await fetch("/api/videos");
-          data = await res.json();
-          localStorage.setItem("everwish_videos_cache", JSON.stringify(data));
+        // Buscar video por name (exacto)
+        let match = videos.find((v) => v.name === slug);
+        
+        // Si no encuentra, buscar por slug
+        if (!match) {
+          match = videos.find((v) => v.slug === slug);
         }
 
-        const match =
-          Array.isArray(data)
-            ? data.find((v) => v.slug === slug)
-            : data?.videos?.find?.((v) => v.slug === slug);
-
         if (match) {
-          setVideoSrc(match.src || `/videos/${slug}.mp4`);
+          console.log("✅ Video encontrado:", match.name);
+          console.log("📁 Usando ruta:", match.file);
+          
+          // ✅ CRÍTICO: Usar match.file NO match.src
+          setVideoSrc(match.file);
           setVideoFound(true);
         } else {
+          console.warn("⚠️ No se encontró el video:", slug);
+          console.log("💡 Primeros 5 videos:", videos.slice(0, 5).map(v => v.name));
+          
+          // Fallback: construir ruta manual
           setVideoSrc(`/videos/${slug}.mp4`);
           setVideoFound(false);
         }
       } catch (err) {
-        console.error("❌ Error loading video:", err);
+        console.error("❌ Error cargando video:", err);
         setVideoSrc(`/videos/${slug}.mp4`);
         setVideoFound(false);
       }
@@ -110,7 +101,7 @@ export default function EditPage({ params }) {
     return () => clearInterval(id);
   }, []);
 
-  // 🧩 Sincroniza animaciones dinámicamente
+  // 🧩 Sincroniza animaciones
   useEffect(
     () => setAnimKey(Date.now()),
     [animation, category, intensity, opacityLevel, emojiCount]
@@ -146,7 +137,7 @@ export default function EditPage({ params }) {
       className="relative min-h-[100dvh] bg-[#fff7f5] flex flex-col items-center overflow-hidden"
       style={{ overscrollBehavior: "contain" }}
     >
-      {/* 🕓 Pantalla de carga */}
+      {/* 🕓 PANTALLA DE CARGA FULLSCREEN */}
       {stage === "expanded" && (
         <motion.div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-[#fff7f5]"
@@ -165,7 +156,8 @@ export default function EditPage({ params }) {
             />
           ) : (
             <div className="text-gray-500 text-center">
-              ⚠️ Video not found: {slug}.mp4
+              <div className="text-6xl mb-4">⚠️</div>
+              <p className="text-lg">Video not found: {slug}</p>
             </div>
           )}
           <div className="absolute bottom-8 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
@@ -179,7 +171,7 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
-      {/* 🎨 Editor principal */}
+      {/* 🎨 EDITOR PRINCIPAL */}
       {stage === "editor" && (
         <>
           <AnimationOverlay
@@ -198,23 +190,38 @@ export default function EditPage({ params }) {
             transition={{ duration: 0.45 }}
             className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-6 mb-10"
           >
-            {/* 🖼 Tarjeta */}
+            {/* 🖼 TARJETA CON PROPORCIÓN FIJA 4:5 */}
             <div
-              className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50"
+              className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50 cursor-pointer"
               onClick={handleCardClick}
+              style={{
+                width: "100%",
+                aspectRatio: "4 / 5",
+                maxHeight: "500px"
+              }}
             >
               {videoFound ? (
                 <video
                   src={videoSrc}
-                  className="w-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover"
                   autoPlay
                   loop
                   muted
                   playsInline
+                  onError={(e) => {
+                    console.error("❌ Error reproduciendo video:", videoSrc);
+                    setVideoFound(false);
+                  }}
                 />
               ) : (
-                <div className="w-full h-[380px] flex items-center justify-center text-gray-400 text-sm">
-                  ⚠️ This card’s video is missing or not uploaded yet.
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 bg-gradient-to-b from-gray-50 to-gray-100">
+                  <div className="text-6xl mb-4">⚠️</div>
+                  <p className="text-sm text-center px-4 mb-2 font-semibold">
+                    This card's video is missing or not uploaded yet.
+                  </p>
+                  <p className="text-xs text-gray-500 px-4 text-center">
+                    Looking for: <code className="bg-white px-2 py-1 rounded text-xs">{slug}</code>
+                  </p>
                 </div>
               )}
             </div>
@@ -361,7 +368,7 @@ export default function EditPage({ params }) {
                 className="fixed bottom-10 right-6 z-[400] rounded-full bg-[#ff7b00] px-6 py-3 text-white font-semibold shadow-lg hover:bg-[#ff9f33]"
               >
                 ⬇️ Download
-              </motion.button>
+              </button>
             )}
           </motion.div>
         </>
@@ -409,4 +416,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-        }
+                }
