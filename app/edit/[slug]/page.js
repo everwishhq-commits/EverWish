@@ -339,17 +339,23 @@ export default function EditPage({ params }) {
                 />
               </div>
 
-              {/* 3. FOTO - grande, resto de pantalla */}
+              {/* 3. FOTO - CORREGIDA: ajustada para verse completa sin salirse */}
               <div className="relative flex-shrink-0" style={{ height: "38vh" }}>
                 <div
-                  className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-[#fff7f5] h-full cursor-pointer"
+                  className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-[#fff7f5] h-full cursor-pointer flex items-center justify-center p-2"
                   onClick={() => setShowCrop(true)}
                   onContextMenu={(e) => e.preventDefault()}
                 >
                   <img
                     src={userImage}
                     alt="user"
-                    className="w-full h-full object-cover pointer-events-none"
+                    className="max-w-full max-h-full object-contain pointer-events-none"
+                    style={{ 
+                      maxWidth: "100%", 
+                      maxHeight: "100%",
+                      width: "auto",
+                      height: "auto"
+                    }}
                   />
                 </div>
 
@@ -505,4 +511,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-              }
+               }
