@@ -247,23 +247,17 @@ export default function EditPage({ params }) {
           transition={{ duration: 0.4 }}
         >
           {videoFound ? (
-            <div className="relative w-full h-full flex items-center justify-center">
-              <video
-                src={videoSrc}
-                className="w-full h-full"
-                style={{
-                  objectFit: "cover",
-                  objectPosition: "center center"
-                }}
-                autoPlay
-                loop
-                muted
-                playsInline
-                controlsList="nodownload nofullscreen noremoteplayback"
-                disablePictureInPicture
-                onContextMenu={(e) => e.preventDefault()}
-              />
-            </div>
+            <video
+              src={videoSrc}
+              className="h-full aspect-[4/5] object-cover object-center bg-pink-50"
+              autoPlay
+              loop
+              muted
+              playsInline
+              controlsList="nodownload nofullscreen noremoteplayback"
+              disablePictureInPicture
+              onContextMenu={(e) => e.preventDefault()}
+            />
           ) : (
             <div className="text-gray-500 text-center">
               <div className="text-6xl mb-4">⚠️</div>
@@ -299,19 +293,12 @@ export default function EditPage({ params }) {
                 className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none flex-shrink-0"
                 onClick={handleCardClick}
                 onContextMenu={(e) => e.preventDefault()}
-                style={{ 
-                  height: "40vh",
-                  aspectRatio: "9/16"
-                }}
+                style={{ height: "40vh" }}
               >
                 {videoFound ? (
                   <video
                     src={videoSrc}
-                    className="absolute inset-0 w-full h-full pointer-events-none"
-                    style={{
-                      objectFit: "cover",
-                      objectPosition: "center center"
-                    }}
+                    className="w-full h-full aspect-[4/5] object-cover object-center pointer-events-none"
                     autoPlay
                     loop
                     muted
@@ -395,19 +382,12 @@ export default function EditPage({ params }) {
                 className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none flex-shrink-0"
                 onClick={handleCardClick}
                 onContextMenu={(e) => e.preventDefault()}
-                style={{ 
-                  height: "46vh",
-                  aspectRatio: "9/16"
-                }}
+                style={{ height: "46vh" }}
               >
                 {videoFound ? (
                   <video
                     src={videoSrc}
-                    className="absolute inset-0 w-full h-full pointer-events-none"
-                    style={{
-                      objectFit: "cover",
-                      objectPosition: "center center"
-                    }}
+                    className="w-full h-full aspect-[4/5] object-cover object-center pointer-events-none"
                     autoPlay
                     loop
                     muted
@@ -511,4 +491,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-}
+              }
