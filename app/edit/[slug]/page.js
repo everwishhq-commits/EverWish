@@ -249,7 +249,7 @@ export default function EditPage({ params }) {
           {videoFound ? (
             <video
               src={videoSrc}
-              className="w-full h-full aspect-[4/5] object-cover object-center bg-pink-50 overflow-hidden"
+              className="w-full h-full aspect-[4/5] object-cover object-center bg-pink-50"
               autoPlay
               loop
               muted
@@ -491,4 +491,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-                       }
+      }
