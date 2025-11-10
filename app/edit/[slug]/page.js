@@ -35,7 +35,7 @@ export default function EditPage({ params }) {
     <div
       className="relative w-full flex justify-center items-center bg-[#fff7f5]"
       style={{
-        height: "500px",     // 🔹 alto del contenedor (sube/baja el área total)
+        height: "800px",     // 🔹 alto del contenedor (sube/baja el área total)
         marginTop: "23vh",    // 🔹 espacio superior
         marginBottom: "2vh", // 🔹 espacio inferior
       }}
