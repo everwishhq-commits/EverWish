@@ -44,7 +44,7 @@ export default function EditPage() {
     >
       <video
         src={video.file}
-        className="w-full h-full object-contain bg-pink-50"
+        className="w-full h-full object-cover bg-pink-50"
         autoPlay
         loop
         muted
@@ -70,4 +70,4 @@ export default function EditPage() {
       </div>
     </motion.div>
   );
-          }
+      }
