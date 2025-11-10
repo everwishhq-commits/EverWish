@@ -38,7 +38,7 @@ export default function EditPage({ params }) {
   const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
   const [animKey, setAnimKey] = useState(0);
 
-  // 🎬 CARGAR VIDEO - CORRECCIÓN CRÍTICA
+  // 🎬 CARGAR VIDEO
   useEffect(() => {
     async function loadVideo() {
       try {
@@ -46,16 +46,10 @@ export default function EditPage({ params }) {
         const data = await res.json();
         const videos = data.videos || data || [];
 
-        // Buscar video por name (exacto)
         let match = videos.find((v) => v.name === slug);
-        
-        // Si no encuentra, buscar por slug
-        if (!match) {
-          match = videos.find((v) => v.slug === slug);
-        }
+        if (!match) match = videos.find((v) => v.slug === slug);
 
         if (match) {
-          // ✅ CRÍTICO: Usar match.file NO match.src
           setVideoSrc(match.file);
           setVideoFound(true);
         } else {
@@ -107,19 +101,22 @@ export default function EditPage({ params }) {
     setTotal(5);
   };
 
-  // 💾 Descarga
+  // 🚫 BLOQUEAR DESCARGA
   const handleCardClick = () => {
-    setShowDownload(true);
-    setTimeout(() => setShowDownload(false), 3500);
+    // Solo muestra mensaje, no permite descargar
+    alert("🔒 This card is protected. Purchase to download!");
   };
-  const handleDownload = () => {
-    const link = document.createElement("a");
-    link.href = videoSrc;
-    link.download = `${slug}.mp4`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  };
+
+  // 🚫 Prevenir clic derecho en toda la página
+  useEffect(() => {
+    const preventContextMenu = (e) => {
+      e.preventDefault();
+      return false;
+    };
+    
+    document.addEventListener("contextmenu", preventContextMenu);
+    return () => document.removeEventListener("contextmenu", preventContextMenu);
+  }, []);
 
   return (
     <div
@@ -142,6 +139,9 @@ export default function EditPage({ params }) {
               loop
               muted
               playsInline
+              controlsList="nodownload nofullscreen noremoteplayback"
+              disablePictureInPicture
+              onContextMenu={(e) => e.preventDefault()}
             />
           ) : (
             <div className="text-gray-500 text-center">
@@ -177,26 +177,30 @@ export default function EditPage({ params }) {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45 }}
-            className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-5 shadow-xl mt-6 mb-10"
+            className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-4 shadow-xl mt-4 mb-6"
           >
-            {/* 🖼 TARJETA CON PROPORCIÓN FIJA 4:5 */}
+            {/* 🖼 TARJETA MÁS PEQUEÑA - 35vh max */}
             <div
-              className="relative mb-4 overflow-hidden rounded-2xl border bg-gray-50 cursor-pointer"
+              className="relative mb-3 overflow-hidden rounded-2xl border bg-gray-50 cursor-pointer select-none"
               onClick={handleCardClick}
+              onContextMenu={(e) => e.preventDefault()}
               style={{
                 width: "100%",
                 aspectRatio: "4 / 5",
-                maxHeight: "500px"
+                maxHeight: "35vh"
               }}
             >
               {videoFound ? (
                 <video
                   src={videoSrc}
-                  className="absolute inset-0 w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover pointer-events-none"
                   autoPlay
                   loop
                   muted
                   playsInline
+                  controlsList="nodownload nofullscreen noremoteplayback"
+                  disablePictureInPicture
+                  onContextMenu={(e) => e.preventDefault()}
                   onError={(e) => {
                     console.error("❌ Error reproduciendo video:", videoSrc);
                     setVideoFound(false);
@@ -204,29 +208,37 @@ export default function EditPage({ params }) {
                 />
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 bg-gradient-to-b from-gray-50 to-gray-100">
-                  <div className="text-6xl mb-4">⚠️</div>
-                  <p className="text-sm text-center px-4 mb-2 font-semibold">
+                  <div className="text-5xl mb-3">⚠️</div>
+                  <p className="text-xs text-center px-4 mb-2 font-semibold">
                     This card's video is missing or not uploaded yet.
                   </p>
-                  <p className="text-xs text-gray-500 px-4 text-center">
+                  <p className="text-xs text-gray-500 px-3 text-center">
                     Looking for: <code className="bg-white px-2 py-1 rounded text-xs">{slug}</code>
                   </p>
                 </div>
               )}
+              
+              {/* Marca de agua */}
+              {videoFound && (
+                <div className="absolute bottom-2 right-2 bg-black/30 backdrop-blur-sm px-2 py-1 rounded-full text-white text-xs font-semibold pointer-events-none">
+                  🔒 Protected
+                </div>
+              )}
             </div>
 
-            {/* 💌 Mensaje */}
-            <h3 className="mb-2 text-center text-lg font-semibold text-gray-700">
+            {/* 💌 Mensaje más compacto */}
+            <h3 className="mb-2 text-center text-base font-semibold text-gray-700">
               ✨ Customize your message ✨
             </h3>
             <textarea
-              className="w-full rounded-2xl border p-3 text-center text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
+              className="w-full rounded-2xl border p-3 text-center text-sm text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
               rows={2}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
+              onContextMenu={(e) => e.preventDefault()}
             />
 
-            {/* 📸 Imagen */}
+            {/* 📸 Imagen más pequeña */}
             {userImage && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -234,47 +246,52 @@ export default function EditPage({ params }) {
                 transition={{ duration: 0.4 }}
                 className="my-3 cursor-pointer hover:scale-[1.02] transition-transform flex justify-center"
                 onClick={() => setShowCrop(true)}
+                onContextMenu={(e) => e.preventDefault()}
+                style={{ userSelect: "none" }}
               >
                 <img
                   src={userImage}
                   alt="User upload"
-                  className="rounded-2xl border border-gray-200 shadow-sm"
+                  className="rounded-2xl border border-gray-200 shadow-sm pointer-events-none"
                   style={{
                     width: "100%",
                     height: "auto",
                     objectFit: "cover",
                     aspectRatio: "4 / 3",
+                    maxHeight: "20vh",
                     backgroundColor: "#fff7f5",
                   }}
+                  draggable="false"
+                  onContextMenu={(e) => e.preventDefault()}
                 />
               </motion.div>
             )}
 
             {!userImage && (
-              <div className="mt-4 flex justify-center">
+              <div className="mt-3 flex justify-center">
                 <button
                   onClick={() => setShowCrop(true)}
-                  className="flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-3 font-semibold text-[#3b2b1f] hover:bg-yellow-300 transition-all shadow-sm"
+                  className="flex items-center gap-2 rounded-full bg-yellow-400 px-4 py-2 text-sm font-semibold text-[#3b2b1f] hover:bg-yellow-300 transition-all shadow-sm"
                 >
                   📸 Add Image
                 </button>
               </div>
             )}
 
-            {/* ✨ Panel de animación */}
-            <div className="my-4">
+            {/* ✨ Panel de animación más compacto */}
+            <div className="my-3">
               <div
                 className={`flex items-center justify-between w-full rounded-xl transition-all duration-300 ${
                   animation && !animation.startsWith("✨ None")
                     ? "bg-gradient-to-r from-pink-100 via-purple-100 to-yellow-100 text-gray-800 shadow-sm"
                     : "bg-gray-100 text-gray-400"
                 }`}
-                style={{ height: "46px", padding: "0 8px", border: "1px solid rgba(0,0,0,0.05)" }}
+                style={{ height: "42px", padding: "0 8px", border: "1px solid rgba(0,0,0,0.05)" }}
               >
                 <select
                   value={animation}
                   onChange={(e) => setAnimation(e.target.value)}
-                  className="flex-1 text-sm font-medium focus:outline-none cursor-pointer truncate transition-colors bg-transparent"
+                  className="flex-1 text-xs font-medium focus:outline-none cursor-pointer truncate transition-colors bg-transparent"
                   style={{ maxWidth: "43%" }}
                 >
                   {animationOptions
@@ -290,16 +307,16 @@ export default function EditPage({ params }) {
                   <div className="flex items-center gap-2 ml-1">
                     <div className="flex items-center rounded-md border border-gray-300 overflow-hidden">
                       <button
-                        className="px-2 text-lg hover:bg-gray-200 transition"
+                        className="px-2 text-base hover:bg-gray-200 transition"
                         onClick={() => setEmojiCount((prev) => Math.max(5, prev - 5))}
                       >
                         –
                       </button>
-                      <span className="px-2 text-sm font-medium text-gray-700">
+                      <span className="px-2 text-xs font-medium text-gray-700">
                         {emojiCount}
                       </span>
                       <button
-                        className="px-2 text-lg hover:bg-gray-200 transition"
+                        className="px-2 text-base hover:bg-gray-200 transition"
                         onClick={() => setEmojiCount((prev) => Math.min(60, prev + 5))}
                       >
                         +
@@ -309,7 +326,7 @@ export default function EditPage({ params }) {
                     <select
                       value={intensity}
                       onChange={(e) => setIntensity(e.target.value)}
-                      className="px-2 text-sm bg-transparent font-medium focus:outline-none cursor-pointer"
+                      className="px-2 text-xs bg-transparent font-medium focus:outline-none cursor-pointer"
                     >
                       <option value="soft">Soft</option>
                       <option value="normal">Normal</option>
@@ -333,32 +350,20 @@ export default function EditPage({ params }) {
             </div>
 
             {/* 🛍 Botones */}
-            <div className="mt-4 flex flex-wrap justify-center gap-3">
+            <div className="mt-3 flex flex-wrap justify-center gap-2">
               <button
                 onClick={() => setShowGift(true)}
-                className="flex items-center gap-2 rounded-full bg-pink-200 px-5 py-3 font-semibold text-pink-700 hover:bg-pink-300 transition-all shadow-sm"
+                className="flex items-center gap-2 rounded-full bg-pink-200 px-4 py-2 text-sm font-semibold text-pink-700 hover:bg-pink-300 transition-all shadow-sm"
               >
                 🎁 Gift Card
               </button>
               <button
                 onClick={() => setShowCheckout(true)}
-                className="flex items-center gap-2 rounded-full bg-purple-500 px-6 py-3 font-semibold text-white hover:bg-purple-600 transition-all shadow-sm"
+                className="flex items-center gap-2 rounded-full bg-purple-500 px-5 py-2 text-sm font-semibold text-white hover:bg-purple-600 transition-all shadow-sm"
               >
                 💳 Checkout
               </button>
             </div>
-
-            {showDownload && (
-              <motion.button
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                onClick={handleDownload}
-                className="fixed bottom-10 right-6 z-[400] rounded-full bg-[#ff7b00] px-6 py-3 text-white font-semibold shadow-lg hover:bg-[#ff9f33]"
-              >
-                ⬇️ Download
-              </motion.button>
-            )}
           </motion.div>
         </>
       )}
@@ -405,4 +410,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-            }
+                }
