@@ -14,8 +14,8 @@ export default function EditPage() {
       className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#fff7f5] overflow-hidden"
       style={{
         height: "108vh", // 🔹 un poco más alto que la pantalla
-        paddingTop: "2vh", // 🔹 espacio arriba
-        paddingBottom: "3vh", // 🔹 espacio abajo
+        paddingTop: "0vh", // 🔹 espacio arriba
+        paddingBottom: "0vh", // 🔹 espacio abajo
       }}
     >
       {videoFound ? (
