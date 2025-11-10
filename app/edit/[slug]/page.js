@@ -99,7 +99,7 @@ export default function EditPage({ params }) {
   }, []);
 
   const handleCardClick = () => {
-    alert("🔒 This card is protected. Purchase to download!");
+    // No mostrar alert, solo prevenir descarga silenciosamente
   };
 
   // gift
@@ -113,8 +113,8 @@ export default function EditPage({ params }) {
     setTotal(5);
   };
 
-  // ⬇️ pequeño componente interno para no repetir el panel
-  const AnimationPanel = ({ compact }) => (
+  // Panel de animación reutilizable
+  const AnimationPanel = () => (
     <div
       className={`flex items-center justify-between w-full rounded-xl ${
         animation && !animation.startsWith("✨ None")
@@ -223,121 +223,171 @@ export default function EditPage({ params }) {
             emojiCount={emojiCount}
           />
 
-          {/* columna principal */}
-          <div className="relative z-[200] w-full max-w-md h-[100vh] max-h-[100vh] px-3 pt-3 pb-[90px] flex flex-col gap-3">
-            {/* 1. VIDEO */}
-            <div
-              className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none"
-              onClick={handleCardClick}
-              onContextMenu={(e) => e.preventDefault()}
-              style={{
-                height: userImage ? "40vh" : "40vh", // mismo alto, tú lo tenías así
-              }}
-            >
-              {videoFound ? (
-                <video
-                  src={videoSrc}
-                  className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  controlsList="nodownload nofullscreen noremoteplayback"
-                  disablePictureInPicture
-                  onError={() => setVideoFound(false)}
-                />
-              ) : (
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 bg-gradient-to-b from-gray-50 to-gray-100">
-                  <div className="text-5xl mb-3">⚠️</div>
-                  <p className="text-xs text-center px-4 mb-2 font-semibold">
-                    This card&apos;s video is missing or not uploaded yet.
-                  </p>
-                  <p className="text-xs text-gray-500 px-3 text-center">
-                    Looking for:{" "}
-                    <code className="bg-white px-2 py-1 rounded text-xs">
-                      {slug}
-                    </code>
-                  </p>
-                </div>
-              )}
-
-              {videoFound && (
-                <div className="absolute bottom-2 right-2 bg-black/30 backdrop-blur-sm px-2 py-1 rounded-full text-white text-xs font-semibold pointer-events-none">
-                  🔒 interno
-                </div>
-              )}
-            </div>
-
-            {/* 2. MENSAJE */}
-            <div className="flex flex-col gap-2">
-              <h3 className="text-center text-sm font-semibold text-gray-700">
-                ✨ Customize your message ✨
-              </h3>
-              <textarea
-                className="w-full rounded-2xl border p-3 text-center text-sm text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
-                rows={userImage ? 2 : 3} // ← sin foto agrandamos un poco
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-              />
-            </div>
-
-            {/* 3. SI HAY FOTO: foto + panel debajo */}
-            {userImage ? (
-              <>
-                <div
-                  className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-[#fff7f5]"
-                  style={{ height: "15vh" }} // NO la hago más pequeña, como pediste
-                  onClick={() => setShowCrop(true)}
-                  onContextMenu={(e) => e.preventDefault()}
-                >
-                  <img
-                    src={userImage}
-                    alt="user"
-                    className="w-full h-full object-cover pointer-events-none"
+          {/* LAYOUT CON FOTO */}
+          {userImage ? (
+            <div className="relative z-[200] w-full max-w-md h-[100vh] max-h-[100vh] px-3 pt-3 pb-3 flex flex-col gap-3">
+              {/* 1. VIDEO - más grande */}
+              <div
+                className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none"
+                onClick={handleCardClick}
+                onContextMenu={(e) => e.preventDefault()}
+                style={{ height: "45vh" }}
+              >
+                {videoFound ? (
+                  <video
+                    src={videoSrc}
+                    className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    controlsList="nodownload nofullscreen noremoteplayback"
+                    disablePictureInPicture
+                    onError={() => setVideoFound(false)}
                   />
-                </div>
+                ) : (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 bg-gradient-to-b from-gray-50 to-gray-100">
+                    <div className="text-5xl mb-3">⚠️</div>
+                    <p className="text-xs text-center px-4 mb-2 font-semibold">
+                      This card&apos;s video is missing or not uploaded yet.
+                    </p>
+                  </div>
+                )}
 
-                {/* panel debajo de la foto */}
-                <AnimationPanel />
-              </>
-            ) : (
-              /* 4. SI NO HAY FOTO: botón + panel, uno debajo del otro */
-              <>
-                <div className="flex items-center justify-center">
-                  <button
-                    onClick={() => setShowCrop(true)}
-                    className="flex items-center gap-2 rounded-full bg-yellow-400 px-4 py-2 text-sm font-semibold text-[#3b2b1f] hover:bg-yellow-300 transition-all shadow-sm"
-                  >
-                    📸 Add Image
-                  </button>
-                </div>
+                {videoFound && (
+                  <div className="absolute bottom-2 right-2 bg-black/30 backdrop-blur-sm px-2 py-1 rounded-full text-white text-xs font-semibold pointer-events-none">
+                    🔒 interno
+                  </div>
+                )}
+              </div>
 
-                {/* panel de animación debajo del botón */}
-                <AnimationPanel />
+              {/* 2. MENSAJE - compacto */}
+              <div className="flex flex-col gap-2">
+                <h3 className="text-center text-sm font-semibold text-gray-700">
+                  ✨ Customize your message ✨
+                </h3>
+                <textarea
+                  className="w-full rounded-2xl border p-3 text-center text-sm text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
+                  rows={2}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                />
+              </div>
 
-                {/* este flex-1 sólo rellena para que todo quede más centrado */}
-                <div className="flex-1" />
-              </>
-            )}
-          </div>
-
-          {/* BOTONES flotantes */}
-          <div className="fixed bottom-0 left-0 right-0 z-[210] px-4 pb-3">
-            <div className="max-w-md mx-auto flex gap-2 justify-center">
-              <button
-                onClick={() => setShowGift(true)}
-                className="flex-1 rounded-full bg-pink-200 py-2 text-sm font-semibold text-pink-700"
+              {/* 3. FOTO */}
+              <div
+                className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-[#fff7f5] cursor-pointer"
+                style={{ height: "18vh" }}
+                onClick={() => setShowCrop(true)}
+                onContextMenu={(e) => e.preventDefault()}
               >
-                🎁 Gift Card
-              </button>
-              <button
-                onClick={() => setShowCheckout(true)}
-                className="flex-1 rounded-full bg-purple-500 py-2 text-sm font-semibold text-white"
-              >
-                💳 Checkout
-              </button>
+                <img
+                  src={userImage}
+                  alt="user"
+                  className="w-full h-full object-cover pointer-events-none"
+                />
+              </div>
+
+              {/* 4. PANEL DE ANIMACIÓN */}
+              <AnimationPanel />
+
+              {/* 5. BOTONES FLOTANTES */}
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => setShowGift(true)}
+                  className="flex-1 rounded-full bg-pink-200 py-2.5 text-sm font-semibold text-pink-700"
+                >
+                  🎁 Gift Card
+                </button>
+                <button
+                  onClick={() => setShowCheckout(true)}
+                  className="flex-1 rounded-full bg-purple-500 py-2.5 text-sm font-semibold text-white"
+                >
+                  💳 Checkout
+                </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            /* LAYOUT SIN FOTO - todo más espaciado y proporcional */
+            <div className="relative z-[200] w-full max-w-md h-[100vh] max-h-[100vh] px-3 py-6 flex flex-col gap-4">
+              {/* 1. VIDEO - más grande y centrado */}
+              <div
+                className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none"
+                onClick={handleCardClick}
+                onContextMenu={(e) => e.preventDefault()}
+                style={{ height: "48vh" }}
+              >
+                {videoFound ? (
+                  <video
+                    src={videoSrc}
+                    className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    controlsList="nodownload nofullscreen noremoteplayback"
+                    disablePictureInPicture
+                    onError={() => setVideoFound(false)}
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 bg-gradient-to-b from-gray-50 to-gray-100">
+                    <div className="text-5xl mb-3">⚠️</div>
+                    <p className="text-xs text-center px-4 mb-2 font-semibold">
+                      This card&apos;s video is missing or not uploaded yet.
+                    </p>
+                  </div>
+                )}
+
+                {videoFound && (
+                  <div className="absolute bottom-2 right-2 bg-black/30 backdrop-blur-sm px-2 py-1 rounded-full text-white text-xs font-semibold pointer-events-none">
+                    🔒 interno
+                  </div>
+                )}
+              </div>
+
+              {/* 2. MENSAJE - más alto */}
+              <div className="flex flex-col gap-2">
+                <h3 className="text-center text-sm font-semibold text-gray-700">
+                  ✨ Customize your message ✨
+                </h3>
+                <textarea
+                  className="w-full rounded-2xl border p-4 text-center text-sm text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
+                  rows={3}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                />
+              </div>
+
+              {/* 3. BOTÓN ADD IMAGE - centrado */}
+              <div className="flex items-center justify-center py-2">
+                <button
+                  onClick={() => setShowCrop(true)}
+                  className="flex items-center gap-2 rounded-full bg-yellow-400 px-6 py-2.5 text-sm font-semibold text-[#3b2b1f] hover:bg-yellow-300 transition-all shadow-md"
+                >
+                  📸 Add Image
+                </button>
+              </div>
+
+              {/* 4. PANEL DE ANIMACIÓN */}
+              <AnimationPanel />
+
+              {/* 5. BOTONES FLOTANTES */}
+              <div className="flex gap-2 mt-auto">
+                <button
+                  onClick={() => setShowGift(true)}
+                  className="flex-1 rounded-full bg-pink-200 py-2.5 text-sm font-semibold text-pink-700"
+                >
+                  🎁 Gift Card
+                </button>
+                <button
+                  onClick={() => setShowCheckout(true)}
+                  className="flex-1 rounded-full bg-purple-500 py-2.5 text-sm font-semibold text-white"
+                >
+                  💳 Checkout
+                </button>
+              </div>
+            </div>
+          )}
         </>
       )}
 
@@ -383,4 +433,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-            }
+}
