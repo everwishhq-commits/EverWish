@@ -179,7 +179,7 @@ export default function EditPage({ params }) {
             transition={{ duration: 0.45 }}
             className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-4 shadow-xl mt-4 mb-6"
           >
-            {/* 🖼 TARJETA MÁS PEQUEÑA - 35vh max */}
+            {/* 🖼 TARJETA CON TAMAÑO OPTIMIZADO - 50vh */}
             <div
               className="relative mb-3 overflow-hidden rounded-2xl border bg-gray-50 cursor-pointer select-none"
               onClick={handleCardClick}
@@ -187,7 +187,7 @@ export default function EditPage({ params }) {
               style={{
                 width: "100%",
                 aspectRatio: "4 / 5",
-                maxHeight: "35vh"
+                maxHeight: "50vh"
               }}
             >
               {videoFound ? (
@@ -218,10 +218,10 @@ export default function EditPage({ params }) {
                 </div>
               )}
               
-              {/* Marca de agua */}
+              {/* Marca de agua - AHORA DICE "interno" */}
               {videoFound && (
                 <div className="absolute bottom-2 right-2 bg-black/30 backdrop-blur-sm px-2 py-1 rounded-full text-white text-xs font-semibold pointer-events-none">
-                  🔒 Protected
+                  🔒 interno
                 </div>
               )}
             </div>
@@ -238,7 +238,7 @@ export default function EditPage({ params }) {
               onContextMenu={(e) => e.preventDefault()}
             />
 
-            {/* 📸 Imagen más pequeña */}
+            {/* 📸 IMAGEN MÁS GRANDE - 40vh */}
             {userImage && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -258,7 +258,7 @@ export default function EditPage({ params }) {
                     height: "auto",
                     objectFit: "cover",
                     aspectRatio: "4 / 3",
-                    maxHeight: "20vh",
+                    maxHeight: "40vh",
                     backgroundColor: "#fff7f5",
                   }}
                   draggable="false"
@@ -410,4 +410,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-                }
+            }
