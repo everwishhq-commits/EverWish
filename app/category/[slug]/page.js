@@ -57,11 +57,13 @@ export default function CategoryPage() {
   }, [slug, q]);
 
   const openModal = (sub) => {
+  setActiveSub(sub);        // Abre INMEDIATAMENTE
+  setModalVideos([]);       // Muestra skeleton primero
+  setTimeout(() => {        // Carga videos DESPUÉS
     const videos = filterBySubcategory(categoryVideos, sub);
-    console.log(`🎯 ${sub}: ${videos.length} videos`);
     setModalVideos(videos);
-    setActiveSub(sub);
-  };
+  }, 0);
+};
 
   const closeModal = () => {
     setActiveSub(null);
