@@ -1,13 +1,41 @@
 "use client";
 
-export default function EditPage() {
-  const match = { file: "/videos/sample.mp4" }; // 🔹 usa tu video o endpoint real
+import { useEffect, useState } from "react";
+
+export default function EditPage({ params }) {
+  const { slug } = params;
+  const [match, setMatch] = useState(null);
+
+  useEffect(() => {
+    async function loadVideo() {
+      try {
+        const res = await fetch("/api/videos");
+        const data = await res.json();
+        const videos = data.videos || data || [];
+        const found = videos.find(
+          (v) => v.slug === slug || v.name === slug
+        );
+        setMatch(found || null);
+      } catch (err) {
+        console.error("❌ Error cargando video:", err);
+      }
+    }
+    loadVideo();
+  }, [slug]);
+
+  if (!match) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-[#fff7f5]">
+        <p className="text-gray-500">Loading video...</p>
+      </div>
+    );
+  }
 
   return (
     <div
       className="relative w-full flex justify-center items-center bg-[#fff7f5]"
       style={{
-        height: "460px",     // 🔹 altura del contenedor del video
+        height: "460px",     // 🔹 alto del contenedor (sube/baja el área total)
         marginTop: "2vh",    // 🔹 espacio superior
         marginBottom: "2vh", // 🔹 espacio inferior
       }}
