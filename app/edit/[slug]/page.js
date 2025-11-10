@@ -21,7 +21,7 @@ export default function EditPage() {
       {videoFound ? (
         <video
           src={match.file}
-          className="w-[90vw] sm:w-[400px] md:w-[440px] aspect-[4/5.2] rounded-2xl shadow-lg object-cover object-center bg-pink-50"
+          className="w-[110vw] sm:w-[400px] md:w-[440px] aspect-[4/5.2] rounded-2xl shadow-lg object-cover object-center bg-pink-50"
           autoPlay
           loop
           muted
