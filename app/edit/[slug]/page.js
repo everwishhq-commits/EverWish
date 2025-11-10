@@ -119,95 +119,122 @@ export default function EditPage({ params }) {
 
   // Panel de animación
   const isAnimationActive = animation && !animation.startsWith("✨ None");
-  
-  const toggleAnimation = () => {
-    if (isAnimationActive) {
-      // Desactivar: guardar la actual y poner None
-      setLastActiveAnimation(animation);
-      const noneOption = animationOptions.find((a) => a.includes("None"));
-      if (noneOption) setAnimation(noneOption);
-    } else {
-      // Activar: restaurar la última
-      if (lastActiveAnimation) {
-        setAnimation(lastActiveAnimation);
-      } else {
-        const firstActive = animationOptions.find((a) => !a.includes("None"));
-        if (firstActive) setAnimation(firstActive);
-      }
-    }
-  };
 
-  const AnimationPanel = () => (
-    <div
-      className={`flex items-center justify-between w-full rounded-xl ${
-        isAnimationActive
-          ? "bg-gradient-to-r from-pink-100 via-purple-100 to-yellow-100 text-gray-800 shadow-sm"
-          : "bg-gray-100 text-gray-400"
-      }`}
-      style={{ height: "50px", padding: "0 12px" }}
-    >
-      <select
-        value={animation}
-        onChange={(e) => {
-          setAnimation(e.target.value);
-          if (!e.target.value.includes("None")) {
-            setLastActiveAnimation(e.target.value);
-          }
-        }}
-        className="flex-1 text-xs font-medium bg-transparent focus:outline-none cursor-pointer truncate"
+  const AnimationPanel = () => {
+    // Extraer el emoji de la animación actual
+    const currentEmoji = isAnimationActive ? animation.split(' ')[0] : '✨';
+    
+    return (
+      <div
+        className={`flex items-center justify-between w-full rounded-xl ${
+          isAnimationActive
+            ? "bg-gradient-to-r from-pink-100 via-purple-100 to-yellow-100 text-gray-800 shadow-sm"
+            : "bg-gray-100 text-gray-400"
+        }`}
+        style={{ height: "50px", padding: "0 12px" }}
       >
-        {animationOptions
-          .filter((a) => !a.includes("None"))
-          .map((a) => (
-            <option key={a} value={a}>
-              {a}
-            </option>
-          ))}
-      </select>
-
-      <div className="flex items-center gap-2 ml-2">
-        <div className="flex items-center rounded-md border border-gray-300 overflow-hidden bg-white">
-          <button
-            className="px-2 text-base"
-            onClick={() => setEmojiCount((prev) => Math.max(5, prev - 5))}
-          >
-            –
-          </button>
-          <span className="px-2 text-xs font-medium text-gray-700">
-            {emojiCount}
-          </span>
-          <button
-            className="px-2 text-base"
-            onClick={() => setEmojiCount((prev) => Math.min(60, prev + 5))}
-          >
-            +
-          </button>
-        </div>
-
-        <select
-          value={intensity}
-          onChange={(e) => setIntensity(e.target.value)}
-          className="px-2 text-xs bg-white rounded-md border border-gray-300 font-medium focus:outline-none cursor-pointer"
-        >
-          <option value="soft">Soft</option>
-          <option value="normal">Normal</option>
-          <option value="vivid">Vivid</option>
-        </select>
-
-        {/* Botón X para activar/desactivar */}
+        {/* Botón emoji - activa la animación */}
         <button
-          onClick={toggleAnimation}
-          className={`w-7 h-7 rounded-md flex items-center justify-center font-bold text-base transition-all ${
-            isAnimationActive
-              ? "bg-white text-red-500 hover:bg-red-50"
-              : "bg-white text-gray-400 hover:bg-gray-50"
+          onClick={() => {
+            if (!isAnimationActive) {
+              // Activar: restaurar la última animación
+              if (lastActiveAnimation) {
+                setAnimation(lastActiveAnimation);
+              } else {
+                const firstActive = animationOptions.find((a) => !a.includes("None"));
+                if (firstActive) setAnimation(firstActive);
+              }
+            }
+          }}
+          className={`text-2xl mr-2 transition-all ${
+            isAnimationActive 
+              ? "cursor-default" 
+              : "cursor-pointer hover:scale-110"
           }`}
         >
-          ✕
+          {currentEmoji}
         </button>
+
+        <select
+          value={isAnimationActive ? animation : ""}
+          onChange={(e) => {
+            setAnimation(e.target.value);
+            if (!e.target.value.includes("None")) {
+              setLastActiveAnimation(e.target.value);
+            }
+          }}
+          disabled={!isAnimationActive}
+          className={`flex-1 text-xs font-medium bg-transparent focus:outline-none truncate ${
+            isAnimationActive ? "cursor-pointer" : "cursor-not-allowed"
+          }`}
+        >
+          {!isAnimationActive && (
+            <option value="">Select Animation</option>
+          )}
+          {animationOptions
+            .filter((a) => !a.includes("None"))
+            .map((a) => (
+              <option key={a} value={a}>
+                {a}
+              </option>
+            ))}
+        </select>
+
+        <div className="flex items-center gap-2 ml-2">
+          <div className="flex items-center rounded-md border border-gray-300 overflow-hidden bg-white">
+            <button
+              className="px-2 text-base"
+              onClick={() => setEmojiCount((prev) => Math.max(5, prev - 5))}
+              disabled={!isAnimationActive}
+            >
+              –
+            </button>
+            <span className="px-2 text-xs font-medium text-gray-700">
+              {emojiCount}
+            </span>
+            <button
+              className="px-2 text-base"
+              onClick={() => setEmojiCount((prev) => Math.min(60, prev + 5))}
+              disabled={!isAnimationActive}
+            >
+              +
+            </button>
+          </div>
+
+          <select
+            value={intensity}
+            onChange={(e) => setIntensity(e.target.value)}
+            disabled={!isAnimationActive}
+            className="px-2 text-xs bg-white rounded-md border border-gray-300 font-medium focus:outline-none cursor-pointer"
+          >
+            <option value="soft">Soft</option>
+            <option value="normal">Normal</option>
+            <option value="vivid">Vivid</option>
+          </select>
+
+          {/* Botón X para SOLO desactivar */}
+          <button
+            onClick={() => {
+              if (isAnimationActive) {
+                // Solo desactiva, no reactiva
+                setLastActiveAnimation(animation);
+                const noneOption = animationOptions.find((a) => a.includes("None"));
+                if (noneOption) setAnimation(noneOption);
+              }
+            }}
+            className={`w-7 h-7 rounded-md flex items-center justify-center font-bold text-base transition-all ${
+              isAnimationActive
+                ? "bg-white text-red-500 hover:bg-red-50 cursor-pointer"
+                : "bg-white text-gray-300 cursor-not-allowed"
+            }`}
+            disabled={!isAnimationActive}
+          >
+            ✕
+          </button>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="relative h-[100vh] max-h-[100vh] bg-[#fff7f5] flex items-center justify-center overflow-hidden">
@@ -472,4 +499,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-}
+    }
