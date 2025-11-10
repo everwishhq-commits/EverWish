@@ -36,7 +36,7 @@ export default function EditPage({ params }) {
       className="relative w-full flex justify-center items-center bg-[#fff7f5]"
       style={{
         height: "460px",     // 🔹 alto del contenedor (sube/baja el área total)
-        marginTop: "8vh",    // 🔹 espacio superior
+        marginTop: "12vh",    // 🔹 espacio superior
         marginBottom: "2vh", // 🔹 espacio inferior
       }}
     >
@@ -50,7 +50,7 @@ export default function EditPage({ params }) {
         draggable="false"
         onContextMenu={(e) => e.preventDefault()}
         className="
-          w-[500px] sm:w-[320px] md:w-[340px]
+          w-[490px] sm:w-[320px] md:w-[340px]
           h-[730px]
           aspect-[4/5]
           rounded-2xl shadow-lg
