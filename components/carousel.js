@@ -9,7 +9,6 @@ export default function Carousel() {
   const autoplayRef = useRef(null);
   const pauseRef = useRef(false);
 
-  // 🧭 Variables de control de gesto
   const startX = useRef(0);
   const startY = useRef(0);
   const moved = useRef(false);
@@ -18,7 +17,6 @@ export default function Carousel() {
   const TAP_THRESHOLD = 10;
   const SWIPE_THRESHOLD = 40;
 
-  // 🕒 Autoplay
   const startAutoplay = () => {
     clearInterval(autoplayRef.current);
     if (!pauseRef.current && videos.length > 0) {
@@ -28,7 +26,6 @@ export default function Carousel() {
     }
   };
 
-  // 🎥 Cargar videos desde API con agrupación, top 10 y actualización diaria
   useEffect(() => {
     async function loadAndFilter() {
       try {
@@ -36,15 +33,14 @@ export default function Carousel() {
         const data = await res.json();
         const allVideos = data.videos || data || [];
 
-        // 🧩 Agrupar por baseSlug (ej: pumpkin_halloween_1A → pumpkin_halloween)
         const grouped = {};
         allVideos.forEach((v) => {
-          const base = v.slug.replace(/_\d+[A-Z]?$/i, "");
+          const slugToUse = v.slug || v.name;
+          const base = slugToUse.replace(/_\d+[A-Z]?$/i, "");
           if (!grouped[base]) grouped[base] = [];
           grouped[base].push(v);
         });
 
-        // 🏆 Tomar el video más reciente o más popular de cada grupo
         const uniqueVideos = Object.values(grouped).map((arr) =>
           arr.sort((a, b) => {
             const aDate = a.updatedAt || a.date || 0;
@@ -55,7 +51,6 @@ export default function Carousel() {
           })[0]
         );
 
-        // 🔝 Limitar a los 10 mejores
         const top10 = uniqueVideos.slice(0, 10);
         setVideos(top10);
       } catch (err) {
@@ -64,8 +59,6 @@ export default function Carousel() {
     }
 
     loadAndFilter();
-
-    // ⏰ Actualizar automáticamente cada 24 horas
     const interval = setInterval(loadAndFilter, 24 * 60 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
@@ -75,7 +68,6 @@ export default function Carousel() {
     return () => clearInterval(autoplayRef.current);
   }, [videos]);
 
-  // 🖐️ Control táctil con bloqueo vertical
   const handleTouchStart = (e) => {
     const t = e.touches[0];
     startX.current = t.clientX;
@@ -95,19 +87,18 @@ export default function Carousel() {
       moved.current = true;
       direction.current =
         Math.abs(deltaX) > Math.abs(deltaY) ? "horizontal" : "vertical";
-      e.stopPropagation(); // 🚫 Bloquea propagación si hay movimiento
+      e.stopPropagation();
     }
   };
 
   const handleTouchEnd = (e) => {
-    e.stopPropagation(); // 🚫 Evita que suba a la página
+    e.stopPropagation();
 
     if (!moved.current) {
-      // TAP → abrir fullscreen
       const tapped = videos[index];
-      if (tapped?.slug) handleClick(tapped.slug);
+      const slugToUse = tapped?.slug || tapped?.name;
+      if (slugToUse) handleClick(slugToUse);
     } else if (direction.current === "horizontal") {
-      // Swipe horizontal → cambia tarjeta
       const diffX = startX.current - e.changedTouches[0].clientX;
       if (Math.abs(diffX) > SWIPE_THRESHOLD) {
         setIndex((prev) =>
@@ -124,7 +115,6 @@ export default function Carousel() {
     }, 3000);
   };
 
-  // 🎬 Pantalla extendida
   const handleClick = async (slug) => {
     try {
       const elem = document.documentElement;
@@ -138,10 +128,18 @@ export default function Carousel() {
     }
   };
 
+  if (videos.length === 0) {
+    return (
+      <div className="w-full flex justify-center items-center h-[440px]">
+        <p className="text-gray-400 text-lg">Loading videos...</p>
+      </div>
+    );
+  }
+
   return (
     <div
       className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none"
-      style={{ touchAction: "pan-y" }} // ✅ permite scroll vertical global
+      style={{ touchAction: "pan-y" }}
     >
       <div
         onTouchStart={handleTouchStart}
@@ -166,7 +164,7 @@ export default function Carousel() {
               className={`absolute transition-all duration-500 ease-in-out ${positionClass}`}
             >
               <video
-                src={video.src}
+                src={video.file}
                 autoPlay
                 loop
                 muted
@@ -174,14 +172,18 @@ export default function Carousel() {
                 controlsList="nodownload noplaybackrate"
                 draggable="false"
                 onContextMenu={(e) => e.preventDefault()}
-                className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover object-center bg-white overflow-hidden"
+                onError={(e) => {
+                  console.error("❌ Error cargando video:", video.file);
+                  // NO mostrar ningún mensaje visual
+                }}
+                className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover object-center bg-pink-50 overflow-hidden"
               />
             </div>
           );
         })}
       </div>
 
-      {/* 🔘 Dots */}
+      {/* Dots */}
       <div className="flex mt-5 gap-2">
         {videos.map((_, i) => (
           <span
@@ -203,4 +205,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-  }
+                                         }
