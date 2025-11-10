@@ -331,14 +331,14 @@ export default function EditPage({ params }) {
 
               <div className="relative flex-shrink-0" style={{ height: "38vh" }}>
                 <div
-                  className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-[#fff7f5] h-full cursor-pointer"
+                  className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-[#fff7f5] h-full cursor-pointer flex items-center justify-center"
                   onClick={() => setShowCrop(true)}
                   onContextMenu={(e) => e.preventDefault()}
                 >
                   <img
                     src={userImage}
                     alt="user"
-                    className="w-full h-full object-cover pointer-events-none"
+                    className="w-full h-full object-contain pointer-events-none"
                   />
                 </div>
 
@@ -485,4 +485,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-                }
+              }
