@@ -50,8 +50,8 @@ export default function EditPage({ params }) {
         draggable="false"
         onContextMenu={(e) => e.preventDefault()}
         className="
-          w-[460px] sm:w-[320px] md:w-[340px]
-          h-[730px]
+          w-[420px] sm:w-[320px] md:w-[340px]
+          h-[830px]
           aspect-[4/5]
           rounded-2xl shadow-lg
           object-cover object-center
