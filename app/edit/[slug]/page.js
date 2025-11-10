@@ -23,6 +23,7 @@ export default function EditPage({ params }) {
   const [animationOptions, setAnimationOptions] = useState([]);
   const [videoSrc, setVideoSrc] = useState("");
   const [videoFound, setVideoFound] = useState(true);
+  const [lastActiveAnimation, setLastActiveAnimation] = useState("");
 
   const [showGift, setShowGift] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
@@ -67,7 +68,9 @@ export default function EditPage({ params }) {
 
     const opts = getAnimationOptionsForSlug(slug);
     setAnimationOptions(opts);
-    setAnimation(opts.find((a) => !a.includes("None")) || opts[0]);
+    const defaultAnim = opts.find((a) => !a.includes("None")) || opts[0];
+    setAnimation(defaultAnim);
+    setLastActiveAnimation(defaultAnim);
   }, [slug]);
 
   // loading pantalla
@@ -114,20 +117,7 @@ export default function EditPage({ params }) {
     return () => document.removeEventListener("contextmenu", preventContextMenu);
   }, []);
 
-  // Panel de animación
-  const AnimationPanel = () => (
-    <div
-      className={`flex items-center justify-between w-full rounded-xl ${
-        animation && !animation.startsWith("✨ None")
-          ? "bg-gradient-to-r from-pink-100 via-purple-100 to-yellow-100 text-gray-800 shadow-sm"
-          : "bg-gray-100 text-gray-400"
-      }`}
-      style={{ height: "50px", padding: "0 12px" }}
-    >
-      <select
-        value={animation}
-        onChange={(e) => setAnimation(e.target.value)}
-        className="flex-1 text-xs font-medium bg-transparent focus:outline-none cursor-pointer truncate"
+ate"
       >
         {animationOptions
           .filter((a) => !a.includes("None"))
@@ -230,7 +220,7 @@ export default function EditPage({ params }) {
                 className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none flex-shrink-0"
                 onClick={handleCardClick}
                 onContextMenu={(e) => e.preventDefault()}
-                style={{ height: "40vh" }}
+                style={{ height: "38vh" }}
               >
                 {videoFound ? (
                   <video
@@ -319,7 +309,7 @@ export default function EditPage({ params }) {
                 className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none flex-shrink-0"
                 onClick={handleCardClick}
                 onContextMenu={(e) => e.preventDefault()}
-                style={{ height: "45vh" }}
+                style={{ height: "38vh" }}
               >
                 {videoFound ? (
                   <video
@@ -349,7 +339,7 @@ export default function EditPage({ params }) {
                   ✨ Customize your message ✨
                 </h3>
                 <textarea
-                  className="w-full rounded-2xl border p-3 text-center text-sm text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400 resize-none"
+                  className="w-full rounded-2xl border p-3 text-center text-base text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400 resize-none"
                   rows={3}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
@@ -433,4 +423,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-            }
+}
