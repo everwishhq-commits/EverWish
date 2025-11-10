@@ -244,7 +244,7 @@ export default function EditPage({ params }) {
 
   return (
     <div className="relative h-[100vh] max-h-[100vh] bg-[#fff7f5] flex items-center justify-center overflow-hidden">
-      {/* pantalla de carga */}
+      {/* pantalla de carga - CORREGIDA PARA MOSTRAR VIDEO COMPLETO */}
       {stage === "expanded" && (
         <motion.div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-[#fff7f5]"
@@ -255,7 +255,7 @@ export default function EditPage({ params }) {
           {videoFound ? (
             <video
               src={videoSrc}
-              className="absolute inset-0 w-full h-full object-cover"
+              className="w-full h-full object-contain"
               autoPlay
               loop
               muted
@@ -297,9 +297,9 @@ export default function EditPage({ params }) {
           {/* LAYOUT CON FOTO - scrolleable */}
           {userImage ? (
             <div className="relative z-[200] w-full max-w-md h-[100vh] px-3 pt-4 pb-24 overflow-y-auto flex flex-col gap-3">
-              {/* 1. VIDEO - bien grande y completa */}
+              {/* 1. VIDEO - CORREGIDO: muestra video completo */}
               <div
-                className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none flex-shrink-0"
+                className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none flex-shrink-0 flex items-center justify-center"
                 onClick={handleCardClick}
                 onContextMenu={(e) => e.preventDefault()}
                 style={{ height: "40vh" }}
@@ -307,7 +307,7 @@ export default function EditPage({ params }) {
                 {videoFound ? (
                   <video
                     src={videoSrc}
-                    className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                    className="w-full h-full object-contain pointer-events-none"
                     autoPlay
                     loop
                     muted
@@ -390,11 +390,11 @@ export default function EditPage({ params }) {
               </div>
             </div>
           ) : (
-            /* LAYOUT SIN FOTO - todo visible, bien distribuido */
+            /* LAYOUT SIN FOTO - todo visible, bien distribuido */}
             <div className="relative z-[200] w-full max-w-md h-[100vh] px-3 py-4 flex flex-col">
-              {/* 1. VIDEO */}
+              {/* 1. VIDEO - CORREGIDO: muestra video completo */}
               <div
-                className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none flex-shrink-0"
+                className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none flex-shrink-0 flex items-center justify-center"
                 onClick={handleCardClick}
                 onContextMenu={(e) => e.preventDefault()}
                 style={{ height: "46vh" }}
@@ -402,7 +402,7 @@ export default function EditPage({ params }) {
                 {videoFound ? (
                   <video
                     src={videoSrc}
-                    className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                    className="w-full h-full object-contain pointer-events-none"
                     autoPlay
                     loop
                     muted
@@ -511,4 +511,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-               }
+      }
