@@ -15,7 +15,6 @@ import CropperModal from "@/components/croppermodal";
 export default function EditPage({ params }) {
   const slug = params.slug;
 
-  // estados
   const [stage, setStage] = useState("expanded");
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("");
@@ -37,7 +36,7 @@ export default function EditPage({ params }) {
   const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
   const [animKey, setAnimKey] = useState(0);
 
-  // cargar video + config
+  // cargar video y mensajes
   useEffect(() => {
     async function loadVideo() {
       try {
@@ -70,7 +69,7 @@ export default function EditPage({ params }) {
     setAnimation(opts.find((a) => !a.includes("None")) || opts[0]);
   }, [slug]);
 
-  // loading pantalla
+  // pantalla de carga
   useEffect(() => {
     let v = 0;
     const id = setInterval(() => {
@@ -84,12 +83,12 @@ export default function EditPage({ params }) {
     return () => clearInterval(id);
   }, []);
 
-  // re-render anim
+  // refrescar anim
   useEffect(() => {
     setAnimKey(Date.now());
   }, [animation, category, intensity, emojiCount]);
 
-  // bloquear guardar
+  // bloquear descarga
   const handleCardClick = () => {
     alert("🔒 This card is protected. Purchase to download!");
   };
@@ -105,7 +104,7 @@ export default function EditPage({ params }) {
     setTotal(5);
   };
 
-  // bloquear clic derecho global
+  // bloquear clic derecho
   useEffect(() => {
     const preventContextMenu = (e) => {
       e.preventDefault();
@@ -116,7 +115,7 @@ export default function EditPage({ params }) {
 
   return (
     <div className="relative h-[100vh] max-h-[100vh] bg-[#fff7f5] flex items-center justify-center overflow-hidden">
-      {/* pantalla de carga */}
+      {/* LOADING */}
       {stage === "expanded" && (
         <motion.div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-[#fff7f5]"
@@ -154,9 +153,10 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
+      {/* EDITOR */}
       {stage === "editor" && (
         <>
-          {/* capa de emojis */}
+          {/* capa de animación */}
           <AnimationOverlay
             key={animKey}
             slug={slug}
@@ -166,14 +166,14 @@ export default function EditPage({ params }) {
             emojiCount={emojiCount}
           />
 
-          {/* ESTE es el lienzo que quieres mostrar */}
-          <div className="relative z-[200] w-full max-w-md h-[100vh] max-h-[100vh] px-3 flex flex-col gap-3">
-            {/* 1. VIDEO: fijo, alto grande */}
+          {/* columna principal */}
+          <div className="relative z-[200] w-full max-w-md h-[100vh] max-h-[100vh] px-3 flex flex-col gap-3 pt-3 pb-[90px]">
+            {/* 1. video */}
             <div
               className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none"
               onClick={handleCardClick}
               onContextMenu={(e) => e.preventDefault()}
-              style={{ height: "42vh" }} // <- puedes subir/bajar este número
+              style={{ height: "40vh" }} // un poco más bajito para dejar hueco al panel
             >
               {videoFound ? (
                 <video
@@ -209,7 +209,7 @@ export default function EditPage({ params }) {
               )}
             </div>
 
-            {/* 2. MENSAJE: pequeño */}
+            {/* 2. mensaje */}
             <div className="flex flex-col gap-2">
               <h3 className="text-center text-sm font-semibold text-gray-700">
                 ✨ Customize your message ✨
@@ -222,34 +222,92 @@ export default function EditPage({ params }) {
               />
             </div>
 
-            {/* 3. FOTO: ocupa el resto de la pantalla */}
-            <div className="flex-1">
-              {userImage ? (
-                <div
-                  className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-[#fff7f5] h-full"
+            {/* 3. foto o placeholder */}
+            {userImage ? (
+              <div
+                className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-[#fff7f5] flex-1"
+                onClick={() => setShowCrop(true)}
+                onContextMenu={(e) => e.preventDefault()}
+              >
+                <img
+                  src={userImage}
+                  alt="user"
+                  className="w-full h-full object-cover pointer-events-none"
+                />
+              </div>
+            ) : (
+              <div className="h-[14vh] flex items-center justify-center">
+                <button
                   onClick={() => setShowCrop(true)}
-                  onContextMenu={(e) => e.preventDefault()}
+                  className="flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-2 text-sm font-semibold text-[#3b2b1f] hover:bg-yellow-300 transition-all shadow-sm"
                 >
-                  <img
-                    src={userImage}
-                    alt="user"
-                    className="w-full h-full object-cover pointer-events-none"
-                  />
-                </div>
-              ) : (
-                <div className="h-full flex items-center justify-center">
-                  <button
-                    onClick={() => setShowCrop(true)}
-                    className="flex items-center gap-2 rounded-full bg-yellow-400 px-4 py-2 text-sm font-semibold text-[#3b2b1f] hover:bg-yellow-300 transition-all shadow-sm"
+                  📸 Add Image
+                </button>
+              </div>
+            )}
+
+            {/* 4. panel de animación (siempre visible) */}
+            <div className="mt-1">
+              <div
+                className={`flex items-center justify-between w-full rounded-xl transition-all duration-300 ${
+                  animation && !animation.startsWith("✨ None")
+                    ? "bg-gradient-to-r from-pink-100 via-purple-100 to-yellow-100 text-gray-800 shadow-sm"
+                    : "bg-gray-100 text-gray-400"
+                }`}
+                style={{ height: "46px", padding: "0 10px" }}
+              >
+                <select
+                  value={animation}
+                  onChange={(e) => setAnimation(e.target.value)}
+                  className="flex-1 text-xs font-medium focus:outline-none cursor-pointer bg-transparent truncate"
+                >
+                  {animationOptions
+                    .filter((a) => !a.includes("None"))
+                    .map((a) => (
+                      <option key={a} value={a}>
+                        {a}
+                      </option>
+                    ))}
+                </select>
+
+                <div className="flex items-center gap-2 ml-2">
+                  <div className="flex items-center rounded-md border border-gray-300 overflow-hidden">
+                    <button
+                      className="px-2 text-base hover:bg-gray-200 transition"
+                      onClick={() =>
+                        setEmojiCount((prev) => Math.max(5, prev - 5))
+                      }
+                    >
+                      –
+                    </button>
+                    <span className="px-2 text-xs font-medium text-gray-700">
+                      {emojiCount}
+                    </span>
+                    <button
+                      className="px-2 text-base hover:bg-gray-200 transition"
+                      onClick={() =>
+                        setEmojiCount((prev) => Math.min(60, prev + 5))
+                      }
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  <select
+                    value={intensity}
+                    onChange={(e) => setIntensity(e.target.value)}
+                    className="px-2 text-xs bg-transparent font-medium focus:outline-none cursor-pointer"
                   >
-                    📸 Add Image
-                  </button>
+                    <option value="soft">Soft</option>
+                    <option value="normal">Normal</option>
+                    <option value="vivid">Vivid</option>
+                  </select>
                 </div>
-              )}
+              </div>
             </div>
           </div>
 
-          {/* BOTONES: pegados abajo, fuera de la "escena" principal */}
+          {/* botones flotantes abajo */}
           <div className="fixed bottom-0 left-0 right-0 z-[210] px-4 pb-3">
             <div className="max-w-md mx-auto flex gap-2 justify-center">
               <button
@@ -311,4 +369,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-}
+              }
