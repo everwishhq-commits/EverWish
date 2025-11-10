@@ -15,6 +15,7 @@ import CropperModal from "@/components/croppermodal";
 export default function EditPage({ params }) {
   const slug = params.slug;
 
+  // estados
   const [stage, setStage] = useState("expanded");
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("");
@@ -31,14 +32,15 @@ export default function EditPage({ params }) {
   const [userImage, setUserImage] = useState(null);
 
   const [intensity, setIntensity] = useState("normal");
-  const [opacityLevel, setOpacityLevel] = useState(0.9);
+  const [opacityLevel] = useState(0.9);
   const [emojiCount, setEmojiCount] = useState(20);
-  const [isPurchased, setIsPurchased] = useState(false);
-  const [isViewed, setIsViewed] = useState(false);
+  const [isPurchased] = useState(false);
+  const [isViewed] = useState(false);
 
   const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
   const [animKey, setAnimKey] = useState(0);
 
+  // carga de video + opciones
   useEffect(() => {
     async function loadVideo() {
       try {
@@ -71,6 +73,7 @@ export default function EditPage({ params }) {
     setAnimation(opts.find((a) => !a.includes("None")) || opts[0]);
   }, [slug]);
 
+  // pantalla de carga
   useEffect(() => {
     let v = 0;
     const id = setInterval(() => {
@@ -84,10 +87,12 @@ export default function EditPage({ params }) {
     return () => clearInterval(id);
   }, []);
 
+  // re-render de animaciones
   useEffect(() => {
     setAnimKey(Date.now());
   }, [animation, category, intensity, opacityLevel, emojiCount]);
 
+  // gift
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
@@ -98,10 +103,12 @@ export default function EditPage({ params }) {
     setTotal(5);
   };
 
+  // bloquear descarga
   const handleCardClick = () => {
     alert("🔒 This card is protected. Purchase to download!");
   };
 
+  // bloquear clic derecho global
   useEffect(() => {
     const preventContextMenu = (e) => {
       e.preventDefault();
@@ -113,10 +120,8 @@ export default function EditPage({ params }) {
   }, []);
 
   return (
-    <div
-      className="relative h-[100dvh] bg-[#fff7f5] flex items-center justify-center overflow-hidden"
-      style={{ overscrollBehavior: "contain" }}
-    >
+    <div className="min-h-screen bg-[#fff7f5] flex flex-col items-center pb-6">
+      {/* pantalla de carga */}
       {stage === "expanded" && (
         <motion.div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-[#fff7f5]"
@@ -154,6 +159,7 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
+      {/* editor normal sin scroll interno */}
       {stage === "editor" && (
         <>
           <AnimationOverlay
@@ -170,186 +176,179 @@ export default function EditPage({ params }) {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45 }}
-            className="relative z-[200] w-full max-w-md bg-white rounded-3xl shadow-xl"
-            style={{
-              maxHeight: "92dvh",
-              display: "flex",
-              flexDirection: "column",
-              padding: "1rem",
-            }}
+            className="relative z-[200] w-full max-w-md mt-4 bg-white rounded-3xl shadow-xl px-4 pt-4 pb-5"
           >
-            <div className="flex-1 overflow-y-auto space-y-3 pb-2">
-              <div
-                className="relative overflow-hidden rounded-2xl border bg-gray-50 cursor-pointer select-none"
-                onClick={handleCardClick}
-                onContextMenu={(e) => e.preventDefault()}
-                style={{
-                  width: "100%",
-                  aspectRatio: "4 / 5",
-                  maxHeight: "36vh",
-                }}
-              >
-                {videoFound ? (
-                  <video
-                    src={videoSrc}
-                    className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    controlsList="nodownload nofullscreen noremoteplayback"
-                    disablePictureInPicture
-                    onContextMenu={(e) => e.preventDefault()}
-                    onError={() => setVideoFound(false)}
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 bg-gradient-to-b from-gray-50 to-gray-100">
-                    <div className="text-5xl mb-3">⚠️</div>
-                    <p className="text-xs text-center px-4 mb-2 font-semibold">
-                      This card&apos;s video is missing or not uploaded yet.
-                    </p>
-                    <p className="text-xs text-gray-500 px-3 text-center">
-                      Looking for:{" "}
-                      <code className="bg-white px-2 py-1 rounded text-xs">
-                        {slug}
-                      </code>
-                    </p>
-                  </div>
-                )}
-
-                {videoFound && (
-                  <div className="absolute bottom-2 right-2 bg-black/30 backdrop-blur-sm px-2 py-1 rounded-full text-white text-xs font-semibold pointer-events-none">
-                    🔒 interno
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <h3 className="mb-2 text-center text-base font-semibold text-gray-700">
-                  ✨ Customize your message ✨
-                </h3>
-                <textarea
-                  className="w-full rounded-2xl border p-3 text-center text-sm text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
-                  rows={2}
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+            {/* 1. tarjeta */}
+            <div
+              className="relative overflow-hidden rounded-2xl border bg-gray-50 cursor-pointer select-none"
+              onClick={handleCardClick}
+              onContextMenu={(e) => e.preventDefault()}
+              style={{
+                width: "100%",
+                aspectRatio: "4 / 5",
+              }}
+            >
+              {videoFound ? (
+                <video
+                  src={videoSrc}
+                  className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  controlsList="nodownload nofullscreen noremoteplayback"
+                  disablePictureInPicture
                   onContextMenu={(e) => e.preventDefault()}
+                  onError={() => setVideoFound(false)}
                 />
-              </div>
-
-              {userImage ? (
-                <div
-                  className="cursor-pointer"
-                  onClick={() => setShowCrop(true)}
-                  onContextMenu={(e) => e.preventDefault()}
-                >
-                  <div
-                    className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-[#fff7f5]"
-                    style={{
-                      width: "100%",
-                      aspectRatio: "4 / 5",
-                      maxHeight: "32vh",
-                    }}
-                  >
-                    <img
-                      src={userImage}
-                      alt="User upload"
-                      className="w-full h-full object-cover pointer-events-none"
-                      draggable="false"
-                    />
-                  </div>
-                </div>
               ) : (
-                <div className="flex justify-center">
-                  <button
-                    onClick={() => setShowCrop(true)}
-                    className="flex items-center gap-2 rounded-full bg-yellow-400 px-4 py-2 text-sm font-semibold text-[#3b2b1f] hover:bg-yellow-300 transition-all shadow-sm"
-                  >
-                    📸 Add Image
-                  </button>
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 bg-gradient-to-b from-gray-50 to-gray-100">
+                  <div className="text-5xl mb-3">⚠️</div>
+                  <p className="text-xs text-center px-4 mb-2 font-semibold">
+                    This card&apos;s video is missing or not uploaded yet.
+                  </p>
+                  <p className="text-xs text-gray-500 px-3 text-center">
+                    Looking for:{" "}
+                    <code className="bg-white px-2 py-1 rounded text-xs">
+                      {slug}
+                    </code>
+                  </p>
                 </div>
               )}
 
-              <div className="my-3">
+              {videoFound && (
+                <div className="absolute bottom-2 right-2 bg-black/30 backdrop-blur-sm px-2 py-1 rounded-full text-white text-xs font-semibold pointer-events-none">
+                  🔒 interno
+                </div>
+              )}
+            </div>
+
+            {/* 2. mensaje */}
+            <h3 className="mt-4 mb-2 text-center text-base font-semibold text-gray-700">
+              ✨ Customize your message ✨
+            </h3>
+            <textarea
+              className="w-full rounded-2xl border p-3 text-center text-sm text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
+              rows={2}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onContextMenu={(e) => e.preventDefault()}
+            />
+
+            {/* 3. foto (misma anchura, abajo) */}
+            {userImage ? (
+              <div
+                className="mt-4 cursor-pointer"
+                onClick={() => setShowCrop(true)}
+                onContextMenu={(e) => e.preventDefault()}
+              >
                 <div
-                  className={`flex items-center justify-between w-full rounded-xl transition-all duration-300 ${
-                    animation && !animation.startsWith("✨ None")
-                      ? "bg-gradient-to-r from-pink-100 via-purple-100 to-yellow-100 text-gray-800 shadow-sm"
-                      : "bg-gray-100 text-gray-400"
-                  }`}
+                  className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-[#fff7f5]"
                   style={{
-                    height: "42px",
-                    padding: "0 8px",
-                    border: "1px solid rgba(0,0,0,0.05)",
+                    width: "100%",
+                    aspectRatio: "4 / 5",
                   }}
                 >
-                  <select
-                    value={animation}
-                    onChange={(e) => setAnimation(e.target.value)}
-                    className="flex-1 text-xs font-medium focus:outline-none cursor-pointer truncate transition-colors bg-transparent"
-                    style={{ maxWidth: "43%" }}
-                  >
-                    {animationOptions
-                      .filter((a) => !a.includes("None"))
-                      .map((a) => (
-                        <option key={a} value={a}>
-                          {a}
-                        </option>
-                      ))}
-                  </select>
+                  <img
+                    src={userImage}
+                    alt="User upload"
+                    className="w-full h-full object-cover pointer-events-none"
+                    draggable="false"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="mt-4 flex justify-center">
+                <button
+                  onClick={() => setShowCrop(true)}
+                  className="flex items-center gap-2 rounded-full bg-yellow-400 px-4 py-2 text-sm font-semibold text-[#3b2b1f] hover:bg-yellow-300 transition-all shadow-sm"
+                >
+                  📸 Add Image
+                </button>
+              </div>
+            )}
 
-                  {!isPurchased && !isViewed && (
-                    <div className="flex items-center gap-2 ml-1">
-                      <div className="flex items-center rounded-md border border-gray-300 overflow-hidden">
-                        <button
-                          className="px-2 text-base hover:bg-gray-200 transition"
-                          onClick={() =>
-                            setEmojiCount((prev) => Math.max(5, prev - 5))
-                          }
-                        >
-                          –
-                        </button>
-                        <span className="px-2 text-xs font-medium text-gray-700">
-                          {emojiCount}
-                        </span>
-                        <button
-                          className="px-2 text-base hover:bg-gray-200 transition"
-                          onClick={() =>
-                            setEmojiCount((prev) => Math.min(60, prev + 5))
-                          }
-                        >
-                          +
-                        </button>
-                      </div>
+            {/* 4. animación compacta */}
+            <div className="mt-4">
+              <div
+                className={`flex items-center justify-between w-full rounded-xl transition-all duration-300 ${
+                  animation && !animation.startsWith("✨ None")
+                    ? "bg-gradient-to-r from-pink-100 via-purple-100 to-yellow-100 text-gray-800 shadow-sm"
+                    : "bg-gray-100 text-gray-400"
+                }`}
+                style={{
+                  height: "42px",
+                  padding: "0 8px",
+                  border: "1px solid rgba(0,0,0,0.05)",
+                }}
+              >
+                <select
+                  value={animation}
+                  onChange={(e) => setAnimation(e.target.value)}
+                  className="flex-1 text-xs font-medium focus:outline-none cursor-pointer truncate transition-colors bg-transparent"
+                  style={{ maxWidth: "43%" }}
+                >
+                  {animationOptions
+                    .filter((a) => !a.includes("None"))
+                    .map((a) => (
+                      <option key={a} value={a}>
+                        {a}
+                      </option>
+                    ))}
+                </select>
 
-                      <select
-                        value={intensity}
-                        onChange={(e) => setIntensity(e.target.value)}
-                        className="px-2 text-xs bg-transparent font-medium focus:outline-none cursor-pointer"
-                      >
-                        <option value="soft">Soft</option>
-                        <option value="normal">Normal</option>
-                        <option value="vivid">Vivid</option>
-                      </select>
-
+                {!isPurchased && !isViewed && (
+                  <div className="flex items-center gap-2 ml-1">
+                    <div className="flex items-center rounded-md border border-gray-300 overflow-hidden">
                       <button
-                        className={`ml-1 px-2 text-lg font-bold transition ${
-                          animation && !animation.startsWith("✨ None")
-                            ? "text-red-500 hover:text-red-600"
-                            : "text-gray-400"
-                        }`}
-                        onClick={() => setAnimation("✨ None (No Animation)")}
-                        title="Remove animation"
+                        className="px-2 text-base hover:bg-gray-200 transition"
+                        onClick={() =>
+                          setEmojiCount((prev) => Math.max(5, prev - 5))
+                        }
                       >
-                        ×
+                        –
+                      </button>
+                      <span className="px-2 text-xs font-medium text-gray-700">
+                        {emojiCount}
+                      </span>
+                      <button
+                        className="px-2 text-base hover:bg-gray-200 transition"
+                        onClick={() =>
+                          setEmojiCount((prev) => Math.min(60, prev + 5))
+                        }
+                      >
+                        +
                       </button>
                     </div>
-                  )}
-                </div>
+
+                    <select
+                      value={intensity}
+                      onChange={(e) => setIntensity(e.target.value)}
+                      className="px-2 text-xs bg-transparent font-medium focus:outline-none cursor-pointer"
+                    >
+                      <option value="soft">Soft</option>
+                      <option value="normal">Normal</option>
+                      <option value="vivid">Vivid</option>
+                    </select>
+
+                    <button
+                      className={`ml-1 px-2 text-lg font-bold transition ${
+                        animation && !animation.startsWith("✨ None")
+                          ? "text-red-500 hover:text-red-600"
+                          : "text-gray-400"
+                      }`}
+                      onClick={() => setAnimation("✨ None (No Animation)")}
+                      title="Remove animation"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="mt-3 flex flex-wrap justify-center gap-2 pt-2 border-t border-pink-50">
+            {/* 5. botones */}
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
               <button
                 onClick={() => setShowGift(true)}
                 className="flex items-center gap-2 rounded-full bg-pink-200 px-4 py-2 text-sm font-semibold text-pink-700 hover:bg-pink-300 transition-all shadow-sm"
@@ -367,6 +366,7 @@ export default function EditPage({ params }) {
         </>
       )}
 
+      {/* modales */}
       <div className="fixed inset-0 pointer-events-none z-[10050]">
         {showGift && (
           <div className="pointer-events-auto relative">
@@ -408,4 +408,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-        }
+            }
