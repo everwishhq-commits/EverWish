@@ -225,13 +225,13 @@ export default function EditPage({ params }) {
 
           {/* LAYOUT CON FOTO */}
           {userImage ? (
-            <div className="relative z-[200] w-full max-w-md min-h-[100vh] px-3 pt-4 pb-20 flex flex-col gap-2 overflow-y-auto">
-              {/* 1. VIDEO - optimizado para verse completo */}
+            <div className="relative z-[200] w-full max-w-md min-h-[100vh] px-3 pt-6 pb-20 flex flex-col gap-2.5 overflow-y-auto">
+              {/* 1. VIDEO - bien visible desde arriba */}
               <div
                 className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none flex-shrink-0"
                 onClick={handleCardClick}
                 onContextMenu={(e) => e.preventDefault()}
-                style={{ height: "36vh" }}
+                style={{ height: "35vh" }}
               >
                 {videoFound ? (
                   <video
@@ -255,21 +255,21 @@ export default function EditPage({ params }) {
                 )}
               </div>
 
-              {/* 2. MENSAJE - compacto */}
-              <div className="flex flex-col gap-1 flex-shrink-0">
-                <h3 className="text-center text-xs font-semibold text-gray-700">
+              {/* 2. MENSAJE - texto más grande y legible */}
+              <div className="flex flex-col gap-1.5 flex-shrink-0">
+                <h3 className="text-center text-sm font-semibold text-gray-700">
                   ✨ Customize your message ✨
                 </h3>
                 <textarea
-                  className="w-full rounded-xl border p-2 text-center text-xs text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400 resize-none"
+                  className="w-full rounded-xl border p-3 text-center text-sm text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400 resize-none"
                   rows={2}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                 />
               </div>
 
-              {/* 3. FOTO GRANDE - botones flotantes encima */}
-              <div className="relative flex-shrink-0" style={{ height: "36vh" }}>
+              {/* 3. FOTO GRANDE - misma altura que tarjeta, botones flotantes */}
+              <div className="relative flex-shrink-0" style={{ height: "35vh" }}>
                 <div
                   className="absolute inset-0 rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-[#fff7f5] cursor-pointer"
                   onClick={() => setShowCrop(true)}
@@ -307,8 +307,8 @@ export default function EditPage({ params }) {
                 </div>
               </div>
 
-              {/* 4. PANEL DE ANIMACIÓN - DEBAJO (requiere scroll para ver) */}
-              <div className="flex-shrink-0 mt-1">
+              {/* 4. PANEL - FUERA DE VISTA, solo con scroll */}
+              <div className="flex-shrink-0 mt-3">
                 <AnimationPanel />
               </div>
             </div>
