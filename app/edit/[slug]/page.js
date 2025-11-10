@@ -146,7 +146,7 @@ export default function EditPage({ params }) {
               }
             }
           }}
-          className={`text-2xl mr-2 transition-all ${
+          className={`text-xl mr-2 transition-all flex-shrink-0 ${
             isAnimationActive 
               ? "cursor-default" 
               : "cursor-pointer hover:scale-110"
@@ -164,7 +164,7 @@ export default function EditPage({ params }) {
             }
           }}
           disabled={!isAnimationActive}
-          className={`flex-1 text-xs font-medium bg-transparent focus:outline-none truncate ${
+          className={`flex-1 text-xs font-medium bg-transparent focus:outline-none truncate min-w-0 ${
             isAnimationActive ? "cursor-pointer" : "cursor-not-allowed"
           }`}
         >
@@ -499,4 +499,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-    }
+          }
