@@ -38,7 +38,7 @@ export default function EditPage() {
     <motion.div
       className="fixed inset-0 z-[80] flex flex-col items-center justify-center bg-[#fff7f5] overflow-hidden"
       style={{
-        height: "100vh", // 🔹 altura completa de viewport
+        height: "50vh", // 🔹 altura completa de viewport
         padding: 0, // 🔹 sin padding
       }}
     >
