@@ -15,6 +15,7 @@ import CropperModal from "@/components/croppermodal";
 export default function EditPage({ params }) {
   const slug = params.slug;
 
+  // estados
   const [stage, setStage] = useState("expanded");
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("");
@@ -23,22 +24,20 @@ export default function EditPage({ params }) {
   const [videoSrc, setVideoSrc] = useState("");
   const [videoFound, setVideoFound] = useState(true);
 
-  const [gift, setGift] = useState(null);
   const [showGift, setShowGift] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showCrop, setShowCrop] = useState(false);
+  const [gift, setGift] = useState(null);
   const [total, setTotal] = useState(5);
   const [userImage, setUserImage] = useState(null);
 
   const [intensity, setIntensity] = useState("normal");
   const [emojiCount, setEmojiCount] = useState(20);
-  const [isPurchased] = useState(false);
-  const [isViewed] = useState(false);
 
   const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
   const [animKey, setAnimKey] = useState(0);
 
-  // cargar video y opciones
+  // cargar video + config
   useEffect(() => {
     async function loadVideo() {
       try {
@@ -71,7 +70,7 @@ export default function EditPage({ params }) {
     setAnimation(opts.find((a) => !a.includes("None")) || opts[0]);
   }, [slug]);
 
-  // loading
+  // loading pantalla
   useEffect(() => {
     let v = 0;
     const id = setInterval(() => {
@@ -90,7 +89,7 @@ export default function EditPage({ params }) {
     setAnimKey(Date.now());
   }, [animation, category, intensity, emojiCount]);
 
-  // bloquear descarga
+  // bloquear guardar
   const handleCardClick = () => {
     alert("🔒 This card is protected. Purchase to download!");
   };
@@ -106,18 +105,17 @@ export default function EditPage({ params }) {
     setTotal(5);
   };
 
-  // bloquear clic derecho
+  // bloquear clic derecho global
   useEffect(() => {
     const preventContextMenu = (e) => {
       e.preventDefault();
-      return false;
     };
     document.addEventListener("contextmenu", preventContextMenu);
     return () => document.removeEventListener("contextmenu", preventContextMenu);
   }, []);
 
   return (
-    <div className="h-[100vh] max-h-[100vh] bg-[#fff7f5] flex items-center justify-center">
+    <div className="relative h-[100vh] max-h-[100vh] bg-[#fff7f5] flex items-center justify-center overflow-hidden">
       {/* pantalla de carga */}
       {stage === "expanded" && (
         <motion.div
@@ -158,7 +156,7 @@ export default function EditPage({ params }) {
 
       {stage === "editor" && (
         <>
-          {/* capa de animación */}
+          {/* capa de emojis */}
           <AnimationOverlay
             key={animKey}
             slug={slug}
@@ -168,14 +166,14 @@ export default function EditPage({ params }) {
             emojiCount={emojiCount}
           />
 
-          {/* CARD */}
+          {/* ESTE es el lienzo que quieres mostrar */}
           <div className="relative z-[200] w-full max-w-md h-[100vh] max-h-[100vh] px-3 flex flex-col gap-3">
-            {/* 1. VIDEO (45% de la pantalla) */}
+            {/* 1. VIDEO: fijo, alto grande */}
             <div
               className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none"
               onClick={handleCardClick}
               onContextMenu={(e) => e.preventDefault()}
-              style={{ height: "45vh" }}
+              style={{ height: "42vh" }} // <- puedes subir/bajar este número
             >
               {videoFound ? (
                 <video
@@ -211,7 +209,7 @@ export default function EditPage({ params }) {
               )}
             </div>
 
-            {/* 2. MENSAJE (auto, pero poco alto) */}
+            {/* 2. MENSAJE: pequeño */}
             <div className="flex flex-col gap-2">
               <h3 className="text-center text-sm font-semibold text-gray-700">
                 ✨ Customize your message ✨
@@ -221,15 +219,14 @@ export default function EditPage({ params }) {
                 rows={2}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                onContextMenu={(e) => e.preventDefault()}
               />
             </div>
 
-            {/* 3. FOTO (30% de la pantalla) */}
+            {/* 3. FOTO: ocupa el resto de la pantalla */}
             <div className="flex-1">
               {userImage ? (
                 <div
-                  className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-[#fff7f5] h-[30vh]"
+                  className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-[#fff7f5] h-full"
                   onClick={() => setShowCrop(true)}
                   onContextMenu={(e) => e.preventDefault()}
                 >
@@ -240,7 +237,7 @@ export default function EditPage({ params }) {
                   />
                 </div>
               ) : (
-                <div className="h-[30vh] flex items-center justify-center">
+                <div className="h-full flex items-center justify-center">
                   <button
                     onClick={() => setShowCrop(true)}
                     className="flex items-center gap-2 rounded-full bg-yellow-400 px-4 py-2 text-sm font-semibold text-[#3b2b1f] hover:bg-yellow-300 transition-all shadow-sm"
@@ -250,96 +247,23 @@ export default function EditPage({ params }) {
                 </div>
               )}
             </div>
+          </div>
 
-            {/* 4. CONTROLES + BOTONES (barra baja, altura fija) */}
-            <div className="pb-1">
-              {/* animación */}
-              <div
-                className={`flex items-center justify-between w-full rounded-xl transition-all duration-300 mb-2 ${
-                  animation && !animation.startsWith("✨ None")
-                    ? "bg-gradient-to-r from-pink-100 via-purple-100 to-yellow-100 text-gray-800 shadow-sm"
-                    : "bg-gray-100 text-gray-400"
-                }`}
-                style={{ height: "42px", padding: "0 8px" }}
+          {/* BOTONES: pegados abajo, fuera de la "escena" principal */}
+          <div className="fixed bottom-0 left-0 right-0 z-[210] px-4 pb-3">
+            <div className="max-w-md mx-auto flex gap-2 justify-center">
+              <button
+                onClick={() => setShowGift(true)}
+                className="flex-1 rounded-full bg-pink-200 py-2 text-sm font-semibold text-pink-700"
               >
-                <select
-                  value={animation}
-                  onChange={(e) => setAnimation(e.target.value)}
-                  className="flex-1 text-xs font-medium focus:outline-none cursor-pointer truncate bg-transparent"
-                >
-                  {animationOptions
-                    .filter((a) => !a.includes("None"))
-                    .map((a) => (
-                      <option key={a} value={a}>
-                        {a}
-                      </option>
-                    ))}
-                </select>
-
-                {!isPurchased && !isViewed && (
-                  <div className="flex items-center gap-2 ml-1">
-                    <div className="flex items-center rounded-md border border-gray-300 overflow-hidden">
-                      <button
-                        className="px-2 text-base hover:bg-gray-200 transition"
-                        onClick={() =>
-                          setEmojiCount((prev) => Math.max(5, prev - 5))
-                        }
-                      >
-                        –
-                      </button>
-                      <span className="px-2 text-xs font-medium text-gray-700">
-                        {emojiCount}
-                      </span>
-                      <button
-                        className="px-2 text-base hover:bg-gray-200 transition"
-                        onClick={() =>
-                          setEmojiCount((prev) => Math.min(60, prev + 5))
-                        }
-                      >
-                        +
-                      </button>
-                    </div>
-
-                    <select
-                      value={intensity}
-                      onChange={(e) => setIntensity(e.target.value)}
-                      className="px-2 text-xs bg-transparent font-medium focus:outline-none cursor-pointer"
-                    >
-                      <option value="soft">Soft</option>
-                      <option value="normal">Normal</option>
-                      <option value="vivid">Vivid</option>
-                    </select>
-
-                    <button
-                      className={`ml-1 px-2 text-lg font-bold transition ${
-                        animation && !animation.startsWith("✨ None")
-                          ? "text-red-500 hover:text-red-600"
-                          : "text-gray-400"
-                      }`}
-                      onClick={() => setAnimation("✨ None (No Animation)")}
-                      title="Remove animation"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* botones */}
-              <div className="flex gap-2 justify-center">
-                <button
-                  onClick={() => setShowGift(true)}
-                  className="flex-1 flex items-center justify-center gap-2 rounded-full bg-pink-200 py-2 text-sm font-semibold text-pink-700 hover:bg-pink-300 transition-all shadow-sm"
-                >
-                  🎁 Gift Card
-                </button>
-                <button
-                  onClick={() => setShowCheckout(true)}
-                  className="flex-1 flex items-center justify-center gap-2 rounded-full bg-purple-500 py-2 text-sm font-semibold text-white hover:bg-purple-600 transition-all shadow-sm"
-                >
-                  💳 Checkout
-                </button>
-              </div>
+                🎁 Gift Card
+              </button>
+              <button
+                onClick={() => setShowCheckout(true)}
+                className="flex-1 rounded-full bg-purple-500 py-2 text-sm font-semibold text-white"
+              >
+                💳 Checkout
+              </button>
             </div>
           </div>
         </>
@@ -387,4 +311,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-                }
+}
