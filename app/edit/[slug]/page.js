@@ -293,7 +293,7 @@ export default function EditPage({ params }) {
                 className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none flex-shrink-0"
                 onClick={handleCardClick}
                 onContextMenu={(e) => e.preventDefault()}
-                style={{ height: "40vh" }}
+                style={{ height: "38vh" }}
               >
                 {videoFound ? (
                   <video
