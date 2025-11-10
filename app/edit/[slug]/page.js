@@ -247,17 +247,23 @@ export default function EditPage({ params }) {
           transition={{ duration: 0.4 }}
         >
           {videoFound ? (
-            <video
-              src={videoSrc}
-              className="w-full h-full object-contain"
-              autoPlay
-              loop
-              muted
-              playsInline
-              controlsList="nodownload nofullscreen noremoteplayback"
-              disablePictureInPicture
-              onContextMenu={(e) => e.preventDefault()}
-            />
+            <div className="relative w-full h-full flex items-center justify-center">
+              <video
+                src={videoSrc}
+                className="w-full h-full"
+                style={{
+                  objectFit: "cover",
+                  objectPosition: "center center"
+                }}
+                autoPlay
+                loop
+                muted
+                playsInline
+                controlsList="nodownload nofullscreen noremoteplayback"
+                disablePictureInPicture
+                onContextMenu={(e) => e.preventDefault()}
+              />
+            </div>
           ) : (
             <div className="text-gray-500 text-center">
               <div className="text-6xl mb-4">⚠️</div>
@@ -290,15 +296,22 @@ export default function EditPage({ params }) {
           {userImage ? (
             <div className="relative z-[200] w-full max-w-md h-[100vh] px-3 pt-4 pb-24 overflow-y-auto flex flex-col gap-3">
               <div
-                className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none flex-shrink-0 flex items-center justify-center"
+                className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none flex-shrink-0"
                 onClick={handleCardClick}
                 onContextMenu={(e) => e.preventDefault()}
-                style={{ height: "40vh" }}
+                style={{ 
+                  height: "40vh",
+                  aspectRatio: "9/16"
+                }}
               >
                 {videoFound ? (
                   <video
                     src={videoSrc}
-                    className="w-full h-full object-contain pointer-events-none"
+                    className="absolute inset-0 w-full h-full pointer-events-none"
+                    style={{
+                      objectFit: "cover",
+                      objectPosition: "center center"
+                    }}
                     autoPlay
                     loop
                     muted
@@ -379,15 +392,22 @@ export default function EditPage({ params }) {
           ) : (
             <div className="relative z-[200] w-full max-w-md h-[100vh] px-3 py-4 flex flex-col">
               <div
-                className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none flex-shrink-0 flex items-center justify-center"
+                className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none flex-shrink-0"
                 onClick={handleCardClick}
                 onContextMenu={(e) => e.preventDefault()}
-                style={{ height: "46vh" }}
+                style={{ 
+                  height: "46vh",
+                  aspectRatio: "9/16"
+                }}
               >
                 {videoFound ? (
                   <video
                     src={videoSrc}
-                    className="w-full h-full object-contain pointer-events-none"
+                    className="absolute inset-0 w-full h-full pointer-events-none"
+                    style={{
+                      objectFit: "cover",
+                      objectPosition: "center center"
+                    }}
                     autoPlay
                     loop
                     muted
@@ -491,4 +511,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-              }
+}
