@@ -38,14 +38,13 @@ export default function EditPage() {
     <motion.div
       className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#fff7f5] overflow-hidden"
       style={{
-        height: "125vh", // 🔹 ligeramente más alto para margen natural
-        paddingTop: "0vh", // 🔹 margen superior
-        paddingBottom: "0vh", // 🔹 margen inferior
+        height: "100vh", // 🔹 altura completa de viewport
+        padding: 0, // 🔹 sin padding
       }}
     >
       <video
         src={video.file}
-        className="w-[92vw] sm:w-[400px] md:w-[440px] aspect-[4/5.2] rounded-2xl shadow-lg object-cover object-center bg-pink-50"
+        className="w-full h-full object-contain bg-pink-50"
         autoPlay
         loop
         muted
@@ -55,13 +54,13 @@ export default function EditPage() {
         onContextMenu={(e) => e.preventDefault()}
       />
 
-      {/* nombre del video */}
-      <p className="mt-3 text-sm text-gray-600 font-medium">
+      {/* nombre del video - posicionado absolutamente */}
+      <p className="absolute bottom-16 left-0 right-0 text-center text-sm text-gray-600 font-medium bg-white/80 backdrop-blur-sm py-2">
         {video.object || video.name}
       </p>
 
       {/* Barra de carga decorativa */}
-      <div className="absolute bottom-10 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
         <motion.div
           className="h-full bg-pink-500"
           initial={{ width: "0%" }}
@@ -71,4 +70,4 @@ export default function EditPage() {
       </div>
     </motion.div>
   );
-}
+          }
