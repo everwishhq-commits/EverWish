@@ -225,13 +225,13 @@ export default function EditPage({ params }) {
 
           {/* LAYOUT CON FOTO */}
           {userImage ? (
-            <div className="relative z-[200] w-full max-w-md min-h-[100vh] px-3 pt-2 pb-20 flex flex-col gap-2 overflow-y-auto">
-              {/* 1. VIDEO - tamaño medio */}
+            <div className="relative z-[200] w-full max-w-md min-h-[100vh] px-3 pt-3 pb-20 flex flex-col gap-2.5 overflow-y-auto">
+              {/* 1. VIDEO - más grande aprovechando espacio */}
               <div
                 className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none flex-shrink-0"
                 onClick={handleCardClick}
                 onContextMenu={(e) => e.preventDefault()}
-                style={{ height: "32vh" }}
+                style={{ height: "38vh" }}
               >
                 {videoFound ? (
                   <video
@@ -255,21 +255,21 @@ export default function EditPage({ params }) {
                 )}
               </div>
 
-              {/* 2. MENSAJE - ultra compacto */}
+              {/* 2. MENSAJE - compacto */}
               <div className="flex flex-col gap-1.5 flex-shrink-0">
                 <h3 className="text-center text-xs font-semibold text-gray-700">
                   ✨ Customize your message ✨
                 </h3>
                 <textarea
-                  className="w-full rounded-xl border p-2 text-center text-xs text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400 resize-none"
+                  className="w-full rounded-xl border p-2.5 text-center text-xs text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400 resize-none"
                   rows={2}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                 />
               </div>
 
-              {/* 3. FOTO GRANDE - mismo tamaño que tarjeta + botones flotantes encima */}
-              <div className="relative flex-shrink-0" style={{ height: "32vh" }}>
+              {/* 3. FOTO GRANDE - más grande + botones flotantes encima */}
+              <div className="relative flex-shrink-0" style={{ height: "38vh" }}>
                 <div
                   className="absolute inset-0 rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-[#fff7f5] cursor-pointer"
                   onClick={() => setShowCrop(true)}
@@ -432,4 +432,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-        }
+      }
