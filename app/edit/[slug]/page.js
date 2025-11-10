@@ -55,12 +55,12 @@ export default function EditPage() {
       />
 
       {/* nombre del video - posicionado absolutamente */}
-      <p className="absolute bottom-16 left-(-)3 right-(-)3 text-center text-sm text-gray-600 font-medium bg-white/80 backdrop-blur-sm py-2">
+      <p className="absolute bottom-16 -left-3 -right-3 text-center text-sm text-gray-600 font-medium bg-white/80 backdrop-blur-sm py-2">
         {video.object || video.name}
       </p>
 
       {/* Barra de carga decorativa */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
+      <div className="absolute bottom-8 -left-3 -right-3 mx-auto w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
         <motion.div
           className="h-full bg-pink-500"
           initial={{ width: "0%" }}
