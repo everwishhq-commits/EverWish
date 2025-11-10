@@ -55,7 +55,7 @@ export default function EditPage() {
       />
 
       {/* nombre del video - posicionado absolutamente */}
-      <p className="absolute bottom-16 left-0 right-0 text-center text-sm text-gray-600 font-medium bg-white/80 backdrop-blur-sm py-2">
+      <p className="absolute bottom-16 left-3 right-3 text-center text-sm text-gray-600 font-medium bg-white/80 backdrop-blur-sm py-2">
         {video.object || video.name}
       </p>
 
