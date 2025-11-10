@@ -312,57 +312,6 @@ export default function EditPage({ params }) {
                 <AnimationPanel />
               </div>
             </div>
-          ) : (</p>
-                  </div>
-                )}
-              </div>
-
-              {/* 2. MENSAJE - compacto */}
-              <div className="flex flex-col gap-2">
-                <h3 className="text-center text-sm font-semibold text-gray-700">
-                  ✨ Customize your message ✨
-                </h3>
-                <textarea
-                  className="w-full rounded-2xl border p-3 text-center text-sm text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
-                  rows={2}
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                />
-              </div>
-
-              {/* 3. FOTO */}
-              <div
-                className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-[#fff7f5] cursor-pointer"
-                style={{ height: "18vh" }}
-                onClick={() => setShowCrop(true)}
-                onContextMenu={(e) => e.preventDefault()}
-              >
-                <img
-                  src={userImage}
-                  alt="user"
-                  className="w-full h-full object-cover pointer-events-none"
-                />
-              </div>
-
-              {/* 4. PANEL DE ANIMACIÓN */}
-              <AnimationPanel />
-
-              {/* 5. BOTONES FLOTANTES */}
-              <div className="flex gap-2 mt-2">
-                <button
-                  onClick={() => setShowGift(true)}
-                  className="flex-1 rounded-full bg-pink-200 py-2.5 text-sm font-semibold text-pink-700"
-                >
-                  🎁 Gift Card
-                </button>
-                <button
-                  onClick={() => setShowCheckout(true)}
-                  className="flex-1 rounded-full bg-purple-500 py-2.5 text-sm font-semibold text-white"
-                >
-                  💳 Checkout
-                </button>
-              </div>
-            </div>
           ) : (
             /* LAYOUT SIN FOTO - todo más espaciado y proporcional */
             <div className="relative z-[200] w-full max-w-md h-[100vh] max-h-[100vh] px-3 py-6 flex flex-col gap-4">
@@ -391,12 +340,6 @@ export default function EditPage({ params }) {
                     <p className="text-xs text-center px-4 mb-2 font-semibold">
                       This card&apos;s video is missing or not uploaded yet.
                     </p>
-                  </div>
-                )}
-
-                {videoFound && (
-                  <div className="absolute bottom-2 right-2 bg-black/30 backdrop-blur-sm px-2 py-1 rounded-full text-white text-xs font-semibold pointer-events-none">
-                    🔒 interno
                   </div>
                 )}
               </div>
@@ -489,4 +432,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-      }
+        }
