@@ -51,7 +51,7 @@ export default function EditPage({ params }) {
         onContextMenu={(e) => e.preventDefault()}
         className="
           w-[500px] sm:w-[320px] md:w-[340px]
-          h-[430px]
+          h-[730px]
           aspect-[4/5]
           rounded-2xl shadow-lg
           object-cover object-center
