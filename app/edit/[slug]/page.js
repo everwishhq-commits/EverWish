@@ -103,7 +103,6 @@ export default function EditPage({ params }) {
 
   // 🚫 BLOQUEAR DESCARGA
   const handleCardClick = () => {
-    // Solo muestra mensaje, no permite descargar
     alert("🔒 This card is protected. Purchase to download!");
   };
 
@@ -177,17 +176,18 @@ export default function EditPage({ params }) {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45 }}
-            className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-4 shadow-xl mt-4 mb-6"
+            className="relative z-[200] w-full max-w-md rounded-3xl bg-white p-4 shadow-xl mt-4 mb-6 flex flex-col"
+            style={{ maxHeight: "calc(100vh - 2rem)" }}
           >
-            {/* 🖼 TARJETA CON TAMAÑO OPTIMIZADO - 50vh */}
+            {/* 🖼 TARJETA - 45% de altura disponible */}
             <div
-              className="relative mb-3 overflow-hidden rounded-2xl border bg-gray-50 cursor-pointer select-none"
+              className="relative mb-3 overflow-hidden rounded-2xl border bg-gray-50 cursor-pointer select-none flex-shrink-0"
               onClick={handleCardClick}
               onContextMenu={(e) => e.preventDefault()}
               style={{
                 width: "100%",
-                aspectRatio: "4 / 5",
-                maxHeight: "50vh"
+                height: "45%",
+                minHeight: "200px"
               }}
             >
               {videoFound ? (
@@ -218,7 +218,7 @@ export default function EditPage({ params }) {
                 </div>
               )}
               
-              {/* Marca de agua - AHORA DICE "interno" */}
+              {/* Marca de agua */}
               {videoFound && (
                 <div className="absolute bottom-2 right-2 bg-black/30 backdrop-blur-sm px-2 py-1 rounded-full text-white text-xs font-semibold pointer-events-none">
                   🔒 interno
@@ -226,143 +226,141 @@ export default function EditPage({ params }) {
               )}
             </div>
 
-            {/* 💌 Mensaje más compacto */}
-            <h3 className="mb-2 text-center text-base font-semibold text-gray-700">
-              ✨ Customize your message ✨
-            </h3>
-            <textarea
-              className="w-full rounded-2xl border p-3 text-center text-sm text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
-              rows={2}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onContextMenu={(e) => e.preventDefault()}
-            />
-
-            {/* 📸 IMAGEN MÁS GRANDE - 40vh */}
+            {/* 📸 IMAGEN - 35% de altura disponible */}
             {userImage && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.4 }}
-                className="my-3 cursor-pointer hover:scale-[1.02] transition-transform flex justify-center"
+                className="mb-3 cursor-pointer hover:scale-[1.02] transition-transform flex justify-center flex-shrink-0"
                 onClick={() => setShowCrop(true)}
                 onContextMenu={(e) => e.preventDefault()}
-                style={{ userSelect: "none" }}
+                style={{ 
+                  userSelect: "none",
+                  height: "35%",
+                  minHeight: "150px"
+                }}
               >
                 <img
                   src={userImage}
                   alt="User upload"
-                  className="rounded-2xl border border-gray-200 shadow-sm pointer-events-none"
-                  style={{
-                    width: "100%",
-                    height: "auto",
-                    objectFit: "cover",
-                    aspectRatio: "4 / 3",
-                    maxHeight: "40vh",
-                    backgroundColor: "#fff7f5",
-                  }}
+                  className="rounded-2xl border border-gray-200 shadow-sm pointer-events-none w-full h-full object-cover"
                   draggable="false"
                   onContextMenu={(e) => e.preventDefault()}
                 />
               </motion.div>
             )}
 
-            {!userImage && (
-              <div className="mt-3 flex justify-center">
-                <button
-                  onClick={() => setShowCrop(true)}
-                  className="flex items-center gap-2 rounded-full bg-yellow-400 px-4 py-2 text-sm font-semibold text-[#3b2b1f] hover:bg-yellow-300 transition-all shadow-sm"
-                >
-                  📸 Add Image
-                </button>
-              </div>
-            )}
+            {/* 💌 Mensaje y controles - espacio restante con scroll */}
+            <div className="flex-1 overflow-y-auto" style={{ minHeight: 0 }}>
+              <h3 className="mb-2 text-center text-base font-semibold text-gray-700">
+                ✨ Customize your message ✨
+              </h3>
+              <textarea
+                className="w-full rounded-2xl border p-3 text-center text-sm text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
+                rows={2}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onContextMenu={(e) => e.preventDefault()}
+              />
 
-            {/* ✨ Panel de animación más compacto */}
-            <div className="my-3">
-              <div
-                className={`flex items-center justify-between w-full rounded-xl transition-all duration-300 ${
-                  animation && !animation.startsWith("✨ None")
-                    ? "bg-gradient-to-r from-pink-100 via-purple-100 to-yellow-100 text-gray-800 shadow-sm"
-                    : "bg-gray-100 text-gray-400"
-                }`}
-                style={{ height: "42px", padding: "0 8px", border: "1px solid rgba(0,0,0,0.05)" }}
-              >
-                <select
-                  value={animation}
-                  onChange={(e) => setAnimation(e.target.value)}
-                  className="flex-1 text-xs font-medium focus:outline-none cursor-pointer truncate transition-colors bg-transparent"
-                  style={{ maxWidth: "43%" }}
-                >
-                  {animationOptions
-                    .filter((a) => !a.includes("None"))
-                    .map((a) => (
-                      <option key={a} value={a}>
-                        {a}
-                      </option>
-                    ))}
-                </select>
+              {!userImage && (
+                <div className="mt-3 flex justify-center">
+                  <button
+                    onClick={() => setShowCrop(true)}
+                    className="flex items-center gap-2 rounded-full bg-yellow-400 px-4 py-2 text-sm font-semibold text-[#3b2b1f] hover:bg-yellow-300 transition-all shadow-sm"
+                  >
+                    📸 Add Image
+                  </button>
+                </div>
+              )}
 
-                {!isPurchased && !isViewed && (
-                  <div className="flex items-center gap-2 ml-1">
-                    <div className="flex items-center rounded-md border border-gray-300 overflow-hidden">
-                      <button
-                        className="px-2 text-base hover:bg-gray-200 transition"
-                        onClick={() => setEmojiCount((prev) => Math.max(5, prev - 5))}
+              {/* ✨ Panel de animación */}
+              <div className="my-3">
+                <div
+                  className={`flex items-center justify-between w-full rounded-xl transition-all duration-300 ${
+                    animation && !animation.startsWith("✨ None")
+                      ? "bg-gradient-to-r from-pink-100 via-purple-100 to-yellow-100 text-gray-800 shadow-sm"
+                      : "bg-gray-100 text-gray-400"
+                  }`}
+                  style={{ height: "42px", padding: "0 8px", border: "1px solid rgba(0,0,0,0.05)" }}
+                >
+                  <select
+                    value={animation}
+                    onChange={(e) => setAnimation(e.target.value)}
+                    className="flex-1 text-xs font-medium focus:outline-none cursor-pointer truncate transition-colors bg-transparent"
+                    style={{ maxWidth: "43%" }}
+                  >
+                    {animationOptions
+                      .filter((a) => !a.includes("None"))
+                      .map((a) => (
+                        <option key={a} value={a}>
+                          {a}
+                        </option>
+                      ))}
+                  </select>
+
+                  {!isPurchased && !isViewed && (
+                    <div className="flex items-center gap-2 ml-1">
+                      <div className="flex items-center rounded-md border border-gray-300 overflow-hidden">
+                        <button
+                          className="px-2 text-base hover:bg-gray-200 transition"
+                          onClick={() => setEmojiCount((prev) => Math.max(5, prev - 5))}
+                        >
+                          –
+                        </button>
+                        <span className="px-2 text-xs font-medium text-gray-700">
+                          {emojiCount}
+                        </span>
+                        <button
+                          className="px-2 text-base hover:bg-gray-200 transition"
+                          onClick={() => setEmojiCount((prev) => Math.min(60, prev + 5))}
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      <select
+                        value={intensity}
+                        onChange={(e) => setIntensity(e.target.value)}
+                        className="px-2 text-xs bg-transparent font-medium focus:outline-none cursor-pointer"
                       >
-                        –
-                      </button>
-                      <span className="px-2 text-xs font-medium text-gray-700">
-                        {emojiCount}
-                      </span>
+                        <option value="soft">Soft</option>
+                        <option value="normal">Normal</option>
+                        <option value="vivid">Vivid</option>
+                      </select>
+
                       <button
-                        className="px-2 text-base hover:bg-gray-200 transition"
-                        onClick={() => setEmojiCount((prev) => Math.min(60, prev + 5))}
+                        className={`ml-1 px-2 text-lg font-bold transition ${
+                          animation && !animation.startsWith("✨ None")
+                            ? "text-red-500 hover:text-red-600"
+                            : "text-gray-400"
+                        }`}
+                        onClick={() => setAnimation("✨ None (No Animation)")}
+                        title="Remove animation"
                       >
-                        +
+                        ×
                       </button>
                     </div>
-
-                    <select
-                      value={intensity}
-                      onChange={(e) => setIntensity(e.target.value)}
-                      className="px-2 text-xs bg-transparent font-medium focus:outline-none cursor-pointer"
-                    >
-                      <option value="soft">Soft</option>
-                      <option value="normal">Normal</option>
-                      <option value="vivid">Vivid</option>
-                    </select>
-
-                    <button
-                      className={`ml-1 px-2 text-lg font-bold transition ${
-                        animation && !animation.startsWith("✨ None")
-                          ? "text-red-500 hover:text-red-600"
-                          : "text-gray-400"
-                      }`}
-                      onClick={() => setAnimation("✨ None (No Animation)")}
-                      title="Remove animation"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
 
-            {/* 🛍 Botones */}
-            <div className="mt-3 flex flex-wrap justify-center gap-2">
-              <button
-                onClick={() => setShowGift(true)}
-                className="flex items-center gap-2 rounded-full bg-pink-200 px-4 py-2 text-sm font-semibold text-pink-700 hover:bg-pink-300 transition-all shadow-sm"
-              >
-                🎁 Gift Card
-              </button>
-              <button
-                onClick={() => setShowCheckout(true)}
-                className="flex items-center gap-2 rounded-full bg-purple-500 px-5 py-2 text-sm font-semibold text-white hover:bg-purple-600 transition-all shadow-sm"
-              >
-                💳 Checkout
-              </button>
+              {/* 🛍 Botones */}
+              <div className="mt-3 flex flex-wrap justify-center gap-2">
+                <button
+                  onClick={() => setShowGift(true)}
+                  className="flex items-center gap-2 rounded-full bg-pink-200 px-4 py-2 text-sm font-semibold text-pink-700 hover:bg-pink-300 transition-all shadow-sm"
+                >
+                  🎁 Gift Card
+                </button>
+                <button
+                  onClick={() => setShowCheckout(true)}
+                  className="flex items-center gap-2 rounded-full bg-purple-500 px-5 py-2 text-sm font-semibold text-white hover:bg-purple-600 transition-all shadow-sm"
+                >
+                  💳 Checkout
+                </button>
+              </div>
             </div>
           </motion.div>
         </>
@@ -410,4 +408,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-            }
+              }
