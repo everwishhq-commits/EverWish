@@ -268,7 +268,7 @@ export default function EditPage({ params }) {
               </div>
 
               {/* 3. FOTO - grande, resto de pantalla */}
-              <div className="relative flex-shrink-0" style={{ height: "45vh" }}>
+              <div className="relative flex-shrink-0" style={{ height: "40vh" }}>
                 <div
                   className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-[#fff7f5] h-full cursor-pointer"
                   onClick={() => setShowCrop(true)}
