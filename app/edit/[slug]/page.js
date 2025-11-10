@@ -225,13 +225,13 @@ export default function EditPage({ params }) {
 
           {/* LAYOUT CON FOTO */}
           {userImage ? (
-            <div className="relative z-[200] w-full max-w-md h-[100vh] max-h-[100vh] px-3 pt-3 pb-3 flex flex-col gap-3">
-              {/* 1. VIDEO - más grande */}
+            <div className="relative z-[200] w-full max-w-md min-h-[100vh] px-3 pt-2 pb-20 flex flex-col gap-2 overflow-y-auto">
+              {/* 1. VIDEO - tamaño medio */}
               <div
-                className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none"
+                className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none flex-shrink-0"
                 onClick={handleCardClick}
                 onContextMenu={(e) => e.preventDefault()}
-                style={{ height: "45vh" }}
+                style={{ height: "32vh" }}
               >
                 {videoFound ? (
                   <video
@@ -249,14 +249,70 @@ export default function EditPage({ params }) {
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 bg-gradient-to-b from-gray-50 to-gray-100">
                     <div className="text-5xl mb-3">⚠️</div>
                     <p className="text-xs text-center px-4 mb-2 font-semibold">
-                      This card&apos;s video is missing or not uploaded yet.
+                      This card&apos;s video is missing
                     </p>
                   </div>
                 )}
+              </div>
 
-                {videoFound && (
-                  <div className="absolute bottom-2 right-2 bg-black/30 backdrop-blur-sm px-2 py-1 rounded-full text-white text-xs font-semibold pointer-events-none">
-                    🔒 interno
+              {/* 2. MENSAJE - ultra compacto */}
+              <div className="flex flex-col gap-1.5 flex-shrink-0">
+                <h3 className="text-center text-xs font-semibold text-gray-700">
+                  ✨ Customize your message ✨
+                </h3>
+                <textarea
+                  className="w-full rounded-xl border p-2 text-center text-xs text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400 resize-none"
+                  rows={2}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                />
+              </div>
+
+              {/* 3. FOTO GRANDE - mismo tamaño que tarjeta + botones flotantes encima */}
+              <div className="relative flex-shrink-0" style={{ height: "32vh" }}>
+                <div
+                  className="absolute inset-0 rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-[#fff7f5] cursor-pointer"
+                  onClick={() => setShowCrop(true)}
+                  onContextMenu={(e) => e.preventDefault()}
+                >
+                  <img
+                    src={userImage}
+                    alt="user"
+                    className="w-full h-full object-cover pointer-events-none"
+                  />
+                </div>
+
+                {/* BOTONES FLOTANTES ENCIMA DE LA FOTO */}
+                <div className="absolute bottom-3 left-0 right-0 px-3 z-10">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowGift(true);
+                      }}
+                      className="flex-1 rounded-full bg-pink-200/95 backdrop-blur-sm py-2.5 text-sm font-semibold text-pink-700 shadow-lg"
+                    >
+                      🎁 Gift Card
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowCheckout(true);
+                      }}
+                      className="flex-1 rounded-full bg-purple-500/95 backdrop-blur-sm py-2.5 text-sm font-semibold text-white shadow-lg"
+                    >
+                      💳 Checkout
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* 4. PANEL DE ANIMACIÓN - DEBAJO (requiere scroll para ver) */}
+              <div className="flex-shrink-0 mt-2">
+                <AnimationPanel />
+              </div>
+            </div>
+          ) : (</p>
                   </div>
                 )}
               </div>
@@ -433,4 +489,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-}
+      }
