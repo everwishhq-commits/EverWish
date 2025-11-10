@@ -260,7 +260,7 @@ export default function EditPage({ params }) {
                   ✨ Customize your message ✨
                 </h3>
                 <textarea
-                  className="w-full rounded-2xl border p-3 text-center text-sm text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400 resize-none"
+                  className="w-full rounded-2xl border p-3 text-center text-base text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400 resize-none"
                   rows={2}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
@@ -433,4 +433,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-  }
+            }
