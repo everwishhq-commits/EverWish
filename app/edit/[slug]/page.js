@@ -42,13 +42,9 @@ export default function EditPage({ params }) {
   useEffect(() => {
     async function loadVideo() {
       try {
-        console.log("🔍 Buscando video para:", slug);
-        
         const res = await fetch("/api/videos", { cache: "no-store" });
         const data = await res.json();
         const videos = data.videos || data || [];
-        
-        console.log(`📦 Videos disponibles: ${videos.length}`);
 
         // Buscar video por name (exacto)
         let match = videos.find((v) => v.name === slug);
@@ -59,17 +55,10 @@ export default function EditPage({ params }) {
         }
 
         if (match) {
-          console.log("✅ Video encontrado:", match.name);
-          console.log("📁 Usando ruta:", match.file);
-          
           // ✅ CRÍTICO: Usar match.file NO match.src
           setVideoSrc(match.file);
           setVideoFound(true);
         } else {
-          console.warn("⚠️ No se encontró el video:", slug);
-          console.log("💡 Primeros 5 videos:", videos.slice(0, 5).map(v => v.name));
-          
-          // Fallback: construir ruta manual
           setVideoSrc(`/videos/${slug}.mp4`);
           setVideoFound(false);
         }
@@ -368,7 +357,7 @@ export default function EditPage({ params }) {
                 className="fixed bottom-10 right-6 z-[400] rounded-full bg-[#ff7b00] px-6 py-3 text-white font-semibold shadow-lg hover:bg-[#ff9f33]"
               >
                 ⬇️ Download
-              </button>
+              </motion.button>
             )}
           </motion.div>
         </>
@@ -416,4 +405,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-                }
+            }
