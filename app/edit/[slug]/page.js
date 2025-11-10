@@ -15,7 +15,6 @@ import CropperModal from "@/components/croppermodal";
 export default function EditPage({ params }) {
   const slug = params.slug;
 
-  // estados
   const [stage, setStage] = useState("expanded");
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("");
@@ -32,7 +31,6 @@ export default function EditPage({ params }) {
   const [userImage, setUserImage] = useState(null);
 
   const [intensity, setIntensity] = useState("normal");
-  const [opacityLevel] = useState(0.9);
   const [emojiCount, setEmojiCount] = useState(20);
   const [isPurchased] = useState(false);
   const [isViewed] = useState(false);
@@ -40,7 +38,7 @@ export default function EditPage({ params }) {
   const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
   const [animKey, setAnimKey] = useState(0);
 
-  // carga de video + opciones
+  // cargar video y opciones
   useEffect(() => {
     async function loadVideo() {
       try {
@@ -66,14 +64,14 @@ export default function EditPage({ params }) {
     }
 
     loadVideo();
-
     setMessage(getMessageForSlug(slug));
+
     const opts = getAnimationOptionsForSlug(slug);
     setAnimationOptions(opts);
     setAnimation(opts.find((a) => !a.includes("None")) || opts[0]);
   }, [slug]);
 
-  // pantalla de carga
+  // loading
   useEffect(() => {
     let v = 0;
     const id = setInterval(() => {
@@ -87,10 +85,15 @@ export default function EditPage({ params }) {
     return () => clearInterval(id);
   }, []);
 
-  // re-render de animaciones
+  // re-render anim
   useEffect(() => {
     setAnimKey(Date.now());
-  }, [animation, category, intensity, opacityLevel, emojiCount]);
+  }, [animation, category, intensity, emojiCount]);
+
+  // bloquear descarga
+  const handleCardClick = () => {
+    alert("🔒 This card is protected. Purchase to download!");
+  };
 
   // gift
   const updateGift = (data) => {
@@ -103,24 +106,18 @@ export default function EditPage({ params }) {
     setTotal(5);
   };
 
-  // bloquear descarga
-  const handleCardClick = () => {
-    alert("🔒 This card is protected. Purchase to download!");
-  };
-
-  // bloquear clic derecho global
+  // bloquear clic derecho
   useEffect(() => {
     const preventContextMenu = (e) => {
       e.preventDefault();
       return false;
     };
     document.addEventListener("contextmenu", preventContextMenu);
-    return () =>
-      document.removeEventListener("contextmenu", preventContextMenu);
+    return () => document.removeEventListener("contextmenu", preventContextMenu);
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#fff7f5] flex flex-col items-center pb-6">
+    <div className="h-[100vh] max-h-[100vh] bg-[#fff7f5] flex items-center justify-center">
       {/* pantalla de carga */}
       {stage === "expanded" && (
         <motion.div
@@ -159,34 +156,26 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
-      {/* editor normal sin scroll interno */}
       {stage === "editor" && (
         <>
+          {/* capa de animación */}
           <AnimationOverlay
             key={animKey}
             slug={slug}
             animation={animation}
             intensity={intensity}
-            opacityLevel={opacityLevel}
+            opacityLevel={0.9}
             emojiCount={emojiCount}
           />
 
-          <motion.div
-            key="editor"
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45 }}
-            className="relative z-[200] w-full max-w-md mt-4 bg-white rounded-3xl shadow-xl px-4 pt-4 pb-5"
-          >
-            {/* 1. tarjeta */}
+          {/* CARD */}
+          <div className="relative z-[200] w-full max-w-md h-[100vh] max-h-[100vh] px-3 flex flex-col gap-3">
+            {/* 1. VIDEO (45% de la pantalla) */}
             <div
-              className="relative overflow-hidden rounded-2xl border bg-gray-50 cursor-pointer select-none"
+              className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none"
               onClick={handleCardClick}
               onContextMenu={(e) => e.preventDefault()}
-              style={{
-                width: "100%",
-                aspectRatio: "4 / 5",
-              }}
+              style={{ height: "45vh" }}
             >
               {videoFound ? (
                 <video
@@ -198,7 +187,6 @@ export default function EditPage({ params }) {
                   playsInline
                   controlsList="nodownload nofullscreen noremoteplayback"
                   disablePictureInPicture
-                  onContextMenu={(e) => e.preventDefault()}
                   onError={() => setVideoFound(false)}
                 />
               ) : (
@@ -223,70 +211,61 @@ export default function EditPage({ params }) {
               )}
             </div>
 
-            {/* 2. mensaje */}
-            <h3 className="mt-4 mb-2 text-center text-base font-semibold text-gray-700">
-              ✨ Customize your message ✨
-            </h3>
-            <textarea
-              className="w-full rounded-2xl border p-3 text-center text-sm text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
-              rows={2}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onContextMenu={(e) => e.preventDefault()}
-            />
-
-            {/* 3. foto (misma anchura, abajo) */}
-            {userImage ? (
-              <div
-                className="mt-4 cursor-pointer"
-                onClick={() => setShowCrop(true)}
+            {/* 2. MENSAJE (auto, pero poco alto) */}
+            <div className="flex flex-col gap-2">
+              <h3 className="text-center text-sm font-semibold text-gray-700">
+                ✨ Customize your message ✨
+              </h3>
+              <textarea
+                className="w-full rounded-2xl border p-3 text-center text-sm text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400"
+                rows={2}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
                 onContextMenu={(e) => e.preventDefault()}
-              >
+              />
+            </div>
+
+            {/* 3. FOTO (30% de la pantalla) */}
+            <div className="flex-1">
+              {userImage ? (
                 <div
-                  className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-[#fff7f5]"
-                  style={{
-                    width: "100%",
-                    aspectRatio: "4 / 5",
-                  }}
+                  className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-[#fff7f5] h-[30vh]"
+                  onClick={() => setShowCrop(true)}
+                  onContextMenu={(e) => e.preventDefault()}
                 >
                   <img
                     src={userImage}
-                    alt="User upload"
+                    alt="user"
                     className="w-full h-full object-cover pointer-events-none"
-                    draggable="false"
                   />
                 </div>
-              </div>
-            ) : (
-              <div className="mt-4 flex justify-center">
-                <button
-                  onClick={() => setShowCrop(true)}
-                  className="flex items-center gap-2 rounded-full bg-yellow-400 px-4 py-2 text-sm font-semibold text-[#3b2b1f] hover:bg-yellow-300 transition-all shadow-sm"
-                >
-                  📸 Add Image
-                </button>
-              </div>
-            )}
+              ) : (
+                <div className="h-[30vh] flex items-center justify-center">
+                  <button
+                    onClick={() => setShowCrop(true)}
+                    className="flex items-center gap-2 rounded-full bg-yellow-400 px-4 py-2 text-sm font-semibold text-[#3b2b1f] hover:bg-yellow-300 transition-all shadow-sm"
+                  >
+                    📸 Add Image
+                  </button>
+                </div>
+              )}
+            </div>
 
-            {/* 4. animación compacta */}
-            <div className="mt-4">
+            {/* 4. CONTROLES + BOTONES (barra baja, altura fija) */}
+            <div className="pb-1">
+              {/* animación */}
               <div
-                className={`flex items-center justify-between w-full rounded-xl transition-all duration-300 ${
+                className={`flex items-center justify-between w-full rounded-xl transition-all duration-300 mb-2 ${
                   animation && !animation.startsWith("✨ None")
                     ? "bg-gradient-to-r from-pink-100 via-purple-100 to-yellow-100 text-gray-800 shadow-sm"
                     : "bg-gray-100 text-gray-400"
                 }`}
-                style={{
-                  height: "42px",
-                  padding: "0 8px",
-                  border: "1px solid rgba(0,0,0,0.05)",
-                }}
+                style={{ height: "42px", padding: "0 8px" }}
               >
                 <select
                   value={animation}
                   onChange={(e) => setAnimation(e.target.value)}
-                  className="flex-1 text-xs font-medium focus:outline-none cursor-pointer truncate transition-colors bg-transparent"
-                  style={{ maxWidth: "43%" }}
+                  className="flex-1 text-xs font-medium focus:outline-none cursor-pointer truncate bg-transparent"
                 >
                   {animationOptions
                     .filter((a) => !a.includes("None"))
@@ -345,24 +324,24 @@ export default function EditPage({ params }) {
                   </div>
                 )}
               </div>
-            </div>
 
-            {/* 5. botones */}
-            <div className="mt-4 flex flex-wrap justify-center gap-2">
-              <button
-                onClick={() => setShowGift(true)}
-                className="flex items-center gap-2 rounded-full bg-pink-200 px-4 py-2 text-sm font-semibold text-pink-700 hover:bg-pink-300 transition-all shadow-sm"
-              >
-                🎁 Gift Card
-              </button>
-              <button
-                onClick={() => setShowCheckout(true)}
-                className="flex items-center gap-2 rounded-full bg-purple-500 px-5 py-2 text-sm font-semibold text-white hover:bg-purple-600 transition-all shadow-sm"
-              >
-                💳 Checkout
-              </button>
+              {/* botones */}
+              <div className="flex gap-2 justify-center">
+                <button
+                  onClick={() => setShowGift(true)}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-full bg-pink-200 py-2 text-sm font-semibold text-pink-700 hover:bg-pink-300 transition-all shadow-sm"
+                >
+                  🎁 Gift Card
+                </button>
+                <button
+                  onClick={() => setShowCheckout(true)}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-full bg-purple-500 py-2 text-sm font-semibold text-white hover:bg-purple-600 transition-all shadow-sm"
+                >
+                  💳 Checkout
+                </button>
+              </div>
             </div>
-          </motion.div>
+          </div>
         </>
       )}
 
@@ -408,4 +387,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-            }
+                }
