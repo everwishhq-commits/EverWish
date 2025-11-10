@@ -36,7 +36,7 @@ export default function EditPage({ params }) {
       className="relative w-full flex justify-center items-center bg-[#fff7f5]"
       style={{
         height: "460px",     // 🔹 alto del contenedor (sube/baja el área total)
-        marginTop: "2vh",    // 🔹 espacio superior
+        marginTop: "23vh",    // 🔹 espacio superior
         marginBottom: "2vh", // 🔹 espacio inferior
       }}
     >
