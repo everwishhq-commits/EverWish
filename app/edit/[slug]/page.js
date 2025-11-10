@@ -38,9 +38,9 @@ export default function EditPage() {
     <motion.div
       className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#fff7f5] overflow-hidden"
       style={{
-        height: "112vh", // 🔹 ligeramente más alto para margen natural
-        paddingTop: "3vh", // 🔹 margen superior
-        paddingBottom: "3vh", // 🔹 margen inferior
+        height: "125vh", // 🔹 ligeramente más alto para margen natural
+        paddingTop: "0vh", // 🔹 margen superior
+        paddingBottom: "0vh", // 🔹 margen inferior
       }}
     >
       <video
