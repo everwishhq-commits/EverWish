@@ -15,7 +15,6 @@ import CropperModal from "@/components/croppermodal";
 export default function EditPage({ params }) {
   const slug = params.slug;
 
-  // estados base
   const [stage, setStage] = useState("expanded");
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("");
@@ -24,7 +23,6 @@ export default function EditPage({ params }) {
   const [videoSrc, setVideoSrc] = useState("");
   const [videoFound, setVideoFound] = useState(true);
 
-  // gift / checkout / crop
   const [gift, setGift] = useState(null);
   const [showGift, setShowGift] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
@@ -32,7 +30,6 @@ export default function EditPage({ params }) {
   const [total, setTotal] = useState(5);
   const [userImage, setUserImage] = useState(null);
 
-  // animaciones
   const [intensity, setIntensity] = useState("normal");
   const [opacityLevel, setOpacityLevel] = useState(0.9);
   const [emojiCount, setEmojiCount] = useState(20);
@@ -42,7 +39,6 @@ export default function EditPage({ params }) {
   const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
   const [animKey, setAnimKey] = useState(0);
 
-  // cargar video + opciones
   useEffect(() => {
     async function loadVideo() {
       try {
@@ -50,7 +46,6 @@ export default function EditPage({ params }) {
         const data = await res.json();
         const videos = data.videos || data || [];
 
-        // intentamos por name y por slug
         let match = videos.find((v) => v.name === slug);
         if (!match) match = videos.find((v) => v.slug === slug);
 
@@ -58,7 +53,6 @@ export default function EditPage({ params }) {
           setVideoSrc(match.file);
           setVideoFound(true);
         } else {
-          // fallback al nombre directo
           setVideoSrc(`/videos/${slug}.mp4`);
           setVideoFound(false);
         }
@@ -71,16 +65,12 @@ export default function EditPage({ params }) {
 
     loadVideo();
 
-    // mensaje sugerido
     setMessage(getMessageForSlug(slug));
-
-    // opciones de animación
     const opts = getAnimationOptionsForSlug(slug);
     setAnimationOptions(opts);
     setAnimation(opts.find((a) => !a.includes("None")) || opts[0]);
   }, [slug]);
 
-  // pantalla de carga que pasa al editor
   useEffect(() => {
     let v = 0;
     const id = setInterval(() => {
@@ -94,12 +84,10 @@ export default function EditPage({ params }) {
     return () => clearInterval(id);
   }, []);
 
-  // refrescar overlay cuando cambian cosas
   useEffect(() => {
     setAnimKey(Date.now());
   }, [animation, category, intensity, opacityLevel, emojiCount]);
 
-  // gift
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
@@ -110,19 +98,18 @@ export default function EditPage({ params }) {
     setTotal(5);
   };
 
-  // bloquear descarga
   const handleCardClick = () => {
     alert("🔒 This card is protected. Purchase to download!");
   };
 
-  // bloquear clic derecho global
   useEffect(() => {
     const preventContextMenu = (e) => {
       e.preventDefault();
       return false;
     };
     document.addEventListener("contextmenu", preventContextMenu);
-    return () => document.removeEventListener("contextmenu", preventContextMenu);
+    return () =>
+      document.removeEventListener("contextmenu", preventContextMenu);
   }, []);
 
   return (
@@ -130,7 +117,6 @@ export default function EditPage({ params }) {
       className="relative h-[100dvh] bg-[#fff7f5] flex items-center justify-center overflow-hidden"
       style={{ overscrollBehavior: "contain" }}
     >
-      {/* 🕓 pantalla de carga */}
       {stage === "expanded" && (
         <motion.div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-[#fff7f5]"
@@ -168,10 +154,8 @@ export default function EditPage({ params }) {
         </motion.div>
       )}
 
-      {/* 🎨 editor */}
       {stage === "editor" && (
         <>
-          {/* overlay de animaciones */}
           <AnimationOverlay
             key={animKey}
             slug={slug}
@@ -194,9 +178,7 @@ export default function EditPage({ params }) {
               padding: "1rem",
             }}
           >
-            {/* todo lo que puede crecer y scrollear */}
             <div className="flex-1 overflow-y-auto space-y-3 pb-2">
-              {/* 1. tarjeta */}
               <div
                 className="relative overflow-hidden rounded-2xl border bg-gray-50 cursor-pointer select-none"
                 onClick={handleCardClick}
@@ -242,7 +224,6 @@ export default function EditPage({ params }) {
                 )}
               </div>
 
-              {/* 2. mensaje */}
               <div>
                 <h3 className="mb-2 text-center text-base font-semibold text-gray-700">
                   ✨ Customize your message ✨
@@ -256,7 +237,6 @@ export default function EditPage({ params }) {
                 />
               </div>
 
-              {/* 3. foto usuario */}
               {userImage ? (
                 <div
                   className="cursor-pointer"
@@ -290,7 +270,6 @@ export default function EditPage({ params }) {
                 </div>
               )}
 
-              {/* 4. panel de animaciones */}
               <div className="my-3">
                 <div
                   className={`flex items-center justify-between w-full rounded-xl transition-all duration-300 ${
@@ -370,7 +349,6 @@ export default function EditPage({ params }) {
               </div>
             </div>
 
-            {/* barra de botones fija abajo */}
             <div className="mt-3 flex flex-wrap justify-center gap-2 pt-2 border-t border-pink-50">
               <button
                 onClick={() => setShowGift(true)}
@@ -389,7 +367,6 @@ export default function EditPage({ params }) {
         </>
       )}
 
-      {/* modales */}
       <div className="fixed inset-0 pointer-events-none z-[10050]">
         {showGift && (
           <div className="pointer-events-auto relative">
@@ -431,5 +408,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-}
-```0
+        }
