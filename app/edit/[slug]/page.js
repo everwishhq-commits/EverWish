@@ -15,28 +15,33 @@ import CropperModal from "@/components/croppermodal";
 export default function EditPage({ params }) {
   const slug = params.slug;
 
+  // estados básicos
   const [stage, setStage] = useState("expanded");
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("");
-  const [animation, setAnimation] = useState("");
-  const [animationOptions, setAnimationOptions] = useState([]);
   const [videoSrc, setVideoSrc] = useState("");
   const [videoFound, setVideoFound] = useState(true);
 
+  // animaciones
+  const [animation, setAnimation] = useState("");
+  const [animationOptions, setAnimationOptions] = useState([]);
+  const [intensity, setIntensity] = useState("normal");
+  const [emojiCount, setEmojiCount] = useState(20);
+  const [animKey, setAnimKey] = useState(0);
+
+  // modales
   const [showGift, setShowGift] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showCrop, setShowCrop] = useState(false);
   const [gift, setGift] = useState(null);
   const [total, setTotal] = useState(5);
+
+  // imagen de usuario
   const [userImage, setUserImage] = useState(null);
 
-  const [intensity, setIntensity] = useState("normal");
-  const [emojiCount, setEmojiCount] = useState(20);
+  useMemo(() => getAnimationsForSlug(slug), [slug]);
 
-  const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
-  const [animKey, setAnimKey] = useState(0);
-
-  // cargar video y mensajes
+  // cargar video + opciones
   useEffect(() => {
     async function loadVideo() {
       try {
@@ -62,6 +67,7 @@ export default function EditPage({ params }) {
     }
 
     loadVideo();
+
     setMessage(getMessageForSlug(slug));
 
     const opts = getAnimationOptionsForSlug(slug);
@@ -83,15 +89,18 @@ export default function EditPage({ params }) {
     return () => clearInterval(id);
   }, []);
 
-  // refrescar anim
+  // refrescar capa de animación
   useEffect(() => {
     setAnimKey(Date.now());
-  }, [animation, category, intensity, emojiCount]);
+  }, [animation, intensity, emojiCount]);
 
-  // bloquear descarga
-  const handleCardClick = () => {
-    alert("🔒 This card is protected. Purchase to download!");
-  };
+  // bloquear clic derecho
+  useEffect(() => {
+    const preventContextMenu = (e) => e.preventDefault();
+    document.addEventListener("contextmenu", preventContextMenu);
+    return () =>
+      document.removeEventListener("contextmenu", preventContextMenu);
+  }, []);
 
   // gift
   const updateGift = (data) => {
@@ -104,17 +113,12 @@ export default function EditPage({ params }) {
     setTotal(5);
   };
 
-  // bloquear clic derecho
-  useEffect(() => {
-    const preventContextMenu = (e) => {
-      e.preventDefault();
-    };
-    document.addEventListener("contextmenu", preventContextMenu);
-    return () => document.removeEventListener("contextmenu", preventContextMenu);
-  }, []);
+  const handleCardClick = () => {
+    alert("🔒 This card is protected. Purchase to download!");
+  };
 
   return (
-    <div className="relative h-[100vh] max-h-[100vh] bg-[#fff7f5] flex items-center justify-center overflow-hidden">
+    <div className="relative h-[100vh] max-h-[100vh] bg-[#fff7f5] overflow-hidden flex items-center justify-center">
       {/* LOADING */}
       {stage === "expanded" && (
         <motion.div
@@ -133,19 +137,18 @@ export default function EditPage({ params }) {
               playsInline
               controlsList="nodownload nofullscreen noremoteplayback"
               disablePictureInPicture
-              onContextMenu={(e) => e.preventDefault()}
             />
           ) : (
-            <div className="text-gray-500 text-center">
+            <div className="text-center text-gray-500">
               <div className="text-6xl mb-4">⚠️</div>
-              <p className="text-lg">Video not found: {slug}</p>
+              <p>Video not found: {slug}</p>
             </div>
           )}
 
           <div className="absolute bottom-8 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
             <motion.div
               className="h-full bg-pink-500"
-              initial={{ width: "0%" }}
+              initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.03, ease: "linear" }}
             />
@@ -156,7 +159,7 @@ export default function EditPage({ params }) {
       {/* EDITOR */}
       {stage === "editor" && (
         <>
-          {/* capa de animación */}
+          {/* capa de animaciones */}
           <AnimationOverlay
             key={animKey}
             slug={slug}
@@ -166,14 +169,13 @@ export default function EditPage({ params }) {
             emojiCount={emojiCount}
           />
 
-          {/* columna principal */}
-          <div className="relative z-[200] w-full max-w-md h-[100vh] max-h-[100vh] px-3 flex flex-col gap-3 pt-3 pb-[90px]">
-            {/* 1. video */}
+          {/* columna principal sin scroll extra */}
+          <div className="relative z-[200] w-full max-w-md h-[100vh] px-3 pt-3 pb-[90px] flex flex-col gap-3">
+            {/* 1. video (ligeramente más bajito) */}
             <div
-              className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none"
+              className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer"
               onClick={handleCardClick}
-              onContextMenu={(e) => e.preventDefault()}
-              style={{ height: "40vh" }} // un poco más bajito para dejar hueco al panel
+              style={{ height: "38vh" }}
             >
               {videoFound ? (
                 <video
@@ -191,13 +193,7 @@ export default function EditPage({ params }) {
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 bg-gradient-to-b from-gray-50 to-gray-100">
                   <div className="text-5xl mb-3">⚠️</div>
                   <p className="text-xs text-center px-4 mb-2 font-semibold">
-                    This card&apos;s video is missing or not uploaded yet.
-                  </p>
-                  <p className="text-xs text-gray-500 px-3 text-center">
-                    Looking for:{" "}
-                    <code className="bg-white px-2 py-1 rounded text-xs">
-                      {slug}
-                    </code>
+                    Video not uploaded yet.
                   </p>
                 </div>
               )}
@@ -222,12 +218,12 @@ export default function EditPage({ params }) {
               />
             </div>
 
-            {/* 3. foto o placeholder */}
-            {userImage ? (
+            {/* 3. si hay imagen la mostramos AQUÍ */}
+            {userImage && (
               <div
-                className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-[#fff7f5] flex-1"
+                className="rounded-2xl border border-gray-200 overflow-hidden"
+                style={{ height: "16vh" }}
                 onClick={() => setShowCrop(true)}
-                onContextMenu={(e) => e.preventDefault()}
               >
                 <img
                   src={userImage}
@@ -235,79 +231,76 @@ export default function EditPage({ params }) {
                   className="w-full h-full object-cover pointer-events-none"
                 />
               </div>
-            ) : (
-              <div className="h-[14vh] flex items-center justify-center">
+            )}
+
+            {/* 4. PANEL DE ANIMACIÓN — siempre visible en pantalla */}
+            <div
+              className={`flex items-center justify-between w-full rounded-xl transition-all duration-300 ${
+                animation && !animation.startsWith("✨ None")
+                  ? "bg-gradient-to-r from-pink-100 via-purple-100 to-yellow-100 text-gray-800 shadow-sm"
+                  : "bg-gray-100 text-gray-400"
+              }`}
+              style={{ height: "44px", padding: "0 10px" }}
+            >
+              <select
+                value={animation}
+                onChange={(e) => setAnimation(e.target.value)}
+                className="flex-1 text-xs font-medium focus:outline-none cursor-pointer bg-transparent truncate"
+              >
+                {animationOptions
+                  .filter((a) => !a.includes("None"))
+                  .map((a) => (
+                    <option key={a} value={a}>
+                      {a}
+                    </option>
+                  ))}
+              </select>
+
+              <div className="flex items-center gap-2 ml-2">
+                <div className="flex items-center rounded-md border border-gray-300 overflow-hidden">
+                  <button
+                    className="px-2 text-base hover:bg-gray-200 transition"
+                    onClick={() => setEmojiCount((prev) => Math.max(5, prev - 5))}
+                  >
+                    –
+                  </button>
+                  <span className="px-2 text-xs font-medium text-gray-700">
+                    {emojiCount}
+                  </span>
+                  <button
+                    className="px-2 text-base hover:bg-gray-200 transition"
+                    onClick={() => setEmojiCount((prev) => Math.min(60, prev + 5))}
+                  >
+                    +
+                  </button>
+                </div>
+
+                <select
+                  value={intensity}
+                  onChange={(e) => setIntensity(e.target.value)}
+                  className="px-2 text-xs bg-transparent font-medium focus:outline-none cursor-pointer"
+                >
+                  <option value="soft">Soft</option>
+                  <option value="normal">Normal</option>
+                  <option value="vivid">Vivid</option>
+                </select>
+              </div>
+            </div>
+
+            {/* 5. SI NO hay imagen → botoncito sin ocupar altura extra */}
+            {!userImage && (
+              <div className="flex justify-center">
                 <button
                   onClick={() => setShowCrop(true)}
-                  className="flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-2 text-sm font-semibold text-[#3b2b1f] hover:bg-yellow-300 transition-all shadow-sm"
+                  className="mt-0 text-xs font-semibold text-[#3b2b1f] bg-yellow-400 px-4 py-1.5 rounded-full shadow-sm hover:bg-yellow-300 transition"
                 >
                   📸 Add Image
                 </button>
               </div>
             )}
-
-            {/* 4. panel de animación (siempre visible) */}
-            <div className="mt-1">
-              <div
-                className={`flex items-center justify-between w-full rounded-xl transition-all duration-300 ${
-                  animation && !animation.startsWith("✨ None")
-                    ? "bg-gradient-to-r from-pink-100 via-purple-100 to-yellow-100 text-gray-800 shadow-sm"
-                    : "bg-gray-100 text-gray-400"
-                }`}
-                style={{ height: "46px", padding: "0 10px" }}
-              >
-                <select
-                  value={animation}
-                  onChange={(e) => setAnimation(e.target.value)}
-                  className="flex-1 text-xs font-medium focus:outline-none cursor-pointer bg-transparent truncate"
-                >
-                  {animationOptions
-                    .filter((a) => !a.includes("None"))
-                    .map((a) => (
-                      <option key={a} value={a}>
-                        {a}
-                      </option>
-                    ))}
-                </select>
-
-                <div className="flex items-center gap-2 ml-2">
-                  <div className="flex items-center rounded-md border border-gray-300 overflow-hidden">
-                    <button
-                      className="px-2 text-base hover:bg-gray-200 transition"
-                      onClick={() =>
-                        setEmojiCount((prev) => Math.max(5, prev - 5))
-                      }
-                    >
-                      –
-                    </button>
-                    <span className="px-2 text-xs font-medium text-gray-700">
-                      {emojiCount}
-                    </span>
-                    <button
-                      className="px-2 text-base hover:bg-gray-200 transition"
-                      onClick={() =>
-                        setEmojiCount((prev) => Math.min(60, prev + 5))
-                      }
-                    >
-                      +
-                    </button>
-                  </div>
-
-                  <select
-                    value={intensity}
-                    onChange={(e) => setIntensity(e.target.value)}
-                    className="px-2 text-xs bg-transparent font-medium focus:outline-none cursor-pointer"
-                  >
-                    <option value="soft">Soft</option>
-                    <option value="normal">Normal</option>
-                    <option value="vivid">Vivid</option>
-                  </select>
-                </div>
-              </div>
-            </div>
           </div>
 
-          {/* botones flotantes abajo */}
+          {/* BOTONES FLOTANTES */}
           <div className="fixed bottom-0 left-0 right-0 z-[210] px-4 pb-3">
             <div className="max-w-md mx-auto flex gap-2 justify-center">
               <button
@@ -327,7 +320,7 @@ export default function EditPage({ params }) {
         </>
       )}
 
-      {/* modales */}
+      {/* MODALES */}
       <div className="fixed inset-0 pointer-events-none z-[10050]">
         {showGift && (
           <div className="pointer-events-auto relative">
