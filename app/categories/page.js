@@ -171,4 +171,4 @@ export default function CategoriesPage() {
       `}</style>
     </div>
   );
-          }
+}
