@@ -1,6 +1,7 @@
 /**
- * 🧠 GENERADOR CON AUTO-APRENDIZAJE
+ * 🧠 GENERADOR CON AUTO-APRENDIZAJE V2
  * - Construye el glosario automáticamente
+ * - ✨ Detecta TODAS las subcategorías por video
  * - Lo guarda en index.json para usarlo en la app
  */
 
@@ -36,7 +37,7 @@ function capitalize(str) {
 }
 
 function generateIndex() {
-  console.log("🧠 Generando index.json con auto-aprendizaje...\n");
+  console.log("🧠 Generando index.json con detección de múltiples subcategorías...\n");
   
   const mp4Files = getAllMp4Files(videosRoot);
   console.log(`📁 Archivos encontrados: ${mp4Files.length}\n`);
@@ -51,13 +52,24 @@ function generateIndex() {
     const urlPath = "/" + relativePath.replace(/\\/g, "/");
     const basename = path.basename(filePath, ".mp4");
     
-    // 🧠 Clasificar (aprende automáticamente)
+    // 🧠 Clasificar (aprende automáticamente y detecta todas las subcategorías)
     const classifications = classifyVideo(basename);
     
     const mainClassification = classifications[0];
     const allCategorySlugs = classifications.map(c => c.categorySlug);
     const allCategoryNames = classifications.map(c => c.categoryName);
-    const allSubcategories = classifications.flatMap(c => c.subcategories);
+    
+    // 🆕 Recoger TODAS las subcategorías de todas las clasificaciones
+    const allSubcategories = [];
+    classifications.forEach(c => {
+      if (c.subcategories && c.subcategories.length > 0) {
+        c.subcategories.forEach(sub => {
+          if (!allSubcategories.includes(sub)) {
+            allSubcategories.push(sub);
+          }
+        });
+      }
+    });
     
     const tags = [
       basename.toLowerCase(),
@@ -72,7 +84,8 @@ function generateIndex() {
       object: capitalize(mainClassification.object),
       category: mainClassification.categoryName,
       categories: allCategorySlugs,
-      subcategory: mainClassification.subcategories[0],
+      subcategory: allSubcategories[0], // Primera subcategoría como principal
+      subcategories: allSubcategories,   // 🆕 Todas las subcategorías
       value: mainClassification.variant,
       slug: basename.toLowerCase(),
       tags: [...new Set(tags)],
@@ -81,7 +94,15 @@ function generateIndex() {
     console.log(`✅ ${videoData.name}`);
     console.log(`   🎨 Object: ${videoData.object}`);
     console.log(`   📂 Categories: [${allCategoryNames.join(", ")}]`);
-    console.log(`   🏷️  Subcategory: ${videoData.subcategory}\n`);
+    console.log(`   🏷️  Subcategories: [${allSubcategories.join(", ")}]`);
+    
+    // Mostrar advertencia si no se detectó ninguna subcategoría
+    if (allSubcategories.length === 0) {
+      console.log(`   ⚠️  WARNING: No subcategories detected!`);
+    } else if (allSubcategories.length > 1) {
+      console.log(`   ✨ MULTIPLE SUBCATEGORIES DETECTED!`);
+    }
+    console.log("");
     
     return videoData;
   });
@@ -128,6 +149,15 @@ function generateIndex() {
     .forEach(([cat, count]) => {
       console.log(`   ${cat}: ${count} videos`);
     });
+  
+  // 🆕 Resumen de subcategorías múltiples
+  const multiSubVideos = videos.filter(v => v.subcategories && v.subcategories.length > 1);
+  if (multiSubVideos.length > 0) {
+    console.log(`\n✨ Videos con MÚLTIPLES subcategorías: ${multiSubVideos.length}`);
+    multiSubVideos.forEach(v => {
+      console.log(`   ${v.name}: [${v.subcategories.join(", ")}]`);
+    });
+  }
 }
 
 try {
