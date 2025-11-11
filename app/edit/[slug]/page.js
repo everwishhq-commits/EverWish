@@ -26,32 +26,23 @@ export default function EditPage({ params }) {
   }
 
   return (
-    <div
-      className="fixed inset-0 flex items-center justify-center bg-[#fff7f5] overflow-hidden"
-    >
-      {/* 🔹 Contenedor del video con tamaño ajustable */}
-      <div
-        className="relative flex items-center justify-center"
+    <div className="fixed inset-0 flex items-center justify-center bg-[#fff7f5] overflow-hidden">
+      <video
+        src={match.file}
+        autoPlay
+        loop
+        muted
+        playsInline
+        controlsList="nodownload noplaybackrate"
+        onContextMenu={(e) => e.preventDefault()}
+        className="max-w-full max-h-full rounded-2xl shadow-lg object-contain bg-pink-50"
         style={{
-          width: "94vw",    // 🔧 AJUSTA AQUÍ: 90vw, 94vw, 98vw, 100vw
-          height: "92vh",   // 🔧 AJUSTA AQUÍ: 85vh, 90vh, 92vh, 95vh, 100vh
+          width: "auto",
+          height: "auto",
+          maxWidth: "100vw",
+          maxHeight: "100vh",
         }}
-      >
-        <video
-          src={match.file}
-          autoPlay
-          loop
-          muted
-          playsInline
-          controlsList="nodownload noplaybackrate"
-          onContextMenu={(e) => e.preventDefault()}
-          className="rounded-2xl shadow-lg object-contain bg-pink-50"
-          style={{
-            width: "100%",   // 🔹 Video ocupa 100% del ancho del contenedor
-            height: "150%",  // 🔹 Video ocupa 100% del alto del contenedor
-          }}
-        />
-      </div>
+      />
     </div>
   );
-            }
+}
