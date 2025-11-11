@@ -73,7 +73,7 @@ const SUBCATEGORIES = {
   "fathers": "Father's Day",
   
   // Animals
-  "turtle": "Turtle",
+  "general": "General",
   "dogcat": "Dogs & Cats",
   
   // General
