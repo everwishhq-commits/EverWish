@@ -1,89 +1,20 @@
 /**
- * 🎯 SISTEMA AUTOMÁTICO DE CLASIFICACIÓN
- * Lee los nombres de archivo y clasifica AUTOMÁTICAMENTE
- * Formato: objeto_categoria1_categoria2_subcategoria_variante
- * Ejemplo: zombie_halloween_birthday_1a
+ * 🧠 GENERADOR CON AUTO-APRENDIZAJE
+ * - Construye el glosario automáticamente
+ * - Lo guarda en index.json para usarlo en la app
  */
 
 import fs from "fs";
 import path from "path";
+import { 
+  classifyVideo, 
+  getLearnedGlossary,
+  BASE_CATEGORIES 
+} from "../lib/classification-system.js";
 
 const videosRoot = path.join(process.cwd(), "public/videos");
 const indexFile = path.join(videosRoot, "index.json");
 
-// 🎯 CATEGORÍAS PRINCIPALES (nombres exactos de la UI)
-const MAIN_CATEGORIES = {
-  "holidays": "Holidays",
-  "seasonal": "Holidays",
-  "celebrations": "Celebrations",
-  "birthday": "Celebrations",
-  "love": "Love & Romance",
-  "romance": "Love & Romance",
-  "wedding": "Love & Romance",
-  "anniversary": "Love & Romance",
-  "family": "Family & Friendship",
-  "friendship": "Family & Friendship",
-  "work": "Work & Professional Life",
-  "professional": "Work & Professional Life",
-  "babies": "Babies & Parenting",
-  "baby": "Babies & Parenting",
-  "parenting": "Babies & Parenting",
-  "pets": "Animal Lovers",
-  "animals": "Animal Lovers",
-  "dog": "Animal Lovers",
-  "cat": "Animal Lovers",
-  "turtle": "Animal Lovers",
-  "support": "Support, Healing & Care",
-  "healing": "Support, Healing & Care",
-  "care": "Support, Healing & Care",
-  "diversity": "Connection",
-  "connection": "Connection",
-  "sports": "Sports",
-  "wellness": "Wellness & Mindful Living",
-  "mindful": "Wellness & Mindful Living",
-  "nature": "Nature & Life Journeys",
-  "life": "Nature & Life Journeys",
-  "journeys": "Nature & Life Journeys",
-};
-
-// 🎯 SUBCATEGORÍAS (detectadas automáticamente)
-const SUBCATEGORIES = {
-  // Holidays
-  "halloween": "Halloween",
-  "christmas": "Christmas",
-  "xmas": "Christmas",
-  "thanksgiving": "Thanksgiving",
-  "easter": "Easter",
-  "newyear": "New Year",
-  "independenceday": "Independence Day",
-  "july4": "Independence Day",
-  
-  // Love & Romance
-  "valentine": "Valentine's Day",
-  "valentines": "Valentine's Day",
-  "hugs": "Hugs",
-  
-  // Celebrations
-  "birthday": "Birthday",
-  
-  // Family
-  "mother": "Mother's Day",
-  "mothers": "Mother's Day",
-  "father": "Father's Day",
-  "fathers": "Father's Day",
-  
-  // Animals
-  "general": "General",
-  "dogcat": "Dogs & Cats",
-  
-  // General
-  "general": "General",
-  "scary": "Scary",
-  "cute": "Cute",
-  "funny": "Funny",
-};
-
-// 🔍 Buscar todos los .mp4 recursivamente
 function getAllMp4Files(dir) {
   if (!fs.existsSync(dir)) return [];
   const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -97,7 +28,6 @@ function getAllMp4Files(dir) {
   });
 }
 
-// 📝 Capitalizar palabras
 function capitalize(str) {
   return str
     .split(/[\s_-]+/)
@@ -105,107 +35,8 @@ function capitalize(str) {
     .join(" ");
 }
 
-// 🧠 CLASIFICACIÓN AUTOMÁTICA
-function classifyVideo(filename) {
-  const basename = path.basename(filename, ".mp4");
-  const parts = basename.toLowerCase().split("_");
-  
-  // Extraer objeto (primera palabra)
-  const object = parts[0] || "unknown";
-  
-  // Extraer variante (última parte: 1a, 2b, etc)
-  const lastPart = parts[parts.length - 1] || "";
-  const isVariant = /^[0-9]+[a-z]?$/i.test(lastPart);
-  const variant = isVariant ? lastPart : "1a";
-  
-  // Partes del medio (categorías y subcategorías)
-  const middleParts = isVariant ? parts.slice(1, -1) : parts.slice(1);
-  
-  // 🎯 Detectar TODAS las categorías que aplican
-  const categoriesSet = new Set();
-  const subcategoriesFound = [];
-  const allTags = new Set();
-  
-  // Analizar cada parte del nombre
-  [object, ...middleParts].forEach(part => {
-    const normalized = part.toLowerCase();
-    allTags.add(normalized);
-    
-    // Buscar en categorías principales
-    if (MAIN_CATEGORIES[normalized]) {
-      categoriesSet.add(MAIN_CATEGORIES[normalized]);
-    }
-    
-    // Buscar en subcategorías
-    if (SUBCATEGORIES[normalized]) {
-      subcategoriesFound.push(SUBCATEGORIES[normalized]);
-    }
-    
-    // Casos especiales multi-categoría
-    if (normalized === "zombie") {
-      categoriesSet.add("Holidays");
-      categoriesSet.add("Celebrations");
-      subcategoriesFound.push("Halloween");
-      subcategoriesFound.push("Birthday");
-    }
-    
-    if (normalized === "halloween") {
-      categoriesSet.add("Holidays");
-      subcategoriesFound.push("Halloween");
-    }
-    
-    if (normalized === "birthday") {
-      categoriesSet.add("Celebrations");
-      subcategoriesFound.push("Birthday");
-    }
-  });
-  
-  // Si no se detectaron categorías, usar "Everyday & Appreciation"
-  const categories = categoriesSet.size > 0 
-    ? Array.from(categoriesSet) 
-    : ["Everyday & Appreciation"];
-  
-  // 🎯 ELEGIR CATEGORÍA PRINCIPAL según prioridad de subcategoría
-  let mainCategory = categories[0];
-  
-  // Si hay Birthday en subcategorías → Celebrations es principal
-  if (subcategoriesFound.includes("Birthday")) {
-    mainCategory = "Celebrations";
-  }
-  // Si hay Halloween en subcategorías → Holidays es principal
-  else if (subcategoriesFound.includes("Halloween")) {
-    mainCategory = "Holidays";
-  }
-  // Si hay Christmas en subcategorías → Holidays es principal
-  else if (subcategoriesFound.includes("Christmas")) {
-    mainCategory = "Holidays";
-  }
-  // Si hay Valentine en subcategorías → Love & Romance es principal
-  else if (subcategoriesFound.includes("Valentine's Day")) {
-    mainCategory = "Love & Romance";
-  }
-  // Si hay Mother's/Father's Day → Family & Friendship
-  else if (subcategoriesFound.includes("Mother's Day") || subcategoriesFound.includes("Father's Day")) {
-    mainCategory = "Family & Friendship";
-  }
-  
-  // Primera subcategoría encontrada o "General"
-  const subcategory = subcategoriesFound[0] || "General";
-  
-  return {
-    name: basename,
-    object: capitalize(object),
-    categories: categories,
-    category: mainCategory, // Categoría principal según subcategoría
-    subcategory: subcategory,
-    tags: Array.from(allTags),
-    variant: variant,
-  };
-}
-
-// 📊 GENERAR INDEX
 function generateIndex() {
-  console.log("🚀 Generando index.json automáticamente...\n");
+  console.log("🧠 Generando index.json con auto-aprendizaje...\n");
   
   const mp4Files = getAllMp4Files(videosRoot);
   console.log(`📁 Archivos encontrados: ${mp4Files.length}\n`);
@@ -218,47 +49,76 @@ function generateIndex() {
   const videos = mp4Files.map(filePath => {
     const relativePath = path.relative(path.join(process.cwd(), "public"), filePath);
     const urlPath = "/" + relativePath.replace(/\\/g, "/");
+    const basename = path.basename(filePath, ".mp4");
     
-    const classified = classifyVideo(filePath);
+    // 🧠 Clasificar (aprende automáticamente)
+    const classifications = classifyVideo(basename);
+    
+    const mainClassification = classifications[0];
+    const allCategorySlugs = classifications.map(c => c.categorySlug);
+    const allCategoryNames = classifications.map(c => c.categoryName);
+    const allSubcategories = classifications.flatMap(c => c.subcategories);
+    
+    const tags = [
+      basename.toLowerCase(),
+      mainClassification.object.toLowerCase(),
+      ...allCategorySlugs,
+      ...allSubcategories.map(s => s.toLowerCase()),
+    ];
     
     const videoData = {
-      name: classified.name,
+      name: basename,
       file: urlPath,
-      object: classified.object,
-      category: classified.category,
-      categories: classified.categories,
-      subcategory: classified.subcategory,
-      tags: classified.tags,
-      value: classified.variant,
-      slug: classified.name.toLowerCase(),
+      object: capitalize(mainClassification.object),
+      category: mainClassification.categoryName,
+      categories: allCategorySlugs,
+      subcategory: mainClassification.subcategories[0],
+      value: mainClassification.variant,
+      slug: basename.toLowerCase(),
+      tags: [...new Set(tags)],
     };
     
-    // Log detallado
     console.log(`✅ ${videoData.name}`);
-    console.log(`   🎯 Object: ${videoData.object}`);
-    console.log(`   📂 Categories: ${videoData.categories.join(", ")}`);
-    console.log(`   🏷️  Subcategory: ${videoData.subcategory}`);
-    console.log(`   🎨 Variant: ${videoData.value}\n`);
+    console.log(`   🎨 Object: ${videoData.object}`);
+    console.log(`   📂 Categories: [${allCategoryNames.join(", ")}]`);
+    console.log(`   🏷️  Subcategory: ${videoData.subcategory}\n`);
     
     return videoData;
   });
   
-  // Guardar index
+  // 🧠 OBTENER GLOSARIO APRENDIDO
+  const glossary = getLearnedGlossary();
+  
+  console.log("\n📚 GLOSARIO AUTO-GENERADO:");
+  console.log("═══════════════════════════════════");
+  Object.entries(glossary).forEach(([key, value]) => {
+    console.log(`\n🔹 ${value.object}`);
+    console.log(`   Categorías: ${[...value.categories].join(", ")}`);
+    console.log(`   Subcategorías: ${[...value.subcategories].join(", ")}`);
+    console.log(`   Apariciones: ${value.appearances}`);
+  });
+  console.log("\n═══════════════════════════════════\n");
+  
+  // Guardar index con glosario
   const indexData = {
     videos,
+    glossary, // 🧠 GLOSARIO INCLUIDO
     generated: new Date().toISOString(),
     total: videos.length,
   };
   
   fs.writeFileSync(indexFile, JSON.stringify(indexData, null, 2), "utf8");
-  console.log(`\n✅ Index generado: ${indexFile}`);
-  console.log(`📊 Total de videos: ${videos.length}\n`);
+  console.log(`✅ Index generado: ${indexFile}`);
+  console.log(`📊 Total de videos: ${videos.length}`);
+  console.log(`📚 Objetos en glosario: ${Object.keys(glossary).length}\n`);
   
   // Resumen de categorías
   const categoryCount = {};
   videos.forEach(v => {
-    v.categories.forEach(cat => {
-      categoryCount[cat] = (categoryCount[cat] || 0) + 1;
+    v.categories.forEach(catSlug => {
+      const catObj = BASE_CATEGORIES.find(c => c.slug === catSlug);
+      const catName = catObj?.name || catSlug;
+      categoryCount[catName] = (categoryCount[catName] || 0) + 1;
     });
   });
   
@@ -270,7 +130,6 @@ function generateIndex() {
     });
 }
 
-// Ejecutar
 try {
   generateIndex();
   process.exit(0);
