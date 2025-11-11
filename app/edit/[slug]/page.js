@@ -34,7 +34,7 @@ export default function EditPage({ params }) {
         className="relative flex items-center justify-center"
         style={{
           width: "94vw",    // 🔧 AJUSTA AQUÍ: 90vw, 94vw, 98vw, 100vw
-          height: "92vh",   // 🔧 AJUSTA AQUÍ: 85vh, 90vh, 92vh, 95vh, 100vh
+          height: "150hv",   // 🔧 AJUSTA AQUÍ: 85vh, 90vh, 92vh, 95vh, 100vh
         }}
       >
         <video
