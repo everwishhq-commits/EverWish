@@ -5,7 +5,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { BASE_CATEGORIES, searchVideos, groupVideosByBaseCategory } from "@/lib/search-system";
+import { BASE_CATEGORIES, searchVideos, groupVideosByBaseCategory } from "@/lib/classification-system";
 import "swiper/css";
 
 const COLORS = [
@@ -215,4 +215,4 @@ export default function Categories() {
       )}
     </section>
   );
-          }
+        }
