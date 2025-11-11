@@ -6,15 +6,16 @@ import {
   filterByCategory, 
   getGroupsWithSubcategories,
   filterBySubcategory,
-  searchVideos 
-} from "@/lib/search-system";
+  searchVideos,
+  SUBCATEGORY_GROUPS // 🆕 Importar para mostrar todos los grupos
+} from "@/lib/classification-system";
 
 export default function CategoryPage() {
   const { slug } = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
   const q = searchParams.get("q");
-  const subFromUrl = searchParams.get("sub"); // 🔥 Detectar subcategoría en URL
+  const subFromUrl = searchParams.get("sub");
   
   const [categoryVideos, setCategoryVideos] = useState([]);
   const [groups, setGroups] = useState({});
@@ -43,10 +44,30 @@ export default function CategoryPage() {
         
         setCategoryVideos(filtered);
         
-        // Obtener grupos con subcategorías
-        const groupsWithSubs = getGroupsWithSubcategories(filtered, slug);
-        console.log(`📂 Grupos:`, Object.keys(groupsWithSubs));
-        setGroups(groupsWithSubs);
+        // 🆕 LÓGICA DIFERENTE SEGÚN SI HAY BÚSQUEDA O NO
+        if (q) {
+          // CON BÚSQUEDA: Solo mostrar grupos con videos
+          const groupsWithSubs = getGroupsWithSubcategories(filtered, slug);
+          console.log(`📂 Grupos con resultados:`, Object.keys(groupsWithSubs));
+          setGroups(groupsWithSubs);
+        } else {
+          // SIN BÚSQUEDA: Mostrar TODOS los grupos (incluso vacíos)
+          const allGroups = SUBCATEGORY_GROUPS[slug] || {};
+          const groupsWithCounts = {};
+          
+          Object.entries(allGroups).forEach(([groupName, subcategories]) => {
+            groupsWithCounts[groupName] = subcategories.map(sub => {
+              const count = filtered.filter(v => 
+                v.subcategory === sub || v.contextSubcategories?.includes(sub)
+              ).length;
+              
+              return { name: sub, count };
+            });
+          });
+          
+          console.log(`📂 Todos los grupos:`, Object.keys(groupsWithCounts));
+          setGroups(groupsWithCounts);
+        }
         
       } catch (err) {
         console.error("❌ Error:", err);
@@ -57,7 +78,7 @@ export default function CategoryPage() {
     load();
   }, [slug, q]);
 
-  // 🔥 Abrir modal automáticamente si hay parámetro "sub" en la URL
+  // Auto-abrir modal si hay parámetro "sub"
   useEffect(() => {
     if (subFromUrl && categoryVideos.length > 0 && !activeSub) {
       console.log("🎯 Auto-abriendo modal para subcategoría:", subFromUrl);
@@ -68,9 +89,8 @@ export default function CategoryPage() {
   const openModal = (sub) => {
     console.log("🎯 Abriendo modal:", sub);
     setActiveSub(sub);
-    setModalVideos([]); // Limpiar videos previos
+    setModalVideos([]);
     
-    // Cargar videos después de que el modal sea visible
     setTimeout(() => {
       const videos = filterBySubcategory(categoryVideos, sub);
       console.log("📹 Videos cargados:", videos.length);
@@ -136,13 +156,22 @@ export default function CategoryPage() {
                 {groups[groupName].map((sub, j) => (
                   <motion.button
                     key={j}
-                    onClick={() => openModal(sub.name)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="px-4 py-2 rounded-full bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 hover:border-pink-400 hover:shadow-md font-semibold text-gray-700 flex items-center gap-2 transition-all"
+                    onClick={() => sub.count > 0 && openModal(sub.name)}
+                    whileHover={sub.count > 0 ? { scale: 1.05 } : {}}
+                    whileTap={sub.count > 0 ? { scale: 0.95 } : {}}
+                    disabled={sub.count === 0}
+                    className={`px-4 py-2 rounded-full border font-semibold flex items-center gap-2 transition-all ${
+                      sub.count > 0
+                        ? "bg-gradient-to-r from-pink-50 to-purple-50 border-pink-200 hover:border-pink-400 hover:shadow-md text-gray-700 cursor-pointer"
+                        : "bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed"
+                    }`}
                   >
                     <span>{sub.name}</span>
-                    <span className="text-xs bg-pink-500 text-white px-2 py-1 rounded-full font-bold">
+                    <span className={`text-xs px-2 py-1 rounded-full font-bold ${
+                      sub.count > 0
+                        ? "bg-pink-500 text-white"
+                        : "bg-gray-300 text-gray-500"
+                    }`}>
                       {sub.count}
                     </span>
                   </motion.button>
@@ -174,11 +203,10 @@ export default function CategoryPage() {
         </div>
       )}
 
-      {/* 💫 MODAL CON CONTENIDO VISIBLE */}
+      {/* MODAL */}
       <AnimatePresence mode="wait">
         {activeSub && (
           <>
-            {/* Overlay oscuro */}
             <motion.div
               className="fixed inset-0 bg-black/60 backdrop-blur-sm"
               style={{ zIndex: 9998 }}
@@ -189,7 +217,6 @@ export default function CategoryPage() {
               onClick={closeModal}
             />
             
-            {/* Contenedor del modal */}
             <motion.div
               className="fixed inset-0 flex items-center justify-center p-4"
               style={{ zIndex: 9999 }}
@@ -202,7 +229,6 @@ export default function CategoryPage() {
                 className="bg-white rounded-3xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto p-6 relative" 
                 onClick={(e) => e.stopPropagation()}
               >
-                {/* Botón cerrar */}
                 <button
                   onClick={closeModal}
                   className="sticky top-0 float-right bg-pink-100 hover:bg-pink-200 text-pink-600 rounded-full w-10 h-10 flex items-center justify-center text-2xl font-bold shadow-md z-10 transition-all"
@@ -210,12 +236,10 @@ export default function CategoryPage() {
                   ×
                 </button>
 
-                {/* Título */}
                 <h2 className="text-3xl font-bold text-pink-600 mb-6 text-center clear-both pt-2">
                   {activeSub}
                 </h2>
 
-                {/* Contenido: Loading o Videos */}
                 {modalVideos.length === 0 ? (
                   <div className="text-center py-20">
                     <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-pink-500 mx-auto mb-4"></div>
@@ -239,11 +263,9 @@ export default function CategoryPage() {
                           router.push(`/edit/${video.name}`);
                         }}
                         className="cursor-pointer bg-white rounded-2xl shadow-md border-2 border-pink-100 hover:border-pink-300 hover:shadow-xl overflow-hidden transition-all"
-                        style={{ willChange: 'transform, opacity' }}
                       >
                         <div className="relative w-full aspect-[4/5] bg-pink-50">
                           <video
-                            key={`video-${video.name}-${i}`}
                             src={video.file}
                             className="absolute inset-0 w-full h-full object-cover"
                             playsInline
@@ -251,23 +273,11 @@ export default function CategoryPage() {
                             muted
                             preload="auto"
                             autoPlay
-                            poster={video.file + "#t=0.1"}
-                            controlsList="nodownload"
-                            disablePictureInPicture
-                            onContextMenu={(e) => e.preventDefault()}
-                            onLoadedData={(e) => {
-                              console.log("✅ Video cargado:", video.name);
-                              e.target.play().catch(() => {});
-                            }}
-                            onError={(e) => {
-                              console.error("❌ Error cargando video:", video.file);
-                            }}
                             onMouseEnter={e => e.target.play().catch(() => {})}
                             onMouseLeave={e => { 
                               e.target.pause(); 
                               e.target.currentTime = 0; 
                             }}
-                            style={{ display: 'block', visibility: 'visible' }}
                           />
                         </div>
                         <div className="text-center py-3 px-2 bg-gradient-to-t from-pink-50 to-white">
@@ -286,4 +296,4 @@ export default function CategoryPage() {
       </AnimatePresence>
     </main>
   );
-      }
+            }
