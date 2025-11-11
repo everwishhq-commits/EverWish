@@ -27,31 +27,27 @@ export default function EditPage({ params }) {
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center bg-[#fff7f5]"
-      style={{
-        width: "100vw",
-        height: "100dvh",
-        overflow: "hidden",
-      }}
+      className="fixed inset-0 flex items-center justify-center bg-[#fff7f5] overflow-hidden"
     >
-      <video
-        src={match.file}
-        autoPlay
-        loop
-        muted
-        playsInline
-        controlsList="nodownload noplaybackrate"
-        onContextMenu={(e) => e.preventDefault()}
-        className="
-          h-[92dvh]        /* usa casi toda la altura del contenedor */
-          w-auto           /* que el ancho se ajuste solo */
-          max-w-[94vw]     /* que no se salga por los lados */
-          rounded-2xl
-          shadow-lg
-          object-contain   /* NO recortes, mantén proporción */
-          bg-pink-50
-        "
-      />
+      {/* 🔹 Contenedor del video con tamaño ajustable */}
+      <div
+        className="relative flex items-center justify-center"
+        style={{
+          width: "94vw",    // 🔧 AJUSTA AQUÍ: 90vw, 94vw, 98vw, 100vw
+          height: "92vh",   // 🔧 AJUSTA AQUÍ: 85vh, 90vh, 92vh, 95vh, 100vh
+        }}
+      >
+        <video
+          src={match.file}
+          autoPlay
+          loop
+          muted
+          playsInline
+          controlsList="nodownload noplaybackrate"
+          onContextMenu={(e) => e.preventDefault()}
+          className="w-full h-full rounded-2xl shadow-lg object-contain bg-pink-50"
+        />
+      </div>
     </div>
   );
 }
