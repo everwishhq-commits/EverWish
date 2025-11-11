@@ -14,13 +14,13 @@ export default function CategoryPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const q = searchParams.get("q");
+  const subFromUrl = searchParams.get("sub"); // 🔥 Detectar subcategoría en URL
   
   const [categoryVideos, setCategoryVideos] = useState([]);
   const [groups, setGroups] = useState({});
   const [activeSub, setActiveSub] = useState(null);
   const [modalVideos, setModalVideos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isModalReady, setIsModalReady] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -57,27 +57,30 @@ export default function CategoryPage() {
     load();
   }, [slug, q]);
 
+  // 🔥 Abrir modal automáticamente si hay parámetro "sub" en la URL
+  useEffect(() => {
+    if (subFromUrl && categoryVideos.length > 0 && !activeSub) {
+      console.log("🎯 Auto-abriendo modal para subcategoría:", subFromUrl);
+      openModal(subFromUrl);
+    }
+  }, [subFromUrl, categoryVideos]);
+
   const openModal = (sub) => {
     console.log("🎯 Abriendo modal:", sub);
     setActiveSub(sub);
-    setModalVideos([]);
-    setIsModalReady(false);
+    setModalVideos([]); // Limpiar videos previos
     
-    // Forzar render del modal primero
-    requestAnimationFrame(() => {
-      setIsModalReady(true);
-      setTimeout(() => {
-        const videos = filterBySubcategory(categoryVideos, sub);
-        console.log("📹 Videos cargados:", videos.length);
-        setModalVideos(videos);
-      }, 50);
-    });
+    // Cargar videos después de que el modal sea visible
+    setTimeout(() => {
+      const videos = filterBySubcategory(categoryVideos, sub);
+      console.log("📹 Videos cargados:", videos.length);
+      setModalVideos(videos);
+    }, 100);
   };
 
   const closeModal = () => {
     setActiveSub(null);
     setModalVideos([]);
-    setIsModalReady(false);
   };
 
   if (loading) {
@@ -171,13 +174,13 @@ export default function CategoryPage() {
         </div>
       )}
 
-      {/* 💫 MODAL MEJORADO - AHORA VISIBLE */}
+      {/* 💫 MODAL CON CONTENIDO VISIBLE */}
       <AnimatePresence mode="wait">
-        {activeSub && isModalReady && (
+        {activeSub && (
           <>
-            {/* Overlay oscuro con z-index forzado */}
+            {/* Overlay oscuro */}
             <motion.div
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm"
               style={{ zIndex: 9998 }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -189,20 +192,20 @@ export default function CategoryPage() {
             {/* Contenedor del modal */}
             <motion.div
               className="fixed inset-0 flex items-center justify-center p-4"
-              style={{ zIndex: 9999, pointerEvents: 'none' }}
+              style={{ zIndex: 9999 }}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.25 }}
             >
               <div 
                 className="bg-white rounded-3xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto p-6 relative" 
-                style={{ pointerEvents: 'auto' }}
+                onClick={(e) => e.stopPropagation()}
               >
                 {/* Botón cerrar */}
                 <button
                   onClick={closeModal}
-                  className="sticky top-0 float-right bg-pink-100 hover:bg-pink-200 text-pink-600 rounded-full w-10 h-10 flex items-center justify-center text-2xl font-bold shadow-md z-10"
+                  className="sticky top-0 float-right bg-pink-100 hover:bg-pink-200 text-pink-600 rounded-full w-10 h-10 flex items-center justify-center text-2xl font-bold shadow-md z-10 transition-all"
                 >
                   ×
                 </button>
@@ -222,7 +225,10 @@ export default function CategoryPage() {
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 pb-4">
                     {modalVideos.map((video, i) => (
                       <motion.div
-                        key={i}
+                        key={`${video.name}-${i}`}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05, duration: 0.3 }}
                         whileHover={{ scale: 1.05, y: -5 }}
                         onClick={async () => {
                           try {
@@ -233,24 +239,37 @@ export default function CategoryPage() {
                           router.push(`/edit/${video.name}`);
                         }}
                         className="cursor-pointer bg-white rounded-2xl shadow-md border-2 border-pink-100 hover:border-pink-300 hover:shadow-xl overflow-hidden transition-all"
+                        style={{ willChange: 'transform, opacity' }}
                       >
-                        <video
-                          src={video.file}
-                          className="w-full aspect-[4/5] object-cover bg-pink-50"
-                          playsInline
-                          loop
-                          muted
-                          preload="metadata"
-                          poster={video.file + "#t=0.1"}
-                          controlsList="nodownload"
-                          disablePictureInPicture
-                          onContextMenu={(e) => e.preventDefault()}
-                          onMouseEnter={e => e.target.play().catch(() => {})}
-                          onMouseLeave={e => { 
-                            e.target.pause(); 
-                            e.target.currentTime = 0; 
-                          }}
-                        />
+                        <div className="relative w-full aspect-[4/5] bg-pink-50">
+                          <video
+                            key={`video-${video.name}-${i}`}
+                            src={video.file}
+                            className="absolute inset-0 w-full h-full object-cover"
+                            playsInline
+                            loop
+                            muted
+                            preload="auto"
+                            autoPlay
+                            poster={video.file + "#t=0.1"}
+                            controlsList="nodownload"
+                            disablePictureInPicture
+                            onContextMenu={(e) => e.preventDefault()}
+                            onLoadedData={(e) => {
+                              console.log("✅ Video cargado:", video.name);
+                              e.target.play().catch(() => {});
+                            }}
+                            onError={(e) => {
+                              console.error("❌ Error cargando video:", video.file);
+                            }}
+                            onMouseEnter={e => e.target.play().catch(() => {})}
+                            onMouseLeave={e => { 
+                              e.target.pause(); 
+                              e.target.currentTime = 0; 
+                            }}
+                            style={{ display: 'block', visibility: 'visible' }}
+                          />
+                        </div>
                         <div className="text-center py-3 px-2 bg-gradient-to-t from-pink-50 to-white">
                           <p className="text-sm font-semibold text-gray-700 line-clamp-2">
                             {video.object || video.name}
