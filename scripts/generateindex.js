@@ -73,7 +73,7 @@ const SUBCATEGORIES = {
   "fathers": "Father's Day",
   
   // Animals
-  "turtle": "Turtle",
+  "general": "General",
   "dogcat": "Dogs & Cats",
   
   // General
@@ -119,7 +119,7 @@ function classifyVideo(filename) {
   const variant = isVariant ? lastPart : "1a";
   
   // Partes del medio (categorías y subcategorías)
-  const middleParts = isVariant ? parts.slice(1, -1) : parts.slice(1);
+  const middleParts = isVariant ? parts.slice -1) : parts.slice(1);
   
   // 🎯 Detectar TODAS las categorías que aplican
   const categoriesSet = new Set();
