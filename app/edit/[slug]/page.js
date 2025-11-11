@@ -33,34 +33,42 @@ export default function EditPage({ params }) {
 
   return (
     <div
-      className="relative w-full flex justify-center items-center bg-[#fff7f5]"
+      className="fixed inset-0 bg-[#fff7f5] flex justify-center items-center overflow-hidden"
       style={{
-        height: "100vh",       // 🔹 ocupa toda la altura del dispositivo
-        marginTop: "0",        // 🔹 sin margen arriba
-        marginBottom: "0",     // 🔹 sin margen abajo
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        overflow: "hidden",    // 🔹 evita scrolls o desbordes
+        height: "100vh",      // 🔹 llena toda la pantalla
+        padding: "0",         // 🔹 sin padding
+        margin: "0",          // 🔹 sin margen extra
       }}
     >
-      <video
-        src={match.file}
-        autoPlay
-        loop
-        muted
-        playsInline
-        controlsList="nodownload noplaybackrate"
-        draggable="false"
-        onContextMenu={(e) => e.preventDefault()}
-        className="
-          w-[90vw] max-w-[460px]
-          aspect-[4/5]
-          rounded-2xl shadow-lg
-          object-cover object-center
-          bg-pink-50 overflow-hidden
-        "
-      />
+      <div
+        className="flex items-center justify-center"
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <video
+          src={match.file}
+          autoPlay
+          loop
+          muted
+          playsInline
+          controlsList="nodownload noplaybackrate"
+          draggable="false"
+          onContextMenu={(e) => e.preventDefault()}
+          className="
+            max-h-[95vh]          /* 🔹 no sobrepasa la pantalla */
+            max-w-[90vw]          /* 🔹 se adapta al ancho */
+            aspect-[4/5]          /* 🔹 mantiene proporción */
+            rounded-2xl shadow-lg
+            object-contain object-center
+            bg-pink-50
+          "
+        />
+      </div>
     </div>
   );
 }
