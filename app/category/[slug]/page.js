@@ -20,6 +20,7 @@ export default function CategoryPage() {
   const [activeSub, setActiveSub] = useState(null);
   const [modalVideos, setModalVideos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isModalReady, setIsModalReady] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -57,17 +58,26 @@ export default function CategoryPage() {
   }, [slug, q]);
 
   const openModal = (sub) => {
-  setActiveSub(sub);        // Abre INMEDIATAMENTE
-  setModalVideos([]);       // Muestra skeleton primero
-  setTimeout(() => {        // Carga videos DESPUÉS
-    const videos = filterBySubcategory(categoryVideos, sub);
-    setModalVideos(videos);
-  }, 0);
-};
+    console.log("🎯 Abriendo modal:", sub);
+    setActiveSub(sub);
+    setModalVideos([]);
+    setIsModalReady(false);
+    
+    // Forzar render del modal primero
+    requestAnimationFrame(() => {
+      setIsModalReady(true);
+      setTimeout(() => {
+        const videos = filterBySubcategory(categoryVideos, sub);
+        console.log("📹 Videos cargados:", videos.length);
+        setModalVideos(videos);
+      }, 50);
+    });
+  };
 
   const closeModal = () => {
     setActiveSub(null);
     setModalVideos([]);
+    setIsModalReady(false);
   };
 
   if (loading) {
@@ -161,24 +171,35 @@ export default function CategoryPage() {
         </div>
       )}
 
-      {/* 💫 Modal */}
-      <AnimatePresence>
-        {activeSub && (
+      {/* 💫 MODAL MEJORADO - AHORA VISIBLE */}
+      <AnimatePresence mode="wait">
+        {activeSub && isModalReady && (
           <>
+            {/* Overlay oscuro con z-index forzado */}
             <motion.div
-              className="fixed inset-0 z-[9998] bg-black/50 backdrop-blur-sm"
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+              style={{ zIndex: 9998 }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
               onClick={closeModal}
             />
+            
+            {/* Contenedor del modal */}
             <motion.div
-              className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+              className="fixed inset-0 flex items-center justify-center p-4"
+              style={{ zIndex: 9999, pointerEvents: 'none' }}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.3 }}
             >
-              <div className="bg-white rounded-3xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto p-6 relative">
+              <div 
+                className="bg-white rounded-3xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto p-6 relative" 
+                style={{ pointerEvents: 'auto' }}
+              >
+                {/* Botón cerrar */}
                 <button
                   onClick={closeModal}
                   className="sticky top-0 float-right bg-pink-100 hover:bg-pink-200 text-pink-600 rounded-full w-10 h-10 flex items-center justify-center text-2xl font-bold shadow-md z-10"
@@ -186,13 +207,16 @@ export default function CategoryPage() {
                   ×
                 </button>
 
+                {/* Título */}
                 <h2 className="text-3xl font-bold text-pink-600 mb-6 text-center clear-both pt-2">
                   {activeSub}
                 </h2>
 
+                {/* Contenido: Loading o Videos */}
                 {modalVideos.length === 0 ? (
                   <div className="text-center py-20">
-                    <p className="text-gray-500 text-lg">No cards found</p>
+                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-pink-500 mx-auto mb-4"></div>
+                    <p className="text-gray-500 text-lg">Loading cards...</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 pb-4">
@@ -243,4 +267,4 @@ export default function CategoryPage() {
       </AnimatePresence>
     </main>
   );
-  }
+      }
