@@ -33,42 +33,34 @@ export default function EditPage({ params }) {
 
   return (
     <div
-      className="fixed inset-0 bg-[#fff7f5] flex justify-center items-center overflow-hidden"
+      className="fixed inset-0 flex items-center justify-center bg-[#fff7f5]"
       style={{
-        height: "100vh",      // 🔹 llena toda la pantalla
-        padding: "0",         // 🔹 sin padding
-        margin: "0",          // 🔹 sin margen extra
+        width: "100vw",      // 🔹 ocupa todo el ancho visible
+        height: "100dvh",    // 🔹 usa altura total real del dispositivo (corrige notch o barra)
+        padding: "0",        // 🔹 sin padding
+        margin: "0",         // 🔹 sin márgenes
+        overflow: "hidden",  // 🔹 evita scroll
       }}
     >
-      <div
-        className="flex items-center justify-center"
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <video
-          src={match.file}
-          autoPlay
-          loop
-          muted
-          playsInline
-          controlsList="nodownload noplaybackrate"
-          draggable="false"
-          onContextMenu={(e) => e.preventDefault()}
-          className="
-            max-h-[95vh]          /* 🔹 no sobrepasa la pantalla */
-            max-w-[90vw]          /* 🔹 se adapta al ancho */
-            aspect-[4/5]          /* 🔹 mantiene proporción */
-            rounded-2xl shadow-lg
-            object-contain object-center
-            bg-pink-50
-          "
-        />
-      </div>
+      <video
+        src={match.file}
+        autoPlay
+        loop
+        muted
+        playsInline
+        controlsList="nodownload noplaybackrate"
+        draggable="false"
+        onContextMenu={(e) => e.preventDefault()}
+        className="
+          h-[88dvh]           /* 🔹 ocupa el 88 % del alto del contenedor */
+          w-auto              /* 🔹 ajusta ancho automáticamente */
+          max-w-[92vw]        /* 🔹 no se sale del ancho de pantalla */
+          aspect-[4/5]
+          rounded-2xl shadow-lg
+          object-contain object-center
+          bg-pink-50
+        "
+      />
     </div>
   );
 }
