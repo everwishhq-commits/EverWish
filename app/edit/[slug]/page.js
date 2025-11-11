@@ -35,9 +35,13 @@ export default function EditPage({ params }) {
     <div
       className="relative w-full flex justify-center items-center bg-[#fff7f5]"
       style={{
-        height: "460px",     // 🔹 alto del contenedor (sube/baja el área total)
-        marginTop: "23vh",    // 🔹 espacio superior
-        marginBottom: "2vh", // 🔹 espacio inferior
+        height: "100vh",       // 🔹 ocupa toda la altura del dispositivo
+        marginTop: "0",        // 🔹 sin margen arriba
+        marginBottom: "0",     // 🔹 sin margen abajo
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "hidden",    // 🔹 evita scrolls o desbordes
       }}
     >
       <video
@@ -50,8 +54,7 @@ export default function EditPage({ params }) {
         draggable="false"
         onContextMenu={(e) => e.preventDefault()}
         className="
-          w-[460px] sm:w-[400px] md:w-[340px]
-          h-[600px]
+          w-[90vw] max-w-[460px]
           aspect-[4/5]
           rounded-2xl shadow-lg
           object-cover object-center
