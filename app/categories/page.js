@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { BASE_CATEGORIES, searchVideos, groupVideosByBaseCategory } from "@/lib/search-system";
+import { BASE_CATEGORIES, searchVideos, groupVideosByBaseCategory } from "@/lib/classification-system";
 
 export default function CategoriesPage() {
   const router = useRouter();
@@ -171,4 +171,4 @@ export default function CategoriesPage() {
       `}</style>
     </div>
   );
-    }
+          }
