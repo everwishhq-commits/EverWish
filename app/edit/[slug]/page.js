@@ -8,17 +8,11 @@ export default function EditPage({ params }) {
 
   useEffect(() => {
     async function loadVideo() {
-      try {
-        const res = await fetch("/api/videos");
-        const data = await res.json();
-        const videos = data.videos || data || [];
-        const found = videos.find(
-          (v) => v.slug === slug || v.name === slug
-        );
-        setMatch(found || null);
-      } catch (err) {
-        console.error("❌ Error cargando video:", err);
-      }
+      const res = await fetch("/api/videos");
+      const data = await res.json();
+      const videos = data.videos || data || [];
+      const found = videos.find((v) => v.slug === slug || v.name === slug);
+      setMatch(found || null);
     }
     loadVideo();
   }, [slug]);
@@ -35,11 +29,9 @@ export default function EditPage({ params }) {
     <div
       className="fixed inset-0 flex items-center justify-center bg-[#fff7f5]"
       style={{
-        width: "100vw",      // 🔹 ocupa todo el ancho visible
-        height: "100dvh",    // 🔹 usa altura total real del dispositivo (corrige notch o barra)
-        padding: "0",        // 🔹 sin padding
-        margin: "0",         // 🔹 sin márgenes
-        overflow: "hidden",  // 🔹 evita scroll
+        width: "100vw",
+        height: "100dvh",
+        overflow: "hidden",
       }}
     >
       <video
@@ -49,15 +41,14 @@ export default function EditPage({ params }) {
         muted
         playsInline
         controlsList="nodownload noplaybackrate"
-        draggable="false"
         onContextMenu={(e) => e.preventDefault()}
         className="
-          h-[88dvh]           /* 🔹 ocupa el 88 % del alto del contenedor */
-          w-auto              /* 🔹 ajusta ancho automáticamente */
-          max-w-[92vw]        /* 🔹 no se sale del ancho de pantalla */
-          aspect-[4/5]
-          rounded-2xl shadow-lg
-          object-contain object-center
+          h-[92dvh]        /* usa casi toda la altura del contenedor */
+          w-auto           /* que el ancho se ajuste solo */
+          max-w-[94vw]     /* que no se salga por los lados */
+          rounded-2xl
+          shadow-lg
+          object-contain   /* NO recortes, mantén proporción */
           bg-pink-50
         "
       />
