@@ -34,7 +34,7 @@ export default function EditPage({ params }) {
         className="relative flex items-center justify-center"
         style={{
           width: "94vw",    // 🔧 AJUSTA AQUÍ: 90vw, 94vw, 98vw, 100vw
-          height: "150hv",   // 🔧 AJUSTA AQUÍ: 85vh, 90vh, 92vh, 95vh, 100vh
+          height: "92vh",   // 🔧 AJUSTA AQUÍ: 85vh, 90vh, 92vh, 95vh, 100vh
         }}
       >
         <video
@@ -45,9 +45,13 @@ export default function EditPage({ params }) {
           playsInline
           controlsList="nodownload noplaybackrate"
           onContextMenu={(e) => e.preventDefault()}
-          className="w-full h-full rounded-2xl shadow-lg object-contain bg-pink-50"
+          className="rounded-2xl shadow-lg object-contain bg-pink-50"
+          style={{
+            width: "100%",   // 🔹 Video ocupa 100% del ancho del contenedor
+            height: "150%",  // 🔹 Video ocupa 100% del alto del contenedor
+          }}
         />
       </div>
     </div>
   );
-}
+            }
