@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import FullscreenPreview from "./FullscreenPreview";
+import FullscreenPreview from "./Fullscreen-Preview";
 
 export default function Carousel() {
   const router = useRouter();
