@@ -100,17 +100,12 @@ export default function Carousel() {
   const handleClick = (video) => {
     const slug = video.slug || video.name;
     
-    // En DESKTOP: mostrar preview fullscreen
-    if (window.innerWidth >= 1024) {
-      setPreviewData({
-        videoSrc: video.file,
-        slug,
-      });
-      setShowPreview(true);
-    } else {
-      // En MOBILE: ir directo a edit
-      router.push(`/edit/${slug}`);
-    }
+    // 🔥 AHORA SIEMPRE USA PREVIEW (PC y móvil)
+    setPreviewData({
+      videoSrc: video.file,
+      slug,
+    });
+    setShowPreview(true);
   };
 
   if (videos.length === 0) {
@@ -189,7 +184,7 @@ export default function Carousel() {
         </div>
       </div>
 
-      {/* Preview Fullscreen (solo PC) */}
+      {/* Preview Fullscreen (PC y móvil) */}
       {showPreview && previewData && (
         <FullscreenPreview
           videoSrc={previewData.videoSrc}
