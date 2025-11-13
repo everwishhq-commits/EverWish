@@ -1,9 +1,7 @@
 #!/usr/bin/env node
 /**
- * 🚀 GENERADOR SIMPLIFICADO - LEE SOLO EL NOMBRE DEL ARCHIVO
- * Formato: zombie_halloween_birthday_1A.mp4
- * Regla: Lo que está ANTES del último _ es categoría/subcategoría
- *        Lo que está DESPUÉS del último _ es el valor (1A, 2B, etc)
+ * 🚀 GENERADOR FLEXIBLE
+ * Soporta: zombie_halloween_1A.mp4 o zombie_halloween_birthday_1A.mp4
  */
 
 import fs from "fs";
@@ -13,9 +11,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ===== MAPEO DIRECTO: palabra → categoría =====
 const CATEGORY_MAP = {
-  // Holidays
   'halloween': { cat: 'seasonal-global-celebrations', sub: 'Halloween' },
   'christmas': { cat: 'seasonal-global-celebrations', sub: 'Christmas' },
   'xmas': { cat: 'seasonal-global-celebrations', sub: 'Christmas' },
@@ -24,40 +20,33 @@ const CATEGORY_MAP = {
   'valentine': { cat: 'seasonal-global-celebrations', sub: "Valentine's Day" },
   'valentines': { cat: 'seasonal-global-celebrations', sub: "Valentine's Day" },
   'july4': { cat: 'seasonal-global-celebrations', sub: 'Independence Day' },
+  'independenceday': { cat: 'seasonal-global-celebrations', sub: 'Independence Day' },
   'mothersday': { cat: 'seasonal-global-celebrations', sub: "Mother's Day" },
   'fathersday': { cat: 'seasonal-global-celebrations', sub: "Father's Day" },
-  
-  // Celebrations
   'birthday': { cat: 'birthdays-celebrations', sub: 'Birthday' },
   'party': { cat: 'birthdays-celebrations', sub: 'Party' },
-  
-  // Love
   'love': { cat: 'love-weddings-anniversaries', sub: 'Love' },
+  'romance': { cat: 'love-weddings-anniversaries', sub: 'Romance' },
   'wedding': { cat: 'love-weddings-anniversaries', sub: 'Wedding' },
   'anniversary': { cat: 'love-weddings-anniversaries', sub: 'Anniversary' },
   'hugs': { cat: 'love-weddings-anniversaries', sub: 'Hugs' },
-  
-  // Animals
   'seaanimals': { cat: 'pets-animal-lovers', sub: 'Sea Animals' },
   'farmanimals': { cat: 'pets-animal-lovers', sub: 'Farm Animals' },
   'flyinganimals': { cat: 'pets-animal-lovers', sub: 'Flying Animals' },
   'wildanimals': { cat: 'pets-animal-lovers', sub: 'Wild Animals' },
   'pets': { cat: 'pets-animal-lovers', sub: 'Companion Animals' },
+  'furryfriends': { cat: 'pets-animal-lovers', sub: 'Companion Animals' },
   'dogs': { cat: 'pets-animal-lovers', sub: 'Dogs' },
   'cats': { cat: 'pets-animal-lovers', sub: 'Cats' },
-  
-  // Life Journeys
+  'family': { cat: 'family-friendship', sub: 'Family' },
+  'general': { cat: 'life-journeys-transitions', sub: 'Just Because' },
   'newbeginning': { cat: 'life-journeys-transitions', sub: 'New Home' },
   'newbeginnings': { cat: 'life-journeys-transitions', sub: 'New Home' },
   'newhome': { cat: 'life-journeys-transitions', sub: 'New Home' },
   'moving': { cat: 'life-journeys-transitions', sub: 'Moving' },
   'thankyou': { cat: 'life-journeys-transitions', sub: 'Thank You' },
-  
-  // Work
   'graduation': { cat: 'work', sub: 'Graduation' },
   'work': { cat: 'work', sub: 'New Job' },
-  
-  // Sports
   'sports': { cat: 'sports', sub: 'Soccer' },
   'gym': { cat: 'sports', sub: 'Gym' },
   'yoga': { cat: 'sports', sub: 'Yoga' },
@@ -81,22 +70,20 @@ function capitalize(str) {
 }
 
 function classifyFromFilename(filename) {
-  // Remover extensión
   const basename = filename.replace(/\.(mp4|MP4)$/, "");
-  
-  // Separar por _
   const parts = basename.split("_");
   
-  // El último elemento es el valor (1A, 2B, etc.)
-  const value = parts[parts.length - 1];
+  // Último elemento es el valor (1A, 2B, etc.)
+  const lastPart = parts[parts.length - 1];
+  const isValue = /^[0-9]+[A-Z]$/i.test(lastPart);
   
-  // Todo lo demás son categorías/subcategorías
-  const nameParts = parts.slice(0, -1);
+  const value = isValue ? lastPart.toUpperCase() : "1A";
+  const nameParts = isValue ? parts.slice(0, -1) : parts;
   
-  // El primer elemento es el objeto
-  const object = capitalize(nameParts[0]);
+  // Primer elemento es el objeto
+  const object = capitalize(nameParts[0] || "Unknown");
   
-  // Buscar categorías en las partes restantes
+  // Buscar categorías en TODAS las partes
   const foundCategories = new Set();
   const foundSubcategories = new Set();
   
@@ -108,7 +95,7 @@ function classifyFromFilename(filename) {
     }
   });
   
-  // Si no encontró nada, fallback
+  // Fallback
   if (foundCategories.size === 0) {
     foundCategories.add('life-journeys-transitions');
     foundSubcategories.add('Just Because');
@@ -127,7 +114,7 @@ function generateIndex() {
   const videosRoot = path.join(process.cwd(), "public/videos");
   const indexFile = path.join(videosRoot, "index.json");
   
-  console.log("🚀 Generador SIMPLIFICADO - Solo lectura directa del nombre\n");
+  console.log("🚀 Generador FLEXIBLE\n");
   console.log(`📁 Carpeta: ${videosRoot}\n`);
   
   if (!fs.existsSync(videosRoot)) {
@@ -159,7 +146,6 @@ function generateIndex() {
       subcategories: classification.subcategories,
       value: classification.value,
       slug: nameWithoutExt.toLowerCase(),
-      // Para búsqueda: incluir TODAS las partes del nombre
       searchTerms: classification.searchTerms,
     };
     
@@ -190,4 +176,4 @@ try {
 } catch (error) {
   console.error("❌ Error:", error);
   process.exit(1);
-    }
+}
