@@ -9,14 +9,16 @@ export default function Carousel() {
   const autoplayRef = useRef(null);
   const pauseRef = useRef(false);
 
+  // Swipe state
   const startX = useRef(0);
   const startY = useRef(0);
   const moved = useRef(false);
   const direction = useRef(null);
 
-  const TAP_THRESHOLD = 10;
-  const SWIPE_THRESHOLD = 40;
+  const TAP_THRESHOLD = 12;
+  const SWIPE_THRESHOLD = 50;
 
+  // Autoplay
   const startAutoplay = () => {
     clearInterval(autoplayRef.current);
     if (!pauseRef.current && videos.length > 0) {
@@ -26,13 +28,15 @@ export default function Carousel() {
     }
   };
 
+  // Load videos
   useEffect(() => {
-    async function loadAndFilter() {
+    async function load() {
       try {
         const res = await fetch("/api/videos");
         const data = await res.json();
         const allVideos = data.videos || data || [];
 
+        // Agrupar por base del slug
         const grouped = {};
         allVideos.forEach((v) => {
           const slugToUse = v.slug || v.name;
@@ -41,7 +45,8 @@ export default function Carousel() {
           grouped[base].push(v);
         });
 
-        const uniqueVideos = Object.values(grouped).map((arr) =>
+        // Ordenar por popularidad/fecha
+        const unique = Object.values(grouped).map((arr) =>
           arr.sort((a, b) => {
             const aDate = a.updatedAt || a.date || 0;
             const bDate = b.updatedAt || b.date || 0;
@@ -51,16 +56,13 @@ export default function Carousel() {
           })[0]
         );
 
-        const top10 = uniqueVideos.slice(0, 10);
-        setVideos(top10);
+        setVideos(unique.slice(0, 10));
       } catch (err) {
         console.error("❌ Error cargando videos:", err);
       }
     }
 
-    loadAndFilter();
-    const interval = setInterval(loadAndFilter, 24 * 60 * 60 * 1000);
-    return () => clearInterval(interval);
+    load();
   }, []);
 
   useEffect(() => {
@@ -68,25 +70,27 @@ export default function Carousel() {
     return () => clearInterval(autoplayRef.current);
   }, [videos]);
 
+  // Touch handlers
   const handleTouchStart = (e) => {
     const t = e.touches[0];
     startX.current = t.clientX;
     startY.current = t.clientY;
     moved.current = false;
     direction.current = null;
+
     pauseRef.current = true;
     clearInterval(autoplayRef.current);
   };
 
   const handleTouchMove = (e) => {
     const t = e.touches[0];
-    const deltaX = t.clientX - startX.current;
-    const deltaY = t.clientY - startY.current;
+    const dx = t.clientX - startX.current;
+    const dy = t.clientY - startY.current;
 
-    if (Math.abs(deltaX) > TAP_THRESHOLD || Math.abs(deltaY) > TAP_THRESHOLD) {
+    if (Math.abs(dx) > TAP_THRESHOLD || Math.abs(dy) > TAP_THRESHOLD) {
       moved.current = true;
       direction.current =
-        Math.abs(deltaX) > Math.abs(deltaY) ? "horizontal" : "vertical";
+        Math.abs(dx) > Math.abs(dy) ? "horizontal" : "vertical";
       e.stopPropagation();
     }
   };
@@ -96,7 +100,7 @@ export default function Carousel() {
 
     if (!moved.current) {
       const tapped = videos[index];
-      const slugToUse = tapped?.slug || tapped?.name;
+      const slugToUse = tapped.slug || tapped.name;
       if (slugToUse) handleClick(slugToUse);
     } else if (direction.current === "horizontal") {
       const diffX = startX.current - e.changedTouches[0].clientX;
@@ -115,12 +119,34 @@ export default function Carousel() {
     }, 3000);
   };
 
+  // Desktop slide change
+  const nextSlide = () => {
+    setIndex((prev) => (prev + 1) % videos.length);
+    pauseTemporarily();
+  };
+
+  const prevSlide = () => {
+    setIndex((prev) => (prev - 1 + videos.length) % videos.length);
+    pauseTemporarily();
+  };
+
+  const pauseTemporarily = () => {
+    pauseRef.current = true;
+    clearInterval(autoplayRef.current);
+    setTimeout(() => {
+      pauseRef.current = false;
+      startAutoplay();
+    }, 3000);
+  };
+
+  // Click en video
   const handleClick = async (slug) => {
     try {
       const elem = document.documentElement;
       if (elem.requestFullscreen) await elem.requestFullscreen();
       else if (elem.webkitRequestFullscreen)
         await elem.webkitRequestFullscreen();
+
       await new Promise((r) => setTimeout(r, 150));
       router.push(`/edit/${slug}`);
     } catch {
@@ -138,7 +164,7 @@ export default function Carousel() {
 
   return (
     <div
-      className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none"
+      className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none group"
       style={{ touchAction: "pan-y" }}
     >
       <div
@@ -147,15 +173,18 @@ export default function Carousel() {
         onTouchEnd={handleTouchEnd}
         className="relative w-full max-w-5xl flex justify-center items-center h-[440px]"
       >
+        {/* VIDEOS */}
         {videos.map((video, i) => {
           const offset = (i - index + videos.length) % videos.length;
+          const isCenter = offset === 0;
+
           const positionClass =
             offset === 0
               ? "translate-x-0 scale-100 z-20 opacity-100"
               : offset === 1
-              ? "translate-x-full scale-90 z-10 opacity-50"
+              ? "translate-x-full scale-90 z-10 opacity-40"
               : offset === videos.length - 1
-              ? "-translate-x-full scale-90 z-10 opacity-50"
+              ? "-translate-x-full scale-90 z-10 opacity-40"
               : "opacity-0 z-0";
 
           return (
@@ -169,33 +198,72 @@ export default function Carousel() {
                 loop
                 muted
                 playsInline
-                controlsList="nodownload noplaybackrate"
                 draggable="false"
                 onContextMenu={(e) => e.preventDefault()}
-                onError={(e) => {
-                  console.error("❌ Error cargando video:", video.file);
-                  // NO mostrar ningún mensaje visual
+                onClick={() => {
+                  if (isCenter) {
+                    const slugToUse = video.slug || video.name;
+                    if (slugToUse) handleClick(slugToUse);
+                  }
                 }}
-                className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover object-center bg-pink-50 overflow-hidden"
+                style={{ pointerEvents: isCenter ? "auto" : "none" }}
+                className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-xl object-cover bg-pink-50"
               />
             </div>
           );
         })}
+
+        {/* FLECHA IZQUIERDA — SOLO PC — visible sólo en hover */}
+        <button
+          onClick={prevSlide}
+          className="hidden md:flex opacity-0 group-hover:opacity-100 transition-opacity
+                     absolute left-4 top-1/2 -translate-y-1/2
+                     bg-white/70 hover:bg-white shadow-lg
+                     rounded-full w-12 h-12 justify-center items-center
+                     text-pink-600 text-3xl cursor-pointer"
+        >
+          {/* SVG minimal */}
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M15 6L9 12L15 18"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+
+        {/* FLECHA DERECHA — SOLO PC — visible sólo en hover */}
+        <button
+          onClick={nextSlide}
+          className="hidden md:flex opacity-0 group-hover:opacity-100 transition-opacity
+                     absolute right-4 top-1/2 -translate-y-1/2
+                     bg-white/70 hover:bg-white shadow-lg
+                     rounded-full w-12 h-12 justify-center items-center
+                     text-pink-600 text-3xl cursor-pointer"
+        >
+          {/* SVG minimal */}
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M9 6L15 12L9 18"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
       </div>
 
-      {/* Dots */}
+      {/* DOTS */}
       <div className="flex mt-5 gap-2">
         {videos.map((_, i) => (
           <span
             key={i}
             onClick={() => {
               setIndex(i);
-              pauseRef.current = true;
-              clearInterval(autoplayRef.current);
-              setTimeout(() => {
-                pauseRef.current = false;
-                startAutoplay();
-              }, 3000);
+              pauseTemporarily();
             }}
             className={`w-3 h-3 rounded-full cursor-pointer transition-all ${
               i === index ? "bg-pink-500 scale-125" : "bg-gray-300"
