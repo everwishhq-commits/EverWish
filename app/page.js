@@ -30,11 +30,11 @@ export default function Page() {
             <h1 className="text-3xl font-bold mb-3 text-gray-800 text-center">
               Share moments that last forever 💫
             </h1>
-            <p className="text-gray-500 mb-10 text-center">
+            <p className="text-gray-500 mb-6 text-center">
               With <b>Everwish</b>, every card becomes a memory you can relive.
             </p>
 
-            {/* 🎞️ Carrusel */}
+            {/* 🎞️ Carrusel - más cerca del texto */}
             <div className="w-full max-w-4xl mb-12">
               <Carousel />
             </div>
