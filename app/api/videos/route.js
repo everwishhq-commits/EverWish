@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
-import { loadGlossary } from "@/lib/classification-system";
 
 export async function GET() {
   try {
@@ -17,18 +16,12 @@ export async function GET() {
     const content = fs.readFileSync(indexPath, "utf-8");
     const data = JSON.parse(content);
     
-    // 🧠 CARGAR GLOSARIO si existe
-    if (data.glossary) {
-      loadGlossary(data.glossary);
-      console.log(`📚 Glosario cargado con ${Object.keys(data.glossary).length} objetos`);
-    }
-    
     console.log(`✅ API responded with ${data.videos?.length || 0} videos`);
     
+    // 💡 YA NO USAMOS GLOSARIO — Eliminado completamente
     return NextResponse.json(
       { 
-        videos: data.videos || [],
-        glossary: data.glossary || {} // Incluir para debugging
+        videos: data.videos || []
       },
       {
         headers: {
