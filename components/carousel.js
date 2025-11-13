@@ -1,20 +1,14 @@
 "use client";
-
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import FullscreenPreview from "./fullscreen-preview";
 
 export default function Carousel() {
   const router = useRouter();
   const [videos, setVideos] = useState([]);
   const [index, setIndex] = useState(0);
-  const [showPreview, setShowPreview] = useState(false);
-  const [previewData, setPreviewData] = useState(null);
-
   const autoplayRef = useRef(null);
   const pauseRef = useRef(false);
 
-  // Para detectar taps y swipes
   const startX = useRef(0);
   const startY = useRef(0);
   const moved = useRef(false);
@@ -23,7 +17,6 @@ export default function Carousel() {
   const TAP_THRESHOLD = 10;
   const SWIPE_THRESHOLD = 40;
 
-  // Autoplay cada 5s
   const startAutoplay = () => {
     clearInterval(autoplayRef.current);
     if (!pauseRef.current && videos.length > 0) {
@@ -33,21 +26,41 @@ export default function Carousel() {
     }
   };
 
-  // Cargar videos desde /public/videos/index.json
   useEffect(() => {
-    async function loadVideos() {
+    async function loadAndFilter() {
       try {
-        const res = await fetch("/api/videos", { cache: "no-store" });
+        const res = await fetch("/api/videos");
         const data = await res.json();
-        const allVideos = data.videos || [];
+        const allVideos = data.videos || data || [];
 
-        setVideos(allVideos.slice(0, 10));
+        const grouped = {};
+        allVideos.forEach((v) => {
+          const slugToUse = v.slug || v.name;
+          const base = slugToUse.replace(/_\d+[A-Z]?$/i, "");
+          if (!grouped[base]) grouped[base] = [];
+          grouped[base].push(v);
+        });
+
+        const uniqueVideos = Object.values(grouped).map((arr) =>
+          arr.sort((a, b) => {
+            const aDate = a.updatedAt || a.date || 0;
+            const bDate = b.updatedAt || b.date || 0;
+            const aPop = a.popularity || 0;
+            const bPop = b.popularity || 0;
+            return bPop - aPop || bDate - aDate;
+          })[0]
+        );
+
+        const top10 = uniqueVideos.slice(0, 10);
+        setVideos(top10);
       } catch (err) {
-        console.error("Error cargando videos:", err);
+        console.error("❌ Error cargando videos:", err);
       }
     }
 
-    loadVideos();
+    loadAndFilter();
+    const interval = setInterval(loadAndFilter, 24 * 60 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -55,19 +68,16 @@ export default function Carousel() {
     return () => clearInterval(autoplayRef.current);
   }, [videos]);
 
-  // TOUCH START
   const handleTouchStart = (e) => {
     const t = e.touches[0];
     startX.current = t.clientX;
     startY.current = t.clientY;
     moved.current = false;
     direction.current = null;
-
     pauseRef.current = true;
     clearInterval(autoplayRef.current);
   };
 
-  // TOUCH MOVE
   const handleTouchMove = (e) => {
     const t = e.touches[0];
     const deltaX = t.clientX - startX.current;
@@ -81,16 +91,14 @@ export default function Carousel() {
     }
   };
 
-  // TOUCH END
   const handleTouchEnd = (e) => {
     e.stopPropagation();
 
     if (!moved.current) {
-      // TAPPED CARD
       const tapped = videos[index];
-      if (tapped) handleClick(tapped);
+      const slugToUse = tapped?.slug || tapped?.name;
+      if (slugToUse) handleClick(slugToUse);
     } else if (direction.current === "horizontal") {
-      // SWIPE
       const diffX = startX.current - e.changedTouches[0].clientX;
       if (Math.abs(diffX) > SWIPE_THRESHOLD) {
         setIndex((prev) =>
@@ -107,110 +115,94 @@ export default function Carousel() {
     }, 3000);
   };
 
-  // CLICK VIDEO
-  const handleClick = (video) => {
-    const slug = video.slug || video.name;
-
-    if (window.innerWidth >= 1024) {
-      // PC → Preview fullscreen
-      setPreviewData({
-        videoSrc: video.file,
-        slug,
-      });
-      setShowPreview(true);
-    } else {
-      // Mobile → directo a editar
+  const handleClick = async (slug) => {
+    try {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) await elem.requestFullscreen();
+      else if (elem.webkitRequestFullscreen)
+        await elem.webkitRequestFullscreen();
+      await new Promise((r) => setTimeout(r, 150));
+      router.push(`/edit/${slug}`);
+    } catch {
       router.push(`/edit/${slug}`);
     }
   };
 
-  // MIENTRAS CARGA
   if (videos.length === 0) {
     return (
       <div className="w-full flex justify-center items-center h-[440px]">
-        <p className="text-gray-400 text-lg">Loading carousel...</p>
+        <p className="text-gray-400 text-lg">Loading videos...</p>
       </div>
     );
   }
 
   return (
-    <>
-      <div className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none">
-        {/* CARRUSEL */}
-        <div
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          onClick={() => {
-            const current = videos[index];
-            if (current) handleClick(current);
-          }}
-          className="relative w-full max-w-5xl flex justify-center items-center h-[440px] cursor-pointer"
-          style={{ touchAction: "pan-y" }}
-        >
-          {videos.map((video, i) => {
-            const offset = (i - index + videos.length) % videos.length;
+    <div
+      className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none"
+      style={{ touchAction: "pan-y" }}
+    >
+      <div
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        className="relative w-full max-w-5xl flex justify-center items-center h-[440px]"
+      >
+        {videos.map((video, i) => {
+          const offset = (i - index + videos.length) % videos.length;
+          const positionClass =
+            offset === 0
+              ? "translate-x-0 scale-100 z-20 opacity-100"
+              : offset === 1
+              ? "translate-x-full scale-90 z-10 opacity-50"
+              : offset === videos.length - 1
+              ? "-translate-x-full scale-90 z-10 opacity-50"
+              : "opacity-0 z-0";
 
-            const positionClass =
-              offset === 0
-                ? "translate-x-0 scale-100 z-20 opacity-100"
-                : offset === 1
-                ? "translate-x-full scale-90 z-10 opacity-50"
-                : offset === videos.length - 1
-                ? "-translate-x-full scale-90 z-10 opacity-50"
-                : "opacity-0 z-0";
-
-            return (
-              <div
-                key={i}
-                className={`absolute transition-all duration-500 ease-in-out ${positionClass}`}
-              >
-                <video
-                  src={video.file}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  controlsList="nodownload noplaybackrate"
-                  draggable="false"
-                  onContextMenu={(e) => e.preventDefault()}
-                  className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover object-center bg-pink-50 overflow-hidden pointer-events-none"
-                />
-              </div>
-            );
-          })}
-        </div>
-
-        {/* DOTS */}
-        <div className="flex mt-5 gap-2">
-          {videos.map((_, i) => (
-            <span
+          return (
+            <div
               key={i}
-              onClick={() => {
-                setIndex(i);
-                pauseRef.current = true;
-                clearInterval(autoplayRef.current);
-
-                setTimeout(() => {
-                  pauseRef.current = false;
-                  startAutoplay();
-                }, 3000);
-              }}
-              className={`w-3 h-3 rounded-full cursor-pointer transition-all ${
-                i === index ? "bg-pink-500 scale-125" : "bg-gray-300"
-              }`}
-            ></span>
-          ))}
-        </div>
+              className={`absolute transition-all duration-500 ease-in-out ${positionClass}`}
+            >
+              <video
+                src={video.file}
+                autoPlay
+                loop
+                muted
+                playsInline
+                controlsList="nodownload noplaybackrate"
+                draggable="false"
+                onContextMenu={(e) => e.preventDefault()}
+                onError={(e) => {
+                  console.error("❌ Error cargando video:", video.file);
+                  // NO mostrar ningún mensaje visual
+                }}
+                className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover object-center bg-pink-50 overflow-hidden"
+              />
+            </div>
+          );
+        })}
       </div>
 
-      {/* PREVIEW FULLSCREEN SOLO PC */}
-      {showPreview && previewData && (
-        <FullscreenPreview
-          videoSrc={previewData.videoSrc}
-          slug={previewData.slug}
-        />
-      )}
-    </>
+      {/* Dots */}
+      <div className="flex mt-5 gap-2">
+        {videos.map((_, i) => (
+          <span
+            key={i}
+            onClick={() => {
+              setIndex(i);
+              pauseRef.current = true;
+              clearInterval(autoplayRef.current);
+              setTimeout(() => {
+                pauseRef.current = false;
+                startAutoplay();
+              }, 3000);
+            }}
+            className={`w-3 h-3 rounded-full cursor-pointer transition-all ${
+              i === index ? "bg-pink-500 scale-125" : "bg-gray-300"
+            }`}
+          ></span>
+        ))}
+      </div>
+    </div>
   );
-        }
+}
