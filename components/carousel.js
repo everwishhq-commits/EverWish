@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import FullscreenPreview from "./Fullscreen-Preview";
+import FullscreenPreview from "./fullscreen-preview";
 
 export default function Carousel() {
   const router = useRouter();
@@ -10,9 +10,11 @@ export default function Carousel() {
   const [index, setIndex] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
   const [previewData, setPreviewData] = useState(null);
+
   const autoplayRef = useRef(null);
   const pauseRef = useRef(false);
 
+  // Para detectar taps y swipes
   const startX = useRef(0);
   const startY = useRef(0);
   const moved = useRef(false);
@@ -21,6 +23,7 @@ export default function Carousel() {
   const TAP_THRESHOLD = 10;
   const SWIPE_THRESHOLD = 40;
 
+  // Autoplay cada 5s
   const startAutoplay = () => {
     clearInterval(autoplayRef.current);
     if (!pauseRef.current && videos.length > 0) {
@@ -30,12 +33,14 @@ export default function Carousel() {
     }
   };
 
+  // Cargar videos desde /public/videos/index.json
   useEffect(() => {
     async function loadVideos() {
       try {
         const res = await fetch("/api/videos", { cache: "no-store" });
         const data = await res.json();
         const allVideos = data.videos || [];
+
         setVideos(allVideos.slice(0, 10));
       } catch (err) {
         console.error("Error cargando videos:", err);
@@ -50,16 +55,19 @@ export default function Carousel() {
     return () => clearInterval(autoplayRef.current);
   }, [videos]);
 
+  // TOUCH START
   const handleTouchStart = (e) => {
     const t = e.touches[0];
     startX.current = t.clientX;
     startY.current = t.clientY;
     moved.current = false;
     direction.current = null;
+
     pauseRef.current = true;
     clearInterval(autoplayRef.current);
   };
 
+  // TOUCH MOVE
   const handleTouchMove = (e) => {
     const t = e.touches[0];
     const deltaX = t.clientX - startX.current;
@@ -73,13 +81,16 @@ export default function Carousel() {
     }
   };
 
+  // TOUCH END
   const handleTouchEnd = (e) => {
     e.stopPropagation();
 
     if (!moved.current) {
+      // TAPPED CARD
       const tapped = videos[index];
       if (tapped) handleClick(tapped);
     } else if (direction.current === "horizontal") {
+      // SWIPE
       const diffX = startX.current - e.changedTouches[0].clientX;
       if (Math.abs(diffX) > SWIPE_THRESHOLD) {
         setIndex((prev) =>
@@ -96,19 +107,24 @@ export default function Carousel() {
     }, 3000);
   };
 
+  // CLICK VIDEO
   const handleClick = (video) => {
     const slug = video.slug || video.name;
 
-    // DESKTOP → Preview fullscreen
     if (window.innerWidth >= 1024) {
-      setPreviewData({ videoSrc: video.file, slug });
+      // PC → Preview fullscreen
+      setPreviewData({
+        videoSrc: video.file,
+        slug,
+      });
       setShowPreview(true);
     } else {
-      // MOBILE → directo a editar
+      // Mobile → directo a editar
       router.push(`/edit/${slug}`);
     }
   };
 
+  // MIENTRAS CARGA
   if (videos.length === 0) {
     return (
       <div className="w-full flex justify-center items-center h-[440px]">
@@ -120,6 +136,7 @@ export default function Carousel() {
   return (
     <>
       <div className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none">
+        {/* CARRUSEL */}
         <div
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
@@ -133,6 +150,7 @@ export default function Carousel() {
         >
           {videos.map((video, i) => {
             const offset = (i - index + videos.length) % videos.length;
+
             const positionClass =
               offset === 0
                 ? "translate-x-0 scale-100 z-20 opacity-100"
@@ -163,7 +181,7 @@ export default function Carousel() {
           })}
         </div>
 
-        {/* Dots */}
+        {/* DOTS */}
         <div className="flex mt-5 gap-2">
           {videos.map((_, i) => (
             <span
@@ -172,6 +190,7 @@ export default function Carousel() {
                 setIndex(i);
                 pauseRef.current = true;
                 clearInterval(autoplayRef.current);
+
                 setTimeout(() => {
                   pauseRef.current = false;
                   startAutoplay();
@@ -185,7 +204,7 @@ export default function Carousel() {
         </div>
       </div>
 
-      {/* PREVIEW EN PC */}
+      {/* PREVIEW FULLSCREEN SOLO PC */}
       {showPreview && previewData && (
         <FullscreenPreview
           videoSrc={previewData.videoSrc}
@@ -194,4 +213,4 @@ export default function Carousel() {
       )}
     </>
   );
-}
+        }
