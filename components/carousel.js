@@ -100,12 +100,17 @@ export default function Carousel() {
   const handleClick = (video) => {
     const slug = video.slug || video.name;
     
-    // 🔥 AHORA SIEMPRE USA PREVIEW (PC y móvil)
-    setPreviewData({
-      videoSrc: video.file,
-      slug,
-    });
-    setShowPreview(true);
+    // En DESKTOP: mostrar preview fullscreen
+    if (window.innerWidth >= 1024) {
+      setPreviewData({
+        videoSrc: video.file,
+        slug,
+      });
+      setShowPreview(true);
+    } else {
+      // En MOBILE: ir directo a edit
+      router.push(`/edit/${slug}`);
+    }
   };
 
   if (videos.length === 0) {
@@ -184,7 +189,7 @@ export default function Carousel() {
         </div>
       </div>
 
-      {/* Preview Fullscreen (PC y móvil) */}
+      {/* Preview Fullscreen (solo PC) */}
       {showPreview && previewData && (
         <FullscreenPreview
           videoSrc={previewData.videoSrc}
@@ -193,4 +198,4 @@ export default function Carousel() {
       )}
     </>
   );
-}
+    }
