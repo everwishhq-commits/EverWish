@@ -4,38 +4,35 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 /**
- * 🎥 FULLSCREEN UNIVERSAL (VERSIÓN PERFECTA)
- * - PC → fullscreen REAL + object-contain (NO corta la tarjeta)
- * - Mobile → cubre toda la pantalla ↓ sin barras negras y sin swipe accidental
+ * 🖥️ PREVIEW FULLSCREEN PARA PC
+ * Se muestra 3 segundos y luego navega a /edit
  */
-export default function FullscreenPreview({ videoSrc, slug }) {
+export default function Fullscreen({ videoSrc, slug }) {
   const router = useRouter();
   const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
-    // 🔒 Bloquear scroll en móvil
-    document.body.style.overflow = "hidden";
-    document.body.style.touchAction = "none";
-    document.body.style.position = "fixed";
-    document.body.style.inset = "0";
-
-    // 🖥️ En PC: fullscreen real
-    const tryFullscreen = async () => {
-      if (window.innerWidth >= 1024) {
-        try {
-          const el = document.documentElement;
-          if (el.requestFullscreen) await el.requestFullscreen();
-        } catch (err) {
-          console.log("Fullscreen PC error:", err);
+    // Intentar fullscreen
+    const elem = document.documentElement;
+    const enterFullscreen = async () => {
+      try {
+        if (elem.requestFullscreen) {
+          await elem.requestFullscreen();
+        } else if (elem.webkitRequestFullscreen) {
+          await elem.webkitRequestFullscreen();
+        } else if (elem.msRequestFullscreen) {
+          await elem.msRequestFullscreen();
         }
+      } catch (err) {
+        console.log("Fullscreen no disponible:", err);
       }
     };
 
-    tryFullscreen();
+    enterFullscreen();
 
-    // Contador
+    // Countdown
     const timer = setInterval(() => {
-      setCountdown((prev) => {
+      setCountdown(prev => {
         if (prev <= 1) {
           clearInterval(timer);
           router.push(`/edit/${slug}`);
@@ -45,15 +42,9 @@ export default function FullscreenPreview({ videoSrc, slug }) {
       });
     }, 1000);
 
-    // Cleanup
     return () => {
       clearInterval(timer);
-
-      document.body.style.overflow = "";
-      document.body.style.touchAction = "";
-      document.body.style.position = "";
-      document.body.style.inset = "";
-
+      // Salir de fullscreen al desmontar
       if (document.fullscreenElement) {
         document.exitFullscreen().catch(() => {});
       }
@@ -61,36 +52,27 @@ export default function FullscreenPreview({ videoSrc, slug }) {
   }, [router, slug]);
 
   return (
-    <div
-      className="fixed inset-0 bg-black flex items-center justify-center"
-      style={{
-        zIndex: 99999,
-        width: "100vw",
-        height: "100vh",
-        overscrollBehavior: "none",
-        touchAction: "none",
-      }}
-    >
-      {/* ⛔ NO CORTA LA TARJETA - Siempre completa */}
+    <div className="fixed inset-0 bg-black z-[9999] flex items-center justify-center">
+      {/* Video centrado y ajustado */}
       <video
         src={videoSrc}
         autoPlay
         loop
         muted
         playsInline
-        className="w-full h-full"
+        className="w-full h-full object-contain"
         style={{
-          objectFit: window.innerWidth >= 1024 ? "contain" : "cover",
-          objectPosition: "center",
+          maxWidth: '100vw',
+          maxHeight: '100vh',
         }}
       />
 
+      {/* Botón de skip */}
       <button
         onClick={() => router.push(`/edit/${slug}`)}
-        className="absolute top-5 right-5 bg-white/80 px-5 py-2 rounded-full text-gray-800 text-sm shadow-md"
-        style={{ zIndex: 100000 }}
+        className="absolute top-8 right-8 bg-white/90 hover:bg-white text-gray-800 px-6 py-3 rounded-full font-semibold shadow-lg transition-all z-10"
       >
-        Skip ({countdown}s)
+        Skip Preview ({countdown}s)
       </button>
     </div>
   );
