@@ -4,31 +4,37 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 /**
- * 🖥️ PREVIEW FULLSCREEN PARA PC
- * Se muestra 3 segundos y luego navega a /edit
+ * 🖥️ PREVIEW FULLSCREEN OPTIMIZADO
+ * - Sin barras negras (object-cover)
+ * - Funciona en PC y móvil
  */
 export default function FullscreenPreview({ videoSrc, slug }) {
   const router = useRouter();
   const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
-    // Intentar fullscreen
-    const elem = document.documentElement;
-    const enterFullscreen = async () => {
-      try {
-        if (elem.requestFullscreen) {
-          await elem.requestFullscreen();
-        } else if (elem.webkitRequestFullscreen) {
-          await elem.webkitRequestFullscreen();
-        } else if (elem.msRequestFullscreen) {
-          await elem.msRequestFullscreen();
-        }
-      } catch (err) {
-        console.log("Fullscreen no disponible:", err);
-      }
-    };
+    // Bloquear scroll
+    document.body.style.overflow = 'hidden';
 
-    enterFullscreen();
+    // Intentar fullscreen (solo desktop)
+    const isDesktop = window.innerWidth >= 1024;
+    if (isDesktop) {
+      const elem = document.documentElement;
+      const enterFullscreen = async () => {
+        try {
+          if (elem.requestFullscreen) {
+            await elem.requestFullscreen();
+          } else if (elem.webkitRequestFullscreen) {
+            await elem.webkitRequestFullscreen();
+          } else if (elem.msRequestFullscreen) {
+            await elem.msRequestFullscreen();
+          }
+        } catch (err) {
+          console.log("Fullscreen bloqueado:", err);
+        }
+      };
+      enterFullscreen();
+    }
 
     // Countdown
     const timer = setInterval(() => {
@@ -44,7 +50,7 @@ export default function FullscreenPreview({ videoSrc, slug }) {
 
     return () => {
       clearInterval(timer);
-      // Salir de fullscreen al desmontar
+      document.body.style.overflow = '';
       if (document.fullscreenElement) {
         document.exitFullscreen().catch(() => {});
       }
@@ -52,28 +58,35 @@ export default function FullscreenPreview({ videoSrc, slug }) {
   }, [router, slug]);
 
   return (
-    <div className="fixed inset-0 bg-black z-[9999] flex items-center justify-center">
-      {/* Video centrado y ajustado */}
+    <div 
+      className="fixed inset-0 bg-black z-[9999] flex items-center justify-center"
+      style={{
+        width: '100vw',
+        height: '100vh',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Video SIN BARRAS - cubre toda la pantalla */}
       <video
         src={videoSrc}
         autoPlay
         loop
         muted
         playsInline
-        className="w-full h-full object-contain"
+        className="absolute inset-0 w-full h-full"
         style={{
-          maxWidth: '100vw',
-          maxHeight: '100vh',
+          objectFit: 'cover', // 🔥 ESTO ELIMINA LAS BARRAS NEGRAS
+          objectPosition: 'center',
         }}
       />
 
       {/* Botón de skip */}
       <button
         onClick={() => router.push(`/edit/${slug}`)}
-        className="absolute top-8 right-8 bg-white/90 hover:bg-white text-gray-800 px-6 py-3 rounded-full font-semibold shadow-lg transition-all z-10"
+        className="absolute top-4 right-4 md:top-8 md:right-8 bg-white/90 hover:bg-white text-gray-800 px-4 py-2 md:px-6 md:py-3 rounded-full font-semibold shadow-lg transition-all z-10 text-sm md:text-base"
       >
-        Skip Preview ({countdown}s)
+        Skip ({countdown}s)
       </button>
     </div>
   );
-          }
+}
