@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import FullscreenPreview from "./fullscreen-preview";
+import FullscreenPreview from "./FullscreenPreview";
 
 export default function Carousel() {
   const router = useRouter();
@@ -36,9 +36,7 @@ export default function Carousel() {
         const res = await fetch("/api/videos", { cache: "no-store" });
         const data = await res.json();
         const allVideos = data.videos || [];
-        
         setVideos(allVideos.slice(0, 10));
-        console.log(`🎡 Carrusel: ${allVideos.slice(0, 10).length} videos`);
       } catch (err) {
         console.error("Error cargando videos:", err);
       }
@@ -69,7 +67,8 @@ export default function Carousel() {
 
     if (Math.abs(deltaX) > TAP_THRESHOLD || Math.abs(deltaY) > TAP_THRESHOLD) {
       moved.current = true;
-      direction.current = Math.abs(deltaX) > Math.abs(deltaY) ? "horizontal" : "vertical";
+      direction.current =
+        Math.abs(deltaX) > Math.abs(deltaY) ? "horizontal" : "vertical";
       e.stopPropagation();
     }
   };
@@ -99,16 +98,13 @@ export default function Carousel() {
 
   const handleClick = (video) => {
     const slug = video.slug || video.name;
-    
-    // En DESKTOP: mostrar preview fullscreen
+
+    // DESKTOP → Preview fullscreen
     if (window.innerWidth >= 1024) {
-      setPreviewData({
-        videoSrc: video.file,
-        slug,
-      });
+      setPreviewData({ videoSrc: video.file, slug });
       setShowPreview(true);
     } else {
-      // En MOBILE: ir directo a edit
+      // MOBILE → directo a editar
       router.push(`/edit/${slug}`);
     }
   };
@@ -189,7 +185,7 @@ export default function Carousel() {
         </div>
       </div>
 
-      {/* Preview Fullscreen (solo PC) */}
+      {/* PREVIEW EN PC */}
       {showPreview && previewData && (
         <FullscreenPreview
           videoSrc={previewData.videoSrc}
@@ -198,4 +194,4 @@ export default function Carousel() {
       )}
     </>
   );
-    }
+}
