@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 /**
  * 📱 MÓVIL → FULLSCREEN REAL
- * 🖥️ PC → VIEWER GRANDE CON BORDES ROSADOS
+ * 🖥️ PC → VIEWER CON BORDES ROSADOS (sin expandir)
  */
 export default function Fullscreen({ videoSrc, slug }) {
   const router = useRouter();
@@ -85,18 +85,19 @@ export default function Fullscreen({ videoSrc, slug }) {
   }
 
   //
-  // 🖥️ UI para PC → VIEWER ROSADO VERTICAL
+  // 🖥️ UI para PC → VIEWER ROSADO CENTRADO (sin expandir completamente)
   //
   return (
-    <div className="fixed inset-0 bg-pink-200 z-[9999] flex items-center justify-center">
-      <div className="h-screen max-h-screen flex items-center justify-center px-10">
+    <div className="fixed inset-0 bg-gradient-to-br from-pink-100 via-pink-200 to-pink-300 z-[9999] flex items-center justify-center p-8">
+      <div className="flex items-center justify-center" style={{ maxWidth: '90vw', maxHeight: '90vh' }}>
         <video
           src={videoSrc}
           autoPlay
           loop
           muted
           playsInline
-          className="h-full max-h-screen object-contain rounded-2xl shadow-2xl"
+          className="rounded-2xl shadow-2xl object-contain"
+          style={{ maxHeight: '85vh', maxWidth: '600px' }}
         />
       </div>
 
