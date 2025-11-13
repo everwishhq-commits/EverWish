@@ -5,8 +5,23 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { BASE_CATEGORIES, searchVideos, groupVideosByBaseCategory } from "@/lib/classification-system";
+import { searchVideos, groupByCategory } from "@/lib/simple-search";
 import "swiper/css";
+
+const BASE_CATEGORIES = [
+  { name: "Holidays", emoji: "🎉", slug: "seasonal-global-celebrations" },
+  { name: "Celebrations", emoji: "🎂", slug: "birthdays-celebrations" },
+  { name: "Love & Romance", emoji: "💝", slug: "love-weddings-anniversaries" },
+  { name: "Family & Friendship", emoji: "🫶", slug: "family-friendship" },
+  { name: "Work & Professional Life", emoji: "💼", slug: "work" },
+  { name: "Babies & Parenting", emoji: "🧸", slug: "babies-parenting" },
+  { name: "Animal Lovers", emoji: "🐾", slug: "pets-animal-lovers" },
+  { name: "Support, Healing & Care", emoji: "🕊️", slug: "support-healing-care" },
+  { name: "Connection", emoji: "🧩", slug: "hear-every-heart" },
+  { name: "Sports", emoji: "🏟️", slug: "sports" },
+  { name: "Wellness & Mindful Living", emoji: "🕯️", slug: "wellness-mindful-living" },
+  { name: "Nature & Life Journeys", emoji: "🏕️", slug: "life-journeys-transitions" },
+];
 
 const COLORS = [
   "#FFE0E9", "#FFDDEE", "#FFECEC", "#E5EDFF", "#EAF4FF", "#DFF7FF",
@@ -22,7 +37,7 @@ export default function Categories() {
   );
   const [searchResults, setSearchResults] = useState(null);
 
-  // Cargar videos y contar por categoría
+  // Cargar videos
   useEffect(() => {
     async function loadVideos() {
       try {
@@ -31,8 +46,8 @@ export default function Categories() {
         const allVideos = data.videos || [];
         setVideos(allVideos);
         
-        // Contar videos por categoría
-        const grouped = groupVideosByBaseCategory(allVideos);
+        // Contar por categoría
+        const grouped = groupByCategory(allVideos);
         const categoriesWithCounts = BASE_CATEGORIES.map((cat, i) => ({
           ...cat,
           color: COLORS[i % COLORS.length],
@@ -41,7 +56,6 @@ export default function Categories() {
         
         setDisplayCategories(categoriesWithCounts);
         console.log(`📦 ${allVideos.length} videos cargados`);
-        console.log(`📊 12 categorías listas`);
       } catch (err) {
         console.error("❌ Error:", err);
       }
@@ -52,7 +66,7 @@ export default function Categories() {
   // Procesar búsqueda
   useEffect(() => {
     if (!search.trim()) {
-      // Sin búsqueda: mostrar TODAS las categorías SIN contadores
+      // Sin búsqueda: mostrar todas
       setDisplayCategories(
         BASE_CATEGORIES.map((cat, i) => ({ 
           ...cat, 
@@ -65,13 +79,14 @@ export default function Categories() {
 
     console.log(`🔍 Buscando: "${search}"`);
 
-    // Con búsqueda: filtrar videos y mostrar solo categorías con resultados
+    // Buscar videos
     const matchedVideos = searchVideos(videos, search);
     console.log(`✅ Videos encontrados: ${matchedVideos.length}`);
     
-    const grouped = groupVideosByBaseCategory(matchedVideos);
+    // Agrupar por categoría
+    const grouped = groupByCategory(matchedVideos);
     
-    // Solo mostrar categorías que tienen resultados en la búsqueda
+    // Solo mostrar categorías con resultados
     const categoriesWithResults = BASE_CATEGORIES
       .map((cat, index) => ({
         ...cat,
@@ -109,7 +124,7 @@ export default function Categories() {
       <div className="flex flex-col items-center mb-10">
         <input
           type="text"
-          placeholder="Search any theme — e.g. zombie, love, turtle..."
+          placeholder="Search: zombie, turtle, love, birthday..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-80 md:w-96 px-4 py-3 rounded-full border-2 border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-pink-400 text-gray-700 text-center transition-all"
@@ -145,7 +160,7 @@ export default function Categories() {
         )}
       </div>
 
-      {/* Carrusel de categorías */}
+      {/* Carrusel */}
       {displayCategories.length > 0 ? (
         <Swiper
           slidesPerView={3.2}
@@ -215,4 +230,4 @@ export default function Categories() {
       )}
     </section>
   );
-        }
+}
