@@ -119,13 +119,17 @@ export default function Carousel() {
     }, 3000);
   };
 
-  // Desktop slide change
-  const nextSlide = () => {
+  // Desktop slide change - CORREGIDO
+  const nextSlide = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     setIndex((prev) => (prev + 1) % videos.length);
     pauseTemporarily();
   };
 
-  const prevSlide = () => {
+  const prevSlide = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     setIndex((prev) => (prev - 1 + videos.length) % videos.length);
     pauseTemporarily();
   };
@@ -213,16 +217,17 @@ export default function Carousel() {
           );
         })}
 
-        {/* FLECHA IZQUIERDA — SOLO PC — visible sólo en hover */}
+        {/* FLECHA IZQUIERDA — SOLO PC — CORREGIDO */}
         <button
           onClick={prevSlide}
+          onMouseDown={(e) => e.preventDefault()}
           className="hidden md:flex opacity-0 group-hover:opacity-100 transition-opacity
                      absolute left-4 top-1/2 -translate-y-1/2
                      bg-white/70 hover:bg-white shadow-lg
                      rounded-full w-12 h-12 justify-center items-center
-                     text-pink-600 text-3xl cursor-pointer"
+                     text-pink-600 text-3xl cursor-pointer z-30"
+          style={{ pointerEvents: 'auto' }}
         >
-          {/* SVG minimal */}
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path
               d="M15 6L9 12L15 18"
@@ -234,16 +239,17 @@ export default function Carousel() {
           </svg>
         </button>
 
-        {/* FLECHA DERECHA — SOLO PC — visible sólo en hover */}
+        {/* FLECHA DERECHA — SOLO PC — CORREGIDO */}
         <button
           onClick={nextSlide}
+          onMouseDown={(e) => e.preventDefault()}
           className="hidden md:flex opacity-0 group-hover:opacity-100 transition-opacity
                      absolute right-4 top-1/2 -translate-y-1/2
                      bg-white/70 hover:bg-white shadow-lg
                      rounded-full w-12 h-12 justify-center items-center
-                     text-pink-600 text-3xl cursor-pointer"
+                     text-pink-600 text-3xl cursor-pointer z-30"
+          style={{ pointerEvents: 'auto' }}
         >
-          {/* SVG minimal */}
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path
               d="M9 6L15 12L9 18"
