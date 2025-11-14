@@ -101,13 +101,35 @@ export default function Categories() {
     });
   }, [search, videos]);
 
-  const handleCategoryClick = (cat) => {
-    const url = search.trim() 
-      ? `/category/${cat.slug}?q=${encodeURIComponent(search)}`
-      : `/category/${cat.slug}`;
-    
-    console.log(`🎯 Navegando a: ${url}`);
-    router.push(url);
+  // 🎯 FUNCIÓN ACTUALIZADA: Pantalla completa ANTES de navegar
+  const handleCategoryClick = async (cat) => {
+    try {
+      // 🚀 Activar pantalla completa ANTES de navegar
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) {
+        await elem.requestFullscreen();
+      } else if (elem.webkitRequestFullscreen) {
+        await elem.webkitRequestFullscreen();
+      }
+      
+      // Pequeña pausa para asegurar que pantalla completa se active
+      await new Promise(r => setTimeout(r, 150));
+      
+      // Construir URL con búsqueda si existe
+      const url = search.trim() 
+        ? `/category/${cat.slug}?q=${encodeURIComponent(search)}`
+        : `/category/${cat.slug}`;
+      
+      console.log(`🎯 Navegando a: ${url}`);
+      router.push(url);
+    } catch (error) {
+      // Si pantalla completa falla, navegar de todos modos
+      console.log("⚠️ Fullscreen no disponible, navegando normalmente");
+      const url = search.trim() 
+        ? `/category/${cat.slug}?q=${encodeURIComponent(search)}`
+        : `/category/${cat.slug}`;
+      router.push(url);
+    }
   };
 
   return (
@@ -230,4 +252,4 @@ export default function Categories() {
       )}
     </section>
   );
-}
+    }
