@@ -4,9 +4,9 @@
  * Soporta: zombie_halloween_1A.mp4 o zombie_halloween_birthday_1A.mp4
  */
 
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from 'url';
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -55,14 +55,18 @@ const CATEGORY_MAP = {
 function getAllMp4Files(dir) {
   if (!fs.existsSync(dir)) return [];
   const entries = fs.readdirSync(dir, { withFileTypes: true });
-  return entries.flatMap((entry) => {
+  const results = [];
+  
+  for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
-    return entry.isDirectory()
-      ? getAllMp4Files(fullPath)
-      : entry.name.endsWith(".mp4") || entry.name.endsWith(".MP4")
-      ? [fullPath]
-      : [];
-  });
+    if (entry.isDirectory()) {
+      results.push(...getAllMp4Files(fullPath));
+    } else if (entry.name.endsWith(".mp4") || entry.name.endsWith(".MP4")) {
+      results.push(fullPath);
+    }
+  }
+  
+  return results;
 }
 
 function capitalize(str) {
@@ -73,29 +77,25 @@ function classifyFromFilename(filename) {
   const basename = filename.replace(/\.(mp4|MP4)$/, "");
   const parts = basename.split("_");
   
-  // Último elemento es el valor (1A, 2B, etc.)
   const lastPart = parts[parts.length - 1];
   const isValue = /^[0-9]+[A-Z]$/i.test(lastPart);
   
   const value = isValue ? lastPart.toUpperCase() : "1A";
   const nameParts = isValue ? parts.slice(0, -1) : parts;
   
-  // Primer elemento es el objeto
   const object = capitalize(nameParts[0] || "Unknown");
   
-  // Buscar categorías en TODAS las partes
   const foundCategories = new Set();
   const foundSubcategories = new Set();
   
-  nameParts.forEach(part => {
+  for (const part of nameParts) {
     const normalized = part.toLowerCase();
     if (CATEGORY_MAP[normalized]) {
       foundCategories.add(CATEGORY_MAP[normalized].cat);
       foundSubcategories.add(CATEGORY_MAP[normalized].sub);
     }
-  });
+  }
   
-  // Fallback
   if (foundCategories.size === 0) {
     foundCategories.add('life-journeys-transitions');
     foundSubcategories.add('Just Because');
@@ -132,7 +132,7 @@ function generateIndex() {
   
   const videos = mp4Files.map(filePath => {
     const relativePath = path.relative(path.join(process.cwd(), "public"), filePath);
-    const urlPath = "/" + relativePath.replace(/\\/g, "/");
+    const urlPath = "/" + relativePath.replaceAll("\\", "/");
     const basename = path.basename(filePath);
     const nameWithoutExt = basename.replace(/\.(mp4|MP4)$/, "");
     
