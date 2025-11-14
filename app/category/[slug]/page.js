@@ -2,13 +2,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  filterByCategory, 
-  getGroupsWithSubcategories,
-  filterBySubcategory,
-  searchVideos,
-  SUBCATEGORY_GROUPS // 🆕 Importar para mostrar todos los grupos
-} from "@/lib/classification-system";
 
 export default function CategoryPage() {
   const { slug } = useParams();
@@ -23,6 +16,164 @@ export default function CategoryPage() {
   const [modalVideos, setModalVideos] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Mapeo de categorías
+  const CATEGORY_MAP = {
+    'halloween': 'seasonal-global-celebrations',
+    'christmas': 'seasonal-global-celebrations',
+    'thanksgiving': 'seasonal-global-celebrations',
+    'easter': 'seasonal-global-celebrations',
+    'valentine': 'seasonal-global-celebrations',
+    'valentines': 'seasonal-global-celebrations',
+    'birthday': 'birthdays-celebrations',
+    'love': 'love-weddings-anniversaries',
+    'pets': 'pets-animal-lovers',
+    'family': 'family-friendship',
+  };
+
+  // Grupos de subcategorías
+  const SUBCATEGORY_GROUPS = {
+    "seasonal-global-celebrations": {
+      "Holiday Seasons": ["Halloween", "Thanksgiving", "Christmas", "Easter"],
+      "Cultural Days": ["Valentine's Day", "Independence Day", "Mother's Day", "Father's Day"],
+      "Seasonal": ["Spring", "Summer", "Fall", "Winter"],
+    },
+    "birthdays-celebrations": {
+      "Birthday": ["Birthday", "Sweet 16", "21st Birthday"],
+      "Celebrations": ["Party", "Surprise"],
+    },
+    "love-weddings-anniversaries": {
+      "Romance": ["Love", "Hugs", "Valentine's Day"],
+      "Wedding": ["Wedding", "Anniversary"],
+    },
+    "family-friendship": {
+      "Family": ["Mother's Day", "Father's Day", "Parents"],
+      "Friendship": ["Friends", "Best Friends"],
+    },
+    "work": {
+      "Career": ["New Job", "Promotion", "Retirement"],
+      "Education": ["Graduation", "School"],
+    },
+    "babies-parenting": {
+      "Baby": ["Newborn", "Baby Shower", "Pregnancy"],
+      "Parenting": ["Mom Life", "Dad Life"],
+    },
+    "pets-animal-lovers": {
+      "Companion Animals": ["Dogs", "Cats"],
+      "Sea Animals": ["Sea Animals"],
+      "Farm Animals": ["Farm Animals"],
+      "Flying Animals": ["Flying Animals"],
+      "Wild Animals": ["Wild Animals"],
+    },
+    "support-healing-care": {
+      "Support": ["Get Well", "Thinking of You"],
+      "Sympathy": ["Condolences", "Loss"],
+    },
+    "hear-every-heart": {
+      "Diversity": ["Inclusivity", "Unity", "Peace"],
+    },
+    "sports": {
+      "Sports": ["Soccer", "Basketball", "Football"],
+      "Fitness": ["Gym", "Yoga"],
+    },
+    "wellness-mindful-living": {
+      "Wellness": ["Self-Care", "Meditation"],
+    },
+    "life-journeys-transitions": {
+      "New Beginnings": ["New Home", "Moving"],
+      "Everyday": ["Thank You", "Just Because"],
+    },
+  };
+
+  // Función para clasificar video dinámicamente
+  function classifyVideo(videoName) {
+    const parts = videoName.toLowerCase().split(/[_\s-]+/);
+    const categoriesFound = new Set();
+    const subcategoriesFound = new Set();
+
+    parts.forEach(part => {
+      // Buscar categoría
+      if (CATEGORY_MAP[part]) {
+        categoriesFound.add(CATEGORY_MAP[part]);
+      }
+
+      // Buscar subcategoría exacta
+      Object.entries(SUBCATEGORY_GROUPS).forEach(([catSlug, groups]) => {
+        Object.values(groups).forEach(subs => {
+          subs.forEach(sub => {
+            if (sub.toLowerCase().replace(/[^a-z0-9]/g, '') === part.replace(/[^a-z0-9]/g, '')) {
+              categoriesFound.add(catSlug);
+              subcategoriesFound.add(sub);
+            }
+          });
+        });
+      });
+    });
+
+    return {
+      categories: [...categoriesFound],
+      subcategories: [...subcategoriesFound]
+    };
+  }
+
+  // Función para filtrar por categoría
+  function filterByCategory(videos, categorySlug) {
+    console.log(`🔍 Filtrando por categoría: ${categorySlug}`);
+    console.log(`📦 Total videos: ${videos.length}`);
+    
+    const results = videos.filter((video) => {
+      // 1. Verificar en categories array del video
+      if (video.categories && Array.isArray(video.categories)) {
+        if (video.categories.includes(categorySlug)) {
+          console.log(`✅ ${video.name} - Match en video.categories`);
+          return true;
+        }
+      }
+      
+      // 2. Clasificar dinámicamente usando el nombre
+      const classification = classifyVideo(video.name);
+      if (classification.categories.includes(categorySlug)) {
+        console.log(`✅ ${video.name} - Match en clasificación dinámica`);
+        console.log(`   Categorías:`, classification.categories);
+        return true;
+      }
+      
+      return false;
+    });
+    
+    console.log(`📊 Resultados: ${results.length} videos encontrados`);
+    return results;
+  }
+
+  // Función para filtrar por subcategoría
+  function filterBySubcategory(videos, subcategory) {
+    console.log(`🔍 Filtrando por subcategoría: ${subcategory}`);
+    
+    return videos.filter(v => {
+      // 1. Verificar en subcategory del video
+      if (v.subcategory === subcategory) {
+        console.log(`✅ ${v.name} - Match en v.subcategory`);
+        return true;
+      }
+
+      // 2. Verificar en subcategories array
+      if (v.subcategories && Array.isArray(v.subcategories)) {
+        if (v.subcategories.includes(subcategory)) {
+          console.log(`✅ ${v.name} - Match en v.subcategories`);
+          return true;
+        }
+      }
+
+      // 3. Clasificar dinámicamente
+      const classification = classifyVideo(v.name);
+      if (classification.subcategories.includes(subcategory)) {
+        console.log(`✅ ${v.name} - Match en clasificación dinámica`);
+        return true;
+      }
+
+      return false;
+    });
+  }
+
   useEffect(() => {
     async function load() {
       try {
@@ -30,44 +181,55 @@ export default function CategoryPage() {
         const data = await res.json();
         const all = data.videos || [];
         
-        console.log(`📦 Total videos: ${all.length}`);
+        console.log(`📦 Total videos cargados: ${all.length}`);
         
         // Filtrar por categoría
         let filtered = filterByCategory(all, slug);
         console.log(`✅ Videos en ${slug}: ${filtered.length}`);
         
-        // Si hay búsqueda
+        // Si hay búsqueda, filtrar más
         if (q) {
-          filtered = searchVideos(filtered, q);
+          const searchTerm = q.toLowerCase();
+          filtered = filtered.filter(v => {
+            const searchable = [
+              v.name,
+              v.object,
+              v.subcategory,
+              ...(v.tags || []),
+              ...(v.categories || [])
+            ].filter(Boolean).join(" ").toLowerCase();
+            
+            return searchable.includes(searchTerm);
+          });
           console.log(`🔍 Después de buscar "${q}": ${filtered.length}`);
         }
         
         setCategoryVideos(filtered);
         
-        // 🆕 LÓGICA DIFERENTE SEGÚN SI HAY BÚSQUEDA O NO
-        if (q) {
-          // CON BÚSQUEDA: Solo mostrar grupos con videos
-          const groupsWithSubs = getGroupsWithSubcategories(filtered, slug);
-          console.log(`📂 Grupos con resultados:`, Object.keys(groupsWithSubs));
-          setGroups(groupsWithSubs);
-        } else {
-          // SIN BÚSQUEDA: Mostrar TODOS los grupos (incluso vacíos)
-          const allGroups = SUBCATEGORY_GROUPS[slug] || {};
-          const groupsWithCounts = {};
-          
-          Object.entries(allGroups).forEach(([groupName, subcategories]) => {
-            groupsWithCounts[groupName] = subcategories.map(sub => {
-              const count = filtered.filter(v => 
-                v.subcategory === sub || v.contextSubcategories?.includes(sub)
-              ).length;
-              
-              return { name: sub, count };
-            });
+        // Construir grupos con contadores
+        const groupsData = {};
+        const availableGroups = SUBCATEGORY_GROUPS[slug] || {};
+        
+        Object.entries(availableGroups).forEach(([groupName, subcategories]) => {
+          const subsWithCounts = subcategories.map(sub => {
+            const count = filterBySubcategory(filtered, sub).length;
+            return { name: sub, count };
           });
           
-          console.log(`📂 Todos los grupos:`, Object.keys(groupsWithCounts));
-          setGroups(groupsWithCounts);
-        }
+          // Solo mostrar grupos con videos si hay búsqueda
+          if (q) {
+            const hasVideos = subsWithCounts.some(s => s.count > 0);
+            if (hasVideos) {
+              groupsData[groupName] = subsWithCounts.filter(s => s.count > 0);
+            }
+          } else {
+            // Sin búsqueda, mostrar todos
+            groupsData[groupName] = subsWithCounts;
+          }
+        });
+        
+        console.log(`📂 Grupos construidos:`, Object.keys(groupsData));
+        setGroups(groupsData);
         
       } catch (err) {
         console.error("❌ Error:", err);
@@ -87,13 +249,13 @@ export default function CategoryPage() {
   }, [subFromUrl, categoryVideos]);
 
   const openModal = (sub) => {
-    console.log("🎯 Abriendo modal:", sub);
+    console.log("🎯 Abriendo modal para:", sub);
     setActiveSub(sub);
     setModalVideos([]);
     
     setTimeout(() => {
       const videos = filterBySubcategory(categoryVideos, sub);
-      console.log("📹 Videos cargados:", videos.length);
+      console.log(`📹 Videos cargados para ${sub}:`, videos.length);
       setModalVideos(videos);
     }, 100);
   };
@@ -254,12 +416,7 @@ export default function CategoryPage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.05, duration: 0.3 }}
                         whileHover={{ scale: 1.05, y: -5 }}
-                        onClick={async () => {
-                          try {
-                            const elem = document.documentElement;
-                            if (elem.requestFullscreen) await elem.requestFullscreen();
-                            await new Promise(r => setTimeout(r, 150));
-                          } catch {}
+                        onClick={() => {
                           router.push(`/edit/${video.name}`);
                         }}
                         className="cursor-pointer bg-white rounded-2xl shadow-md border-2 border-pink-100 hover:border-pink-300 hover:shadow-xl overflow-hidden transition-all"
@@ -271,8 +428,7 @@ export default function CategoryPage() {
                             playsInline
                             loop
                             muted
-                            preload="auto"
-                            autoPlay
+                            preload="metadata"
                             onMouseEnter={e => e.target.play().catch(() => {})}
                             onMouseLeave={e => { 
                               e.target.pause(); 
@@ -296,4 +452,4 @@ export default function CategoryPage() {
       </AnimatePresence>
     </main>
   );
-            }
+}
