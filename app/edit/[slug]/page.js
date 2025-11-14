@@ -11,12 +11,14 @@ import { getMessageForSlug } from "@/lib/messages";
 import GiftCardPopup from "@/components/giftcard";
 import CheckoutModal from "@/components/checkout";
 import CropperModal from "@/components/croppermodal";
+import { useRouter } from "next/navigation";
 
 export default function EditPage({ params }) {
   const slug = params.slug;
+  const router = useRouter();
 
   // estados
-  const [stage, setStage] = useState("expanded");
+  const [stage, setStage] = useState("preview"); // Cambiado de "expanded" a "preview"
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("");
   const [animation, setAnimation] = useState("");
@@ -37,6 +39,20 @@ export default function EditPage({ params }) {
 
   const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
   const [animKey, setAnimKey] = useState(0);
+
+  // Detectar si es móvil
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(
+        /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+        window.innerWidth < 768
+      );
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // cargar video + config
   useEffect(() => {
@@ -73,7 +89,7 @@ export default function EditPage({ params }) {
     setLastActiveAnimation(defaultAnim);
   }, [slug]);
 
-  // loading pantalla
+  // loading pantalla con countdown
   useEffect(() => {
     let v = 0;
     const id = setInterval(() => {
@@ -81,7 +97,9 @@ export default function EditPage({ params }) {
       setProgress(v);
       if (v >= 100) {
         clearInterval(id);
-        setStage("editor");
+        setTimeout(() => {
+          setStage("editor");
+        }, 500);
       }
     }, 30);
     return () => clearInterval(id);
@@ -239,31 +257,61 @@ export default function EditPage({ params }) {
 
   return (
     <div className="relative h-[100vh] max-h-[100vh] bg-[#fff7f5] flex items-center justify-center overflow-hidden">
-      {stage === "expanded" && (
+      {stage === "preview" && (
         <motion.div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-[#fff7f5]"
+          className="fixed inset-0 z-[100] flex items-center justify-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4 }}
+          style={{
+            background: isMobile 
+              ? '#000000'
+              : 'linear-gradient(135deg, #fce7f3 0%, #fbcfe8 50%, #f9a8d4 100%)'
+          }}
         >
-          {videoFound ? (
-            <video
-              src={videoSrc}
-              className="w-full h-full aspect-[4/5] object-cover object-center bg-pink-50"
-              autoPlay
-              loop
-              muted
-              playsInline
-              controlsList="nodownload nofullscreen noremoteplayback"
-              disablePictureInPicture
-              onContextMenu={(e) => e.preventDefault()}
-            />
-          ) : (
-            <div className="text-gray-500 text-center">
-              <div className="text-6xl mb-4">⚠️</div>
-              <p className="text-lg">Video not found: {slug}</p>
-            </div>
-          )}
+          <div 
+            className="flex items-center justify-center"
+            style={{
+              width: isMobile ? '100%' : 'auto',
+              height: isMobile ? '100%' : 'auto',
+              maxWidth: isMobile ? '100%' : '600px',
+              maxHeight: isMobile ? '100%' : '85vh',
+              padding: isMobile ? '0' : '2rem'
+            }}
+          >
+            {videoFound ? (
+              <video
+                src={videoSrc}
+                className="rounded-2xl shadow-2xl object-contain bg-pink-50"
+                style={{
+                  width: isMobile ? '100%' : 'auto',
+                  height: isMobile ? '100%' : 'auto',
+                  maxHeight: isMobile ? '100%' : '80vh',
+                  maxWidth: isMobile ? '100%' : '550px',
+                  borderRadius: isMobile ? '0' : '1rem'
+                }}
+                autoPlay
+                loop
+                muted
+                playsInline
+                controlsList="nodownload nofullscreen noremoteplayback"
+                disablePictureInPicture
+                onContextMenu={(e) => e.preventDefault()}
+              />
+            ) : (
+              <div className="text-gray-500 text-center">
+                <div className="text-6xl mb-4">⚠️</div>
+                <p className="text-lg">Video not found: {slug}</p>
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={() => setStage("editor")}
+            className="absolute top-8 right-8 bg-white/90 hover:bg-white text-gray-800 px-6 py-3 rounded-full font-semibold shadow-lg transition-all z-10"
+          >
+            Skip Preview
+          </button>
 
           <div className="absolute bottom-8 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
             <motion.div
@@ -485,4 +533,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-              }
+}
