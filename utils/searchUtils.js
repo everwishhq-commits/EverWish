@@ -17,7 +17,7 @@ export function normalizeForSearch(text) {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "") // Eliminar acentos
-    .replace(/\s+/g, " ") // Espacios múltiples → uno solo
+    .replaceAll(/\s+/g, " ") // Espacios múltiples → uno solo
     .trim();
 }
 
@@ -29,13 +29,13 @@ export function toSingular(word) {
   
   // Reglas simples de plurales en inglés y español
   if (normalized.endsWith("ies")) {
-    return normalized.slice(0, -3) + "y"; // zombies → zombie (no aplica aquí)
+    return normalized.slice(0, -3) + "y";
   }
   if (normalized.endsWith("es")) {
-    return normalized.slice(0, -2); // houses → hous (no perfecto pero funciona)
+    return normalized.slice(0, -2);
   }
   if (normalized.endsWith("s") && !normalized.endsWith("ss")) {
-    return normalized.slice(0, -1); // zombies → zombie
+    return normalized.slice(0, -1);
   }
   
   return normalized;
