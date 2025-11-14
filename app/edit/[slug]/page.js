@@ -11,14 +11,12 @@ import { getMessageForSlug } from "@/lib/messages";
 import GiftCardPopup from "@/components/giftcard";
 import CheckoutModal from "@/components/checkout";
 import CropperModal from "@/components/croppermodal";
-import { useRouter } from "next/navigation";
 
 export default function EditPage({ params }) {
   const slug = params.slug;
-  const router = useRouter();
 
-  // estados
-  const [stage, setStage] = useState("preview"); // Cambiado de "expanded" a "preview"
+  // Estados
+  const [stage, setStage] = useState("expanded");
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("");
   const [animation, setAnimation] = useState("");
@@ -40,21 +38,10 @@ export default function EditPage({ params }) {
   const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
   const [animKey, setAnimKey] = useState(0);
 
-  // Detectar si es móvil
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(
-        /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
-        window.innerWidth < 768
-      );
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  // ⚡ NUEVO: Estado de fullscreen
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // cargar video + config
+  // Cargar video + config
   useEffect(() => {
     async function loadVideo() {
       try {
@@ -89,28 +76,87 @@ export default function EditPage({ params }) {
     setLastActiveAnimation(defaultAnim);
   }, [slug]);
 
-  // loading pantalla con countdown
+  // ⚡ NUEVO: Listener para detectar salida de fullscreen
   useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isCurrentlyFullscreen = !!(
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.mozFullScreenElement ||
+        document.msFullscreenElement
+      );
+      
+      setIsFullscreen(isCurrentlyFullscreen);
+      
+      // Si salimos de fullscreen, ir al editor
+      if (!isCurrentlyFullscreen && stage === "expanded") {
+        setStage("editor");
+      }
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    document.addEventListener("mozfullscreenchange", handleFullscreenChange);
+    document.addEventListener("MSFullscreenChange", handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
+      document.removeEventListener("mozfullscreenchange", handleFullscreenChange);
+      document.removeEventListener("MSFullscreenChange", handleFullscreenChange);
+    };
+  }, [stage]);
+
+  // ⚡ NUEVO: Intentar entrar en fullscreen al cargar
+  useEffect(() => {
+    const enterFullscreen = async () => {
+      try {
+        const elem = document.documentElement;
+        
+        if (elem.requestFullscreen) {
+          await elem.requestFullscreen();
+        } else if (elem.webkitRequestFullscreen) {
+          await elem.webkitRequestFullscreen();
+        } else if (elem.mozRequestFullScreen) {
+          await elem.mozRequestFullScreen();
+        } else if (elem.msRequestFullscreen) {
+          await elem.msRequestFullscreen();
+        }
+        
+        setIsFullscreen(true);
+      } catch (err) {
+        console.log("Fullscreen no disponible o bloqueado:", err);
+        // Si falla, continuar normalmente
+      }
+    };
+
+    // Esperar un poco para que el componente se monte
+    const timer = setTimeout(enterFullscreen, 300);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Loading pantalla
+  useEffect(() => {
+    if (stage !== "expanded") return;
+    
     let v = 0;
     const id = setInterval(() => {
       v += 1;
       setProgress(v);
       if (v >= 100) {
         clearInterval(id);
-        setTimeout(() => {
-          setStage("editor");
-        }, 500);
+        setStage("editor");
       }
     }, 30);
     return () => clearInterval(id);
-  }, []);
+  }, [stage]);
 
-  // re-render anim
+  // Re-render anim
   useEffect(() => {
     setAnimKey(Date.now());
   }, [animation, category, intensity, emojiCount]);
 
-  // bloquear clic derecho global
+  // Bloquear clic derecho global
   useEffect(() => {
     const preventContextMenu = (e) => {
       e.preventDefault();
@@ -119,12 +165,12 @@ export default function EditPage({ params }) {
     return () => document.removeEventListener("contextmenu", preventContextMenu);
   }, []);
 
-  // bloquear guardar
+  // Bloquear guardar
   const handleCardClick = () => {
     alert("🔒 This card is protected. Purchase to download!");
   };
 
-  // gift
+  // Gift
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
@@ -257,61 +303,36 @@ export default function EditPage({ params }) {
 
   return (
     <div className="relative h-[100vh] max-h-[100vh] bg-[#fff7f5] flex items-center justify-center overflow-hidden">
-      {stage === "preview" && (
+      {stage === "expanded" && (
         <motion.div
-          className="fixed inset-0 z-[100] flex items-center justify-center"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-[#fff7f5]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4 }}
-          style={{
-            background: isMobile 
-              ? '#000000'
-              : 'linear-gradient(135deg, #fce7f3 0%, #fbcfe8 50%, #f9a8d4 100%)'
-          }}
         >
-          <div 
-            className="flex items-center justify-center"
-            style={{
-              width: isMobile ? '100%' : 'auto',
-              height: isMobile ? '100%' : 'auto',
-              maxWidth: isMobile ? '100%' : '600px',
-              maxHeight: isMobile ? '100%' : '85vh',
-              padding: isMobile ? '0' : '2rem'
-            }}
-          >
-            {videoFound ? (
-              <video
-                src={videoSrc}
-                className="rounded-2xl shadow-2xl object-contain bg-pink-50"
-                style={{
-                  width: isMobile ? '100%' : 'auto',
-                  height: isMobile ? '100%' : 'auto',
-                  maxHeight: isMobile ? '100%' : '80vh',
-                  maxWidth: isMobile ? '100%' : '550px',
-                  borderRadius: isMobile ? '0' : '1rem'
-                }}
-                autoPlay
-                loop
-                muted
-                playsInline
-                controlsList="nodownload nofullscreen noremoteplayback"
-                disablePictureInPicture
-                onContextMenu={(e) => e.preventDefault()}
-              />
-            ) : (
-              <div className="text-gray-500 text-center">
-                <div className="text-6xl mb-4">⚠️</div>
-                <p className="text-lg">Video not found: {slug}</p>
-              </div>
-            )}
-          </div>
-
-          <button
-            onClick={() => setStage("editor")}
-            className="absolute top-8 right-8 bg-white/90 hover:bg-white text-gray-800 px-6 py-3 rounded-full font-semibold shadow-lg transition-all z-10"
-          >
-            Skip Preview
-          </button>
+          {videoFound ? (
+            <video
+              src={videoSrc}
+              className="w-full h-full object-contain bg-black"
+              autoPlay
+              loop
+              muted
+              playsInline
+              controlsList="nodownload nofullscreen noremoteplayback"
+              disablePictureInPicture
+              onContextMenu={(e) => e.preventDefault()}
+              style={{
+                maxWidth: "100vw",
+                maxHeight: "100vh",
+                objectFit: "contain"
+              }}
+            />
+          ) : (
+            <div className="text-gray-500 text-center">
+              <div className="text-6xl mb-4">⚠️</div>
+              <p className="text-lg">Video not found: {slug}</p>
+            </div>
+          )}
 
           <div className="absolute bottom-8 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
             <motion.div
@@ -321,6 +342,26 @@ export default function EditPage({ params }) {
               transition={{ duration: 0.03, ease: "linear" }}
             />
           </div>
+
+          {/* ⚡ NUEVO: Botón para salir de fullscreen */}
+          {isFullscreen && (
+            <button
+              onClick={() => {
+                if (document.exitFullscreen) {
+                  document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                  document.webkitExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                  document.mozCancelFullScreen();
+                } else if (document.msExitFullscreen) {
+                  document.msExitFullscreen();
+                }
+              }}
+              className="absolute top-4 right-4 bg-white/90 hover:bg-white text-gray-800 px-4 py-2 rounded-full font-semibold shadow-lg z-[101]"
+            >
+              ← Exit Fullscreen
+            </button>
+          )}
         </motion.div>
       )}
 
@@ -498,39 +539,4 @@ export default function EditPage({ params }) {
             <GiftCardPopup
               initial={gift}
               onSelect={updateGift}
-              onClose={() => setShowGift(false)}
-            />
-          </div>
-        )}
-        {showCheckout && (
-          <div className="pointer-events-auto relative">
-            <CheckoutModal
-              total={total}
-              gift={gift}
-              onGiftChange={() => setShowGift(true)}
-              onGiftRemove={removeGift}
-              onClose={() => setShowCheckout(false)}
-            />
-          </div>
-        )}
-        {showCrop && (
-          <div className="pointer-events-auto relative">
-            <CropperModal
-              open={showCrop}
-              existingImage={userImage}
-              onClose={() => setShowCrop(false)}
-              onDelete={() => {
-                setUserImage(null);
-                setShowCrop(false);
-              }}
-              onDone={(img) => {
-                setUserImage(img);
-                setShowCrop(false);
-              }}
-            />
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+              onClose={() => setShow
