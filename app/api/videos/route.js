@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 
 export async function GET() {
   try {
@@ -18,7 +18,6 @@ export async function GET() {
     
     console.log(`✅ API responded with ${data.videos?.length || 0} videos`);
     
-    // 💡 YA NO USAMOS GLOSARIO — Eliminado completamente
     return NextResponse.json(
       { 
         videos: data.videos || []
