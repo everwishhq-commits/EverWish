@@ -79,7 +79,7 @@ export default function CarouselAdminPanel() {
       const cfg = loadCarouselConfig();
       setConfig(cfg);
 
-      const active = Object.entries(cfg.videos).filter(([_, info]) => info.active);
+      const active = Object.entries(cfg.videos).filter(([, info]) => info.active);
       const pending = videos.filter(v => !cfg.videos[v.name]?.active);
       const lastRotation = cfg.lastRotation || 0;
       const hoursSince = (Date.now() - lastRotation) / (1000 * 60 * 60);
@@ -107,7 +107,7 @@ export default function CarouselAdminPanel() {
     };
     
     const activeVideos = Object.entries(newConfig.videos)
-      .filter(([_, info]) => info.active)
+      .filter(([, info]) => info.active)
       .sort((a, b) => {
         if (a[1].forced && !b[1].forced) return 1;
         if (!a[1].forced && b[1].forced) return -1;
@@ -115,7 +115,7 @@ export default function CarouselAdminPanel() {
       });
     
     if (activeVideos.length > 10) {
-      const [oldestName, _] = activeVideos[0];
+      const [oldestName] = activeVideos[0];
       newConfig.videos[oldestName] = {
         ...newConfig.videos[oldestName],
         active: false,
@@ -242,14 +242,14 @@ export default function CarouselAdminPanel() {
 
         {/* Lista de Videos */}
         <div className="space-y-3">
-          {filteredVideos.map((video, i) => {
+          {filteredVideos.map((video) => {
             const isActive = config?.videos[video.name]?.active;
             const isForced = config?.videos[video.name]?.forced;
             const addedAt = config?.videos[video.name]?.addedAt;
 
             return (
               <div
-                key={i}
+                key={video.name}
                 className={`bg-white rounded-xl p-4 shadow-md border-2 ${
                   isActive ? "border-green-400" : "border-gray-200"
                 }`}
