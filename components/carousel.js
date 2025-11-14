@@ -1,123 +1,11 @@
+"use client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-
-// 📅 DETECTAR TEMPORADA ACTUAL
-function getCurrentSeason() {
-  const now = new Date();
-  const month = now.getMonth();
-  const day = now.getDate();
-
-  if (month === 9) return "halloween";
-  if (month === 10) {
-    const thanksgiving = getNthThursday(now.getFullYear(), 10, 4);
-    if (day >= thanksgiving.getDate() - 7 && day <= thanksgiving.getDate() + 3) {
-      return "thanksgiving";
-    }
-  }
-  if (month === 11) return "christmas";
-  if (month === 1) return "valentines";
-  if (month === 2 || month === 3) return "easter";
-  if (month === 6) return "july4";
-  return "general";
-}
-
-function getNthThursday(year, month, n) {
-  const firstDay = new Date(year, month, 1);
-  const firstThursday = 1 + ((11 - firstDay.getDay()) % 7);
-  return new Date(year, month, firstThursday + (n - 1) * 7);
-}
-
-// 🎯 CALCULAR SCORE
-function calculateVideoScore(video) {
-  let score = 0;
-  const currentSeason = getCurrentSeason();
-  const videoCategories = [
-    video.name?.toLowerCase(),
-    video.subcategory?.toLowerCase(),
-    ...(video.tags || []).map(t => t.toLowerCase()),
-  ].join(" ");
-  
-  if (videoCategories.includes(currentSeason)) score += 50;
-  
-  const views = video.views || 0;
-  const purchases = video.purchases || 0;
-  const votes = video.votes || 0;
-  score += Math.min(30, (purchases * 5 + votes * 2 + views * 0.1));
-  
-  const createdAt = new Date(video.createdAt || video.uploadedAt || Date.now());
-  const daysSinceCreated = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
-  if (daysSinceCreated < 7) score += 20;
-  else if (daysSinceCreated < 30) score += 10;
-  
-  return score;
-}
-
-// 💾 CONFIGURACIÓN
-function loadCarouselConfig() {
-  if (typeof window === "undefined") return { videos: {}, lastRotation: Date.now() };
-  try {
-    const stored = localStorage.getItem("everwish_carousel_config");
-    return stored ? JSON.parse(stored) : { videos: {}, lastRotation: Date.now() };
-  } catch {
-    return { videos: {}, lastRotation: Date.now() };
-  }
-}
-
-function saveCarouselConfig(config) {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem("everwish_carousel_config", JSON.stringify(config));
-  } catch (err) {
-    console.error("Error guardando config:", err);
-  }
-}
-
-// 🔄 ROTACIÓN
-function applyRotation(allVideos, config) {
-  const now = Date.now();
-  const currentActive = Object.entries(config.videos)
-    .filter(([_, info]) => info.active)
-    .map(([name, info]) => ({
-      name,
-      ...info,
-      video: allVideos.find(v => v.name === name),
-    }))
-    .filter(item => item.video)
-    .sort((a, b) => a.addedAt - b.addedAt);
-  
-  const candidates = allVideos.filter(v => !config.videos[v.name]?.active);
-  
-  const lastRotation = config.lastRotation || 0;
-  const hoursSinceRotation = (now - lastRotation) / (1000 * 60 * 60);
-  
-  if (hoursSinceRotation >= 24 && candidates.length > 0 && currentActive.length >= 10) {
-    const oldestVideo = currentActive[0];
-    const newVideo = candidates[0];
-    
-    config.videos[oldestVideo.name] = { ...config.videos[oldestVideo.name], active: false, removedAt: now };
-    config.videos[newVideo.name] = { active: true, addedAt: now, forced: false };
-    config.lastRotation = now;
-    saveCarouselConfig(config);
-    
-    currentActive.shift();
-    currentActive.push({ name: newVideo.name, active: true, addedAt: now, video: newVideo });
-  }
-  
-  while (currentActive.length < 10 && candidates.length > 0) {
-    const newVideo = candidates.shift();
-    config.videos[newVideo.name] = { active: true, addedAt: now, forced: false };
-    currentActive.push({ name: newVideo.name, active: true, addedAt: now, video: newVideo });
-  }
-  
-  saveCarouselConfig(config);
-  return currentActive.map(item => item.video);
-}
 
 export default function Carousel() {
   const router = useRouter();
   const [videos, setVideos] = useState([]);
   const [index, setIndex] = useState(0);
-  const [stats, setStats] = useState(null);
   const autoplayRef = useRef(null);
   const pauseRef = useRef(false);
 
@@ -139,39 +27,40 @@ export default function Carousel() {
   };
 
   useEffect(() => {
-    async function loadVideos() {
+    async function loadAndFilter() {
       try {
-        const res = await fetch("/api/videos", { cache: "no-store" });
+        const res = await fetch("/api/videos");
         const data = await res.json();
-        const allVideos = data.videos || [];
+        const allVideos = data.videos || data || [];
 
-        const config = loadCarouselConfig();
-        const videosWithScore = allVideos.map(v => ({
-          ...v,
-          score: calculateVideoScore(v),
-        }));
-        
-        videosWithScore.sort((a, b) => b.score - a.score);
-        const activeVideos = applyRotation(videosWithScore, config);
-        
-        setVideos(activeVideos);
-
-        const active = Object.values(config.videos).filter(v => v.active).length;
-        const lastRotation = config.lastRotation || 0;
-        const hoursSinceRotation = (Date.now() - lastRotation) / (1000 * 60 * 60);
-        const nextRotationIn = Math.max(0, 24 - hoursSinceRotation);
-        
-        setStats({
-          active,
-          nextRotationIn: Math.round(nextRotationIn * 10) / 10,
-          currentSeason: getCurrentSeason(),
+        const grouped = {};
+        allVideos.forEach((v) => {
+          const slugToUse = v.slug || v.name;
+          const base = slugToUse.replace(/_\d+[A-Z]?$/i, "");
+          if (!grouped[base]) grouped[base] = [];
+          grouped[base].push(v);
         });
+
+        const uniqueVideos = Object.values(grouped).map((arr) =>
+          arr.sort((a, b) => {
+            const aDate = a.updatedAt || a.date || 0;
+            const bDate = b.updatedAt || b.date || 0;
+            const aPop = a.popularity || 0;
+            const bPop = b.popularity || 0;
+            return bPop - aPop || bDate - aDate;
+          })[0]
+        );
+
+        const top10 = uniqueVideos.slice(0, 10);
+        setVideos(top10);
       } catch (err) {
-        console.error("Error cargando videos:", err);
+        console.error("❌ Error cargando videos:", err);
       }
     }
 
-    loadVideos();
+    loadAndFilter();
+    const interval = setInterval(loadAndFilter, 24 * 60 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -196,7 +85,8 @@ export default function Carousel() {
 
     if (Math.abs(deltaX) > TAP_THRESHOLD || Math.abs(deltaY) > TAP_THRESHOLD) {
       moved.current = true;
-      direction.current = Math.abs(deltaX) > Math.abs(deltaY) ? "horizontal" : "vertical";
+      direction.current =
+        Math.abs(deltaX) > Math.abs(deltaY) ? "horizontal" : "vertical";
       e.stopPropagation();
     }
   };
@@ -225,57 +115,37 @@ export default function Carousel() {
     }, 3000);
   };
 
-  // ⚡ MEJORADO: Activar fullscreen antes de navegar
   const handleClick = async (slug) => {
     try {
       const elem = document.documentElement;
-      
-      // Intentar entrar en fullscreen
-      if (elem.requestFullscreen) {
-        await elem.requestFullscreen();
-      } else if (elem.webkitRequestFullscreen) {
+      if (elem.requestFullscreen) await elem.requestFullscreen();
+      else if (elem.webkitRequestFullscreen)
         await elem.webkitRequestFullscreen();
-      } else if (elem.mozRequestFullScreen) {
-        await elem.mozRequestFullScreen();
-      } else if (elem.msRequestFullscreen) {
-        await elem.msRequestFullscreen();
-      }
-      
-      // Pequeña pausa para que el fullscreen se active
-      await new Promise((r) => setTimeout(r, 200));
-    } catch (err) {
-      console.log("Fullscreen no disponible:", err);
-      // Continuar sin fullscreen si falla
+      await new Promise((r) => setTimeout(r, 150));
+      router.push(`/edit/${slug}`);
+    } catch {
+      router.push(`/edit/${slug}`);
     }
-    
-    // Navegar a la página de edición
-    router.push(`/edit/${slug}`);
   };
 
   if (videos.length === 0) {
     return (
       <div className="w-full flex justify-center items-center h-[440px]">
-        <p className="text-gray-400 text-lg">Loading carousel...</p>
+        <p className="text-gray-400 text-lg">Loading videos...</p>
       </div>
     );
   }
 
   return (
-    <div className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none">
-      {/* Estadísticas del carrusel */}
-      {stats && (
-        <div className="mb-4 text-center text-sm text-gray-600">
-          <p>🎡 {stats.active} videos activos · 🌍 Temporada: <b>{stats.currentSeason}</b></p>
-          <p>⏰ Próxima rotación en <b>{stats.nextRotationIn}h</b></p>
-        </div>
-      )}
-
+    <div
+      className="w-full flex flex-col items-center mt-8 mb-12 overflow-hidden select-none"
+      style={{ touchAction: "pan-y" }}
+    >
       <div
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className="relative w-full max-w-5xl flex justify-center items-center h-[440px] cursor-pointer"
-        style={{ touchAction: "pan-y" }}
+        className="relative w-full max-w-5xl flex justify-center items-center h-[440px]"
       >
         {videos.map((video, i) => {
           const offset = (i - index + videos.length) % videos.length;
@@ -302,6 +172,10 @@ export default function Carousel() {
                 controlsList="nodownload noplaybackrate"
                 draggable="false"
                 onContextMenu={(e) => e.preventDefault()}
+                onError={(e) => {
+                  console.error("❌ Error cargando video:", video.file);
+                  // NO mostrar ningún mensaje visual
+                }}
                 className="w-[300px] sm:w-[320px] md:w-[340px] h-[420px] aspect-[4/5] rounded-2xl shadow-lg object-cover object-center bg-pink-50 overflow-hidden"
               />
             </div>
@@ -331,4 +205,4 @@ export default function Carousel() {
       </div>
     </div>
   );
-}
+            }
