@@ -4,7 +4,13 @@
  * CheckoutModal.js
  * Muestra el resumen de pago y permite agregar o quitar Gift Card.
  */
-export default function CheckoutModal({ total, gift, onGiftChange, onGiftRemove, onClose }) {
+export default function CheckoutModal({ 
+  total = 0, 
+  gift = null, 
+  onGiftChange = () => {}, 
+  onGiftRemove = () => {}, 
+  onClose = () => {} 
+}) {
   return (
     <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl p-6 shadow-2xl w-[90%] max-w-md text-center">
