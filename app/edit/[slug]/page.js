@@ -15,7 +15,7 @@ import CropperModal from "@/components/croppermodal";
 export default function EditPage({ params }) {
   const slug = params.slug;
 
-  // Estados
+  // estados
   const [stage, setStage] = useState("expanded");
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("");
@@ -38,10 +38,7 @@ export default function EditPage({ params }) {
   const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
   const [animKey, setAnimKey] = useState(0);
 
-  // ⚡ NUEVO: Estado de fullscreen
-  const [isFullscreen, setIsFullscreen] = useState(false);
-
-  // Cargar video + config
+  // cargar video + config
   useEffect(() => {
     async function loadVideo() {
       try {
@@ -76,69 +73,8 @@ export default function EditPage({ params }) {
     setLastActiveAnimation(defaultAnim);
   }, [slug]);
 
-  // ⚡ NUEVO: Listener para detectar salida de fullscreen
+  // loading pantalla
   useEffect(() => {
-    const handleFullscreenChange = () => {
-      const isCurrentlyFullscreen = !!(
-        document.fullscreenElement ||
-        document.webkitFullscreenElement ||
-        document.mozFullScreenElement ||
-        document.msFullscreenElement
-      );
-      
-      setIsFullscreen(isCurrentlyFullscreen);
-      
-      // Si salimos de fullscreen, ir al editor
-      if (!isCurrentlyFullscreen && stage === "expanded") {
-        setStage("editor");
-      }
-    };
-
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
-    document.addEventListener("mozfullscreenchange", handleFullscreenChange);
-    document.addEventListener("MSFullscreenChange", handleFullscreenChange);
-
-    return () => {
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
-      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
-      document.removeEventListener("mozfullscreenchange", handleFullscreenChange);
-      document.removeEventListener("MSFullscreenChange", handleFullscreenChange);
-    };
-  }, [stage]);
-
-  // ⚡ NUEVO: Intentar entrar en fullscreen al cargar
-  useEffect(() => {
-    const enterFullscreen = async () => {
-      try {
-        const elem = document.documentElement;
-        
-        if (elem.requestFullscreen) {
-          await elem.requestFullscreen();
-        } else if (elem.webkitRequestFullscreen) {
-          await elem.webkitRequestFullscreen();
-        } else if (elem.mozRequestFullScreen) {
-          await elem.mozRequestFullScreen();
-        } else if (elem.msRequestFullscreen) {
-          await elem.msRequestFullscreen();
-        }
-        
-        setIsFullscreen(true);
-      } catch (err) {
-        console.log("Fullscreen no disponible o bloqueado:", err);
-        // Si falla, continuar normalmente
-      }
-    };
-
-    // Esperar un poco para que el componente se monte
-    const timer = setTimeout(enterFullscreen, 300);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Loading pantalla
-  useEffect(() => {
-    if (stage !== "expanded") return;
-    
     let v = 0;
     const id = setInterval(() => {
       v += 1;
@@ -149,14 +85,14 @@ export default function EditPage({ params }) {
       }
     }, 30);
     return () => clearInterval(id);
-  }, [stage]);
+  }, []);
 
-  // Re-render anim
+  // re-render anim
   useEffect(() => {
     setAnimKey(Date.now());
   }, [animation, category, intensity, emojiCount]);
 
-  // Bloquear clic derecho global
+  // bloquear clic derecho global
   useEffect(() => {
     const preventContextMenu = (e) => {
       e.preventDefault();
@@ -165,12 +101,12 @@ export default function EditPage({ params }) {
     return () => document.removeEventListener("contextmenu", preventContextMenu);
   }, []);
 
-  // Bloquear guardar
+  // bloquear guardar
   const handleCardClick = () => {
     alert("🔒 This card is protected. Purchase to download!");
   };
 
-  // Gift
+  // gift
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
@@ -313,7 +249,7 @@ export default function EditPage({ params }) {
           {videoFound ? (
             <video
               src={videoSrc}
-              className="w-full h-full object-contain bg-black"
+              className="w-full h-full aspect-[4/5] object-cover object-center bg-pink-50"
               autoPlay
               loop
               muted
@@ -321,11 +257,6 @@ export default function EditPage({ params }) {
               controlsList="nodownload nofullscreen noremoteplayback"
               disablePictureInPicture
               onContextMenu={(e) => e.preventDefault()}
-              style={{
-                maxWidth: "100vw",
-                maxHeight: "100vh",
-                objectFit: "contain"
-              }}
             />
           ) : (
             <div className="text-gray-500 text-center">
@@ -342,26 +273,6 @@ export default function EditPage({ params }) {
               transition={{ duration: 0.03, ease: "linear" }}
             />
           </div>
-
-          {/* ⚡ NUEVO: Botón para salir de fullscreen */}
-          {isFullscreen && (
-            <button
-              onClick={() => {
-                if (document.exitFullscreen) {
-                  document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) {
-                  document.webkitExitFullscreen();
-                } else if (document.mozCancelFullScreen) {
-                  document.mozCancelFullScreen();
-                } else if (document.msExitFullscreen) {
-                  document.msExitFullscreen();
-                }
-              }}
-              className="absolute top-4 right-4 bg-white/90 hover:bg-white text-gray-800 px-4 py-2 rounded-full font-semibold shadow-lg z-[101]"
-            >
-              ← Exit Fullscreen
-            </button>
-          )}
         </motion.div>
       )}
 
@@ -539,4 +450,39 @@ export default function EditPage({ params }) {
             <GiftCardPopup
               initial={gift}
               onSelect={updateGift}
-              onClose={() => setShow
+              onClose={() => setShowGift(false)}
+            />
+          </div>
+        )}
+        {showCheckout && (
+          <div className="pointer-events-auto relative">
+            <CheckoutModal
+              total={total}
+              gift={gift}
+              onGiftChange={() => setShowGift(true)}
+              onGiftRemove={removeGift}
+              onClose={() => setShowCheckout(false)}
+            />
+          </div>
+        )}
+        {showCrop && (
+          <div className="pointer-events-auto relative">
+            <CropperModal
+              open={showCrop}
+              existingImage={userImage}
+              onClose={() => setShowCrop(false)}
+              onDelete={() => {
+                setUserImage(null);
+                setShowCrop(false);
+              }}
+              onDone={(img) => {
+                setUserImage(img);
+                setShowCrop(false);
+              }}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
