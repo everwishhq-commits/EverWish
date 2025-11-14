@@ -13,7 +13,6 @@ export default function Carousel() {
   const startX = useRef(0);
   const startY = useRef(0);
   const moved = useRef(false);
-  const direction = useRef(null);
 
   const TAP_THRESHOLD = 12;
   const SWIPE_THRESHOLD = 50;
@@ -38,12 +37,12 @@ export default function Carousel() {
 
         // Agrupar por base del slug
         const grouped = {};
-        allVideos.forEach((v) => {
+        for (const v of allVideos) {
           const slugToUse = v.slug || v.name;
           const base = slugToUse.replace(/_\d+[A-Z]?$/i, "");
           if (!grouped[base]) grouped[base] = [];
           grouped[base].push(v);
-        });
+        }
 
         // Ordenar por popularidad/fecha
         const unique = Object.values(grouped).map((arr) =>
@@ -76,7 +75,6 @@ export default function Carousel() {
     startX.current = t.clientX;
     startY.current = t.clientY;
     moved.current = false;
-    direction.current = null;
 
     pauseRef.current = true;
     clearInterval(autoplayRef.current);
@@ -89,8 +87,6 @@ export default function Carousel() {
 
     if (Math.abs(dx) > TAP_THRESHOLD || Math.abs(dy) > TAP_THRESHOLD) {
       moved.current = true;
-      direction.current =
-        Math.abs(dx) > Math.abs(dy) ? "horizontal" : "vertical";
       e.stopPropagation();
     }
   };
@@ -102,7 +98,7 @@ export default function Carousel() {
       const tapped = videos[index];
       const slugToUse = tapped.slug || tapped.name;
       if (slugToUse) handleClick(slugToUse);
-    } else if (direction.current === "horizontal") {
+    } else {
       const diffX = startX.current - e.changedTouches[0].clientX;
       if (Math.abs(diffX) > SWIPE_THRESHOLD) {
         setIndex((prev) =>
@@ -119,7 +115,7 @@ export default function Carousel() {
     }, 3000);
   };
 
-  // Desktop slide change - CORREGIDO
+  // Desktop slide change
   const nextSlide = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -178,8 +174,9 @@ export default function Carousel() {
         className="relative w-full max-w-5xl flex justify-center items-center h-[440px]"
       >
         {/* VIDEOS */}
-        {videos.map((video, i) => {
-          const offset = (i - index + videos.length) % videos.length;
+        {videos.map((video) => {
+          const videoIndex = videos.indexOf(video);
+          const offset = (videoIndex - index + videos.length) % videos.length;
           const isCenter = offset === 0;
 
           const positionClass =
@@ -193,7 +190,7 @@ export default function Carousel() {
 
           return (
             <div
-              key={i}
+              key={video.name || video.slug}
               className={`absolute transition-all duration-500 ease-in-out ${positionClass}`}
             >
               <video
@@ -217,7 +214,7 @@ export default function Carousel() {
           );
         })}
 
-        {/* FLECHA IZQUIERDA — SOLO PC — CORREGIDO */}
+        {/* FLECHA IZQUIERDA */}
         <button
           onClick={prevSlide}
           onMouseDown={(e) => e.preventDefault()}
@@ -227,6 +224,7 @@ export default function Carousel() {
                      rounded-full w-12 h-12 justify-center items-center
                      text-pink-600 text-3xl cursor-pointer z-30"
           style={{ pointerEvents: 'auto' }}
+          aria-label="Previous slide"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path
@@ -239,7 +237,7 @@ export default function Carousel() {
           </svg>
         </button>
 
-        {/* FLECHA DERECHA — SOLO PC — CORREGIDO */}
+        {/* FLECHA DERECHA */}
         <button
           onClick={nextSlide}
           onMouseDown={(e) => e.preventDefault()}
@@ -249,6 +247,7 @@ export default function Carousel() {
                      rounded-full w-12 h-12 justify-center items-center
                      text-pink-600 text-3xl cursor-pointer z-30"
           style={{ pointerEvents: 'auto' }}
+          aria-label="Next slide"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path
@@ -264,18 +263,22 @@ export default function Carousel() {
 
       {/* DOTS */}
       <div className="flex mt-5 gap-2">
-        {videos.map((_, i) => (
-          <span
-            key={i}
-            onClick={() => {
-              setIndex(i);
-              pauseTemporarily();
-            }}
-            className={`w-3 h-3 rounded-full cursor-pointer transition-all ${
-              i === index ? "bg-pink-500 scale-125" : "bg-gray-300"
-            }`}
-          ></span>
-        ))}
+        {videos.map((video) => {
+          const videoIndex = videos.indexOf(video);
+          return (
+            <button
+              key={video.name || video.slug}
+              onClick={() => {
+                setIndex(videoIndex);
+                pauseTemporarily();
+              }}
+              className={`w-3 h-3 rounded-full cursor-pointer transition-all ${
+                videoIndex === index ? "bg-pink-500 scale-125" : "bg-gray-300"
+              }`}
+              aria-label={`Go to slide ${videoIndex + 1}`}
+            />
+          );
+        })}
       </div>
     </div>
   );
