@@ -26,16 +26,18 @@ export default function RecipientsAdmin() {
         📬 Administración de Envíos
       </h2>
       <div className="max-w-lg mx-auto bg-white p-6 rounded-2xl shadow">
-        <label className="block font-semibold mb-1">ID de Tarjeta</label>
+        <label htmlFor="cardId" className="block font-semibold mb-1">ID de Tarjeta</label>
         <input
+          id="cardId"
           value={cardId}
           onChange={(e) => setCardId(e.target.value)}
           className="w-full border rounded-xl p-3 mb-3"
           placeholder="uuid o slug"
         />
 
-        <label className="block font-semibold mb-1">Lista de destinatarios</label>
+        <label htmlFor="csvList" className="block font-semibold mb-1">Lista de destinatarios</label>
         <textarea
+          id="csvList"
           value={csv}
           onChange={(e) => setCsv(e.target.value)}
           rows={6}
@@ -68,4 +70,4 @@ export default function RecipientsAdmin() {
       </div>
     </div>
   );
-            }
+}
