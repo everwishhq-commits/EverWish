@@ -66,7 +66,6 @@ export default function Categories() {
   // Procesar búsqueda
   useEffect(() => {
     if (!search.trim()) {
-      // Sin búsqueda: mostrar todas
       setDisplayCategories(
         BASE_CATEGORIES.map((cat, i) => ({ 
           ...cat, 
@@ -79,14 +78,11 @@ export default function Categories() {
 
     console.log(`🔍 Buscando: "${search}"`);
 
-    // Buscar videos
     const matchedVideos = searchVideos(videos, search);
     console.log(`✅ Videos encontrados: ${matchedVideos.length}`);
     
-    // Agrupar por categoría
     const grouped = groupByCategory(matchedVideos);
     
-    // Solo mostrar categorías con resultados
     const categoriesWithResults = BASE_CATEGORIES
       .map((cat, index) => ({
         ...cat,
@@ -177,9 +173,13 @@ export default function Categories() {
           modules={[Autoplay]}
           className="overflow-visible"
         >
-          {displayCategories.map((cat, i) => (
-            <SwiperSlide key={i}>
-              <div onClick={() => handleCategoryClick(cat)}>
+          {displayCategories.map((cat) => (
+            <SwiperSlide key={cat.slug}>
+              <button 
+                onClick={() => handleCategoryClick(cat)}
+                className="w-full"
+                aria-label={`View ${cat.name} category`}
+              >
                 <motion.div
                   className="flex flex-col items-center justify-center cursor-pointer relative"
                   whileHover={{ scale: 1.07 }}
@@ -207,7 +207,7 @@ export default function Categories() {
                     {cat.name}
                   </p>
                 </motion.div>
-              </div>
+              </button>
             </SwiperSlide>
           ))}
         </Swiper>
