@@ -17,7 +17,7 @@ export async function POST(req) {
     const gift = body.gift || {};
 
     // --- Validaciones ---
-    if (!amount || isNaN(amount) || amount < 50) {
+    if (!amount || Number.isNaN(amount) || amount < 50) {
       return new Response(
         JSON.stringify({ error: "Invalid or missing amount" }),
         { status: 400, headers: { "Content-Type": "application/json" } }
@@ -63,4 +63,4 @@ export async function POST(req) {
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
-                                 }
+}
