@@ -101,39 +101,9 @@ export default function EditPage({ params }) {
     return () => document.removeEventListener("contextmenu", preventContextMenu);
   }, []);
 
-  // 🔥 FULLSCREEN MEJORADO - Oculta tabs de Chrome
-  const handleCardClick = async () => {
-    try {
-      const elem = document.documentElement;
-      
-      // Usar fullscreen con opciones para ocultar navegación
-      if (elem.requestFullscreen) {
-        await elem.requestFullscreen({ navigationUI: "hide" });
-      } else if (elem.webkitRequestFullscreen) {
-        // Safari en iOS
-        await elem.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-      } else if (elem.mozRequestFullScreen) {
-        await elem.mozRequestFullScreen();
-      } else if (elem.msRequestFullscreen) {
-        await elem.msRequestFullscreen();
-      }
-      
-      // Forzar pantalla completa después de un delay
-      setTimeout(() => {
-        if (screen?.orientation?.lock) {
-          screen.orientation.lock("portrait").catch(() => {});
-        }
-      }, 100);
-      
-    } catch (err) {
-      console.log("Fullscreen not available:", err);
-      // Intentar alternativa para iOS
-      if (document.body.webkitRequestFullscreen) {
-        try {
-          await document.body.webkitRequestFullscreen();
-        } catch {}
-      }
-    }
+  // bloquear guardar
+  const handleCardClick = () => {
+    alert("🔒 This card is protected. Purchase to download!");
   };
 
   // gift
@@ -279,7 +249,7 @@ export default function EditPage({ params }) {
           {videoFound ? (
             <video
               src={videoSrc}
-              className="w-full h-full object-cover bg-pink-50"
+              className="w-full h-full aspect-[4/5] object-cover object-center bg-pink-50"
               autoPlay
               loop
               muted
@@ -328,7 +298,7 @@ export default function EditPage({ params }) {
                 {videoFound ? (
                   <video
                     src={videoSrc}
-                    className="w-full h-full object-contain bg-pink-50 overflow-hidden pointer-events-none"
+                    className="w-full h-full aspect-[4/5] object-cover object-center bg-pink-50 overflow-hidden pointer-events-none"
                     autoPlay
                     loop
                     muted
@@ -411,7 +381,7 @@ export default function EditPage({ params }) {
                 {videoFound ? (
                   <video
                     src={videoSrc}
-                    className="w-full h-full object-contain bg-pink-50 overflow-hidden pointer-events-none"
+                    className="w-full h-full aspect-[4/5] object-cover object-center bg-pink-50 overflow-hidden pointer-events-none"
                     autoPlay
                     loop
                     muted
@@ -515,4 +485,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-    }
+}
