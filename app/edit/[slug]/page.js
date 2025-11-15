@@ -101,9 +101,18 @@ export default function EditPage({ params }) {
     return () => document.removeEventListener("contextmenu", preventContextMenu);
   }, []);
 
-  // bloquear guardar
-  const handleCardClick = () => {
-    alert("🔒 This card is protected. Purchase to download!");
+  // fullscreen al hacer clic
+  const handleCardClick = async () => {
+    try {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) {
+        await elem.requestFullscreen();
+      } else if (elem.webkitRequestFullscreen) {
+        await elem.webkitRequestFullscreen();
+      }
+    } catch (err) {
+      console.log("Fullscreen not available");
+    }
   };
 
   // gift
@@ -249,7 +258,7 @@ export default function EditPage({ params }) {
           {videoFound ? (
             <video
               src={videoSrc}
-              className="w-full h-full aspect-[4/5] object-cover object-center bg-pink-50"
+              className="w-full h-full object-cover bg-pink-50"
               autoPlay
               loop
               muted
@@ -298,7 +307,7 @@ export default function EditPage({ params }) {
                 {videoFound ? (
                   <video
                     src={videoSrc}
-                    className="w-full h-full aspect-[4/5] object-cover object-center bg-pink-50 overflow-hidden pointer-events-none"
+                    className="w-full h-full object-cover bg-pink-50 overflow-hidden pointer-events-none"
                     autoPlay
                     loop
                     muted
@@ -381,7 +390,7 @@ export default function EditPage({ params }) {
                 {videoFound ? (
                   <video
                     src={videoSrc}
-                    className="w-full h-full aspect-[4/5] object-cover object-center bg-pink-50 overflow-hidden pointer-events-none"
+                    className="w-full h-full object-cover bg-pink-50 overflow-hidden pointer-events-none"
                     autoPlay
                     loop
                     muted
@@ -485,4 +494,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-    }
+            }
