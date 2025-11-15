@@ -1,446 +1,488 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  getAnimationsForSlug,
+  getAnimationOptionsForSlug,
+  AnimationOverlay,
+} from "@/lib/animations";
 import { getMessageForSlug } from "@/lib/messages";
-import { AnimationOverlay, getAnimationOptionsForSlug } from "@/lib/animations";
-import CropperModal from "@/components/croppermodal";
 import GiftCardPopup from "@/components/giftcard";
 import CheckoutModal from "@/components/checkout";
+import CropperModal from "@/components/croppermodal";
 
-export default function EditPage() {
-  const { slug } = useParams();
-  const router = useRouter();
+export default function EditPage({ params }) {
+  const slug = params.slug;
 
-  // Estados principales
-  const [video, setVideo] = useState(null);
+  const [stage, setStage] = useState("expanded");
+  const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("");
-  const [senderName, setSenderName] = useState("");
-  const [senderEmail, setSenderEmail] = useState("");
-  const [recipientName, setRecipientName] = useState("");
-  const [recipientEmail, setRecipientEmail] = useState("");
-  const [selectedAnimation, setSelectedAnimation] = useState("✨ None (No Animation)");
-  const [showAnimationPicker, setShowAnimationPicker] = useState(false);
+  const [animation, setAnimation] = useState("");
   const [animationOptions, setAnimationOptions] = useState([]);
-  const [uploadedImage, setUploadedImage] = useState(null);
-  const [showCropper, setShowCropper] = useState(false);
-  const [gift, setGift] = useState(null);
-  const [showGiftPopup, setShowGiftPopup] = useState(false);
+  const [videoSrc, setVideoSrc] = useState("");
+  const [videoFound, setVideoFound] = useState(true);
+  const [lastActiveAnimation, setLastActiveAnimation] = useState("");
+
+  const [showGift, setShowGift] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showControls, setShowControls] = useState(true);
+  const [showCrop, setShowCrop] = useState(false);
+  const [gift, setGift] = useState(null);
+  const [total, setTotal] = useState(5);
+  const [userImage, setUserImage] = useState(null);
 
-  const videoRef = useRef(null);
-  const controlsTimeoutRef = useRef(null);
+  const [intensity, setIntensity] = useState("normal");
+  const [emojiCount, setEmojiCount] = useState(20);
 
-  // 🎬 CARGAR VIDEO
+  const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
+  const [animKey, setAnimKey] = useState(0);
+
   useEffect(() => {
     async function loadVideo() {
       try {
         const res = await fetch("/api/videos", { cache: "no-store" });
         const data = await res.json();
-        const allVideos = data.videos || [];
-        const found = allVideos.find(v => v.name === slug || v.slug === slug);
-        
-        if (found) {
-          setVideo(found);
-          const defaultMsg = getMessageForSlug(slug);
-          setMessage(defaultMsg);
-          
-          const options = getAnimationOptionsForSlug(slug);
-          setAnimationOptions(options);
-          setSelectedAnimation(options[1] || options[0]);
+        const videos = data.videos || data || [];
+
+        let match = videos.find((v) => v.name === slug);
+        if (!match) match = videos.find((v) => v.slug === slug);
+
+        if (match) {
+          setVideoSrc(match.file);
+          setVideoFound(true);
         } else {
-          console.error("Video no encontrado:", slug);
-          router.push("/categories");
+          setVideoSrc(`/videos/${slug}.mp4`);
+          setVideoFound(false);
         }
       } catch (err) {
-        console.error("Error cargando video:", err);
-        router.push("/categories");
+        console.error("❌ Error cargando video:", err);
+        setVideoSrc(`/videos/${slug}.mp4`);
+        setVideoFound(false);
       }
     }
+
     loadVideo();
-  }, [slug, router]);
+    setMessage(getMessageForSlug(slug));
 
-  // 🖥️ PANTALLA COMPLETA - Detectar cambios
+    const opts = getAnimationOptionsForSlug(slug);
+    setAnimationOptions(opts);
+    const defaultAnim = opts.find((a) => !a.includes("None")) || opts[0];
+    setAnimation(defaultAnim);
+    setLastActiveAnimation(defaultAnim);
+  }, [slug]);
+
   useEffect(() => {
-    const handleFullscreenChange = () => {
-      const isNowFullscreen = !!(
-        document.fullscreenElement ||
-        document.webkitFullscreenElement ||
-        document.mozFullScreenElement ||
-        document.msFullscreenElement
-      );
-      setIsFullscreen(isNowFullscreen);
-      
-      if (isNowFullscreen) {
-        setShowControls(true);
-        startControlsTimeout();
+    let v = 0;
+    const id = setInterval(() => {
+      v += 1;
+      setProgress(v);
+      if (v >= 100) {
+        clearInterval(id);
+        setStage("editor");
       }
-    };
-
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
-    document.addEventListener("mozfullscreenchange", handleFullscreenChange);
-    document.addEventListener("MSFullscreenChange", handleFullscreenChange);
-
-    return () => {
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
-      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
-      document.removeEventListener("mozfullscreenchange", handleFullscreenChange);
-      document.removeEventListener("MSFullscreenChange", handleFullscreenChange);
-      clearTimeout(controlsTimeoutRef.current);
-    };
+    }, 30);
+    return () => clearInterval(id);
   }, []);
 
-  // ⏱️ Auto-ocultar controles después de 3 segundos
-  const startControlsTimeout = () => {
-    clearTimeout(controlsTimeoutRef.current);
-    controlsTimeoutRef.current = setTimeout(() => {
-      if (isFullscreen) {
-        setShowControls(false);
-      }
-    }, 3000);
+  useEffect(() => {
+    setAnimKey(Date.now());
+  }, [animation, category, intensity, emojiCount]);
+
+  useEffect(() => {
+    const preventContextMenu = (e) => e.preventDefault();
+    document.addEventListener("contextmenu", preventContextMenu);
+    return () => document.removeEventListener("contextmenu", preventContextMenu);
+  }, []);
+
+  const handleCardClick = () => {
+    alert("🔒 This card is protected. Purchase to download!");
   };
 
-  const handleMouseMove = () => {
-    if (isFullscreen) {
-      setShowControls(true);
-      startControlsTimeout();
-    }
+  const updateGift = (data) => {
+    setGift(data);
+    setShowGift(false);
+    setTotal(5 + (data?.amount || 0));
+  };
+  
+  const removeGift = () => {
+    setGift(null);
+    setTotal(5);
   };
 
-  // 🎬 ENTRAR/SALIR DE PANTALLA COMPLETA
-  const toggleFullscreen = async () => {
-    try {
-      if (!isFullscreen) {
-        const elem = document.documentElement;
-        if (elem.requestFullscreen) {
-          await elem.requestFullscreen();
-        } else if (elem.webkitRequestFullscreen) {
-          await elem.webkitRequestFullscreen();
-        } else if (elem.mozRequestFullScreen) {
-          await elem.mozRequestFullScreen();
-        } else if (elem.msRequestFullscreen) {
-          await elem.msRequestFullscreen();
-        }
-      } else {
-        if (document.exitFullscreen) {
-          await document.exitFullscreen();
-        } else if (document.webkitExitFullscreen) {
-          await document.webkitExitFullscreen();
-        } else if (document.mozCancelFullScreen) {
-          await document.mozCancelFullScreen();
-        } else if (document.msExitFullscreen) {
-          await document.msExitFullscreen();
-        }
-      }
-    } catch (err) {
-      console.error("Error toggling fullscreen:", err);
-    }
-  };
+  const isAnimationActive = animation && !animation.startsWith("✨ None");
 
-  // 📸 IMAGEN SUBIDA
-  const handleImageDone = (croppedImage) => {
-    setUploadedImage(croppedImage);
-    setShowCropper(false);
-  };
-
-  // 🎁 GIFT CARD
-  const handleGiftSelect = (giftData) => {
-    setGift(giftData);
-    setShowGiftPopup(false);
-  };
-
-  // 💳 CHECKOUT
-  const handleCheckout = async () => {
-    if (!senderName || !senderEmail || !recipientName || !recipientEmail) {
-      alert("Please fill in all sender and recipient information");
-      return;
-    }
-
-    try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          slug,
-          message,
-          anim: selectedAnimation,
-          sender: { name: senderName, email: senderEmail },
-          recipient: { name: recipientName, email: recipientEmail },
-          gift: gift || { brand: "", amount: 0 },
-          cardPrice: 5,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert("Error creating checkout session");
-      }
-    } catch (err) {
-      console.error("Checkout error:", err);
-      alert("An error occurred. Please try again.");
-    }
-  };
-
-  if (!video) {
+  const AnimationPanel = () => {
+    const currentEmoji = isAnimationActive ? animation.split(' ')[0] : '✨';
+    
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#fff5f8]">
-        <p className="text-lg text-gray-600 animate-pulse">Loading...</p>
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={`flex items-center justify-between w-full rounded-2xl transition-all duration-300 ${
+          isAnimationActive
+            ? "bg-gradient-to-r from-pink-100 via-purple-100 to-yellow-100 text-gray-800 shadow-lg border-2 border-white"
+            : "bg-white/90 backdrop-blur-sm text-gray-400 border-2 border-gray-200"
+        }`}
+        style={{ height: "56px", padding: "0 16px" }}
+      >
+        <button
+          onClick={() => {
+            if (!isAnimationActive) {
+              if (lastActiveAnimation) {
+                setAnimation(lastActiveAnimation);
+              } else {
+                const firstActive = animationOptions.find((a) => !a.includes("None"));
+                if (firstActive) setAnimation(firstActive);
+              }
+            }
+          }}
+          className={`text-2xl mr-3 transition-all flex-shrink-0 ${
+            isAnimationActive 
+              ? "cursor-default animate-bounce" 
+              : "cursor-pointer hover:scale-125 hover:rotate-12"
+          }`}
+        >
+          {currentEmoji}
+        </button>
+
+        <select
+          value={isAnimationActive ? animation : ""}
+          onChange={(e) => {
+            setAnimation(e.target.value);
+            if (!e.target.value.includes("None")) {
+              setLastActiveAnimation(e.target.value);
+            }
+          }}
+          disabled={!isAnimationActive}
+          className={`flex-1 text-sm font-semibold bg-transparent focus:outline-none truncate min-w-0 ${
+            isAnimationActive ? "cursor-pointer" : "cursor-not-allowed"
+          }`}
+        >
+          {!isAnimationActive ? (
+            <option value="">✨ Tap emoji to activate</option>
+          ) : (
+            <>
+              {animationOptions
+                .filter((a) => !a.includes("None"))
+                .map((a) => {
+                  const name = a.split(' ').slice(1).join(' ');
+                  return (
+                    <option key={a} value={a}>
+                      {name}
+                    </option>
+                  );
+                })}
+            </>
+          )}
+        </select>
+
+        <div className="flex items-center gap-2 ml-3">
+          <div className="flex items-center rounded-lg border-2 border-gray-300 overflow-hidden bg-white shadow-sm">
+            <button
+              className="px-2.5 py-1 text-lg font-bold text-pink-600 hover:bg-pink-50 transition-colors"
+              onClick={() => setEmojiCount((prev) => Math.max(5, prev - 5))}
+              disabled={!isAnimationActive}
+            >
+              −
+            </button>
+            <span className="px-3 text-sm font-bold text-gray-700 min-w-[32px] text-center border-x-2 border-gray-200">
+              {emojiCount}
+            </span>
+            <button
+              className="px-2.5 py-1 text-lg font-bold text-pink-600 hover:bg-pink-50 transition-colors"
+              onClick={() => setEmojiCount((prev) => Math.min(60, prev + 5))}
+              disabled={!isAnimationActive}
+            >
+              +
+            </button>
+          </div>
+
+          <select
+            value={intensity}
+            onChange={(e) => setIntensity(e.target.value)}
+            disabled={!isAnimationActive}
+            className="px-3 py-1.5 text-sm bg-white rounded-lg border-2 border-gray-300 font-semibold focus:outline-none focus:border-pink-400 cursor-pointer shadow-sm"
+          >
+            <option value="soft">💫 Soft</option>
+            <option value="normal">✨ Normal</option>
+            <option value="vivid">🌟 Vivid</option>
+          </select>
+
+          <button
+            onClick={() => {
+              if (isAnimationActive) {
+                setLastActiveAnimation(animation);
+                const noneOption = animationOptions.find((a) => a.includes("None"));
+                if (noneOption) setAnimation(noneOption);
+              }
+            }}
+            className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg transition-all shadow-sm ${
+              isAnimationActive
+                ? "bg-white text-red-500 hover:bg-red-50 hover:scale-110 cursor-pointer border-2 border-red-200"
+                : "bg-gray-100 text-gray-300 cursor-not-allowed border-2 border-gray-200"
+            }`}
+            disabled={!isAnimationActive}
+          >
+            ✕
+          </button>
+        </div>
+      </motion.div>
     );
-  }
+  };
 
   return (
-    <div 
-      className="min-h-screen bg-gradient-to-b from-pink-50 to-white"
-      onMouseMove={handleMouseMove}
-      onTouchStart={handleMouseMove}
-    >
-      {/* 🎬 VIDEO CON OVERLAY */}
-      <div className={`relative ${isFullscreen ? 'h-screen' : 'h-[60vh]'} w-full bg-black`}>
-        <video
-          ref={videoRef}
-          src={video.file}
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+    <div className="relative h-[100vh] max-h-[100vh] bg-gradient-to-b from-pink-50 via-purple-50 to-pink-50 flex items-center justify-center overflow-hidden">
+      {stage === "expanded" && (
+        <motion.div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-gradient-to-b from-pink-50 to-purple-50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          {videoFound ? (
+            <video
+              src={videoSrc}
+              className="w-full h-full aspect-[4/5] object-cover object-center shadow-2xl"
+              autoPlay
+              loop
+              muted
+              playsInline
+              controlsList="nodownload nofullscreen noremoteplayback"
+              disablePictureInPicture
+              onContextMenu={(e) => e.preventDefault()}
+            />
+          ) : (
+            <div className="text-gray-500 text-center">
+              <div className="text-6xl mb-4">⚠️</div>
+              <p className="text-lg">Video not found: {slug}</p>
+            </div>
+          )}
 
-        {/* Overlay de Animación */}
-        {selectedAnimation && !selectedAnimation.includes("None") && (
-          <AnimationOverlay
-            slug={slug}
-            animation={selectedAnimation}
-            intensity="normal"
-            opacityLevel={0.9}
-            emojiCount={20}
-          />
-        )}
-
-        {/* Imagen subida */}
-        {uploadedImage && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-            <img
-              src={uploadedImage}
-              alt="Uploaded"
-              className="max-w-[80%] max-h-[80%] rounded-2xl shadow-2xl"
+          <div className="absolute bottom-8 w-2/3 h-3 bg-white/30 backdrop-blur-sm rounded-full overflow-hidden shadow-lg">
+            <motion.div
+              className="h-full bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500"
+              initial={{ width: "0%" }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.03, ease: "linear" }}
             />
           </div>
-        )}
+        </motion.div>
+      )}
 
-        {/* Mensaje sobre el video */}
-        {message && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm px-6 py-4 rounded-2xl shadow-2xl max-w-md text-center z-20"
-          >
-            <p className="text-gray-800 font-medium leading-relaxed whitespace-pre-line">
-              {message}
-            </p>
-          </motion.div>
-        )}
+      {stage === "editor" && (
+        <>
+          <AnimationOverlay
+            key={animKey}
+            slug={slug}
+            animation={animation}
+            intensity={intensity}
+            opacityLevel={0.9}
+            emojiCount={emojiCount}
+          />
 
-        {/* CONTROLES EN PANTALLA COMPLETA */}
+          {userImage ? (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="relative z-[200] w-full max-w-md h-[100vh] px-4 pt-6 pb-24 overflow-y-auto flex flex-col gap-4"
+            >
+              <div
+                className="relative rounded-3xl border-4 border-white bg-white overflow-hidden cursor-pointer select-none flex-shrink-0 shadow-2xl hover:shadow-pink-200 transition-shadow duration-300"
+                onClick={handleCardClick}
+                onContextMenu={(e) => e.preventDefault()}
+                style={{ height: "38vh" }}
+              >
+                {videoFound ? (
+                  <video
+                    src={videoSrc}
+                    className="w-full h-full aspect-[4/5] object-cover object-center pointer-events-none"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    controlsList="nodownload nofullscreen noremoteplayback"
+                    disablePictureInPicture
+                    onError={() => setVideoFound(false)}
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 bg-gradient-to-b from-gray-50 to-gray-100">
+                    <div className="text-5xl mb-3">⚠️</div>
+                    <p className="text-xs text-center px-4 mb-2 font-semibold">
+                      This card&apos;s video is missing or not uploaded yet.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-3 flex-shrink-0">
+                <div className="flex items-center justify-center gap-2">
+                  <div className="h-px bg-gradient-to-r from-transparent via-pink-300 to-transparent flex-1"></div>
+                  <h3 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500">
+                    ✨ Your Message ✨
+                  </h3>
+                  <div className="h-px bg-gradient-to-r from-transparent via-pink-300 to-transparent flex-1"></div>
+                </div>
+                <textarea
+                  className="w-full rounded-2xl border-2 border-pink-200 p-4 text-center text-base text-gray-700 shadow-lg focus:border-pink-400 focus:ring-2 focus:ring-pink-200 resize-none bg-white/95 backdrop-blur-sm transition-all"
+                  rows={2}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Write your heartfelt message..."
+                />
+              </div>
+
+              <div className="relative flex-shrink-0" style={{ height: "38vh" }}>
+                <div
+                  className="rounded-3xl border-4 border-white shadow-2xl overflow-hidden bg-gradient-to-b from-pink-50 to-purple-50 h-full cursor-pointer flex items-center justify-center hover:shadow-pink-200 transition-shadow duration-300"
+                  onClick={() => setShowCrop(true)}
+                  onContextMenu={(e) => e.preventDefault()}
+                >
+                  <img
+                    src={userImage}
+                    alt="user"
+                    className="w-full h-full object-contain pointer-events-none"
+                  />
+                </div>
+
+                <div className="absolute bottom-4 left-0 right-0 px-4 z-10">
+                  <div className="flex gap-3">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowGift(true);
+                      }}
+                      className="flex-1 rounded-2xl bg-gradient-to-r from-pink-400 to-pink-500 backdrop-blur-sm py-3 text-sm font-bold text-white shadow-xl hover:shadow-2xl transition-all border-2 border-white"
+                    >
+                      🎁 Add Gift
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowCheckout(true);
+                      }}
+                      className="flex-1 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 backdrop-blur-sm py-3 text-sm font-bold text-white shadow-xl hover:shadow-2xl transition-all border-2 border-white"
+                    >
+                      💳 Checkout ${total}
+                    </motion.button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex-shrink-0 mt-2 mb-4">
+                <AnimationPanel />
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="relative z-[200] w-full max-w-md h-[100vh] px-4 py-6 flex flex-col"
+            >
+              <div
+                className="relative rounded-3xl border-4 border-white bg-white overflow-hidden cursor-pointer select-none flex-shrink-0 shadow-2xl hover:shadow-pink-200 transition-shadow duration-300"
+                onClick={handleCardClick}
+                onContextMenu={(e) => e.preventDefault()}
+                style={{ height: "46vh" }}
+              >
+                {videoFound ? (
+                  <video
+                    src={videoSrc}
+                    className="w-full h-full aspect-[4/5] object-cover object-center pointer-events-none"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    controlsList="nodownload nofullscreen noremoteplayback"
+                    disablePictureInPicture
+                    onError={() => setVideoFound(false)}
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 bg-gradient-to-b from-gray-50 to-gray-100">
+                    <div className="text-5xl mb-3">⚠️</div>
+                    <p className="text-xs text-center px-4 mb-2 font-semibold">
+                      This card&apos;s video is missing or not uploaded yet.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-3 flex-shrink-0 mt-5">
+                <div className="flex items-center justify-center gap-2">
+                  <div className="h-px bg-gradient-to-r from-transparent via-pink-300 to-transparent flex-1"></div>
+                  <h3 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500">
+                    ✨ Your Message ✨
+                  </h3>
+                  <div className="h-px bg-gradient-to-r from-transparent via-pink-300 to-transparent flex-1"></div>
+                </div>
+                <textarea
+                  className="w-full rounded-2xl border-2 border-pink-200 p-4 text-center text-base text-gray-700 shadow-lg focus:border-pink-400 focus:ring-2 focus:ring-pink-200 resize-none bg-white/95 backdrop-blur-sm transition-all"
+                  rows={4}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Write your heartfelt message..."
+                />
+              </div>
+
+              <div className="flex items-center justify-center flex-shrink-0 py-5">
+                <motion.button
+                  whileHover={{ scale: 1.05, rotate: 2 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowCrop(true)}
+                  className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-yellow-400 to-yellow-500 px-8 py-3 text-base font-bold text-gray-800 hover:shadow-xl transition-all shadow-lg border-2 border-white"
+                >
+                  📸 Add Photo
+                </motion.button>
+              </div>
+
+              <div className="flex-shrink-0 mt-2">
+                <AnimationPanel />
+              </div>
+
+              <div className="flex gap-3 flex-shrink-0 mt-auto pt-4 pb-4">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowGift(true)}
+                  className="flex-1 rounded-2xl bg-gradient-to-r from-pink-400 to-pink-500 py-3 text-sm font-bold text-white hover:shadow-xl transition-all shadow-lg border-2 border-white"
+                >
+                  🎁 Add Gift
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowCheckout(true)}
+                  className="flex-1 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 py-3 text-sm font-bold text-white hover:shadow-xl transition-all shadow-lg border-2 border-white"
+                >
+                  💳 Checkout ${total}
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+        </>
+      )}
+
+      <div className="fixed inset-0 pointer-events-none z-[10050]">
         <AnimatePresence>
-          {isFullscreen && showControls && (
-            <motion.div
+          {showGift && (
+            <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute top-4 right-4 z-50 flex gap-3"
+              className="pointer-events-auto relative"
             >
-              <button
-                onClick={toggleFullscreen}
-                className="bg-white/90 hover:bg-white text-gray-800 px-4 py-2 rounded-full font-semibold shadow-lg transition-all"
-              >
-                ✕ Exit Fullscreen
-              </button>
+              <GiftCardPopup
+                initial={gift}
+                onSelect={updateGift}
+                onClose={() => setShowGift(false)}
+              />
             </motion.div>
           )}
-        </AnimatePresence>
-
-        {/* Botón Fullscreen (cuando NO está en fullscreen) */}
-        {!isFullscreen && (
-          <button
-            onClick={toggleFullscreen}
-            className="absolute top-4 right-4 bg-white/90 hover:bg-white text-gray-800 px-4 py-2 rounded-full font-semibold shadow-lg transition-all z-30"
-          >
-            ⛶ Fullscreen
-          </button>
-        )}
-      </div>
-
-      {/* FORMULARIO DE EDICIÓN */}
-      <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
-        {/* Mensaje */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Your Message
-          </label>
-          <textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            rows={4}
-            className="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none resize-none"
-            placeholder="Write your personalized message..."
-          />
-        </div>
-
-        {/* Sender Info */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Your Name
-            </label>
-            <input
-              type="text"
-              value={senderName}
-              onChange={(e) => setSenderName(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none"
-              placeholder="John Doe"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Your Email
-            </label>
-            <input
-              type="email"
-              value={senderEmail}
-              onChange={(e) => setSenderEmail(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none"
-              placeholder="john@example.com"
-            />
-          </div>
-        </div>
-
-        {/* Recipient Info */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Recipient Name
-            </label>
-            <input
-              type="text"
-              value={recipientName}
-              onChange={(e) => setRecipientName(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none"
-              placeholder="Jane Doe"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Recipient Email
-            </label>
-            <input
-              type="email"
-              value={recipientEmail}
-              onChange={(e) => setRecipientEmail(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none"
-              placeholder="jane@example.com"
-            />
-          </div>
-        </div>
-
-        {/* Animation Picker */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Animation Style
-          </label>
-          <button
-            onClick={() => setShowAnimationPicker(!showAnimationPicker)}
-            className="w-full px-4 py-3 rounded-xl border-2 border-pink-200 hover:border-pink-400 text-left flex justify-between items-center transition-all"
-          >
-            <span>{selectedAnimation}</span>
-            <span className="text-gray-400">{showAnimationPicker ? "▲" : "▼"}</span>
-          </button>
-
-          <AnimatePresence>
-            {showAnimationPicker && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="mt-2 max-h-64 overflow-y-auto border-2 border-pink-200 rounded-xl bg-white"
-              >
-                {animationOptions.map((option, i) => (
-                  <button
-                    key={i}
-                    onClick={() => {
-                      setSelectedAnimation(option);
-                      setShowAnimationPicker(false);
-                    }}
-                    className={`w-full px-4 py-3 text-left hover:bg-pink-50 transition-colors ${
-                      selectedAnimation === option ? "bg-pink-100 font-semibold" : ""
-                    }`}
-                  >
-                    {option}
-                  </button>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Botones de acción */}
-        <div className="flex flex-col gap-3">
-          <button
-            onClick={() => setShowCropper(true)}
-            className="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-800 py-3 rounded-full font-semibold shadow-md transition-all"
-          >
-            📸 Add Photo
-          </button>
-
-          <button
-            onClick={() => setShowGiftPopup(true)}
-            className="w-full bg-pink-200 hover:bg-pink-300 text-pink-700 py-3 rounded-full font-semibold shadow-md transition-all"
-          >
-            🎁 {gift ? `Gift Card: $${gift.amount}` : "Add Gift Card"}
-          </button>
-
-          <button
-            onClick={handleCheckout}
-            className="w-full bg-pink-500 hover:bg-pink-600 text-white py-4 rounded-full font-bold text-lg shadow-lg transition-all"
-          >
-            💳 Continue to Checkout ($5.00)
-          </button>
-        </div>
-      </div>
-
-      {/* MODALES */}
-      {showCropper && (
-        <CropperModal
-          open={showCropper}
-          onClose={() => setShowCropper(false)}
-          onDone={handleImageDone}
-        />
-      )}
-
-      {showGiftPopup && (
-        <GiftCardPopup
-          initial={gift}
-          onSelect={handleGiftSelect}
-          onClose={() => setShowGiftPopup(false)}
-        />
-      )}
-
-      {showCheckout && (
-        <CheckoutModal
-          total={5 + (gift?.amount || 0)}
-          gift={gift}
-          onGiftChange={() => setShowGiftPopup(true)}
-          onGiftRemove={() => setGift(null)}
-          onClose={() => setShowCheckout(false)}
-        />
-      )}
-    </div>
-  );
-    }
+          {showCheckout && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit
