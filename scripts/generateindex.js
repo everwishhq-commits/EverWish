@@ -12,15 +12,95 @@ const __dirname = path.dirname(__filename);
 
 // 📋 MAPA COMPLETO - AHORA CON SOPORTE PARA NOMBRES CON ESPACIOS
 const CATEGORY_MAP = {
+  
+Y listo! Las búsquedas de "diwali", "veterans day", etc funcionarán igual que Halloween.
+¿Quieres que te genere el CATEGORY_MAP completo actualizado con TODAS las subcategorías faltantes?RetryJSi el archivo completogenerateindex.js - COMPLETO con todas las subcategoríasCode #!/usr/bin/env node
+/**
+ * 🚀 GENERADOR V15.0 - COMPLETO con TODAS las subcategorías
+ * Incluye: Diwali, Veterans Day, Memorial Day, y TODAS las demás
+ */
+
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from 'node:ur2 / 2RetryJContinuegenerateindex.js - COMPLETO con todas las subcategoríasCode ∙ Version 2     const videoData = {
+      name: nameWithoutExt,
+      file: urlPath,
+      object: classification.object,
+      categories: classification.categories,
+      subcategories: classification.subcategories,
+      variant: classification.variant,
+     ¡Perfecto! 🎉 Ahora tienes el archivo completo con:
+✅ Nuevas subcategorías agregadas:
+🇺🇸 US Holidays:
+
+Veterans Day
+Memorial Day
+MLK Day
+Presidents' Day
+Labor Day
+Columbus Day
+Indigenous Peoples Day
+
+🌍 Cultural Celebrations:
+
+Diwali
+Hanukkah (+ Chanukah)
+Ramadan
+Eid (+ Eid al-Fitr, Eid al-Adha)
+Passover
+Day of the Dead (+ Día de los Muertos)
+Kwanzaa
+Oktoberfest
+
+🛍️ Shopping Days:
+
+Black Friday
+Cyber Monday
+
+📝 Cómo usar:
+
+Reemplaza scripts/generateindex.js con este archivo
+Ejecuta:
+
+bashnode scripts/generateindex.js
+
+Verifica que se detectaron las nuevas subcategorías:
+
+bash# Busca en el output:
+# 🔥 NUEVAS SUBCATEGORÍAS DETECTADAS:
+#    ✅ Diwali: X videos
+#    ✅ Veterans Day: X videos
+Ahora todas las búsquedas funcionarán: "diwali", "veterans day", "memorial day", etc. 🚀
+¿Lo pruebo ejecutando el script?RetryClaude can make mistakes. Please double-check responses. Sonnet 4.5v2∙LatestCopyPublish#!/usr/bin/env node
+/**
+ * 🚀 GENERADOR V15.0 - COMPLETO con TODAS las subcategorías
+ * Incluye: Diwali, Veterans Day, Memorial Day, y TODAS las demás
+ */
+
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// 📋 MAPA COMPLETO - ACTUALIZADO CON TODAS LAS SUBCATEGORÍAS
+const CATEGORY_MAP = {
+  // ========================================
   // 🎉 HOLIDAYS (seasonal-global-celebrations)
+  // ========================================
+  
+  // Main Holidays
   'halloween': { cat: 'seasonal-global-celebrations', sub: 'Halloween' },
   'thanksgiving': { cat: 'seasonal-global-celebrations', sub: 'Thanksgiving' },
   'christmas': { cat: 'seasonal-global-celebrations', sub: 'Christmas' },
   'xmas': { cat: 'seasonal-global-celebrations', sub: 'Christmas' },
   'easter': { cat: 'seasonal-global-celebrations', sub: 'Easter' },
   'newyear': { cat: 'seasonal-global-celebrations', sub: 'New Year' },
+  'newyearsday': { cat: 'seasonal-global-celebrations', sub: 'New Year' },
+  'newyearseve': { cat: 'seasonal-global-celebrations', sub: 'New Year' },
   
-  // 🔥 ST PATRICK - TODAS LAS VARIACIONES
+  // St Patrick (todas las variaciones)
   'stpatricksday': { cat: 'seasonal-global-celebrations', sub: "St Patrick's Day" },
   'stpatrick': { cat: 'seasonal-global-celebrations', sub: "St Patrick's Day" },
   'stpatricks': { cat: 'seasonal-global-celebrations', sub: "St Patrick's Day" },
@@ -28,86 +108,271 @@ const CATEGORY_MAP = {
   'saintpatricks': { cat: 'seasonal-global-celebrations', sub: "St Patrick's Day" },
   'saintpatricksday': { cat: 'seasonal-global-celebrations', sub: "St Patrick's Day" },
   
+  // Cultural Days
   'cincodemayo': { cat: 'seasonal-global-celebrations', sub: 'Cinco de Mayo' },
   'valentinesday': { cat: 'seasonal-global-celebrations', sub: "Valentine's Day" },
   'valentine': { cat: 'seasonal-global-celebrations', sub: "Valentine's Day" },
   'valentines': { cat: 'seasonal-global-celebrations', sub: "Valentine's Day" },
   'independenceday': { cat: 'seasonal-global-celebrations', sub: 'Independence Day' },
   'july4': { cat: 'seasonal-global-celebrations', sub: 'Independence Day' },
+  'july4th': { cat: 'seasonal-global-celebrations', sub: 'Independence Day' },
+  'fourthofjuly': { cat: 'seasonal-global-celebrations', sub: 'Independence Day' },
   'mothersday': { cat: 'seasonal-global-celebrations', sub: "Mother's Day" },
   'fathersday': { cat: 'seasonal-global-celebrations', sub: "Father's Day" },
+  
+  // 🔥 NUEVAS SUBCATEGORÍAS
   'hanukkah': { cat: 'seasonal-global-celebrations', sub: 'Hanukkah' },
+  'chanukah': { cat: 'seasonal-global-celebrations', sub: 'Hanukkah' },
   'diwali': { cat: 'seasonal-global-celebrations', sub: 'Diwali' },
   'ramadan': { cat: 'seasonal-global-celebrations', sub: 'Ramadan' },
   'eid': { cat: 'seasonal-global-celebrations', sub: 'Eid' },
+  'eidalfitr': { cat: 'seasonal-global-celebrations', sub: 'Eid' },
+  'eidaladha': { cat: 'seasonal-global-celebrations', sub: 'Eid' },
   'passover': { cat: 'seasonal-global-celebrations', sub: 'Passover' },
   'dayofthedead': { cat: 'seasonal-global-celebrations', sub: 'Day of the Dead' },
+  'diadelosmuertos': { cat: 'seasonal-global-celebrations', sub: 'Day of the Dead' },
   'kwanzaa': { cat: 'seasonal-global-celebrations', sub: 'Kwanzaa' },
   'oktoberfest': { cat: 'seasonal-global-celebrations', sub: 'Oktoberfest' },
+  
+  // 🇺🇸 US Holidays
+  'veteransday': { cat: 'seasonal-global-celebrations', sub: 'Veterans Day' },
+  'memorialday': { cat: 'seasonal-global-celebrations', sub: 'Memorial Day' },
+  'mlkday': { cat: 'seasonal-global-celebrations', sub: 'MLK Day' },
+  'martinlutherking': { cat: 'seasonal-global-celebrations', sub: 'MLK Day' },
+  'presidentsday': { cat: 'seasonal-global-celebrations', sub: "Presidents' Day" },
+  'laborday': { cat: 'seasonal-global-celebrations', sub: 'Labor Day' },
+  'columbusday': { cat: 'seasonal-global-celebrations', sub: 'Columbus Day' },
+  'indigenouspeoplesday': { cat: 'seasonal-global-celebrations', sub: 'Indigenous Peoples Day' },
+  
+  // Shopping Days
+  'blackfriday': { cat: 'seasonal-global-celebrations', sub: 'Black Friday' },
+  'cybermonday': { cat: 'seasonal-global-celebrations', sub: 'Cyber Monday' },
+  
+  // Seasonal
   'spring': { cat: 'seasonal-global-celebrations', sub: 'Spring' },
   'summer': { cat: 'seasonal-global-celebrations', sub: 'Summer' },
   'fall': { cat: 'seasonal-global-celebrations', sub: 'Fall' },
   'autumn': { cat: 'seasonal-global-celebrations', sub: 'Fall' },
   'winter': { cat: 'seasonal-global-celebrations', sub: 'Winter' },
 
-  // 🎂 CELEBRATIONS
+  // ========================================
+  // 🎂 CELEBRATIONS (birthdays-celebrations)
+  // ========================================
   'birthday': { cat: 'birthdays-celebrations', sub: 'Birthday Celebration' },
+  'bday': { cat: 'birthdays-celebrations', sub: 'Birthday Celebration' },
+  'firstbirthday': { cat: 'birthdays-celebrations', sub: 'First Birthday' },
+  'quinceanera': { cat: 'birthdays-celebrations', sub: 'Quinceañera' },
+  'sweet16': { cat: 'birthdays-celebrations', sub: 'Sweet 16' },
   'party': { cat: 'birthdays-celebrations', sub: 'Party Celebration' },
+  'surpriseparty': { cat: 'birthdays-celebrations', sub: 'Surprise Party' },
   'babyshower': { cat: 'birthdays-celebrations', sub: 'Baby Shower' },
+  'bridalshower': { cat: 'birthdays-celebrations', sub: 'Bridal Shower Celebration' },
+  'genderreveal': { cat: 'birthdays-celebrations', sub: 'Gender Reveal' },
 
-  // 💝 LOVE & ROMANCE
+  // ========================================
+  // 💝 LOVE & ROMANCE (love-weddings-anniversaries)
+  // ========================================
   'love': { cat: 'love-weddings-anniversaries', sub: 'Love & Affection' },
   'hugs': { cat: 'love-weddings-anniversaries', sub: 'Warm Hugs' },
+  'romance': { cat: 'love-weddings-anniversaries', sub: 'Romantic Moments' },
+  'iloveyou': { cat: 'love-weddings-anniversaries', sub: 'I Love You Message' },
+  'firstdate': { cat: 'love-weddings-anniversaries', sub: 'First Date Memory' },
+  
+  // Wedding
   'wedding': { cat: 'love-weddings-anniversaries', sub: 'Wedding Celebration' },
+  'engagement': { cat: 'love-weddings-anniversaries', sub: 'Engagement Moment' },
+  'proposal': { cat: 'love-weddings-anniversaries', sub: 'Proposal Moment' },
+  'bachelorparty': { cat: 'love-weddings-anniversaries', sub: 'Bachelor Party Celebration' },
+  'bacheloretteparty': { cat: 'love-weddings-anniversaries', sub: 'Bachelorette Party Celebration' },
+  
+  // Anniversaries
   'anniversary': { cat: 'love-weddings-anniversaries', sub: 'Anniversary Celebration' },
+  'paperanniversary': { cat: 'love-weddings-anniversaries', sub: 'Paper Anniversary Celebration' },
+  'silveranniversary': { cat: 'love-weddings-anniversaries', sub: 'Silver Anniversary Celebration' },
+  'goldenanniversary': { cat: 'love-weddings-anniversaries', sub: 'Golden Anniversary Celebration' },
 
-  // 🫶 FAMILY & FRIENDSHIP
+  // ========================================
+  // 🫶 FAMILY & FRIENDSHIP (family-friendship)
+  // ========================================
   'family': { cat: 'family-friendship', sub: 'Family Time Together' },
+  'familylove': { cat: 'family-friendship', sub: 'Family Love Moment' },
+  'parents': { cat: 'family-friendship', sub: 'Parents Appreciation' },
+  'grandparents': { cat: 'family-friendship', sub: 'Grandparents Day Celebration' },
+  'grandparentsday': { cat: 'family-friendship', sub: 'Grandparents Day Celebration' },
+  'siblings': { cat: 'family-friendship', sub: 'Siblings Day Celebration' },
+  'siblingsday': { cat: 'family-friendship', sub: 'Siblings Day Celebration' },
+  
+  // Friendship
   'friends': { cat: 'family-friendship', sub: 'Friends Forever' },
+  'bestfriends': { cat: 'family-friendship', sub: 'Best Friends Bond' },
+  'bff': { cat: 'family-friendship', sub: 'BFF Connection' },
+  'friendshipday': { cat: 'family-friendship', sub: 'Friendship Day Celebration' },
+  'foreverFriends': { cat: 'family-friendship', sub: 'Forever Friends Moment' },
 
-  // 💼 WORK
-  'graduation': { cat: 'work', sub: 'Graduation Celebration' },
+  // ========================================
+  // 💼 WORK (work)
+  // ========================================
   'newjob': { cat: 'work', sub: 'New Job Celebration' },
+  'promotion': { cat: 'work', sub: 'Promotion Celebration' },
+  'retirement': { cat: 'work', sub: 'Retirement Celebration' },
+  'workanniversary': { cat: 'work', sub: 'Work Anniversary Celebration' },
+  'careersuccess': { cat: 'work', sub: 'Career Success Moment' },
+  'appreciation': { cat: 'work', sub: 'Appreciation Day Tribute' },
+  'appreciationday': { cat: 'work', sub: 'Appreciation Day Tribute' },
+  
+  // Education
+  'graduation': { cat: 'work', sub: 'Graduation Celebration' },
+  'schoolachievement': { cat: 'work', sub: 'School Achievement' },
+  'highschoolgraduation': { cat: 'work', sub: 'High School Graduation' },
+  'collegegraduation': { cat: 'work', sub: 'College Graduation' },
+  'backtoschool': { cat: 'work', sub: 'Back to School Moment' },
 
-  // 🧸 BABIES
+  // ========================================
+  // 🧸 BABIES & PARENTING (babies-parenting)
+  // ========================================
   'baby': { cat: 'babies-parenting', sub: 'New Baby Celebration' },
   'newborn': { cat: 'babies-parenting', sub: 'Newborn Arrival' },
+  'pregnancy': { cat: 'babies-parenting', sub: 'Pregnancy Announcement' },
+  'pregnancyannouncement': { cat: 'babies-parenting', sub: 'Pregnancy Announcement' },
+  'itsaboy': { cat: 'babies-parenting', sub: "It's a Boy Announcement" },
+  'itsagirl': { cat: 'babies-parenting', sub: "It's a Girl Announcement" },
+  'twins': { cat: 'babies-parenting', sub: 'Twins Announcement' },
+  'momlife': { cat: 'babies-parenting', sub: 'Mom Life Moment' },
+  'dadlife': { cat: 'babies-parenting', sub: 'Dad Life Moment' },
+  'adoption': { cat: 'babies-parenting', sub: 'Adoption Journey' },
+  'fostercare': { cat: 'babies-parenting', sub: 'Foster Care Love' },
+  'newparents': { cat: 'babies-parenting', sub: 'New Parents Celebration' },
 
-  // 🐾 ANIMALS
+  // ========================================
+  // 🐾 ANIMALS (pets-animal-lovers)
+  // ========================================
   'pets': { cat: 'pets-animal-lovers', sub: 'Furry Companions' },
+  'pet': { cat: 'pets-animal-lovers', sub: 'Furry Companions' },
   'dogs': { cat: 'pets-animal-lovers', sub: 'Household Friends' },
+  'dog': { cat: 'pets-animal-lovers', sub: 'Household Friends' },
   'cats': { cat: 'pets-animal-lovers', sub: 'Loyal Sidekicks' },
+  'cat': { cat: 'pets-animal-lovers', sub: 'Loyal Sidekicks' },
+  'petcelebration': { cat: 'pets-animal-lovers', sub: 'Pet Celebration Moments' },
+  'adopted': { cat: 'pets-animal-lovers', sub: 'Adopted with Love' },
+  
+  // Farm
   'farmanimals': { cat: 'pets-animal-lovers', sub: 'Barnyard Companions' },
+  'farm': { cat: 'pets-animal-lovers', sub: 'Barnyard Companions' },
+  
+  // Sea
   'seaanimals': { cat: 'pets-animal-lovers', sub: 'Underwater Universe' },
+  'ocean': { cat: 'pets-animal-lovers', sub: 'Underwater Universe' },
+  'underwater': { cat: 'pets-animal-lovers', sub: 'Underwater Universe' },
+  
+  // Flying
   'flyinganimals': { cat: 'pets-animal-lovers', sub: 'Wings in Motion' },
+  'birds': { cat: 'pets-animal-lovers', sub: 'Wings in Motion' },
+  
+  // Wild
   'wildanimals': { cat: 'pets-animal-lovers', sub: 'Amazing Life' },
+  'wildlife': { cat: 'pets-animal-lovers', sub: 'Amazing Life' },
 
-  // 🕊️ SUPPORT
+  // ========================================
+  // 🕊️ SUPPORT (support-healing-care)
+  // ========================================
   'getwell': { cat: 'support-healing-care', sub: 'Get Well Wishes' },
+  'getwellsoon': { cat: 'support-healing-care', sub: 'Get Well Wishes' },
+  'thinkingofyou': { cat: 'support-healing-care', sub: 'Thinking of You Message' },
+  'staystrong': { cat: 'support-healing-care', sub: 'Stay Strong Motivation' },
+  'cheerup': { cat: 'support-healing-care', sub: 'Cheer Up Message' },
+  'youvegotthis': { cat: 'support-healing-care', sub: "You've Got This Inspiration" },
+  
+  // Sympathy
   'condolences': { cat: 'support-healing-care', sub: 'Condolence Message' },
+  'condolence': { cat: 'support-healing-care', sub: 'Condolence Message' },
+  'sympathy': { cat: 'support-healing-care', sub: 'Loss & Healing' },
+  'inlovingmemory': { cat: 'support-healing-care', sub: 'In Loving Memory' },
+  'deepestsympathy': { cat: 'support-healing-care', sub: 'With Deepest Sympathy' },
 
-  // 🧩 CONNECTION
+  // ========================================
+  // 🧩 CONNECTION (hear-every-heart)
+  // ========================================
   'diversity': { cat: 'hear-every-heart', sub: 'Inclusivity & Belonging' },
+  'inclusivity': { cat: 'hear-every-heart', sub: 'Inclusivity & Belonging' },
+  'unity': { cat: 'hear-every-heart', sub: 'Unity & Harmony' },
+  'peace': { cat: 'hear-every-heart', sub: 'Peace & Balance' },
   'pride': { cat: 'hear-every-heart', sub: 'Pride Celebration' },
+  'equality': { cat: 'hear-every-heart', sub: 'Equality for All' },
+  'acceptance': { cat: 'hear-every-heart', sub: 'Acceptance & Respect' },
+  'immigration': { cat: 'hear-every-heart', sub: 'Immigration Journey' },
+  'disability': { cat: 'hear-every-heart', sub: 'Disability Awareness Tribute' },
+  'disabilityawareness': { cat: 'hear-every-heart', sub: 'Disability Awareness Tribute' },
+  'mobilityawareness': { cat: 'hear-every-heart', sub: 'Mobility Awareness Day' },
+  'autism': { cat: 'hear-every-heart', sub: 'Autism Awareness Day' },
+  'autismawareness': { cat: 'hear-every-heart', sub: 'Autism Awareness Day' },
+  'mentalhealth': { cat: 'hear-every-heart', sub: 'Mental Health Awareness' },
+  'mentalhealthawareness': { cat: 'hear-every-heart', sub: 'Mental Health Awareness' },
+  'cancer': { cat: 'hear-every-heart', sub: 'Cancer Awareness' },
+  'cancerawareness': { cat: 'hear-every-heart', sub: 'Cancer Awareness' },
+  'afroheritage': { cat: 'hear-every-heart', sub: 'Afro Heritage Pride' },
+  'hispanicheritage': { cat: 'hear-every-heart', sub: 'Hispanic Heritage Pride' },
+  
+  // Emotions
+  'sorry': { cat: 'hear-every-heart', sub: "I'm Sorry Message" },
+  'imsorry': { cat: 'hear-every-heart', sub: "I'm Sorry Message" },
+  'forgiveme': { cat: 'hear-every-heart', sub: 'Forgive Me Note' },
+  'missingyou': { cat: 'hear-every-heart', sub: 'Missing You Moment' },
+  'yourespecial': { cat: 'hear-every-heart', sub: "You're Special Message" },
+  'youmatter': { cat: 'hear-every-heart', sub: 'You Matter Reminder' },
 
-  // 🏟️ SPORTS
+  // ========================================
+  // 🏟️ SPORTS (sports)
+  // ========================================
   'sports': { cat: 'sports', sub: 'Team Sports Energy' },
+  'teamsports': { cat: 'sports', sub: 'Team Sports Energy' },
+  'championship': { cat: 'sports', sub: 'Championship Moment' },
+  'victory': { cat: 'sports', sub: 'Victory Celebration' },
+  'fitness': { cat: 'sports', sub: 'Fitness & Training Journey' },
+  'training': { cat: 'sports', sub: 'Fitness & Training Journey' },
   'gym': { cat: 'sports', sub: 'Healthy Movement Habit' },
+  'endurance': { cat: 'sports', sub: 'Endurance Sports Challenge' },
   'yoga': { cat: 'sports', sub: 'Yoga & Balance Flow' },
+  'dance': { cat: 'sports', sub: 'Dance & Rhythm Energy' },
+  'martialarts': { cat: 'sports', sub: 'Martial Arts Flow' },
 
-  // 🕯️ WELLNESS
+  // ========================================
+  // 🕯️ WELLNESS (wellness-mindful-living)
+  // ========================================
   'wellness': { cat: 'wellness-mindful-living', sub: 'Self-Care Routine' },
+  'selfcare': { cat: 'wellness-mindful-living', sub: 'Self-Care Routine' },
   'meditation': { cat: 'wellness-mindful-living', sub: 'Meditation Practice' },
+  'mindfulness': { cat: 'wellness-mindful-living', sub: 'Mindfulness Moment' },
+  'innerpeace': { cat: 'wellness-mindful-living', sub: 'Inner Peace Journey' },
+  'mentalhealthbalance': { cat: 'wellness-mindful-living', sub: 'Mental Health Balance' },
+  'spaday': { cat: 'wellness-mindful-living', sub: 'Spa Day Relaxation' },
+  'healthylifestyle': { cat: 'wellness-mindful-living', sub: 'Healthy Lifestyle Choice' },
+  'fitnessjourney': { cat: 'wellness-mindful-living', sub: 'Fitness Journey Path' },
+  'weightloss': { cat: 'wellness-mindful-living', sub: 'Weight Loss Success Story' },
+  'quitsmoking': { cat: 'wellness-mindful-living', sub: 'Quit Smoking Journey' },
 
-  // 🏕️ LIFE JOURNEYS
+  // ========================================
+  // 🏕️ LIFE JOURNEYS (life-journeys-transitions)
+  // ========================================
   'newhome': { cat: 'life-journeys-transitions', sub: 'New Home Celebration' },
   'moving': { cat: 'life-journeys-transitions', sub: 'Moving to a New Place' },
+  'housewarming': { cat: 'life-journeys-transitions', sub: 'Housewarming Moment' },
+  'freshstart': { cat: 'life-journeys-transitions', sub: 'Fresh Start Journey' },
   'newbeginning': { cat: 'life-journeys-transitions', sub: 'New Chapter Beginning' },
+  'newchapter': { cat: 'life-journeys-transitions', sub: 'New Chapter Beginning' },
   'thankyou': { cat: 'life-journeys-transitions', sub: 'Thank You Message' },
+  'thanks': { cat: 'life-journeys-transitions', sub: 'Thank You Message' },
   'justbecause': { cat: 'life-journeys-transitions', sub: 'Just Because Moment' },
+  'congratulations': { cat: 'life-journeys-transitions', sub: 'Congratulations Celebration' },
+  'congrats': { cat: 'life-journeys-transitions', sub: 'Congratulations Celebration' },
+  'goodluck': { cat: 'life-journeys-transitions', sub: 'Good Luck Wish' },
+  'safetravels': { cat: 'life-journeys-transitions', sub: 'Safe Travels Message' },
+  'welcome': { cat: 'life-journeys-transitions', sub: 'Warm Welcome Greeting' },
+  'outdooradventure': { cat: 'life-journeys-transitions', sub: 'Outdoor Adventure Moment' },
   'nature': { cat: 'life-journeys-transitions', sub: 'Beautiful Landscape Scene' },
+  'landscape': { cat: 'life-journeys-transitions', sub: 'Beautiful Landscape Scene' },
+  'natureescape': { cat: 'life-journeys-transitions', sub: 'Nature Escape Journey' },
 };
-
+                
 // ⚠️ OBJETOS ESPECÍFICOS (NO son categorías)
 const OBJECT_KEYWORDS = new Set([
   'zombie', 'zombies', 'ghost', 'ghosts', 'pumpkin', 'pumpkins',
