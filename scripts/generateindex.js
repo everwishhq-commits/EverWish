@@ -17,12 +17,20 @@ const CATEGORY_MAP = {
   'xmas': { cat: 'seasonal-global-celebrations', sub: 'Christmas' },
   'thanksgiving': { cat: 'seasonal-global-celebrations', sub: 'Thanksgiving' },
   'easter': { cat: 'seasonal-global-celebrations', sub: 'Easter' },
+  'newyear': { cat: 'seasonal-global-celebrations', sub: 'New Year' },
   'valentine': { cat: 'seasonal-global-celebrations', sub: "Valentine's Day" },
   'valentines': { cat: 'seasonal-global-celebrations', sub: "Valentine's Day" },
   'july4': { cat: 'seasonal-global-celebrations', sub: 'Independence Day' },
   'independenceday': { cat: 'seasonal-global-celebrations', sub: 'Independence Day' },
   'mothersday': { cat: 'seasonal-global-celebrations', sub: "Mother's Day" },
   'fathersday': { cat: 'seasonal-global-celebrations', sub: "Father's Day" },
+  'stpatricksday': { cat: 'seasonal-global-celebrations', sub: "St Patrick's Day" },
+  'stpatrick': { cat: 'seasonal-global-celebrations', sub: "St Patrick's Day" },
+  'cincodemayo': { cat: 'seasonal-global-celebrations', sub: 'Cinco de Mayo' },
+  'spring': { cat: 'seasonal-global-celebrations', sub: 'Spring' },
+  'summer': { cat: 'seasonal-global-celebrations', sub: 'Summer' },
+  'fall': { cat: 'seasonal-global-celebrations', sub: 'Fall' },
+  'winter': { cat: 'seasonal-global-celebrations', sub: 'Winter' },
   'birthday': { cat: 'birthdays-celebrations', sub: 'Birthday' },
   'party': { cat: 'birthdays-celebrations', sub: 'Party' },
   'love': { cat: 'love-weddings-anniversaries', sub: 'Love' },
@@ -176,4 +184,4 @@ try {
 } catch (error) {
   console.error("❌ Error:", error);
   process.exit(1);
-  }
+                }
