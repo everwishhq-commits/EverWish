@@ -1,350 +1,446 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { getMessageForSlug } from "@/lib/messages";
+import { AnimationOverlay, getAnimationOptionsForSlug } from "@/lib/animations";
+import CropperModal from "@/components/croppermodal";
+import GiftCardPopup from "@/components/giftcard";
+import CheckoutModal from "@/components/checkout";
 
-export const dynamic = 'force-dynamic';
-
-export default function CategoryPage() {
+export default function EditPage() {
   const { slug } = useParams();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const q = searchParams.get("q");
-  const subFromUrl = searchParams.get("sub");
-  
-  const [categoryVideos, setCategoryVideos] = useState([]);
-  const [groups, setGroups] = useState({});
-  const [activeSub, setActiveSub] = useState(null);
-  const [modalVideos, setModalVideos] = useState([]);
-  const [loading, setLoading] = useState(true);
 
-  const SUBCATEGORY_GROUPS = {
-    "seasonal-global-celebrations": {
-      "Holiday Seasons": ["Halloween", "Thanksgiving", "Christmas", "Easter", "New Year", "St Patrick's Day", "Cinco de Mayo"],
-      "Cultural Days": ["Valentine's Day", "Independence Day", "Mother's Day", "Father's Day"],
-      "Seasonal": ["Spring", "Summer", "Fall", "Winter"],
-    },
-    "birthdays-celebrations": {
-      "Birthday": ["Birthday", "Sweet 16", "21st Birthday"],
-      "Celebrations": ["Party", "Surprise"],
-    },
-    "love-weddings-anniversaries": {
-      "Romance": ["Love", "Hugs", "Valentine's Day"],
-      "Wedding": ["Wedding", "Anniversary"],
-    },
-    "family-friendship": {
-      "Family": ["Mother's Day", "Father's Day", "Parents"],
-      "Friendship": ["Friends", "Best Friends"],
-    },
-    "work": {
-      "Career": ["New Job", "Promotion", "Retirement"],
-      "Education": ["Graduation", "School"],
-    },
-    "babies-parenting": {
-      "Baby": ["Newborn", "Baby Shower", "Pregnancy"],
-      "Parenting": ["Mom Life", "Dad Life"],
-    },
-    "pets-animal-lovers": {
-      "Companion Animals": ["Dogs", "Cats"],
-      "Sea Animals": ["Sea Animals"],
-      "Farm Animals": ["Farm Animals"],
-      "Flying Animals": ["Flying Animals"],
-      "Wild Animals": ["Wild Animals"],
-    },
-    "support-healing-care": {
-      "Support": ["Get Well", "Thinking of You"],
-      "Sympathy": ["Condolences", "Loss"],
-    },
-    "hear-every-heart": {
-      "Diversity": ["Inclusivity", "Unity", "Peace"],
-    },
-    "sports": {
-      "Sports": ["Soccer", "Basketball", "Football"],
-      "Fitness": ["Gym", "Yoga"],
-    },
-    "wellness-mindful-living": {
-      "Wellness": ["Self-Care", "Meditation"],
-    },
-    "life-journeys-transitions": {
-      "New Beginnings": ["New Home", "Moving"],
-      "Everyday": ["Thank You", "Just Because"],
-    },
-  };
+  // Estados principales
+  const [video, setVideo] = useState(null);
+  const [message, setMessage] = useState("");
+  const [senderName, setSenderName] = useState("");
+  const [senderEmail, setSenderEmail] = useState("");
+  const [recipientName, setRecipientName] = useState("");
+  const [recipientEmail, setRecipientEmail] = useState("");
+  const [selectedAnimation, setSelectedAnimation] = useState("✨ None (No Animation)");
+  const [showAnimationPicker, setShowAnimationPicker] = useState(false);
+  const [animationOptions, setAnimationOptions] = useState([]);
+  const [uploadedImage, setUploadedImage] = useState(null);
+  const [showCropper, setShowCropper] = useState(false);
+  const [gift, setGift] = useState(null);
+  const [showGiftPopup, setShowGiftPopup] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showControls, setShowControls] = useState(true);
 
+  const videoRef = useRef(null);
+  const controlsTimeoutRef = useRef(null);
+
+  // 🎬 CARGAR VIDEO
   useEffect(() => {
-    async function load() {
+    async function loadVideo() {
       try {
         const res = await fetch("/api/videos", { cache: "no-store" });
         const data = await res.json();
-        const all = data.videos || [];
+        const allVideos = data.videos || [];
+        const found = allVideos.find(v => v.name === slug || v.slug === slug);
         
-        let filtered = all.filter(v => {
-          if (v.categories && Array.isArray(v.categories)) {
-            return v.categories.includes(slug);
-          }
-          return false;
-        });
-        
-        if (q) {
-          const searchTerm = q.toLowerCase();
-          filtered = filtered.filter(v => {
-            const searchable = [
-              v.name,
-              v.object,
-              v.subcategory,
-              ...(v.tags || []),
-              ...(v.categories || []),
-              ...(v.subcategories || [])
-            ].filter(Boolean).join(" ").toLowerCase();
-            
-            return searchable.includes(searchTerm);
-          });
-        }
-        
-        setCategoryVideos(filtered);
-        
-        const groupsData = {};
-        const availableGroups = SUBCATEGORY_GROUPS[slug] || {};
-        
-        Object.entries(availableGroups).forEach(([groupName, subcategories]) => {
-          const subsWithCounts = subcategories.map(sub => {
-            const count = filtered.filter(v => {
-              if (v.subcategory === sub) return true;
-              if (v.subcategories && Array.isArray(v.subcategories)) {
-                return v.subcategories.includes(sub);
-              }
-              return false;
-            }).length;
-            return { name: sub, count };
-          });
+        if (found) {
+          setVideo(found);
+          const defaultMsg = getMessageForSlug(slug);
+          setMessage(defaultMsg);
           
-          if (q) {
-            const withResults = subsWithCounts.filter(s => s.count > 0);
-            if (withResults.length > 0) {
-              groupsData[groupName] = withResults;
-            }
-          } else {
-            groupsData[groupName] = subsWithCounts;
-          }
-        });
-        
-        setGroups(groupsData);
-        
-      } catch (err) {
-        console.error("Error:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-  }, [slug, q]);
-
-  useEffect(() => {
-    if (subFromUrl && categoryVideos.length > 0 && !activeSub) {
-      setActiveSub(subFromUrl);
-      const videos = categoryVideos.filter(v => {
-        if (v.subcategory === subFromUrl) return true;
-        if (v.subcategories && Array.isArray(v.subcategories)) {
-          return v.subcategories.includes(subFromUrl);
+          const options = getAnimationOptionsForSlug(slug);
+          setAnimationOptions(options);
+          setSelectedAnimation(options[1] || options[0]);
+        } else {
+          console.error("Video no encontrado:", slug);
+          router.push("/categories");
         }
-        return false;
-      });
-      setModalVideos(videos);
-    }
-  }, [subFromUrl, categoryVideos, activeSub]);
-
-  const openModal = (sub) => {
-    setActiveSub(sub);
-    const videos = categoryVideos.filter(v => {
-      if (v.subcategory === sub) return true;
-      if (v.subcategories && Array.isArray(v.subcategories)) {
-        return v.subcategories.includes(sub);
+      } catch (err) {
+        console.error("Error cargando video:", err);
+        router.push("/categories");
       }
-      return false;
-    });
-    setModalVideos(videos);
+    }
+    loadVideo();
+  }, [slug, router]);
+
+  // 🖥️ PANTALLA COMPLETA - Detectar cambios
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isNowFullscreen = !!(
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.mozFullScreenElement ||
+        document.msFullscreenElement
+      );
+      setIsFullscreen(isNowFullscreen);
+      
+      if (isNowFullscreen) {
+        setShowControls(true);
+        startControlsTimeout();
+      }
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    document.addEventListener("mozfullscreenchange", handleFullscreenChange);
+    document.addEventListener("MSFullscreenChange", handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
+      document.removeEventListener("mozfullscreenchange", handleFullscreenChange);
+      document.removeEventListener("MSFullscreenChange", handleFullscreenChange);
+      clearTimeout(controlsTimeoutRef.current);
+    };
+  }, []);
+
+  // ⏱️ Auto-ocultar controles después de 3 segundos
+  const startControlsTimeout = () => {
+    clearTimeout(controlsTimeoutRef.current);
+    controlsTimeoutRef.current = setTimeout(() => {
+      if (isFullscreen) {
+        setShowControls(false);
+      }
+    }, 3000);
   };
 
-  const closeModal = () => {
-    setActiveSub(null);
-    setModalVideos([]);
+  const handleMouseMove = () => {
+    if (isFullscreen) {
+      setShowControls(true);
+      startControlsTimeout();
+    }
   };
 
-  const handleCardClick = async (videoName) => {
+  // 🎬 ENTRAR/SALIR DE PANTALLA COMPLETA
+  const toggleFullscreen = async () => {
     try {
-      const elem = document.documentElement;
-      if (elem.requestFullscreen) {
-        await elem.requestFullscreen();
-      } else if (elem.webkitRequestFullscreen) {
-        await elem.webkitRequestFullscreen();
+      if (!isFullscreen) {
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) {
+          await elem.requestFullscreen();
+        } else if (elem.webkitRequestFullscreen) {
+          await elem.webkitRequestFullscreen();
+        } else if (elem.mozRequestFullScreen) {
+          await elem.mozRequestFullScreen();
+        } else if (elem.msRequestFullscreen) {
+          await elem.msRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          await document.webkitExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+          await document.mozCancelFullScreen();
+        } else if (document.msExitFullscreen) {
+          await document.msExitFullscreen();
+        }
       }
-      await new Promise(r => setTimeout(r, 150));
-      router.push(`/edit/${videoName}`);
-    } catch {
-      router.push(`/edit/${videoName}`);
+    } catch (err) {
+      console.error("Error toggling fullscreen:", err);
     }
   };
 
-  if (loading) {
+  // 📸 IMAGEN SUBIDA
+  const handleImageDone = (croppedImage) => {
+    setUploadedImage(croppedImage);
+    setShowCropper(false);
+  };
+
+  // 🎁 GIFT CARD
+  const handleGiftSelect = (giftData) => {
+    setGift(giftData);
+    setShowGiftPopup(false);
+  };
+
+  // 💳 CHECKOUT
+  const handleCheckout = async () => {
+    if (!senderName || !senderEmail || !recipientName || !recipientEmail) {
+      alert("Please fill in all sender and recipient information");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          slug,
+          message,
+          anim: selectedAnimation,
+          sender: { name: senderName, email: senderEmail },
+          recipient: { name: recipientName, email: recipientEmail },
+          gift: gift || { brand: "", amount: 0 },
+          cardPrice: 5,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert("Error creating checkout session");
+      }
+    } catch (err) {
+      console.error("Checkout error:", err);
+      alert("An error occurred. Please try again.");
+    }
+  };
+
+  if (!video) {
     return (
-      <main className="flex items-center justify-center min-h-screen bg-[#fff5f8]">
+      <div className="flex items-center justify-center min-h-screen bg-[#fff5f8]">
         <p className="text-lg text-gray-600 animate-pulse">Loading...</p>
-      </main>
+      </div>
     );
   }
 
-  const categoryTitle = slug.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
-  const groupNames = Object.keys(groups);
-
   return (
-    <main className="min-h-screen bg-[#fff5f8] py-10 px-4">
-      <button 
-        onClick={() => router.push("/categories")} 
-        className="text-pink-500 hover:text-pink-600 font-semibold mb-6"
-      >
-        ← Back
-      </button>
+    <div 
+      className="min-h-screen bg-gradient-to-b from-pink-50 to-white"
+      onMouseMove={handleMouseMove}
+      onTouchStart={handleMouseMove}
+    >
+      {/* 🎬 VIDEO CON OVERLAY */}
+      <div className={`relative ${isFullscreen ? 'h-screen' : 'h-[60vh]'} w-full bg-black`}>
+        <video
+          ref={videoRef}
+          src={video.file}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        />
 
-      <h1 className="text-4xl font-extrabold text-pink-600 mb-3 text-center">
-        {categoryTitle}
-      </h1>
+        {/* Overlay de Animación */}
+        {selectedAnimation && !selectedAnimation.includes("None") && (
+          <AnimationOverlay
+            slug={slug}
+            animation={selectedAnimation}
+            intensity="normal"
+            opacityLevel={0.9}
+            emojiCount={20}
+          />
+        )}
 
-      {q && (
-        <p className="text-sm text-gray-500 text-center mb-4">
-          Results for &quot;{q}&quot;
-        </p>
-      )}
+        {/* Imagen subida */}
+        {uploadedImage && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+            <img
+              src={uploadedImage}
+              alt="Uploaded"
+              className="max-w-[80%] max-h-[80%] rounded-2xl shadow-2xl"
+            />
+          </div>
+        )}
 
-      <p className="text-center text-gray-500 mb-10 text-sm">
-        {categoryVideos.length} {categoryVideos.length === 1 ? 'card' : 'cards'} available
-      </p>
+        {/* Mensaje sobre el video */}
+        {message && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm px-6 py-4 rounded-2xl shadow-2xl max-w-md text-center z-20"
+          >
+            <p className="text-gray-800 font-medium leading-relaxed whitespace-pre-line">
+              {message}
+            </p>
+          </motion.div>
+        )}
 
-      {groupNames.length > 0 ? (
-        <div className="max-w-6xl mx-auto space-y-8">
-          {groupNames.map((groupName, i) => (
+        {/* CONTROLES EN PANTALLA COMPLETA */}
+        <AnimatePresence>
+          {isFullscreen && showControls && (
             <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="bg-white rounded-3xl shadow-lg p-6 border border-pink-100"
-            >
-              <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <span className="text-pink-500">📂</span>
-                {groupName}
-              </h2>
-              
-              <div className="flex flex-wrap gap-3">
-                {groups[groupName].map((sub, j) => (
-                  <motion.button
-                    key={j}
-                    onClick={() => sub.count > 0 && openModal(sub.name)}
-                    whileHover={sub.count > 0 ? { scale: 1.05 } : {}}
-                    whileTap={sub.count > 0 ? { scale: 0.95 } : {}}
-                    className={`px-4 py-2 rounded-full border font-semibold flex items-center gap-2 transition-all ${
-                      sub.count > 0
-                        ? "bg-gradient-to-r from-pink-50 to-purple-50 border-pink-200 hover:border-pink-400 hover:shadow-md text-gray-700 cursor-pointer"
-                        : "bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed"
-                    }`}
-                  >
-                    <span>{sub.name}</span>
-                    <span className={`text-xs px-2 py-1 rounded-full font-bold ${
-                      sub.count > 0
-                        ? "bg-pink-500 text-white"
-                        : "bg-gray-300 text-gray-500"
-                    }`}>
-                      {sub.count}
-                    </span>
-                  </motion.button>
-                ))}
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-20 max-w-md mx-auto bg-white rounded-3xl shadow-lg p-8">
-          <p className="text-gray-500 text-lg mb-4">No subcategories found</p>
-        </div>
-      )}
-
-      <AnimatePresence mode="wait">
-        {activeSub && (
-          <>
-            <motion.div
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-              style={{ zIndex: 9998 }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={closeModal}
-            />
-            
-            <motion.div
-              className="fixed inset-0 flex items-center justify-center p-4"
-              style={{ zIndex: 9999 }}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
+              className="absolute top-4 right-4 z-50 flex gap-3"
             >
-              <div 
-                className="bg-white rounded-3xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto p-6 relative" 
-                onClick={(e) => e.stopPropagation()}
+              <button
+                onClick={toggleFullscreen}
+                className="bg-white/90 hover:bg-white text-gray-800 px-4 py-2 rounded-full font-semibold shadow-lg transition-all"
               >
-                <button
-                  onClick={closeModal}
-                  className="sticky top-0 float-right bg-pink-100 hover:bg-pink-200 text-pink-600 rounded-full w-10 h-10 flex items-center justify-center text-2xl font-bold shadow-md z-10"
-                >
-                  ×
-                </button>
-
-                <h2 className="text-3xl font-bold text-pink-600 mb-6 text-center clear-both pt-2">
-                  {activeSub}
-                </h2>
-
-                {modalVideos.length === 0 ? (
-                  <div className="text-center py-20">
-                    <p className="text-gray-500 text-lg">No cards yet</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 pb-4">
-                    {modalVideos.map((video, i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        whileHover={{ scale: 1.05 }}
-                        onClick={() => handleCardClick(video.name)}
-                        className="cursor-pointer bg-white rounded-2xl shadow-md border-2 border-pink-100 hover:border-pink-300 overflow-hidden"
-                      >
-                        <div className="relative w-full aspect-[4/5] bg-pink-50">
-                          <video
-                            src={video.file}
-                            className="absolute inset-0 w-full h-full object-cover"
-                            playsInline
-                            loop
-                            muted
-                            preload="metadata"
-                            onMouseEnter={e => e.target.play().catch(() => {})}
-                            onMouseLeave={e => { 
-                              e.target.pause(); 
-                              e.target.currentTime = 0; 
-                            }}
-                          />
-                        </div>
-                        <div className="text-center py-3 px-2">
-                          <p className="text-sm font-semibold text-gray-700">
-                            {video.object || video.name}
-                          </p>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                ✕ Exit Fullscreen
+              </button>
             </motion.div>
-          </>
+          )}
+        </AnimatePresence>
+
+        {/* Botón Fullscreen (cuando NO está en fullscreen) */}
+        {!isFullscreen && (
+          <button
+            onClick={toggleFullscreen}
+            className="absolute top-4 right-4 bg-white/90 hover:bg-white text-gray-800 px-4 py-2 rounded-full font-semibold shadow-lg transition-all z-30"
+          >
+            ⛶ Fullscreen
+          </button>
         )}
-      </AnimatePresence>
-    </main>
+      </div>
+
+      {/* FORMULARIO DE EDICIÓN */}
+      <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
+        {/* Mensaje */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Your Message
+          </label>
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            rows={4}
+            className="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none resize-none"
+            placeholder="Write your personalized message..."
+          />
+        </div>
+
+        {/* Sender Info */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Your Name
+            </label>
+            <input
+              type="text"
+              value={senderName}
+              onChange={(e) => setSenderName(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none"
+              placeholder="John Doe"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Your Email
+            </label>
+            <input
+              type="email"
+              value={senderEmail}
+              onChange={(e) => setSenderEmail(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none"
+              placeholder="john@example.com"
+            />
+          </div>
+        </div>
+
+        {/* Recipient Info */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Recipient Name
+            </label>
+            <input
+              type="text"
+              value={recipientName}
+              onChange={(e) => setRecipientName(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none"
+              placeholder="Jane Doe"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Recipient Email
+            </label>
+            <input
+              type="email"
+              value={recipientEmail}
+              onChange={(e) => setRecipientEmail(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:outline-none"
+              placeholder="jane@example.com"
+            />
+          </div>
+        </div>
+
+        {/* Animation Picker */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Animation Style
+          </label>
+          <button
+            onClick={() => setShowAnimationPicker(!showAnimationPicker)}
+            className="w-full px-4 py-3 rounded-xl border-2 border-pink-200 hover:border-pink-400 text-left flex justify-between items-center transition-all"
+          >
+            <span>{selectedAnimation}</span>
+            <span className="text-gray-400">{showAnimationPicker ? "▲" : "▼"}</span>
+          </button>
+
+          <AnimatePresence>
+            {showAnimationPicker && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mt-2 max-h-64 overflow-y-auto border-2 border-pink-200 rounded-xl bg-white"
+              >
+                {animationOptions.map((option, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      setSelectedAnimation(option);
+                      setShowAnimationPicker(false);
+                    }}
+                    className={`w-full px-4 py-3 text-left hover:bg-pink-50 transition-colors ${
+                      selectedAnimation === option ? "bg-pink-100 font-semibold" : ""
+                    }`}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Botones de acción */}
+        <div className="flex flex-col gap-3">
+          <button
+            onClick={() => setShowCropper(true)}
+            className="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-800 py-3 rounded-full font-semibold shadow-md transition-all"
+          >
+            📸 Add Photo
+          </button>
+
+          <button
+            onClick={() => setShowGiftPopup(true)}
+            className="w-full bg-pink-200 hover:bg-pink-300 text-pink-700 py-3 rounded-full font-semibold shadow-md transition-all"
+          >
+            🎁 {gift ? `Gift Card: $${gift.amount}` : "Add Gift Card"}
+          </button>
+
+          <button
+            onClick={handleCheckout}
+            className="w-full bg-pink-500 hover:bg-pink-600 text-white py-4 rounded-full font-bold text-lg shadow-lg transition-all"
+          >
+            💳 Continue to Checkout ($5.00)
+          </button>
+        </div>
+      </div>
+
+      {/* MODALES */}
+      {showCropper && (
+        <CropperModal
+          open={showCropper}
+          onClose={() => setShowCropper(false)}
+          onDone={handleImageDone}
+        />
+      )}
+
+      {showGiftPopup && (
+        <GiftCardPopup
+          initial={gift}
+          onSelect={handleGiftSelect}
+          onClose={() => setShowGiftPopup(false)}
+        />
+      )}
+
+      {showCheckout && (
+        <CheckoutModal
+          total={5 + (gift?.amount || 0)}
+          gift={gift}
+          onGiftChange={() => setShowGiftPopup(true)}
+          onGiftRemove={() => setGift(null)}
+          onClose={() => setShowCheckout(false)}
+        />
+      )}
+    </div>
   );
-}
+    }
