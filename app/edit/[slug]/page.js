@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   getAnimationsForSlug,
   getAnimationOptionsForSlug,
@@ -15,6 +15,7 @@ import CropperModal from "@/components/croppermodal";
 export default function EditPage({ params }) {
   const slug = params.slug;
 
+  // estados
   const [stage, setStage] = useState("expanded");
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("");
@@ -37,6 +38,7 @@ export default function EditPage({ params }) {
   const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
   const [animKey, setAnimKey] = useState(0);
 
+  // cargar video + config
   useEffect(() => {
     async function loadVideo() {
       try {
@@ -71,6 +73,7 @@ export default function EditPage({ params }) {
     setLastActiveAnimation(defaultAnim);
   }, [slug]);
 
+  // loading pantalla
   useEffect(() => {
     let v = 0;
     const id = setInterval(() => {
@@ -84,46 +87,50 @@ export default function EditPage({ params }) {
     return () => clearInterval(id);
   }, []);
 
+  // re-render anim
   useEffect(() => {
     setAnimKey(Date.now());
   }, [animation, category, intensity, emojiCount]);
 
+  // bloquear clic derecho global
   useEffect(() => {
-    const preventContextMenu = (e) => e.preventDefault();
+    const preventContextMenu = (e) => {
+      e.preventDefault();
+    };
     document.addEventListener("contextmenu", preventContextMenu);
     return () => document.removeEventListener("contextmenu", preventContextMenu);
   }, []);
 
+  // bloquear guardar
   const handleCardClick = () => {
     alert("🔒 This card is protected. Purchase to download!");
   };
 
+  // gift
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
     setTotal(5 + (data?.amount || 0));
   };
-  
   const removeGift = () => {
     setGift(null);
     setTotal(5);
   };
 
+  // Panel de animación
   const isAnimationActive = animation && !animation.startsWith("✨ None");
 
   const AnimationPanel = () => {
     const currentEmoji = isAnimationActive ? animation.split(' ')[0] : '✨';
     
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className={`flex items-center justify-between w-full rounded-2xl transition-all duration-300 ${
+      <div
+        className={`flex items-center justify-between w-full rounded-xl ${
           isAnimationActive
-            ? "bg-gradient-to-r from-pink-100 via-purple-100 to-yellow-100 text-gray-800 shadow-lg border-2 border-white"
-            : "bg-white/90 backdrop-blur-sm text-gray-400 border-2 border-gray-200"
+            ? "bg-gradient-to-r from-pink-100 via-purple-100 to-yellow-100 text-gray-800 shadow-sm"
+            : "bg-gray-100 text-gray-400"
         }`}
-        style={{ height: "56px", padding: "0 16px" }}
+        style={{ height: "50px", padding: "0 12px" }}
       >
         <button
           onClick={() => {
@@ -136,10 +143,10 @@ export default function EditPage({ params }) {
               }
             }
           }}
-          className={`text-2xl mr-3 transition-all flex-shrink-0 ${
+          className={`text-xl mr-2 transition-all flex-shrink-0 ${
             isAnimationActive 
-              ? "cursor-default animate-bounce" 
-              : "cursor-pointer hover:scale-125 hover:rotate-12"
+              ? "cursor-default" 
+              : "cursor-pointer hover:scale-110"
           }`}
         >
           {currentEmoji}
@@ -154,12 +161,12 @@ export default function EditPage({ params }) {
             }
           }}
           disabled={!isAnimationActive}
-          className={`flex-1 text-sm font-semibold bg-transparent focus:outline-none truncate min-w-0 ${
+          className={`flex-1 text-xs font-medium bg-transparent focus:outline-none truncate min-w-0 ${
             isAnimationActive ? "cursor-pointer" : "cursor-not-allowed"
           }`}
         >
           {!isAnimationActive ? (
-            <option value="">✨ Tap emoji to activate</option>
+            <option value="">Select Animation</option>
           ) : (
             <>
               {animationOptions
@@ -176,20 +183,20 @@ export default function EditPage({ params }) {
           )}
         </select>
 
-        <div className="flex items-center gap-2 ml-3">
-          <div className="flex items-center rounded-lg border-2 border-gray-300 overflow-hidden bg-white shadow-sm">
+        <div className="flex items-center gap-2 ml-2">
+          <div className="flex items-center rounded-md border border-gray-300 overflow-hidden bg-white">
             <button
-              className="px-2.5 py-1 text-lg font-bold text-pink-600 hover:bg-pink-50 transition-colors"
+              className="px-2 text-base"
               onClick={() => setEmojiCount((prev) => Math.max(5, prev - 5))}
               disabled={!isAnimationActive}
             >
-              −
+              –
             </button>
-            <span className="px-3 text-sm font-bold text-gray-700 min-w-[32px] text-center border-x-2 border-gray-200">
+            <span className="px-2 text-xs font-medium text-gray-700">
               {emojiCount}
             </span>
             <button
-              className="px-2.5 py-1 text-lg font-bold text-pink-600 hover:bg-pink-50 transition-colors"
+              className="px-2 text-base"
               onClick={() => setEmojiCount((prev) => Math.min(60, prev + 5))}
               disabled={!isAnimationActive}
             >
@@ -201,11 +208,11 @@ export default function EditPage({ params }) {
             value={intensity}
             onChange={(e) => setIntensity(e.target.value)}
             disabled={!isAnimationActive}
-            className="px-3 py-1.5 text-sm bg-white rounded-lg border-2 border-gray-300 font-semibold focus:outline-none focus:border-pink-400 cursor-pointer shadow-sm"
+            className="px-2 text-xs bg-white rounded-md border border-gray-300 font-medium focus:outline-none cursor-pointer"
           >
-            <option value="soft">💫 Soft</option>
-            <option value="normal">✨ Normal</option>
-            <option value="vivid">🌟 Vivid</option>
+            <option value="soft">Soft</option>
+            <option value="normal">Normal</option>
+            <option value="vivid">Vivid</option>
           </select>
 
           <button
@@ -216,25 +223,25 @@ export default function EditPage({ params }) {
                 if (noneOption) setAnimation(noneOption);
               }
             }}
-            className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg transition-all shadow-sm ${
+            className={`w-7 h-7 rounded-md flex items-center justify-center font-bold text-base transition-all ${
               isAnimationActive
-                ? "bg-white text-red-500 hover:bg-red-50 hover:scale-110 cursor-pointer border-2 border-red-200"
-                : "bg-gray-100 text-gray-300 cursor-not-allowed border-2 border-gray-200"
+                ? "bg-white text-red-500 hover:bg-red-50 cursor-pointer"
+                : "bg-white text-gray-300 cursor-not-allowed"
             }`}
             disabled={!isAnimationActive}
           >
             ✕
           </button>
         </div>
-      </motion.div>
+      </div>
     );
   };
 
   return (
-    <div className="relative h-[100vh] max-h-[100vh] bg-gradient-to-b from-pink-50 via-purple-50 to-pink-50 flex items-center justify-center overflow-hidden">
+    <div className="relative h-[100vh] max-h-[100vh] bg-[#fff7f5] flex items-center justify-center overflow-hidden">
       {stage === "expanded" && (
         <motion.div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-gradient-to-b from-pink-50 to-purple-50"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-[#fff7f5]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4 }}
@@ -242,7 +249,7 @@ export default function EditPage({ params }) {
           {videoFound ? (
             <video
               src={videoSrc}
-              className="w-full h-full aspect-[4/5] object-cover object-center shadow-2xl"
+              className="w-full h-full aspect-[4/5] object-cover object-center bg-pink-50"
               autoPlay
               loop
               muted
@@ -258,9 +265,9 @@ export default function EditPage({ params }) {
             </div>
           )}
 
-          <div className="absolute bottom-8 w-2/3 h-3 bg-white/30 backdrop-blur-sm rounded-full overflow-hidden shadow-lg">
+          <div className="absolute bottom-8 w-2/3 h-2 bg-gray-300 rounded-full overflow-hidden">
             <motion.div
-              className="h-full bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500"
+              className="h-full bg-pink-500"
               initial={{ width: "0%" }}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.03, ease: "linear" }}
@@ -281,13 +288,9 @@ export default function EditPage({ params }) {
           />
 
           {userImage ? (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="relative z-[200] w-full max-w-md h-[100vh] px-4 pt-6 pb-24 overflow-y-auto flex flex-col gap-4"
-            >
+            <div className="relative z-[200] w-full max-w-md h-[100vh] px-3 pt-4 pb-24 overflow-y-auto flex flex-col gap-3">
               <div
-                className="relative rounded-3xl border-4 border-white bg-white overflow-hidden cursor-pointer select-none flex-shrink-0 shadow-2xl hover:shadow-pink-200 transition-shadow duration-300"
+                className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none flex-shrink-0"
                 onClick={handleCardClick}
                 onContextMenu={(e) => e.preventDefault()}
                 style={{ height: "38vh" }}
@@ -295,7 +298,7 @@ export default function EditPage({ params }) {
                 {videoFound ? (
                   <video
                     src={videoSrc}
-                    className="w-full h-full aspect-[4/5] object-cover object-center pointer-events-none"
+                    className="w-full h-full aspect-[4/5] object-cover object-center bg-pink-50 overflow-hidden pointer-events-none"
                     autoPlay
                     loop
                     muted
@@ -314,26 +317,21 @@ export default function EditPage({ params }) {
                 )}
               </div>
 
-              <div className="flex flex-col gap-3 flex-shrink-0">
-                <div className="flex items-center justify-center gap-2">
-                  <div className="h-px bg-gradient-to-r from-transparent via-pink-300 to-transparent flex-1"></div>
-                  <h3 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500">
-                    ✨ Your Message ✨
-                  </h3>
-                  <div className="h-px bg-gradient-to-r from-transparent via-pink-300 to-transparent flex-1"></div>
-                </div>
+              <div className="flex flex-col gap-2 flex-shrink-0">
+                <h3 className="text-center text-sm font-semibold text-gray-700">
+                  ✨ Customize your message ✨
+                </h3>
                 <textarea
-                  className="w-full rounded-2xl border-2 border-pink-200 p-4 text-center text-base text-gray-700 shadow-lg focus:border-pink-400 focus:ring-2 focus:ring-pink-200 resize-none bg-white/95 backdrop-blur-sm transition-all"
+                  className="w-full rounded-2xl border p-3 text-center text-base text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400 resize-none"
                   rows={2}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Write your heartfelt message..."
                 />
               </div>
 
               <div className="relative flex-shrink-0" style={{ height: "38vh" }}>
                 <div
-                  className="rounded-3xl border-4 border-white shadow-2xl overflow-hidden bg-gradient-to-b from-pink-50 to-purple-50 h-full cursor-pointer flex items-center justify-center hover:shadow-pink-200 transition-shadow duration-300"
+                  className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-[#fff7f5] h-full cursor-pointer flex items-center justify-center"
                   onClick={() => setShowCrop(true)}
                   onContextMenu={(e) => e.preventDefault()}
                 >
@@ -344,30 +342,26 @@ export default function EditPage({ params }) {
                   />
                 </div>
 
-                <div className="absolute bottom-4 left-0 right-0 px-4 z-10">
-                  <div className="flex gap-3">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                <div className="absolute bottom-3 left-0 right-0 px-3 z-10">
+                  <div className="flex gap-2">
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setShowGift(true);
                       }}
-                      className="flex-1 rounded-2xl bg-gradient-to-r from-pink-400 to-pink-500 backdrop-blur-sm py-3 text-sm font-bold text-white shadow-xl hover:shadow-2xl transition-all border-2 border-white"
+                      className="flex-1 rounded-full bg-pink-200/95 backdrop-blur-sm py-2.5 text-sm font-semibold text-pink-700 shadow-lg hover:bg-pink-300/95 transition-all"
                     >
-                      🎁 Add Gift
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                      🎁 Gift Card
+                    </button>
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setShowCheckout(true);
                       }}
-                      className="flex-1 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 backdrop-blur-sm py-3 text-sm font-bold text-white shadow-xl hover:shadow-2xl transition-all border-2 border-white"
+                      className="flex-1 rounded-full bg-purple-500/95 backdrop-blur-sm py-2.5 text-sm font-semibold text-white shadow-lg hover:bg-purple-600/95 transition-all"
                     >
-                      💳 Checkout ${total}
-                    </motion.button>
+                      💳 Checkout
+                    </button>
                   </div>
                 </div>
               </div>
@@ -375,15 +369,11 @@ export default function EditPage({ params }) {
               <div className="flex-shrink-0 mt-2 mb-4">
                 <AnimationPanel />
               </div>
-            </motion.div>
+            </div>
           ) : (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="relative z-[200] w-full max-w-md h-[100vh] px-4 py-6 flex flex-col"
-            >
+            <div className="relative z-[200] w-full max-w-md h-[100vh] px-3 py-4 flex flex-col">
               <div
-                className="relative rounded-3xl border-4 border-white bg-white overflow-hidden cursor-pointer select-none flex-shrink-0 shadow-2xl hover:shadow-pink-200 transition-shadow duration-300"
+                className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none flex-shrink-0"
                 onClick={handleCardClick}
                 onContextMenu={(e) => e.preventDefault()}
                 style={{ height: "46vh" }}
@@ -391,7 +381,7 @@ export default function EditPage({ params }) {
                 {videoFound ? (
                   <video
                     src={videoSrc}
-                    className="w-full h-full aspect-[4/5] object-cover object-center pointer-events-none"
+                    className="w-full h-full aspect-[4/5] object-cover object-center bg-pink-50 overflow-hidden pointer-events-none"
                     autoPlay
                     loop
                     muted
@@ -410,79 +400,89 @@ export default function EditPage({ params }) {
                 )}
               </div>
 
-              <div className="flex flex-col gap-3 flex-shrink-0 mt-5">
-                <div className="flex items-center justify-center gap-2">
-                  <div className="h-px bg-gradient-to-r from-transparent via-pink-300 to-transparent flex-1"></div>
-                  <h3 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500">
-                    ✨ Your Message ✨
-                  </h3>
-                  <div className="h-px bg-gradient-to-r from-transparent via-pink-300 to-transparent flex-1"></div>
-                </div>
+              <div className="flex flex-col gap-2 flex-shrink-0 mt-4">
+                <h3 className="text-center text-sm font-semibold text-gray-700">
+                  ✨ Customize your message ✨
+                </h3>
                 <textarea
-                  className="w-full rounded-2xl border-2 border-pink-200 p-4 text-center text-base text-gray-700 shadow-lg focus:border-pink-400 focus:ring-2 focus:ring-pink-200 resize-none bg-white/95 backdrop-blur-sm transition-all"
+                  className="w-full rounded-2xl border p-4 text-center text-base text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400 resize-none"
                   rows={4}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Write your heartfelt message..."
                 />
               </div>
 
-              <div className="flex items-center justify-center flex-shrink-0 py-5">
-                <motion.button
-                  whileHover={{ scale: 1.05, rotate: 2 }}
-                  whileTap={{ scale: 0.95 }}
+              <div className="flex items-center justify-center flex-shrink-0 py-4">
+                <button
                   onClick={() => setShowCrop(true)}
-                  className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-yellow-400 to-yellow-500 px-8 py-3 text-base font-bold text-gray-800 hover:shadow-xl transition-all shadow-lg border-2 border-white"
+                  className="flex items-center gap-2 rounded-full bg-yellow-400 px-6 py-2.5 text-sm font-semibold text-[#3b2b1f] hover:bg-yellow-300 transition-all shadow-md"
                 >
-                  📸 Add Photo
-                </motion.button>
+                  📸 Add Image
+                </button>
               </div>
 
-              <div className="flex-shrink-0 mt-2">
+              <div className="flex-shrink-0 mt-1">
                 <AnimationPanel />
               </div>
 
-              <div className="flex gap-3 flex-shrink-0 mt-auto pt-4 pb-4">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+              <div className="flex gap-2 flex-shrink-0 mt-auto pt-2 pb-3">
+                <button
                   onClick={() => setShowGift(true)}
-                  className="flex-1 rounded-2xl bg-gradient-to-r from-pink-400 to-pink-500 py-3 text-sm font-bold text-white hover:shadow-xl transition-all shadow-lg border-2 border-white"
+                  className="flex-1 rounded-full bg-pink-200 py-2.5 text-sm font-semibold text-pink-700 hover:bg-pink-300 transition-all"
                 >
-                  🎁 Add Gift
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  🎁 Gift Card
+                </button>
+                <button
                   onClick={() => setShowCheckout(true)}
-                  className="flex-1 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 py-3 text-sm font-bold text-white hover:shadow-xl transition-all shadow-lg border-2 border-white"
+                  className="flex-1 rounded-full bg-purple-500 py-2.5 text-sm font-semibold text-white hover:bg-purple-600 transition-all"
                 >
-                  💳 Checkout ${total}
-                </motion.button>
+                  💳 Checkout
+                </button>
               </div>
-            </motion.div>
+            </div>
           )}
         </>
       )}
 
       <div className="fixed inset-0 pointer-events-none z-[10050]">
-        <AnimatePresence>
-          {showGift && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="pointer-events-auto relative"
-            >
-              <GiftCardPopup
-                initial={gift}
-                onSelect={updateGift}
-                onClose={() => setShowGift(false)}
-              />
-            </motion.div>
-          )}
-          {showCheckout && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit
+        {showGift && (
+          <div className="pointer-events-auto relative">
+            <GiftCardPopup
+              initial={gift}
+              onSelect={updateGift}
+              onClose={() => setShowGift(false)}
+            />
+          </div>
+        )}
+        {showCheckout && (
+          <div className="pointer-events-auto relative">
+            <CheckoutModal
+              total={total}
+              gift={gift}
+              onGiftChange={() => setShowGift(true)}
+              onGiftRemove={removeGift}
+              onClose={() => setShowCheckout(false)}
+            />
+          </div>
+        )}
+        {showCrop && (
+          <div className="pointer-events-auto relative">
+            <CropperModal
+              open={showCrop}
+              existingImage={userImage}
+              onClose={() => setShowCrop(false)}
+              onDelete={() => {
+                setUserImage(null);
+                setShowCrop(false);
+              }}
+              onDone={(img) => {
+                setUserImage(img);
+                setShowCrop(false);
+              }}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+    }
