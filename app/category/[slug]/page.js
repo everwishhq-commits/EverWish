@@ -3,6 +3,10 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
+// 🔥 FORZAR REGENERACIÓN SIN CACHE
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default function CategoryPage() {
   const { slug } = useParams();
   const router = useRouter();
@@ -16,24 +20,10 @@ export default function CategoryPage() {
   const [modalVideos, setModalVideos] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Mapeo de categorías
-  const CATEGORY_MAP = {
-    'halloween': 'seasonal-global-celebrations',
-    'christmas': 'seasonal-global-celebrations',
-    'thanksgiving': 'seasonal-global-celebrations',
-    'easter': 'seasonal-global-celebrations',
-    'valentine': 'seasonal-global-celebrations',
-    'valentines': 'seasonal-global-celebrations',
-    'birthday': 'birthdays-celebrations',
-    'love': 'love-weddings-anniversaries',
-    'pets': 'pets-animal-lovers',
-    'family': 'family-friendship',
-  };
-
-  // Grupos de subcategorías
+  // 🎯 SUBCATEGORÍAS HARDCODED (aparecen siempre)
   const SUBCATEGORY_GROUPS = {
     "seasonal-global-celebrations": {
-      "Holiday Seasons": ["Halloween", "Thanksgiving", "Christmas", "Easter"],
+      "Holiday Seasons": ["Halloween", "Thanksgiving", "Christmas", "Easter", "New Year", "St Patrick's Day", "Cinco de Mayo"],
       "Cultural Days": ["Valentine's Day", "Independence Day", "Mother's Day", "Father's Day"],
       "Seasonal": ["Spring", "Summer", "Fall", "Winter"],
     },
@@ -84,92 +74,21 @@ export default function CategoryPage() {
     },
   };
 
-  // Función para clasificar video dinámicamente
-  function classifyVideo(videoName) {
-    const parts = videoName.toLowerCase().split(/[_\s-]+/);
-    const categoriesFound = new Set();
-    const subcategoriesFound = new Set();
-
-    parts.forEach(part => {
-      // Buscar categoría
-      if (CATEGORY_MAP[part]) {
-        categoriesFound.add(CATEGORY_MAP[part]);
-      }
-
-      // Buscar subcategoría exacta
-      Object.entries(SUBCATEGORY_GROUPS).forEach(([catSlug, groups]) => {
-        Object.values(groups).forEach(subs => {
-          subs.forEach(sub => {
-            if (sub.toLowerCase().replace(/[^a-z0-9]/g, '') === part.replace(/[^a-z0-9]/g, '')) {
-              categoriesFound.add(catSlug);
-              subcategoriesFound.add(sub);
-            }
-          });
-        });
-      });
-    });
-
-    return {
-      categories: [...categoriesFound],
-      subcategories: [...subcategoriesFound]
-    };
-  }
-
-  // Función para filtrar por categoría
   function filterByCategory(videos, categorySlug) {
-    console.log(`🔍 Filtrando por categoría: ${categorySlug}`);
-    console.log(`📦 Total videos: ${videos.length}`);
-    
-    const results = videos.filter((video) => {
-      // 1. Verificar en categories array del video
-      if (video.categories && Array.isArray(video.categories)) {
-        if (video.categories.includes(categorySlug)) {
-          console.log(`✅ ${video.name} - Match en video.categories`);
-          return true;
-        }
+    return videos.filter(v => {
+      if (v.categories && Array.isArray(v.categories)) {
+        return v.categories.includes(categorySlug);
       }
-      
-      // 2. Clasificar dinámicamente usando el nombre
-      const classification = classifyVideo(video.name);
-      if (classification.categories.includes(categorySlug)) {
-        console.log(`✅ ${video.name} - Match en clasificación dinámica`);
-        console.log(`   Categorías:`, classification.categories);
-        return true;
-      }
-      
       return false;
     });
-    
-    console.log(`📊 Resultados: ${results.length} videos encontrados`);
-    return results;
   }
 
-  // Función para filtrar por subcategoría
-  function filterBySubcategory(videos, subcategory) {
-    console.log(`🔍 Filtrando por subcategoría: ${subcategory}`);
-    
+  function filterBySubcategory(videos, sub) {
     return videos.filter(v => {
-      // 1. Verificar en subcategory del video
-      if (v.subcategory === subcategory) {
-        console.log(`✅ ${v.name} - Match en v.subcategory`);
-        return true;
-      }
-
-      // 2. Verificar en subcategories array
+      if (v.subcategory === sub) return true;
       if (v.subcategories && Array.isArray(v.subcategories)) {
-        if (v.subcategories.includes(subcategory)) {
-          console.log(`✅ ${v.name} - Match en v.subcategories`);
-          return true;
-        }
+        return v.subcategories.includes(sub);
       }
-
-      // 3. Clasificar dinámicamente
-      const classification = classifyVideo(v.name);
-      if (classification.subcategories.includes(subcategory)) {
-        console.log(`✅ ${v.name} - Match en clasificación dinámica`);
-        return true;
-      }
-
       return false;
     });
   }
@@ -181,13 +100,8 @@ export default function CategoryPage() {
         const data = await res.json();
         const all = data.videos || [];
         
-        console.log(`📦 Total videos cargados: ${all.length}`);
-        
-        // Filtrar por categoría
         let filtered = filterByCategory(all, slug);
-        console.log(`✅ Videos en ${slug}: ${filtered.length}`);
         
-        // Si hay búsqueda, filtrar más
         if (q) {
           const searchTerm = q.toLowerCase();
           filtered = filtered.filter(v => {
@@ -201,12 +115,11 @@ export default function CategoryPage() {
             
             return searchable.includes(searchTerm);
           });
-          console.log(`🔍 Después de buscar "${q}": ${filtered.length}`);
         }
         
         setCategoryVideos(filtered);
         
-        // Construir grupos con contadores
+        // Construir grupos
         const groupsData = {};
         const availableGroups = SUBCATEGORY_GROUPS[slug] || {};
         
@@ -216,19 +129,16 @@ export default function CategoryPage() {
             return { name: sub, count };
           });
           
-          // Solo mostrar grupos con videos si hay búsqueda
           if (q) {
-            const hasVideos = subsWithCounts.some(s => s.count > 0);
-            if (hasVideos) {
-              groupsData[groupName] = subsWithCounts.filter(s => s.count > 0);
+            const withResults = subsWithCounts.filter(s => s.count > 0);
+            if (withResults.length > 0) {
+              groupsData[groupName] = withResults;
             }
           } else {
-            // Sin búsqueda, mostrar todos
             groupsData[groupName] = subsWithCounts;
           }
         });
         
-        console.log(`📂 Grupos construidos:`, Object.keys(groupsData));
         setGroups(groupsData);
         
       } catch (err) {
@@ -240,22 +150,18 @@ export default function CategoryPage() {
     load();
   }, [slug, q]);
 
-  // Auto-abrir modal si hay parámetro "sub"
   useEffect(() => {
     if (subFromUrl && categoryVideos.length > 0 && !activeSub) {
-      console.log("🎯 Auto-abriendo modal para subcategoría:", subFromUrl);
       openModal(subFromUrl);
     }
   }, [subFromUrl, categoryVideos]);
 
   const openModal = (sub) => {
-    console.log("🎯 Abriendo modal para:", sub);
     setActiveSub(sub);
     setModalVideos([]);
     
     setTimeout(() => {
       const videos = filterBySubcategory(categoryVideos, sub);
-      console.log(`📹 Videos cargados para ${sub}:`, videos.length);
       setModalVideos(videos);
     }, 100);
   };
@@ -321,7 +227,6 @@ export default function CategoryPage() {
                     onClick={() => sub.count > 0 && openModal(sub.name)}
                     whileHover={sub.count > 0 ? { scale: 1.05 } : {}}
                     whileTap={sub.count > 0 ? { scale: 0.95 } : {}}
-                    disabled={sub.count === 0}
                     className={`px-4 py-2 rounded-full border font-semibold flex items-center gap-2 transition-all ${
                       sub.count > 0
                         ? "bg-gradient-to-r from-pink-50 to-purple-50 border-pink-200 hover:border-pink-400 hover:shadow-md text-gray-700 cursor-pointer"
@@ -365,7 +270,6 @@ export default function CategoryPage() {
         </div>
       )}
 
-      {/* MODAL */}
       <AnimatePresence mode="wait">
         {activeSub && (
           <>
@@ -452,4 +356,4 @@ export default function CategoryPage() {
       </AnimatePresence>
     </main>
   );
-}
+    }
