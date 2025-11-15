@@ -3,9 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
-// 🔥 FORZAR REGENERACIÓN SIN CACHE
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 export default function CategoryPage() {
   const { slug } = useParams();
@@ -20,7 +18,6 @@ export default function CategoryPage() {
   const [modalVideos, setModalVideos] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 🎯 SUBCATEGORÍAS HARDCODED (aparecen siempre)
   const SUBCATEGORY_GROUPS = {
     "seasonal-global-celebrations": {
       "Holiday Seasons": ["Halloween", "Thanksgiving", "Christmas", "Easter", "New Year", "St Patrick's Day", "Cinco de Mayo"],
@@ -74,25 +71,6 @@ export default function CategoryPage() {
     },
   };
 
-  function filterByCategory(videos, categorySlug) {
-    return videos.filter(v => {
-      if (v.categories && Array.isArray(v.categories)) {
-        return v.categories.includes(categorySlug);
-      }
-      return false;
-    });
-  }
-
-  function filterBySubcategory(videos, sub) {
-    return videos.filter(v => {
-      if (v.subcategory === sub) return true;
-      if (v.subcategories && Array.isArray(v.subcategories)) {
-        return v.subcategories.includes(sub);
-      }
-      return false;
-    });
-  }
-
   useEffect(() => {
     async function load() {
       try {
@@ -100,7 +78,12 @@ export default function CategoryPage() {
         const data = await res.json();
         const all = data.videos || [];
         
-        let filtered = filterByCategory(all, slug);
+        let filtered = all.filter(v => {
+          if (v.categories && Array.isArray(v.categories)) {
+            return v.categories.includes(slug);
+          }
+          return false;
+        });
         
         if (q) {
           const searchTerm = q.toLowerCase();
@@ -119,13 +102,18 @@ export default function CategoryPage() {
         
         setCategoryVideos(filtered);
         
-        // Construir grupos
         const groupsData = {};
         const availableGroups = SUBCATEGORY_GROUPS[slug] || {};
         
         Object.entries(availableGroups).forEach(([groupName, subcategories]) => {
           const subsWithCounts = subcategories.map(sub => {
-            const count = filterBySubcategory(filtered, sub).length;
+            const count = filtered.filter(v => {
+              if (v.subcategory === sub) return true;
+              if (v.subcategories && Array.isArray(v.subcategories)) {
+                return v.subcategories.includes(sub);
+              }
+              return false;
+            }).length;
             return { name: sub, count };
           });
           
@@ -142,7 +130,7 @@ export default function CategoryPage() {
         setGroups(groupsData);
         
       } catch (err) {
-        console.error("❌ Error:", err);
+        console.error("Error:", err);
       } finally {
         setLoading(false);
       }
@@ -152,18 +140,28 @@ export default function CategoryPage() {
 
   useEffect(() => {
     if (subFromUrl && categoryVideos.length > 0 && !activeSub) {
-      openModal(subFromUrl);
+      setActiveSub(subFromUrl);
+      const videos = categoryVideos.filter(v => {
+        if (v.subcategory === subFromUrl) return true;
+        if (v.subcategories && Array.isArray(v.subcategories)) {
+          return v.subcategories.includes(subFromUrl);
+        }
+        return false;
+      });
+      setModalVideos(videos);
     }
-  }, [subFromUrl, categoryVideos]);
+  }, [subFromUrl, categoryVideos, activeSub]);
 
   const openModal = (sub) => {
     setActiveSub(sub);
-    setModalVideos([]);
-    
-    setTimeout(() => {
-      const videos = filterBySubcategory(categoryVideos, sub);
-      setModalVideos(videos);
-    }, 100);
+    const videos = categoryVideos.filter(v => {
+      if (v.subcategory === sub) return true;
+      if (v.subcategories && Array.isArray(v.subcategories)) {
+        return v.subcategories.includes(sub);
+      }
+      return false;
+    });
+    setModalVideos(videos);
   };
 
   const closeModal = () => {
@@ -188,7 +186,7 @@ export default function CategoryPage() {
         onClick={() => router.push("/categories")} 
         className="text-pink-500 hover:text-pink-600 font-semibold mb-6"
       >
-        ← Back to Main Categories
+        ← Back
       </button>
 
       <h1 className="text-4xl font-extrabold text-pink-600 mb-3 text-center">
@@ -197,7 +195,7 @@ export default function CategoryPage() {
 
       {q && (
         <p className="text-sm text-gray-500 text-center mb-4">
-          Results for "<b>{q}</b>"
+          Results for &quot;{q}&quot;
         </p>
       )}
 
@@ -250,23 +248,6 @@ export default function CategoryPage() {
       ) : (
         <div className="text-center py-20 max-w-md mx-auto bg-white rounded-3xl shadow-lg p-8">
           <p className="text-gray-500 text-lg mb-4">No subcategories found</p>
-          {q ? (
-            <>
-              <p className="text-sm text-gray-400 mb-4">
-                Try a different search term
-              </p>
-              <button 
-                onClick={() => router.push(`/category/${slug}`)} 
-                className="text-pink-500 hover:text-pink-600 font-semibold"
-              >
-                ← Clear search
-              </button>
-            </>
-          ) : (
-            <p className="text-sm text-gray-400">
-              This category doesn't have any cards yet
-            </p>
-          )}
         </div>
       )}
 
@@ -279,7 +260,6 @@ export default function CategoryPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
               onClick={closeModal}
             />
             
@@ -289,7 +269,6 @@ export default function CategoryPage() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.25 }}
             >
               <div 
                 className="bg-white rounded-3xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto p-6 relative" 
@@ -297,7 +276,7 @@ export default function CategoryPage() {
               >
                 <button
                   onClick={closeModal}
-                  className="sticky top-0 float-right bg-pink-100 hover:bg-pink-200 text-pink-600 rounded-full w-10 h-10 flex items-center justify-center text-2xl font-bold shadow-md z-10 transition-all"
+                  className="sticky top-0 float-right bg-pink-100 hover:bg-pink-200 text-pink-600 rounded-full w-10 h-10 flex items-center justify-center text-2xl font-bold shadow-md z-10"
                 >
                   ×
                 </button>
@@ -308,22 +287,18 @@ export default function CategoryPage() {
 
                 {modalVideos.length === 0 ? (
                   <div className="text-center py-20">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-pink-500 mx-auto mb-4"></div>
-                    <p className="text-gray-500 text-lg">Loading cards...</p>
+                    <p className="text-gray-500 text-lg">No cards yet</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 pb-4">
                     {modalVideos.map((video, i) => (
                       <motion.div
-                        key={`${video.name}-${i}`}
+                        key={i}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.05, duration: 0.3 }}
-                        whileHover={{ scale: 1.05, y: -5 }}
-                        onClick={() => {
-                          router.push(`/edit/${video.name}`);
-                        }}
-                        className="cursor-pointer bg-white rounded-2xl shadow-md border-2 border-pink-100 hover:border-pink-300 hover:shadow-xl overflow-hidden transition-all"
+                        whileHover={{ scale: 1.05 }}
+                        onClick={() => router.push(`/edit/${video.name}`)}
+                        className="cursor-pointer bg-white rounded-2xl shadow-md border-2 border-pink-100 hover:border-pink-300 overflow-hidden"
                       >
                         <div className="relative w-full aspect-[4/5] bg-pink-50">
                           <video
@@ -333,15 +308,10 @@ export default function CategoryPage() {
                             loop
                             muted
                             preload="metadata"
-                            onMouseEnter={e => e.target.play().catch(() => {})}
-                            onMouseLeave={e => { 
-                              e.target.pause(); 
-                              e.target.currentTime = 0; 
-                            }}
                           />
                         </div>
-                        <div className="text-center py-3 px-2 bg-gradient-to-t from-pink-50 to-white">
-                          <p className="text-sm font-semibold text-gray-700 line-clamp-2">
+                        <div className="text-center py-3 px-2">
+                          <p className="text-sm font-semibold text-gray-700">
                             {video.object || video.name}
                           </p>
                         </div>
@@ -356,4 +326,4 @@ export default function CategoryPage() {
       </AnimatePresence>
     </main>
   );
-    }
+                  }
