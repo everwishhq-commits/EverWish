@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { SUBCATEGORY_GROUPS } from "@/lib/classification-system";
 
 export const dynamic = 'force-dynamic';
 
@@ -18,59 +19,6 @@ export default function CategoryPage() {
   const [modalVideos, setModalVideos] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const SUBCATEGORY_GROUPS = {
-    "seasonal-global-celebrations": {
-      "Holiday Seasons": ["Halloween", "Thanksgiving", "Christmas", "Easter", "New Year", "St Patrick's Day", "Cinco de Mayo"],
-      "Cultural Days": ["Valentine's Day", "Independence Day", "Mother's Day", "Father's Day"],
-      "Seasonal": ["Spring", "Summer", "Fall", "Winter"],
-    },
-    "birthdays-celebrations": {
-      "Birthday": ["Birthday", "Sweet 16", "21st Birthday"],
-      "Celebrations": ["Party", "Surprise"],
-    },
-    "love-weddings-anniversaries": {
-      "Romance": ["Love", "Hugs", "Valentine's Day"],
-      "Wedding": ["Wedding", "Anniversary"],
-    },
-    "family-friendship": {
-      "Family": ["Mother's Day", "Father's Day", "Parents"],
-      "Friendship": ["Friends", "Best Friends"],
-    },
-    "work": {
-      "Career": ["New Job", "Promotion", "Retirement"],
-      "Education": ["Graduation", "School"],
-    },
-    "babies-parenting": {
-      "Baby": ["Newborn", "Baby Shower", "Pregnancy"],
-      "Parenting": ["Mom Life", "Dad Life"],
-    },
-    "pets-animal-lovers": {
-      "Companion Animals": ["Dogs", "Cats"],
-      "Sea Animals": ["Sea Animals"],
-      "Farm Animals": ["Farm Animals"],
-      "Flying Animals": ["Flying Animals"],
-      "Wild Animals": ["Wild Animals"],
-    },
-    "support-healing-care": {
-      "Support": ["Get Well", "Thinking of You"],
-      "Sympathy": ["Condolences", "Loss"],
-    },
-    "hear-every-heart": {
-      "Diversity": ["Inclusivity", "Unity", "Peace"],
-    },
-    "sports": {
-      "Sports": ["Soccer", "Basketball", "Football"],
-      "Fitness": ["Gym", "Yoga"],
-    },
-    "wellness-mindful-living": {
-      "Wellness": ["Self-Care", "Meditation"],
-    },
-    "life-journeys-transitions": {
-      "New Beginnings": ["New Home", "Moving"],
-      "Everyday": ["Thank You", "Just Because"],
-    },
-  };
-
   useEffect(() => {
     async function load() {
       try {
@@ -78,6 +26,10 @@ export default function CategoryPage() {
         const data = await res.json();
         const all = data.videos || [];
         
+        console.log(`📊 Total videos cargados: ${all.length}`);
+        console.log(`🔍 Filtrando por categoría: ${slug}`);
+        
+        // Filtrar videos por categoría
         let filtered = all.filter(v => {
           if (v.categories && Array.isArray(v.categories)) {
             return v.categories.includes(slug);
@@ -85,6 +37,9 @@ export default function CategoryPage() {
           return false;
         });
         
+        console.log(`✅ Videos filtrados: ${filtered.length}`);
+        
+        // Si hay búsqueda, filtrar adicionalmente
         if (q) {
           const searchTerm = q.toLowerCase();
           filtered = filtered.filter(v => {
@@ -93,44 +48,53 @@ export default function CategoryPage() {
               v.object,
               v.subcategory,
               ...(v.tags || []),
-              ...(v.categories || [])
+              ...(v.categories || []),
+              ...(v.subcategories || [])
             ].filter(Boolean).join(" ").toLowerCase();
             
             return searchable.includes(searchTerm);
           });
+          
+          console.log(`🔍 Filtrados por búsqueda "${q}": ${filtered.length}`);
         }
         
         setCategoryVideos(filtered);
         
-        const groupsData = {};
+        // Obtener grupos de subcategorías
         const availableGroups = SUBCATEGORY_GROUPS[slug] || {};
+        const groupsData = {};
         
         Object.entries(availableGroups).forEach(([groupName, subcategories]) => {
           const subsWithCounts = subcategories.map(sub => {
             const count = filtered.filter(v => {
-              if (v.subcategory === sub) return true;
+              // Buscar en v.subcategories (array)
               if (v.subcategories && Array.isArray(v.subcategories)) {
                 return v.subcategories.includes(sub);
               }
               return false;
             }).length;
+            
             return { name: sub, count };
           });
           
+          // Si hay búsqueda, solo mostrar subcategorías con resultados
           if (q) {
             const withResults = subsWithCounts.filter(s => s.count > 0);
             if (withResults.length > 0) {
               groupsData[groupName] = withResults;
             }
           } else {
+            // Sin búsqueda, mostrar todas (incluso con 0)
             groupsData[groupName] = subsWithCounts;
           }
         });
         
         setGroups(groupsData);
         
+        console.log(`📂 Grupos con subcategorías:`, Object.keys(groupsData));
+        
       } catch (err) {
-        console.error("Error:", err);
+        console.error("❌ Error cargando videos:", err);
       } finally {
         setLoading(false);
       }
@@ -138,35 +102,51 @@ export default function CategoryPage() {
     load();
   }, [slug, q]);
 
+  // Auto-abrir modal si hay subcategoría en URL
   useEffect(() => {
     if (subFromUrl && categoryVideos.length > 0 && !activeSub) {
       setActiveSub(subFromUrl);
       const videos = categoryVideos.filter(v => {
-        if (v.subcategory === subFromUrl) return true;
         if (v.subcategories && Array.isArray(v.subcategories)) {
           return v.subcategories.includes(subFromUrl);
         }
         return false;
       });
       setModalVideos(videos);
+      console.log(`📂 Modal abierto automáticamente: ${subFromUrl} (${videos.length} videos)`);
     }
   }, [subFromUrl, categoryVideos, activeSub]);
 
   const openModal = (sub) => {
     setActiveSub(sub);
     const videos = categoryVideos.filter(v => {
-      if (v.subcategory === sub) return true;
       if (v.subcategories && Array.isArray(v.subcategories)) {
         return v.subcategories.includes(sub);
       }
       return false;
     });
     setModalVideos(videos);
+    console.log(`📂 Modal abierto: ${sub} (${videos.length} videos)`);
   };
 
   const closeModal = () => {
     setActiveSub(null);
     setModalVideos([]);
+  };
+
+  const handleCardClick = async (videoName) => {
+    try {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) {
+        await elem.requestFullscreen();
+      } else if (elem.webkitRequestFullscreen) {
+        await elem.webkitRequestFullscreen();
+      }
+      await new Promise(r => setTimeout(r, 150));
+      router.push(`/edit/${videoName}`);
+    } catch {
+      router.push(`/edit/${videoName}`);
+    }
   };
 
   if (loading) {
@@ -177,7 +157,11 @@ export default function CategoryPage() {
     );
   }
 
-  const categoryTitle = slug.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+  const categoryTitle = slug
+    .split("-")
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+  
   const groupNames = Object.keys(groups);
 
   return (
@@ -248,9 +232,18 @@ export default function CategoryPage() {
       ) : (
         <div className="text-center py-20 max-w-md mx-auto bg-white rounded-3xl shadow-lg p-8">
           <p className="text-gray-500 text-lg mb-4">No subcategories found</p>
+          {q && (
+            <button
+              onClick={() => router.push(`/category/${slug}`)}
+              className="text-pink-500 hover:text-pink-600 font-semibold"
+            >
+              ← Clear search
+            </button>
+          )}
         </div>
       )}
 
+      {/* MODAL */}
       <AnimatePresence mode="wait">
         {activeSub && (
           <>
@@ -297,7 +290,7 @@ export default function CategoryPage() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         whileHover={{ scale: 1.05 }}
-                        onClick={() => router.push(`/edit/${video.name}`)}
+                        onClick={() => handleCardClick(video.name)}
                         className="cursor-pointer bg-white rounded-2xl shadow-md border-2 border-pink-100 hover:border-pink-300 overflow-hidden"
                       >
                         <div className="relative w-full aspect-[4/5] bg-pink-50">
@@ -308,6 +301,11 @@ export default function CategoryPage() {
                             loop
                             muted
                             preload="metadata"
+                            onMouseEnter={e => e.target.play().catch(() => {})}
+                            onMouseLeave={e => { 
+                              e.target.pause(); 
+                              e.target.currentTime = 0; 
+                            }}
                           />
                         </div>
                         <div className="text-center py-3 px-2">
@@ -326,4 +324,4 @@ export default function CategoryPage() {
       </AnimatePresence>
     </main>
   );
-                  }
+                     }
