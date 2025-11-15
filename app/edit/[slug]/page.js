@@ -105,13 +105,19 @@ export default function EditPage({ params }) {
   const handleCardClick = async () => {
     try {
       const elem = document.documentElement;
+      
+      // Primero intentar fullscreen nativo (oculta tabs)
       if (elem.requestFullscreen) {
-        await elem.requestFullscreen();
+        await elem.requestFullscreen({ navigationUI: "hide" });
       } else if (elem.webkitRequestFullscreen) {
         await elem.webkitRequestFullscreen();
+      } else if (elem.mozRequestFullScreen) {
+        await elem.mozRequestFullScreen();
+      } else if (elem.msRequestFullscreen) {
+        await elem.msRequestFullscreen();
       }
     } catch (err) {
-      console.log("Fullscreen not available");
+      console.log("Fullscreen not available:", err);
     }
   };
 
@@ -307,7 +313,7 @@ export default function EditPage({ params }) {
                 {videoFound ? (
                   <video
                     src={videoSrc}
-                    className="w-full h-full object-cover bg-pink-50 overflow-hidden pointer-events-none"
+                    className="w-full h-full object-contain bg-pink-50 overflow-hidden pointer-events-none"
                     autoPlay
                     loop
                     muted
@@ -390,7 +396,7 @@ export default function EditPage({ params }) {
                 {videoFound ? (
                   <video
                     src={videoSrc}
-                    className="w-full h-full object-cover bg-pink-50 overflow-hidden pointer-events-none"
+                    className="w-full h-full object-contain bg-pink-50 overflow-hidden pointer-events-none"
                     autoPlay
                     loop
                     muted
@@ -494,4 +500,4 @@ export default function EditPage({ params }) {
       </div>
     </div>
   );
-            }
+}
