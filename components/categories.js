@@ -37,7 +37,6 @@ export default function Categories() {
   );
   const [searchResults, setSearchResults] = useState(null);
 
-  // Cargar videos
   useEffect(() => {
     async function loadVideos() {
       try {
@@ -46,7 +45,6 @@ export default function Categories() {
         const allVideos = data.videos || [];
         setVideos(allVideos);
         
-        // Contar por categoría
         const grouped = groupByCategory(allVideos);
         const categoriesWithCounts = BASE_CATEGORIES.map((cat, i) => ({
           ...cat,
@@ -63,7 +61,6 @@ export default function Categories() {
     loadVideos();
   }, []);
 
-  // Procesar búsqueda
   useEffect(() => {
     if (!search.trim()) {
       setDisplayCategories(
@@ -101,7 +98,6 @@ export default function Categories() {
     });
   }, [search, videos]);
 
-  // 🎯 MISMO CÓDIGO QUE EL CARRUSEL
   const handleCategoryClick = async (cat) => {
     try {
       const elem = document.documentElement;
@@ -129,11 +125,10 @@ export default function Categories() {
         Categories
       </h2>
 
-      {/* Barra de búsqueda */}
       <div className="flex flex-col items-center mb-10">
         <input
           type="text"
-          placeholder="Search: zombie, turtle, love, birthday..."
+          placeholder="Search: St Patrick, Diwali, Veterans Day..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-80 md:w-96 px-4 py-3 rounded-full border-2 border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-pink-400 text-gray-700 text-center transition-all"
@@ -169,7 +164,6 @@ export default function Categories() {
         )}
       </div>
 
-      {/* Carrusel */}
       {displayCategories.length > 0 ? (
         <Swiper
           slidesPerView={3.2}
@@ -243,4 +237,4 @@ export default function Categories() {
       )}
     </section>
   );
-    }
+        }
