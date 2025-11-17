@@ -5,23 +5,9 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { searchVideos, groupByCategory } from "@/lib/simple-search";
+import { BASE_CATEGORIES } from "@/lib/categories-config";
+import { searchVideos, groupVideosByBaseCategory } from "@/lib/classification-system";
 import "swiper/css";
-
-const BASE_CATEGORIES = [
-  { name: "Holidays", emoji: "🎉", slug: "seasonal-global-celebrations" },
-  { name: "Celebrations", emoji: "🎂", slug: "birthdays-celebrations" },
-  { name: "Love & Romance", emoji: "💝", slug: "love-weddings-anniversaries" },
-  { name: "Family & Friendship", emoji: "🫶", slug: "family-friendship" },
-  { name: "Work & Professional Life", emoji: "💼", slug: "work" },
-  { name: "Babies & Parenting", emoji: "🧸", slug: "babies-parenting" },
-  { name: "Animal Lovers", emoji: "🐾", slug: "pets-animal-lovers" },
-  { name: "Support, Healing & Care", emoji: "🕊️", slug: "support-healing-care" },
-  { name: "Connection", emoji: "🧩", slug: "hear-every-heart" },
-  { name: "Sports", emoji: "🏟️", slug: "sports" },
-  { name: "Wellness & Mindful Living", emoji: "🕯️", slug: "wellness-mindful-living" },
-  { name: "Nature & Life Journeys", emoji: "🏕️", slug: "life-journeys-transitions" },
-];
 
 const COLORS = [
   "#FFE0E9", "#FFDDEE", "#FFECEC", "#E5EDFF", "#EAF4FF", "#DFF7FF",
@@ -33,7 +19,11 @@ export default function Categories() {
   const [search, setSearch] = useState("");
   const [videos, setVideos] = useState([]);
   const [displayCategories, setDisplayCategories] = useState(
-    BASE_CATEGORIES.map((cat, i) => ({ ...cat, color: COLORS[i % COLORS.length], count: 0 }))
+    BASE_CATEGORIES.map((cat, i) => ({ 
+      ...cat, 
+      color: COLORS[i % COLORS.length], 
+      count: 0 
+    }))
   );
   const [searchResults, setSearchResults] = useState(null);
 
@@ -45,7 +35,7 @@ export default function Categories() {
         const allVideos = data.videos || [];
         setVideos(allVideos);
         
-        const grouped = groupByCategory(allVideos);
+        const grouped = groupVideosByBaseCategory(allVideos);
         const categoriesWithCounts = BASE_CATEGORIES.map((cat, i) => ({
           ...cat,
           color: COLORS[i % COLORS.length],
@@ -78,7 +68,7 @@ export default function Categories() {
     const matchedVideos = searchVideos(videos, search);
     console.log(`✅ Videos encontrados: ${matchedVideos.length}`);
     
-    const grouped = groupByCategory(matchedVideos);
+    const grouped = groupVideosByBaseCategory(matchedVideos);
     
     const categoriesWithResults = BASE_CATEGORIES
       .map((cat, index) => ({
@@ -237,4 +227,4 @@ export default function Categories() {
       )}
     </section>
   );
-        }
+}
