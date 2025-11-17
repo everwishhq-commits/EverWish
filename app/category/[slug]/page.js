@@ -2,7 +2,13 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { SUBCATEGORY_GROUPS } from "@/lib/classification-system";
+import { 
+  SUBCATEGORY_GROUPS,
+  searchVideos,
+  filterByCategory,
+  getGroupsWithSubcategories,
+  filterBySubcategory
+} from "@/lib/classification-system";
 
 export const dynamic = 'force-dynamic';
 
@@ -26,75 +32,32 @@ export default function CategoryPage() {
         const data = await res.json();
         const all = data.videos || [];
         
-        console.log(`📊 Total videos cargados: ${all.length}`);
-        console.log(`🔍 Filtrando por categoría: ${slug}`);
+        console.log(`📊 Total videos: ${all.length}`);
+        console.log(`🔍 Categoría: ${slug}`);
         
-        // Filtrar videos por categoría
-        let filtered = all.filter(v => {
-          if (v.categories && Array.isArray(v.categories)) {
-            return v.categories.includes(slug);
-          }
-          return false;
-        });
+        // 🔥 PASO 1: Filtrar por categoría usando el sistema modular
+        let filtered = filterByCategory(all, slug);
         
-        console.log(`✅ Videos filtrados: ${filtered.length}`);
+        console.log(`✅ Videos en categoría: ${filtered.length}`);
         
-        // Si hay búsqueda, filtrar adicionalmente
+        // 🔥 PASO 2: Si hay búsqueda, aplicar filtro adicional
         if (q) {
-          const searchTerm = q.toLowerCase();
-          filtered = filtered.filter(v => {
-            const searchable = [
-              v.name,
-              v.object,
-              v.subcategory,
-              ...(v.tags || []),
-              ...(v.categories || []),
-              ...(v.subcategories || [])
-            ].filter(Boolean).join(" ").toLowerCase();
-            
-            return searchable.includes(searchTerm);
-          });
-          
-          console.log(`🔍 Filtrados por búsqueda "${q}": ${filtered.length}`);
+          console.log(`🔍 Aplicando búsqueda: "${q}"`);
+          filtered = searchVideos(filtered, q);
+          console.log(`✅ Videos después de búsqueda: ${filtered.length}`);
         }
         
         setCategoryVideos(filtered);
         
-        // Obtener grupos de subcategorías
-        const availableGroups = SUBCATEGORY_GROUPS[slug] || {};
-        const groupsData = {};
+        // 🔥 PASO 3: Obtener grupos de subcategorías con contadores
+        const groupsData = getGroupsWithSubcategories(filtered, slug);
         
-        Object.entries(availableGroups).forEach(([groupName, subcategories]) => {
-          const subsWithCounts = subcategories.map(sub => {
-            const count = filtered.filter(v => {
-              // Buscar en v.subcategories (array)
-              if (v.subcategories && Array.isArray(v.subcategories)) {
-                return v.subcategories.includes(sub);
-              }
-              return false;
-            }).length;
-            
-            return { name: sub, count };
-          });
-          
-          // Si hay búsqueda, solo mostrar subcategorías con resultados
-          if (q) {
-            const withResults = subsWithCounts.filter(s => s.count > 0);
-            if (withResults.length > 0) {
-              groupsData[groupName] = withResults;
-            }
-          } else {
-            // Sin búsqueda, mostrar todas (incluso con 0)
-            groupsData[groupName] = subsWithCounts;
-          }
-        });
+        console.log(`📂 Grupos encontrados:`, Object.keys(groupsData));
         
         setGroups(groupsData);
         
-        console.log(`📂 Grupos con subcategorías:`, Object.keys(groupsData));
-        
       } catch (err) {
-        console.error("❌ Error cargando videos:", err);
+        console.error("❌ Error:", err);
       } finally {
         setLoading(false);
       }
@@ -106,27 +69,17 @@ export default function CategoryPage() {
   useEffect(() => {
     if (subFromUrl && categoryVideos.length > 0 && !activeSub) {
       setActiveSub(subFromUrl);
-      const videos = categoryVideos.filter(v => {
-        if (v.subcategories && Array.isArray(v.subcategories)) {
-          return v.subcategories.includes(subFromUrl);
-        }
-        return false;
-      });
+      const videos = filterBySubcategory(categoryVideos, subFromUrl);
       setModalVideos(videos);
-      console.log(`📂 Modal abierto automáticamente: ${subFromUrl} (${videos.length} videos)`);
+      console.log(`📂 Modal abierto: ${subFromUrl} (${videos.length} videos)`);
     }
   }, [subFromUrl, categoryVideos, activeSub]);
 
   const openModal = (sub) => {
     setActiveSub(sub);
-    const videos = categoryVideos.filter(v => {
-      if (v.subcategories && Array.isArray(v.subcategories)) {
-        return v.subcategories.includes(sub);
-      }
-      return false;
-    });
+    const videos = filterBySubcategory(categoryVideos, sub);
     setModalVideos(videos);
-    console.log(`📂 Modal abierto: ${sub} (${videos.length} videos)`);
+    console.log(`📂 Abriendo modal: ${sub} (${videos.length} videos)`);
   };
 
   const closeModal = () => {
@@ -324,4 +277,4 @@ export default function CategoryPage() {
       </AnimatePresence>
     </main>
   );
-                     }
+        }
