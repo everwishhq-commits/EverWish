@@ -529,4 +529,94 @@ export default function EditPage({ params }) {
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 bg-gradient-to-b from-gray-50 to-gray-100">
                     <div className="text-5xl mb-3">⚠️</div>
                     <p className="text-xs text-center px-4 mb-2 font-semibold">
-                      This c
+                      This card&apos;s video is missing or not uploaded yet.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* 🔥 NUEVO: Mostrar información de la tarjeta */}
+              <CardInfoPanel />
+
+              <div className="flex flex-col gap-2 flex-shrink-0 mt-3">
+                <h3 className="text-center text-sm font-semibold text-gray-700">
+                  ✨ Customize your message ✨
+                </h3>
+                <textarea
+                  className="w-full rounded-2xl border p-3 text-center text-base text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400 resize-none"
+                  rows={2}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                />
+              </div>
+
+              <div className="flex-shrink-0 mt-4">
+                <AnimationPanel />
+              </div>
+
+              <div className="flex-1 flex flex-col items-center justify-center mt-4">
+                <button
+                  onClick={() => setShowCrop(true)}
+                  className="w-full rounded-2xl bg-gradient-to-r from-yellow-400 to-yellow-500 py-4 text-lg font-bold text-[#3b2b1f] shadow-lg hover:from-yellow-300 hover:to-yellow-400 transition-all"
+                >
+                  📸 Upload Your Photo
+                </button>
+                <p className="text-xs text-gray-500 mt-3 text-center">
+                  Add a personal touch to your card
+                </p>
+              </div>
+
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={() => setShowGift(true)}
+                  className="flex-1 rounded-full bg-pink-200 py-3 text-sm font-semibold text-pink-700 shadow hover:bg-pink-300 transition-all"
+                >
+                  🎁 Add Gift Card
+                </button>
+                <button
+                  onClick={() => setShowCheckout(true)}
+                  className="flex-1 rounded-full bg-purple-500 py-3 text-sm font-semibold text-white shadow hover:bg-purple-600 transition-all"
+                >
+                  💳 Continue
+                </button>
+              </div>
+            </div>
+          )}
+
+          {showGift && (
+            <GiftCardPopup
+              initial={gift}
+              onSelect={updateGift}
+              onClose={() => setShowGift(false)}
+            />
+          )}
+
+          {showCheckout && (
+            <CheckoutModal
+              total={total}
+              gift={gift}
+              onGiftChange={() => {
+                setShowCheckout(false);
+                setShowGift(true);
+              }}
+              onGiftRemove={removeGift}
+              onClose={() => setShowCheckout(false)}
+            />
+          )}
+
+          {showCrop && (
+            <CropperModal
+              open={showCrop}
+              onClose={() => setShowCrop(false)}
+              onDone={(img) => {
+                setUserImage(img);
+                setShowCrop(false);
+              }}
+            />
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+                      
