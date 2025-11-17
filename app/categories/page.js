@@ -1,7 +1,85 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { BASE_CATEGORIES, searchVideos, groupVideosByBaseCategory } from "@/lib/classification-system";
+
+// 🔥 IMPORTAR DESDE EL SISTEMA MODULAR
+const BASE_CATEGORIES = [
+  { name: "Holidays", emoji: "🎉", slug: "seasonal-global-celebrations" },
+  { name: "Celebrations", emoji: "🎂", slug: "birthdays-celebrations" },
+  { name: "Love & Romance", emoji: "💝", slug: "love-weddings-anniversaries" },
+  { name: "Family & Friendship", emoji: "🫶", slug: "family-friendship" },
+  { name: "Work & Professional Life", emoji: "💼", slug: "work" },
+  { name: "Babies & Parenting", emoji: "🧸", slug: "babies-parenting" },
+  { name: "Animal Lovers", emoji: "🐾", slug: "pets-animal-lovers" },
+  { name: "Support, Healing & Care", emoji: "🕊️", slug: "support-healing-care" },
+  { name: "Connection", emoji: "🧩", slug: "hear-every-heart" },
+  { name: "Sports", emoji: "🏟️", slug: "sports" },
+  { name: "Wellness & Mindful Living", emoji: "🕯️", slug: "wellness-mindful-living" },
+  { name: "Nature & Life Journeys", emoji: "🏕️", slug: "life-journeys-transitions" },
+];
+
+function normalize(text) {
+  if (!text) return '';
+  return text.toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '')
+    .trim();
+}
+
+function searchVideos(videos, query) {
+  if (!query?.trim()) return videos;
+  const n = normalize(query);
+  
+  const variations = [n];
+  if (n.endsWith('s')) variations.push(n.slice(0, -1));
+  else variations.push(n + 's');
+  if (n.endsWith('ies')) variations.push(n.slice(0, -3) + 'y');
+  
+  return videos.filter(v => {
+    const allText = [
+      v.name, v.object, v.subcategory, v.category,
+      ...(v.tags || []),
+      ...(v.categories || []),
+      ...(v.subcategories || [])
+    ].filter(Boolean).join(" ");
+    
+    const normalizedText = normalize(allText);
+    return variations.some(variant => normalizedText.includes(variant));
+  });
+}
+
+function groupByCategory(videos) {
+  const grouped = {};
+  
+  videos.forEach(video => {
+    if (!video.categories || !Array.isArray(video.categories)) return;
+    
+    video.categories.forEach(cat => {
+      const normalizedCat = normalize(cat);
+      
+      // Buscar la categoría base que coincida
+      BASE_CATEGORIES.forEach(baseCat => {
+        const normalizedBase = normalize(baseCat.slug);
+        
+        if (normalizedCat === normalizedBase || 
+            normalizedCat.includes(normalizedBase) || 
+            normalizedBase.includes(normalizedCat)) {
+          
+          if (!grouped[baseCat.slug]) {
+            grouped[baseCat.slug] = [];
+          }
+          
+          if (!grouped[baseCat.slug].find(v => v.name === video.name)) {
+            grouped[baseCat.slug].push(video);
+          }
+        }
+      });
+    });
+  });
+  
+  return grouped;
+}
 
 export default function CategoriesPage() {
   const router = useRouter();
@@ -22,7 +100,6 @@ export default function CategoriesPage() {
         // Inicializar con las 12 categorías SIN contadores
         setDisplayCategories(BASE_CATEGORIES);
         console.log(`📦 ${allVideos.length} videos cargados`);
-        console.log(`📊 12 categorías inicializadas`);
       } catch (err) {
         console.error("❌ Error loading videos:", err);
         setDisplayCategories(BASE_CATEGORIES);
@@ -34,7 +111,6 @@ export default function CategoriesPage() {
   // Procesar búsqueda
   useEffect(() => {
     if (!search.trim()) {
-      // Sin búsqueda: mostrar TODAS las 12 categorías SIN contadores
       setDisplayCategories(BASE_CATEGORIES);
       setResults(null);
       return;
@@ -42,11 +118,10 @@ export default function CategoriesPage() {
 
     console.log(`🔍 Buscando: "${search}"`);
 
-    // Con búsqueda: filtrar videos y mostrar contadores
     const matchedVideos = searchVideos(videos, search);
     console.log(`✅ ${matchedVideos.length} videos encontrados`);
     
-    const grouped = groupVideosByBaseCategory(matchedVideos);
+    const grouped = groupByCategory(matchedVideos);
     
     // Solo mostrar categorías con resultados + contadores
     const categoriesWithResults = BASE_CATEGORIES
@@ -90,7 +165,7 @@ export default function CategoriesPage() {
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search: zombie, turtle, love, mother..."
+            placeholder="Search: St Patrick, zombie, turtle..."
             className="w-full px-4 py-3 rounded-full border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-center shadow-sm transition-all"
           />
           {search && (
@@ -103,7 +178,7 @@ export default function CategoriesPage() {
           )}
         </div>
 
-        {/* Resultados de búsqueda - SOLO cuando hay búsqueda */}
+        {/* Resultados de búsqueda */}
         {results && (
           <div className="text-center mb-6">
             {results.found > 0 ? (
@@ -171,4 +246,4 @@ export default function CategoriesPage() {
       `}</style>
     </div>
   );
-}
+              }
