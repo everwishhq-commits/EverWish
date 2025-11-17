@@ -8,6 +8,8 @@ import {
   AnimationOverlay,
 } from "@/lib/animations";
 import { getMessageForSlug } from "@/lib/messages";
+import { classifyVideo } from "@/lib/classification-system";
+import { SUBCATEGORY_GROUPS } from "@/lib/categories-config";
 import GiftCardPopup from "@/components/giftcard";
 import CheckoutModal from "@/components/checkout";
 import CropperModal from "@/components/croppermodal";
@@ -35,10 +37,13 @@ export default function EditPage({ params }) {
   const [intensity, setIntensity] = useState("normal");
   const [emojiCount, setEmojiCount] = useState(20);
 
+  // 🔥 NUEVO: Información de clasificación
+  const [cardInfo, setCardInfo] = useState(null);
+
   const category = useMemo(() => getAnimationsForSlug(slug), [slug]);
   const [animKey, setAnimKey] = useState(0);
 
-  // 🔥 MEJORA: Cargar video desde el sistema modular
+  // 🔥 MEJORA: Cargar video + clasificación
   useEffect(() => {
     async function loadVideo() {
       try {
@@ -46,15 +51,13 @@ export default function EditPage({ params }) {
         const data = await res.json();
         const videos = data.videos || data || [];
 
-        // 🔥 Buscar el video por nombre exacto primero
+        // Buscar el video por nombre exacto primero
         let match = videos.find((v) => v.name === slug);
         
-        // Si no se encuentra, buscar por slug normalizado
         if (!match) {
           match = videos.find((v) => v.slug === slug);
         }
         
-        // Si tampoco, buscar sin la variante (1A, 2B, etc)
         if (!match) {
           const baseSlug = slug.replace(/_\d+[A-Z]$/i, '');
           match = videos.find((v) => 
@@ -66,9 +69,31 @@ export default function EditPage({ params }) {
           console.log(`✅ Video encontrado: ${match.name}`);
           setVideoSrc(match.file);
           setVideoFound(true);
+          
+          // 🔥 CLASIFICAR el video para obtener sus categorías/subcategorías
+          const classifications = classifyVideo(match.name + ".mp4");
+          const primaryClass = classifications[0];
+          
+          // Extraer todas las subcategorías disponibles en esta categoría
+          const categorySlug = primaryClass.categorySlug;
+          const allSubcategories = SUBCATEGORY_GROUPS[categorySlug] || {};
+          
+          setCardInfo({
+            name: match.name,
+            object: primaryClass.object,
+            variant: primaryClass.variant,
+            categories: match.categories || [primaryClass.categorySlug],
+            subcategories: match.subcategories || primaryClass.subcategories,
+            availableSubcategories: allSubcategories, // ⭐ TODAS las subcategorías
+          });
+          
+          console.log(`📊 Clasificación:`, {
+            categorías: primaryClass.categorySlug,
+            subcategorías: primaryClass.subcategories,
+            disponibles: Object.keys(allSubcategories).length + " grupos"
+          });
         } else {
           console.warn(`⚠️ Video no encontrado en index.json: ${slug}`);
-          console.log(`📂 Intentando con ruta directa: /videos/${slug}.mp4`);
           setVideoSrc(`/videos/${slug}.mp4`);
           setVideoFound(false);
         }
@@ -117,23 +142,21 @@ export default function EditPage({ params }) {
     return () => document.removeEventListener("contextmenu", preventContextMenu);
   }, []);
 
-  // bloquear guardar
   const handleCardClick = () => {
     alert("🔒 This card is protected. Purchase to download!");
   };
 
-  // gift
   const updateGift = (data) => {
     setGift(data);
     setShowGift(false);
     setTotal(5 + (data?.amount || 0));
   };
+  
   const removeGift = () => {
     setGift(null);
     setTotal(5);
   };
 
-  // Panel de animación
   const isAnimationActive = animation && !animation.startsWith("✨ None");
 
   const AnimationPanel = () => {
@@ -253,6 +276,92 @@ export default function EditPage({ params }) {
     );
   };
 
+  // 🔥 NUEVO: Panel de información de la tarjeta
+  const CardInfoPanel = () => {
+    if (!cardInfo) return null;
+
+    return (
+      <div className="bg-white rounded-2xl p-4 shadow-md border border-pink-100 mb-3">
+        <h3 className="text-sm font-bold text-pink-600 mb-2 text-center">
+          📋 Card Information
+        </h3>
+        
+        <div className="space-y-2 text-xs">
+          {/* Objeto */}
+          <div>
+            <span className="font-semibold text-gray-700">Object:</span>
+            <span className="ml-2 text-gray-600">{cardInfo.object}</span>
+          </div>
+          
+          {/* Variante */}
+          <div>
+            <span className="font-semibold text-gray-700">Variant:</span>
+            <span className="ml-2 text-purple-600 font-mono">{cardInfo.variant}</span>
+          </div>
+          
+          {/* Categorías */}
+          <div>
+            <span className="font-semibold text-gray-700">Categories:</span>
+            <div className="flex flex-wrap gap-1 mt-1">
+              {cardInfo.categories.map((cat, i) => (
+                <span key={i} className="bg-pink-100 text-pink-700 px-2 py-0.5 rounded-full text-xs">
+                  {cat.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}
+                </span>
+              ))}
+            </div>
+          </div>
+          
+          {/* Subcategorías ACTIVAS */}
+          <div>
+            <span className="font-semibold text-gray-700">Active Subcategories:</span>
+            {cardInfo.subcategories.length > 0 ? (
+              <div className="flex flex-wrap gap-1 mt-1">
+                {cardInfo.subcategories.map((sub, i) => (
+                  <span key={i} className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs">
+                    ✅ {sub}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-400 text-xs mt-1">None active</p>
+            )}
+          </div>
+          
+          {/* Subcategorías DISPONIBLES (aunque estén vacías) */}
+          <div>
+            <span className="font-semibold text-gray-700">Available Subcategories:</span>
+            <div className="mt-1 space-y-1">
+              {Object.entries(cardInfo.availableSubcategories).map(([group, subs]) => (
+                <details key={group} className="bg-gray-50 rounded p-2">
+                  <summary className="cursor-pointer font-semibold text-xs text-gray-700">
+                    📂 {group} ({subs.length})
+                  </summary>
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {subs.map((sub, i) => {
+                      const isActive = cardInfo.subcategories.includes(sub);
+                      return (
+                        <span 
+                          key={i} 
+                          className={`px-2 py-0.5 rounded-full text-xs ${
+                            isActive 
+                              ? "bg-green-100 text-green-700 font-semibold" 
+                              : "bg-gray-200 text-gray-500"
+                          }`}
+                        >
+                          {isActive ? "✅" : "○"} {sub}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </details>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="relative h-[100vh] max-h-[100vh] bg-[#fff7f5] flex items-center justify-center overflow-hidden">
       {stage === "expanded" && (
@@ -316,7 +425,7 @@ export default function EditPage({ params }) {
                 className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none flex-shrink-0"
                 onClick={handleCardClick}
                 onContextMenu={(e) => e.preventDefault()}
-                style={{ height: "38vh" }}
+                style={{ height: "30vh" }}
               >
                 {videoFound ? (
                   <video
@@ -340,6 +449,9 @@ export default function EditPage({ params }) {
                 )}
               </div>
 
+              {/* 🔥 NUEVO: Mostrar información de la tarjeta */}
+              <CardInfoPanel />
+
               <div className="flex flex-col gap-2 flex-shrink-0">
                 <h3 className="text-center text-sm font-semibold text-gray-700">
                   ✨ Customize your message ✨
@@ -352,7 +464,7 @@ export default function EditPage({ params }) {
                 />
               </div>
 
-              <div className="relative flex-shrink-0" style={{ height: "38vh" }}>
+              <div className="relative flex-shrink-0" style={{ height: "30vh" }}>
                 <div
                   className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden bg-[#fff7f5] h-full cursor-pointer flex items-center justify-center"
                   onClick={() => setShowCrop(true)}
@@ -399,7 +511,7 @@ export default function EditPage({ params }) {
                 className="relative rounded-2xl border bg-gray-50 overflow-hidden cursor-pointer select-none flex-shrink-0"
                 onClick={handleCardClick}
                 onContextMenu={(e) => e.preventDefault()}
-                style={{ height: "46vh" }}
+                style={{ height: "36vh" }}
               >
                 {videoFound ? (
                   <video
@@ -417,95 +529,4 @@ export default function EditPage({ params }) {
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 bg-gradient-to-b from-gray-50 to-gray-100">
                     <div className="text-5xl mb-3">⚠️</div>
                     <p className="text-xs text-center px-4 mb-2 font-semibold">
-                      This card&apos;s video is missing or not uploaded yet.
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex flex-col gap-2 flex-shrink-0 mt-4">
-                <h3 className="text-center text-sm font-semibold text-gray-700">
-                  ✨ Customize your message ✨
-                </h3>
-                <textarea
-                  className="w-full rounded-2xl border p-4 text-center text-base text-gray-700 shadow-sm focus:border-pink-400 focus:ring-pink-400 resize-none"
-                  rows={4}
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                />
-              </div>
-
-              <div className="flex items-center justify-center flex-shrink-0 py-4">
-                <button
-                  onClick={() => setShowCrop(true)}
-                  className="flex items-center gap-2 rounded-full bg-yellow-400 px-6 py-2.5 text-sm font-semibold text-[#3b2b1f] hover:bg-yellow-300 transition-all shadow-md"
-                >
-                  📸 Add Image
-                </button>
-              </div>
-
-              <div className="flex-shrink-0 mt-1">
-                <AnimationPanel />
-              </div>
-
-              <div className="flex gap-2 flex-shrink-0 mt-auto pt-2 pb-3">
-                <button
-                  onClick={() => setShowGift(true)}
-                  className="flex-1 rounded-full bg-pink-200 py-2.5 text-sm font-semibold text-pink-700 hover:bg-pink-300 transition-all"
-                >
-                  🎁 Gift Card
-                </button>
-                <button
-                  onClick={() => setShowCheckout(true)}
-                  className="flex-1 rounded-full bg-purple-500 py-2.5 text-sm font-semibold text-white hover:bg-purple-600 transition-all"
-                >
-                  💳 Checkout
-                </button>
-              </div>
-            </div>
-          )}
-        </>
-      )}
-
-      <div className="fixed inset-0 pointer-events-none z-[10050]">
-        {showGift && (
-          <div className="pointer-events-auto relative">
-            <GiftCardPopup
-              initial={gift}
-              onSelect={updateGift}
-              onClose={() => setShowGift(false)}
-            />
-          </div>
-        )}
-        {showCheckout && (
-          <div className="pointer-events-auto relative">
-            <CheckoutModal
-              total={total}
-              gift={gift}
-              onGiftChange={() => setShowGift(true)}
-              onGiftRemove={removeGift}
-              onClose={() => setShowCheckout(false)}
-            />
-          </div>
-        )}
-        {showCrop && (
-          <div className="pointer-events-auto relative">
-            <CropperModal
-              open={showCrop}
-              existingImage={userImage}
-              onClose={() => setShowCrop(false)}
-              onDelete={() => {
-                setUserImage(null);
-                setShowCrop(false);
-              }}
-              onDone={(img) => {
-                setUserImage(img);
-                setShowCrop(false);
-              }}
-            />
-          </div>
-        )}
-      </div>
-    </div>
-  );
-               }
+                      This c
