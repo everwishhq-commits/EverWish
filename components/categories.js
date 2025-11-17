@@ -6,7 +6,7 @@ import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { BASE_CATEGORIES } from "@/lib/categories-config";
-import { searchVideos, groupVideosByBaseCategory } from "@/lib/classification-system";
+import { searchVideos, groupByCategory } from "@/lib/simple-search";
 import "swiper/css";
 
 const COLORS = [
@@ -35,7 +35,7 @@ export default function Categories() {
         const allVideos = data.videos || [];
         setVideos(allVideos);
 
-        const grouped = groupVideosByBaseCategory(allVideos);
+        const grouped = groupByCategory(allVideos);
         const categoriesWithCounts = BASE_CATEGORIES.map((cat, i) => ({
           ...cat,
           color: COLORS[i % COLORS.length],
@@ -56,7 +56,7 @@ export default function Categories() {
       const categoriesWithCounts = BASE_CATEGORIES.map((cat, i) => ({
         ...cat,
         color: COLORS[i % COLORS.length],
-        count: groupVideosByBaseCategory(videos)[cat.slug]?.length || 0
+        count: groupByCategory(videos)[cat.slug]?.length || 0
       }));
       setDisplayCategories(categoriesWithCounts);
       setSearchResults(null);
@@ -64,7 +64,7 @@ export default function Categories() {
     }
 
     const matchedVideos = searchVideos(videos, search);
-    const grouped = groupVideosByBaseCategory(matchedVideos);
+    const grouped = groupByCategory(matchedVideos);
 
     const categoriesWithResults = BASE_CATEGORIES
       .map((cat, index) => ({
