@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
 
-import { classifyVideo } from "@/lib/classify"; // tu archivo real
+import { classifyVideo } from "@/lib/classification-system"; // tu archivo real
 
 export async function GET() {
   try {
