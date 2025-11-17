@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-// 🔥 IMPORTAR DESDE EL SISTEMA MODULAR
+// 🔥 Categorías base importadas desde config
 const BASE_CATEGORIES = [
   { name: "Holidays", emoji: "🎉", slug: "seasonal-global-celebrations" },
   { name: "Celebrations", emoji: "🎂", slug: "birthdays-celebrations" },
@@ -30,20 +30,20 @@ function normalize(text) {
 function searchVideos(videos, query) {
   if (!query?.trim()) return videos;
   const n = normalize(query);
-  
   const variations = [n];
   if (n.endsWith('s')) variations.push(n.slice(0, -1));
   else variations.push(n + 's');
   if (n.endsWith('ies')) variations.push(n.slice(0, -3) + 'y');
-  
+
   return videos.filter(v => {
     const allText = [
-      v.name, v.object, v.subcategory, v.category,
-      ...(v.tags || []),
+      v.name,
+      v.object,
       ...(v.categories || []),
-      ...(v.subcategories || [])
+      ...(v.subcategories || []),
+      ...(v.tags || [])
     ].filter(Boolean).join(" ");
-    
+
     const normalizedText = normalize(allText);
     return variations.some(variant => normalizedText.includes(variant));
   });
@@ -51,33 +51,20 @@ function searchVideos(videos, query) {
 
 function groupByCategory(videos) {
   const grouped = {};
-  
   videos.forEach(video => {
-    if (!video.categories || !Array.isArray(video.categories)) return;
-    
-    video.categories.forEach(cat => {
-      const normalizedCat = normalize(cat);
-      
-      // Buscar la categoría base que coincida
+    (video.categories || []).forEach(cat => {
       BASE_CATEGORIES.forEach(baseCat => {
+        const normalizedCat = normalize(cat);
         const normalizedBase = normalize(baseCat.slug);
-        
-        if (normalizedCat === normalizedBase || 
-            normalizedCat.includes(normalizedBase) || 
-            normalizedBase.includes(normalizedCat)) {
-          
-          if (!grouped[baseCat.slug]) {
-            grouped[baseCat.slug] = [];
-          }
-          
-          if (!grouped[baseCat.slug].find(v => v.name === video.name)) {
+        if (normalizedCat === normalizedBase || normalizedCat.includes(normalizedBase) || normalizedBase.includes(normalizedCat)) {
+          if (!grouped[baseCat.slug]) grouped[baseCat.slug] = [];
+          if (!grouped[baseCat.slug].some(v => v.name === video.name)) {
             grouped[baseCat.slug].push(video);
           }
         }
       });
     });
   });
-  
   return grouped;
 }
 
@@ -85,10 +72,10 @@ export default function CategoriesPage() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [videos, setVideos] = useState([]);
-  const [displayCategories, setDisplayCategories] = useState([]);
+  const [displayCategories, setDisplayCategories] = useState(BASE_CATEGORIES);
   const [results, setResults] = useState(null);
 
-  // Cargar videos
+  // Cargar videos desde el index ya generado
   useEffect(() => {
     async function loadVideos() {
       try {
@@ -96,19 +83,15 @@ export default function CategoriesPage() {
         const data = await res.json();
         const allVideos = data.videos || [];
         setVideos(allVideos);
-        
-        // Inicializar con las 12 categorías SIN contadores
-        setDisplayCategories(BASE_CATEGORIES);
         console.log(`📦 ${allVideos.length} videos cargados`);
       } catch (err) {
         console.error("❌ Error loading videos:", err);
-        setDisplayCategories(BASE_CATEGORIES);
       }
     }
     loadVideos();
   }, []);
 
-  // Procesar búsqueda
+  // Actualizar resultados según búsqueda
   useEffect(() => {
     if (!search.trim()) {
       setDisplayCategories(BASE_CATEGORIES);
@@ -116,23 +99,13 @@ export default function CategoriesPage() {
       return;
     }
 
-    console.log(`🔍 Buscando: "${search}"`);
-
     const matchedVideos = searchVideos(videos, search);
-    console.log(`✅ ${matchedVideos.length} videos encontrados`);
-    
     const grouped = groupByCategory(matchedVideos);
-    
-    // Solo mostrar categorías con resultados + contadores
+
     const categoriesWithResults = BASE_CATEGORIES
-      .map(cat => ({
-        ...cat,
-        count: grouped[cat.slug]?.length || 0
-      }))
+      .map(cat => ({ ...cat, count: grouped[cat.slug]?.length || 0 }))
       .filter(cat => cat.count > 0);
-    
-    console.log(`📊 ${categoriesWithResults.length} categorías con resultados`);
-    
+
     setDisplayCategories(categoriesWithResults);
     setResults({
       found: matchedVideos.length,
@@ -141,25 +114,18 @@ export default function CategoriesPage() {
   }, [search, videos]);
 
   const handleCategoryClick = (cat) => {
-    const url = search.trim() 
+    const url = search.trim()
       ? `/category/${cat.slug}?q=${encodeURIComponent(search)}`
       : `/category/${cat.slug}`;
-    
-    console.log(`🎯 Navegando a: ${url}`);
     router.push(url);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white p-4">
       <div className="max-w-5xl mx-auto">
-        <h1 className="text-4xl font-bold text-pink-600 text-center mb-2 mt-6">
-          Categories
-        </h1>
-        <p className="text-gray-500 text-center mb-8 text-sm">
-          Explore all our greeting card categories
-        </p>
-        
-        {/* Barra de búsqueda */}
+        <h1 className="text-4xl font-bold text-pink-600 text-center mb-2 mt-6">Categories</h1>
+        <p className="text-gray-500 text-center mb-8 text-sm">Explore all our greeting card categories</p>
+
         <div className="max-w-md mx-auto mb-8">
           <input
             type="text"
@@ -169,33 +135,25 @@ export default function CategoriesPage() {
             className="w-full px-4 py-3 rounded-full border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-center shadow-sm transition-all"
           />
           {search && (
-            <button 
-              onClick={() => setSearch("")} 
-              className="mt-2 text-pink-500 hover:text-pink-600 font-semibold block mx-auto"
-            >
+            <button onClick={() => setSearch("")} className="mt-2 text-pink-500 hover:text-pink-600 font-semibold block mx-auto">
               × Clear search
             </button>
           )}
         </div>
 
-        {/* Resultados de búsqueda */}
         {results && (
           <div className="text-center mb-6">
             {results.found > 0 ? (
               <p className="text-gray-600">
                 ✨ Found <span className="font-bold text-pink-600">{results.found}</span> cards 
-                in <span className="font-bold text-pink-600">{results.categoriesCount}</span>{" "}
-                {results.categoriesCount === 1 ? 'category' : 'categories'}
+                in <span className="font-bold text-pink-600">{results.categoriesCount}</span> {results.categoriesCount === 1 ? 'category' : 'categories'}
               </p>
             ) : (
-              <p className="text-gray-400">
-                No results for "<span className="font-semibold">{search}</span>"
-              </p>
+              <p className="text-gray-400">No results for "<span className="font-semibold">{search}</span>"</p>
             )}
           </div>
         )}
 
-        {/* Grid de categorías */}
         {displayCategories.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
             {displayCategories.map((cat, i) => (
@@ -204,46 +162,26 @@ export default function CategoriesPage() {
                 onClick={() => handleCategoryClick(cat)}
                 className="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl cursor-pointer transition-all transform hover:scale-105 relative border-2 border-pink-100 hover:border-pink-300"
               >
-                <div className="text-5xl text-center mb-3 animate-bounce-slow">
-                  {cat.emoji}
-                </div>
-                <div className="text-center font-semibold text-gray-800 text-sm leading-tight">
-                  {cat.name}
-                </div>
-                
-                {/* Contador SOLO cuando hay búsqueda */}
+                <div className="text-5xl text-center mb-3 animate-bounce-slow">{cat.emoji}</div>
+                <div className="text-center font-semibold text-gray-800 text-sm leading-tight">{cat.name}</div>
                 {cat.count > 0 && search && (
-                  <span className="absolute -top-2 -right-2 bg-pink-500 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold shadow-lg border-2 border-white">
-                    {cat.count}
-                  </span>
+                  <span className="absolute -top-2 -right-2 bg-pink-500 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold shadow-lg border-2 border-white">{cat.count}</span>
                 )}
               </div>
             ))}
           </div>
         ) : (
           <div className="text-center py-20 bg-white rounded-3xl shadow-lg max-w-md mx-auto">
-            <p className="text-gray-500 text-lg mb-4">
-              No categories match "<span className="font-semibold">{search}</span>"
-            </p>
-            <button
-              onClick={() => setSearch("")}
-              className="text-pink-500 hover:text-pink-600 font-semibold"
-            >
-              ← Clear search and see all
-            </button>
+            <p className="text-gray-500 text-lg mb-4">No categories match "<span className="font-semibold">{search}</span>"</p>
+            <button onClick={() => setSearch("")} className="text-pink-500 hover:text-pink-600 font-semibold">← Clear search and see all</button>
           </div>
         )}
       </div>
 
       <style jsx>{`
-        @keyframes bounce-slow {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-5px); }
-        }
-        .animate-bounce-slow {
-          animation: bounce-slow 3s ease-in-out infinite;
-        }
+        @keyframes bounce-slow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        .animate-bounce-slow { animation: bounce-slow 3s ease-in-out infinite; }
       `}</style>
     </div>
   );
-              }
+}
