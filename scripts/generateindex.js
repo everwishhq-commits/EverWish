@@ -1,10 +1,4 @@
 #!/usr/bin/env node
-/**
- * 🚀 GENERADOR V2.0 - USA SISTEMA MODULAR
- * Lee categorías desde categories-config.js
- * Usa classification-system.js para clasificar
- */
-
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from 'node:url';
@@ -17,7 +11,6 @@ function getAllMp4Files(dir) {
   if (!fs.existsSync(dir)) return [];
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   const results = [];
-  
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
@@ -26,7 +19,6 @@ function getAllMp4Files(dir) {
       results.push(fullPath);
     }
   }
-  
   return results;
 }
 
@@ -37,52 +29,34 @@ function capitalize(str) {
 function generateIndex() {
   const videosRoot = path.join(process.cwd(), "public/videos");
   const indexFile = path.join(videosRoot, "index.json");
-  
-  console.log("🚀 Generador V2.0 - Sistema Modular\n");
-  console.log(`📁 Carpeta: ${videosRoot}\n`);
-  
+
   if (!fs.existsSync(videosRoot)) {
     console.error(`❌ ERROR: ${videosRoot} no existe`);
     process.exit(1);
   }
-  
+
   const mp4Files = getAllMp4Files(videosRoot);
-  console.log(`📹 Archivos encontrados: ${mp4Files.length}\n`);
-  
   if (mp4Files.length === 0) {
+    fs.writeFileSync(indexFile, JSON.stringify({ videos: [], generated: new Date().toISOString(), total: 0 }, null, 2));
     console.warn("⚠️  No se encontraron archivos .mp4");
-    const emptyIndex = {
-      videos: [],
-      generated: new Date().toISOString(),
-      total: 0,
-    };
-    fs.writeFileSync(indexFile, JSON.stringify(emptyIndex, null, 2), "utf8");
     return;
   }
-  
+
   const videos = mp4Files.map(filePath => {
     const relativePath = path.relative(path.join(process.cwd(), "public"), filePath);
     const urlPath = "/" + relativePath.replaceAll("\\", "/");
     const basename = path.basename(filePath);
     const nameWithoutExt = basename.replace(/\.mp4$/i, "");
-    
-    // 🔥 Usar sistema de clasificación modular
+
+    // 🔥 Usar clasificación modular
     const classifications = classifyVideo(basename);
-    const primaryClass = classifications[0]; // Primera clasificación
-    
-    // Extraer todas las categorías y subcategorías
+    const primaryClass = classifications[0];
+
     const allCategories = [...new Set(classifications.map(c => c.categorySlug))];
     const allSubcategories = [...new Set(classifications.flatMap(c => c.subcategories))];
-    
-    // Generar términos de búsqueda
-    const searchTerms = nameWithoutExt.toLowerCase()
-      .split(/[_\s-]+/)
-      .filter(Boolean);
-    
-    console.log(`\n📹 ${basename}`);
-    console.log(`   Categorías: ${allCategories.join(", ")}`);
-    console.log(`   Subcategorías: ${allSubcategories.join(", ")}`);
-    
+
+    const searchTerms = nameWithoutExt.toLowerCase().split(/[_\s-]+/).filter(Boolean);
+
     return {
       name: nameWithoutExt,
       file: urlPath,
@@ -94,32 +68,22 @@ function generateIndex() {
       searchTerms,
     };
   });
-  
+
   const indexData = {
     videos,
     generated: new Date().toISOString(),
     total: videos.length,
   };
-  
+
   fs.writeFileSync(indexFile, JSON.stringify(indexData, null, 2), "utf8");
-  
-  console.log(`\n✅ Index generado: ${indexFile}`);
-  console.log(`📊 Total: ${videos.length} videos\n`);
-  
-  // Resumen por categoría
+
+  console.log(`✅ Index generado: ${indexFile}`);
+  console.log(`📊 Total: ${videos.length} videos`);
+
   const categoryCounts = {};
-  videos.forEach(v => {
-    v.categories.forEach(cat => {
-      categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
-    });
-  });
-  
+  videos.forEach(v => v.categories.forEach(cat => categoryCounts[cat] = (categoryCounts[cat] || 0) + 1));
   console.log("📊 Videos por categoría:");
-  Object.entries(categoryCounts)
-    .sort((a, b) => b[1] - a[1])
-    .forEach(([cat, count]) => {
-      console.log(`   ${cat}: ${count}`);
-    });
+  Object.entries(categoryCounts).sort((a, b) => b[1] - a[1]).forEach(([cat, count]) => console.log(`   ${cat}: ${count}`));
 }
 
 try {
