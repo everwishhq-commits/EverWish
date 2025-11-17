@@ -3,12 +3,12 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  SUBCATEGORY_GROUPS,
   searchVideos,
   filterByCategory,
-  getGroupsWithSubcategories,
-  filterBySubcategory
-} from "@/lib/classification-system";
+  filterBySubcategory,
+  getUniqueSubcategories 
+} from "@/lib/simple-search";
+import { SUBCATEGORY_GROUPS } from "@/lib/categories-config";
 
 export const dynamic = 'force-dynamic';
 
@@ -35,12 +35,12 @@ export default function CategoryPage() {
         console.log(`📊 Total videos: ${all.length}`);
         console.log(`🔍 Categoría: ${slug}`);
         
-        // 🔥 PASO 1: Filtrar por categoría usando el sistema modular
+        // PASO 1: Filtrar por categoría
         let filtered = filterByCategory(all, slug);
         
         console.log(`✅ Videos en categoría: ${filtered.length}`);
         
-        // 🔥 PASO 2: Si hay búsqueda, aplicar filtro adicional
+        // PASO 2: Si hay búsqueda, aplicar filtro adicional
         if (q) {
           console.log(`🔍 Aplicando búsqueda: "${q}"`);
           filtered = searchVideos(filtered, q);
@@ -49,8 +49,24 @@ export default function CategoryPage() {
         
         setCategoryVideos(filtered);
         
-        // 🔥 PASO 3: Obtener grupos de subcategorías con contadores
-        const groupsData = getGroupsWithSubcategories(filtered, slug);
+        // PASO 3: Obtener subcategorías únicas
+        const uniqueSubs = getUniqueSubcategories(filtered);
+        
+        // PASO 4: Agrupar subcategorías según SUBCATEGORY_GROUPS
+        const groupsData = {};
+        const subGroups = SUBCATEGORY_GROUPS[slug] || {};
+        
+        Object.entries(subGroups).forEach(([groupName, subList]) => {
+          const subsWithCount = subList.map(subName => {
+            const count = filterBySubcategory(filtered, subName).length;
+            return { name: subName, count };
+          });
+          
+          // Solo agregar grupos con al menos una subcategoría con videos
+          if (subsWithCount.some(s => s.count > 0)) {
+            groupsData[groupName] = subsWithCount;
+          }
+        });
         
         console.log(`📂 Grupos encontrados:`, Object.keys(groupsData));
         
@@ -277,4 +293,4 @@ export default function CategoryPage() {
       </AnimatePresence>
     </main>
   );
-        }
+}
