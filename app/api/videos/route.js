@@ -2,42 +2,25 @@ import { NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
 
-import { classifyVideo } from "@/lib/classification-system"; // tu archivo real
-
 export async function GET() {
   try {
-    const videosDir = path.join(process.cwd(), "public/videos");
+    // Ruta al index ya generado
+    const indexFile = path.join(process.cwd(), "public/videos/index.json");
 
-    if (!fs.existsSync(videosDir)) {
+    if (!fs.existsSync(indexFile)) {
       return NextResponse.json(
-        { error: "Videos folder missing", videos: [] },
+        { error: "Index file missing", videos: [] },
         { status: 404 }
       );
     }
 
-    // leer archivos .mp4 del folder
-    const files = fs.readdirSync(videosDir)
-      .filter((f) => f.toLowerCase().endsWith(".mp4"));
+    // Leer el index.json
+    const rawData = fs.readFileSync(indexFile, "utf8");
+    const indexData = JSON.parse(rawData);
 
-    const videos = files.map((file) => {
-      const name = file.replace(/\.mp4$/i, "");
-      const filePath = `/videos/${file}`;
-
-      const classifications = classifyVideo(name);
-
-      return {
-        name,              // desert_teamsportsenergy_1A
-        slug: name,        // slug igual al nombre
-        file: filePath,    // /videos/desert_teamsportsenergy_1A.mp4
-        categories: classifications.map(c => c.categorySlug),
-        subcategories: classifications.flatMap(c => c.subcategories || []),
-        variant: classifications[0]?.variant || "1A",
-        object: classifications[0]?.object || ""
-      };
-    });
-
+    // Devolver videos tal como fueron generados
     return NextResponse.json(
-      { videos },
+      { videos: indexData.videos },
       { headers: { "Cache-Control": "no-store" } }
     );
 
