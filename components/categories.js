@@ -34,18 +34,17 @@ export default function Categories() {
         const data = await res.json();
         const allVideos = data.videos || [];
         setVideos(allVideos);
-        
+
         const grouped = groupVideosByBaseCategory(allVideos);
         const categoriesWithCounts = BASE_CATEGORIES.map((cat, i) => ({
           ...cat,
           color: COLORS[i % COLORS.length],
           count: grouped[cat.slug]?.length || 0
         }));
-        
+
         setDisplayCategories(categoriesWithCounts);
-        console.log(`📦 ${allVideos.length} videos cargados`);
       } catch (err) {
-        console.error("❌ Error:", err);
+        console.error("Error cargando videos:", err);
       }
     }
     loadVideos();
@@ -53,23 +52,20 @@ export default function Categories() {
 
   useEffect(() => {
     if (!search.trim()) {
-      setDisplayCategories(
-        BASE_CATEGORIES.map((cat, i) => ({ 
-          ...cat, 
-          color: COLORS[i % COLORS.length]
-        }))
-      );
+      // Reset categories if search is empty
+      const categoriesWithCounts = BASE_CATEGORIES.map((cat, i) => ({
+        ...cat,
+        color: COLORS[i % COLORS.length],
+        count: groupVideosByBaseCategory(videos)[cat.slug]?.length || 0
+      }));
+      setDisplayCategories(categoriesWithCounts);
       setSearchResults(null);
       return;
     }
 
-    console.log(`🔍 Buscando: "${search}"`);
-
     const matchedVideos = searchVideos(videos, search);
-    console.log(`✅ Videos encontrados: ${matchedVideos.length}`);
-    
     const grouped = groupVideosByBaseCategory(matchedVideos);
-    
+
     const categoriesWithResults = BASE_CATEGORIES
       .map((cat, index) => ({
         ...cat,
@@ -77,9 +73,7 @@ export default function Categories() {
         count: grouped[cat.slug]?.length || 0
       }))
       .filter(cat => cat.count > 0);
-    
-    console.log(`📊 Categorías con resultados: ${categoriesWithResults.length}`);
-    
+
     setDisplayCategories(categoriesWithResults);
     setSearchResults({
       query: search,
@@ -88,25 +82,11 @@ export default function Categories() {
     });
   }, [search, videos]);
 
-  const handleCategoryClick = async (cat) => {
-    try {
-      const elem = document.documentElement;
-      if (elem.requestFullscreen) await elem.requestFullscreen();
-      else if (elem.webkitRequestFullscreen)
-        await elem.webkitRequestFullscreen();
-      await new Promise((r) => setTimeout(r, 150));
-      
-      const url = search.trim() 
-        ? `/category/${cat.slug}?q=${encodeURIComponent(search)}`
-        : `/category/${cat.slug}`;
-      
-      router.push(url);
-    } catch {
-      const url = search.trim() 
-        ? `/category/${cat.slug}?q=${encodeURIComponent(search)}`
-        : `/category/${cat.slug}`;
-      router.push(url);
-    }
+  const handleCategoryClick = (cat) => {
+    const url = search.trim() 
+      ? `/category/${cat.slug}?q=${encodeURIComponent(search)}`
+      : `/category/${cat.slug}`;
+    router.push(url);
   };
 
   return (
@@ -123,7 +103,6 @@ export default function Categories() {
           onChange={(e) => setSearch(e.target.value)}
           className="w-80 md:w-96 px-4 py-3 rounded-full border-2 border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-pink-400 text-gray-700 text-center transition-all"
         />
-        
         {search && (
           <button
             onClick={() => setSearch("")}
@@ -132,7 +111,7 @@ export default function Categories() {
             × Clear search
           </button>
         )}
-        
+
         {searchResults && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -194,7 +173,7 @@ export default function Categories() {
                       {cat.emoji}
                     </motion.span>
                     
-                    {cat.count > 0 && searchResults && (
+                    {cat.count > 0 && (
                       <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg border-2 border-white z-10">
                         {cat.count}
                       </span>
