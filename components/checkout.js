@@ -211,13 +211,13 @@ export default function CheckoutModal({ total, gift, onGiftChange, onGiftRemove,
 
           {/* TOTAL */}
           <div className="bg-gray-50 rounded-xl p-2.5 space-y-1.5 text-xs mb-4">
-            <div className="flex justify-between cursor-pointer hover:text-purple-600 transition">
+            <div className="flex justify-between">
               <span>{plans[selectedPlan].name}</span>
               <span>${plans[selectedPlan].price.toFixed(2)}</span>
             </div>
 
             {selectedGiftAmount && (
-              <div className="flex justify-between cursor-pointer hover:text-purple-600 transition">
+              <div className="flex justify-between">
                 <span>Gift Card</span>
                 <span>${selectedGiftAmount}</span>
               </div>
@@ -270,4 +270,4 @@ export default function CheckoutModal({ total, gift, onGiftChange, onGiftRemove,
       )}
     </div>
   );
-                        }
+          }
