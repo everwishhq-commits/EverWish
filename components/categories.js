@@ -59,7 +59,7 @@ export default function Categories() {
     }
   }, [search, videos]);
 
-  // 3️⃣ Actualizar categorías (con ordenamiento)
+  // 3️⃣ Actualizar categorías
   useEffect(() => {
     const grouped = groupByCategory(filteredVideos);
     
@@ -69,13 +69,9 @@ export default function Categories() {
       count: grouped[cat.slug]?.length || 0
     }));
 
-    // 🔥 Si hay búsqueda, ordenar: con resultados primero
+    // 🔥 Si hay búsqueda, SOLO mostrar las que tienen resultados
     if (search.trim()) {
-      categoriesWithCounts = categoriesWithCounts.sort((a, b) => {
-        if (a.count > 0 && b.count === 0) return -1;
-        if (a.count === 0 && b.count > 0) return 1;
-        return 0; // Mantener orden original si ambos tienen o no tienen
-      });
+      categoriesWithCounts = categoriesWithCounts.filter(cat => cat.count > 0);
     }
 
     setDisplayCategories(categoriesWithCounts);
@@ -212,4 +208,4 @@ export default function Categories() {
       )}
     </section>
   );
-            }
+}
