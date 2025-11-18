@@ -16,7 +16,7 @@ export default function CategoryPage() {
   const { slug } = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const q = searchParams.get("q");
+  const q = searchParams.get("q"); // 🔥 Parámetro de búsqueda
   const subFromUrl = searchParams.get("sub");
   
   const [categoryVideos, setCategoryVideos] = useState([]);
@@ -34,13 +34,13 @@ export default function CategoryPage() {
         
         console.log(`📊 Total videos: ${all.length}`);
         console.log(`🔍 Categoría: ${slug}`);
+        if (q) console.log(`🔍 Búsqueda: "${q}"`);
         
         // PASO 1: Filtrar por categoría
         let filtered = filterByCategory(all, slug);
-        
         console.log(`✅ Videos en categoría: ${filtered.length}`);
         
-        // PASO 2: Si hay búsqueda, aplicar filtro adicional
+        // 🔥 PASO 2: Si hay búsqueda, aplicar filtro adicional
         if (q) {
           console.log(`🔍 Aplicando búsqueda: "${q}"`);
           filtered = searchVideos(filtered, q);
@@ -64,7 +64,6 @@ export default function CategoryPage() {
         });
         
         console.log(`📂 Grupos encontrados:`, Object.keys(groupsData));
-        
         setGroups(groupsData);
         
       } catch (err) {
@@ -74,7 +73,7 @@ export default function CategoryPage() {
       }
     }
     load();
-  }, [slug, q]);
+  }, [slug, q]); // 🔥 Agregar 'q' como dependencia
 
   // Auto-abrir modal si hay subcategoría en URL
   useEffect(() => {
@@ -141,10 +140,19 @@ export default function CategoryPage() {
         {categoryTitle}
       </h1>
 
+      {/* 🔥 Mostrar término de búsqueda si existe */}
       {q && (
-        <p className="text-sm text-gray-500 text-center mb-4">
-          Results for &quot;{q}&quot;
-        </p>
+        <div className="text-center mb-4">
+          <p className="text-sm text-gray-500 mb-2">
+            Results for &quot;<span className="font-semibold text-pink-600">{q}</span>&quot;
+          </p>
+          <button
+            onClick={() => router.push(`/category/${slug}`)}
+            className="text-pink-500 hover:text-pink-600 text-sm font-semibold"
+          >
+            × Clear search
+          </button>
+        </div>
       )}
 
       <p className="text-center text-gray-500 mb-10 text-sm">
@@ -153,49 +161,64 @@ export default function CategoryPage() {
 
       {groupNames.length > 0 ? (
         <div className="max-w-6xl mx-auto space-y-8">
-          {groupNames.map((groupName, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="bg-white rounded-3xl shadow-lg p-6 border border-pink-100"
-            >
-              <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <span className="text-pink-500">📂</span>
-                {groupName}
-              </h2>
-              
-              <div className="flex flex-wrap gap-3">
-                {groups[groupName].map((sub, j) => (
-                  <motion.button
-                    key={j}
-                    onClick={() => sub.count > 0 && openModal(sub.name)}
-                    whileHover={sub.count > 0 ? { scale: 1.05 } : {}}
-                    whileTap={sub.count > 0 ? { scale: 0.95 } : {}}
-                    className={`px-4 py-2 rounded-full border font-semibold flex items-center gap-2 transition-all ${
-                      sub.count > 0
-                        ? "bg-gradient-to-r from-pink-50 to-purple-50 border-pink-200 hover:border-pink-400 hover:shadow-md text-gray-700 cursor-pointer"
-                        : "bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed"
-                    }`}
-                  >
-                    <span>{sub.name}</span>
-                    <span className={`text-xs px-2 py-1 rounded-full font-bold ${
-                      sub.count > 0
-                        ? "bg-pink-500 text-white"
-                        : "bg-gray-300 text-gray-500"
-                    }`}>
-                      {sub.count}
-                    </span>
-                  </motion.button>
-                ))}
-              </div>
-            </motion.div>
-          ))}
+          {groupNames.map((groupName, i) => {
+            // 🔥 Filtrar subcategorías con count > 0 cuando hay búsqueda
+            const subsToShow = q 
+              ? groups[groupName].filter(sub => sub.count > 0)
+              : groups[groupName];
+
+            // Si la búsqueda deja este grupo vacío, no mostrarlo
+            if (q && subsToShow.length === 0) return null;
+
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-white rounded-3xl shadow-lg p-6 border border-pink-100"
+              >
+                <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <span className="text-pink-500">📂</span>
+                  {groupName}
+                </h2>
+                
+                <div className="flex flex-wrap gap-3">
+                  {subsToShow.map((sub, j) => (
+                    <motion.button
+                      key={j}
+                      onClick={() => sub.count > 0 && openModal(sub.name)}
+                      whileHover={sub.count > 0 ? { scale: 1.05 } : {}}
+                      whileTap={sub.count > 0 ? { scale: 0.95 } : {}}
+                      className={`px-4 py-2 rounded-full border font-semibold flex items-center gap-2 transition-all ${
+                        sub.count > 0
+                          ? "bg-gradient-to-r from-pink-50 to-purple-50 border-pink-200 hover:border-pink-400 hover:shadow-md text-gray-700 cursor-pointer"
+                          : "bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed"
+                      }`}
+                    >
+                      <span>{sub.name}</span>
+                      <span className={`text-xs px-2 py-1 rounded-full font-bold ${
+                        sub.count > 0
+                          ? "bg-pink-500 text-white"
+                          : "bg-gray-300 text-gray-500"
+                      }`}>
+                        {sub.count}
+                      </span>
+                    </motion.button>
+                  ))}
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       ) : (
         <div className="text-center py-20 max-w-md mx-auto bg-white rounded-3xl shadow-lg p-8">
-          <p className="text-gray-500 text-lg mb-4">No subcategories found</p>
+          <p className="text-gray-500 text-lg mb-4">
+            {q 
+              ? `No results found for "${q}" in this category`
+              : "No subcategories found"
+            }
+          </p>
           {q && (
             <button
               onClick={() => router.push(`/category/${slug}`)}
@@ -288,4 +311,4 @@ export default function CategoryPage() {
       </AnimatePresence>
     </main>
   );
-          }
+                      }
