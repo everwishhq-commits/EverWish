@@ -35,24 +35,24 @@ export default function CategoriesPage() {
       return;
     }
 
-    // Usar función de búsqueda simple
+    // Usar función de búsqueda con priorización
     const matchedVideos = searchVideos(videos, search);
     
     // Agrupar por categoría base
     const grouped = groupByCategory(matchedVideos);
 
-    // Filtrar categorías que tienen resultados
+    // NO filtrar categorías vacías
     const categoriesWithResults = BASE_CATEGORIES
       .map(cat => ({ 
         ...cat, 
         count: grouped[cat.slug]?.length || 0 
-      }))
-      .filter(cat => cat.count > 0);
+      }));
+      // Ya NO filtramos .filter(cat => cat.count > 0)
 
     setDisplayCategories(categoriesWithResults);
     setResults({
       found: matchedVideos.length,
-      categoriesCount: categoriesWithResults.length
+      categoriesCount: categoriesWithResults.filter(c => c.count > 0).length
     });
   }, [search, videos]);
 
@@ -109,7 +109,7 @@ export default function CategoriesPage() {
           </div>
         )}
 
-        {/* Grid de categorías */}
+        {/* Grid de categorías - SIN CONTADORES VISIBLES */}
         {displayCategories.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
             {displayCategories.map((cat, i) => (
@@ -124,11 +124,7 @@ export default function CategoriesPage() {
                 <div className="text-center font-semibold text-gray-800 text-sm leading-tight">
                   {cat.name}
                 </div>
-                {cat.count > 0 && search && (
-                  <span className="absolute -top-2 -right-2 bg-pink-500 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold shadow-lg border-2 border-white">
-                    {cat.count}
-                  </span>
-                )}
+                {/* ❌ REMOVIDO: El badge con el contador */}
               </div>
             ))}
           </div>
@@ -158,4 +154,4 @@ export default function CategoriesPage() {
       `}</style>
     </div>
   );
-}
+              }
