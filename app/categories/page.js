@@ -36,13 +36,13 @@ export default function CategoriesPage() {
       return;
     }
 
-    // ✅ CON BÚSQUEDA: Usar la función de búsqueda con priorización
+    // Usar función de búsqueda con priorización
     const matchedVideos = searchVideos(videos, search);
     
     // Agrupar por categoría base
     const grouped = groupByCategory(matchedVideos);
 
-    // ✅ SIEMPRE mostrar TODAS las categorías (incluso sin videos)
+    // ✅ CAMBIO: NO filtrar categorías vacías
     const categoriesWithResults = BASE_CATEGORIES.map(cat => ({ 
       ...cat, 
       count: grouped[cat.slug]?.length || 0 
@@ -108,23 +108,38 @@ export default function CategoriesPage() {
           </div>
         )}
 
-        {/* ✅ Grid de categorías - SIN CONTADORES - SIEMPRE TODAS */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
-          {displayCategories.map((cat, i) => (
-            <div
-              key={i}
-              onClick={() => handleCategoryClick(cat)}
-              className="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl cursor-pointer transition-all transform hover:scale-105 relative border-2 border-pink-100 hover:border-pink-300"
+        {/* ✅ Grid de categorías - SIN CONTADOR */}
+        {displayCategories.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
+            {displayCategories.map((cat, i) => (
+              <div
+                key={i}
+                onClick={() => handleCategoryClick(cat)}
+                className="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl cursor-pointer transition-all transform hover:scale-105 relative border-2 border-pink-100 hover:border-pink-300"
+              >
+                <div className="text-5xl text-center mb-3 animate-bounce-slow">
+                  {cat.emoji}
+                </div>
+                <div className="text-center font-semibold text-gray-800 text-sm leading-tight">
+                  {cat.name}
+                </div>
+                {/* ❌ REMOVIDO: Badge con count */}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 bg-white rounded-3xl shadow-lg max-w-md mx-auto">
+            <p className="text-gray-500 text-lg mb-4">
+              No categories match "<span className="font-semibold">{search}</span>"
+            </p>
+            <button 
+              onClick={() => setSearch("")} 
+              className="text-pink-500 hover:text-pink-600 font-semibold"
             >
-              <div className="text-5xl text-center mb-3 animate-bounce-slow">
-                {cat.emoji}
-              </div>
-              <div className="text-center font-semibold text-gray-800 text-sm leading-tight">
-                {cat.name}
-              </div>
-            </div>
-          ))}
-        </div>
+              ← Clear search and see all
+            </button>
+          </div>
+        )}
       </div>
 
       <style jsx>{`
