@@ -59,18 +59,27 @@ export default function Categories() {
     }
   }, [search, videos]);
 
-  // 3️⃣ Actualizar categorías
+  // 3️⃣ Actualizar categorías (con ordenamiento)
   useEffect(() => {
     const grouped = groupByCategory(filteredVideos);
     
-    const categoriesWithCounts = BASE_CATEGORIES.map((cat, i) => ({
+    let categoriesWithCounts = BASE_CATEGORIES.map((cat, i) => ({
       ...cat,
       color: COLORS[i % COLORS.length],
       count: grouped[cat.slug]?.length || 0
     }));
 
+    // 🔥 Si hay búsqueda, ordenar: con resultados primero
+    if (search.trim()) {
+      categoriesWithCounts = categoriesWithCounts.sort((a, b) => {
+        if (a.count > 0 && b.count === 0) return -1;
+        if (a.count === 0 && b.count > 0) return 1;
+        return 0; // Mantener orden original si ambos tienen o no tienen
+      });
+    }
+
     setDisplayCategories(categoriesWithCounts);
-  }, [filteredVideos]);
+  }, [filteredVideos, search]);
 
   const handleCategoryClick = (cat) => {
     if (cat.count === 0 && search.trim()) {
@@ -203,4 +212,4 @@ export default function Categories() {
       )}
     </section>
   );
-}
+            }
