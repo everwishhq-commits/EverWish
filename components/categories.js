@@ -18,6 +18,7 @@ export default function Categories() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [videos, setVideos] = useState([]);
+  const [filteredVideos, setFilteredVideos] = useState([]);
   const [displayCategories, setDisplayCategories] = useState(
     BASE_CATEGORIES.map((cat, i) => ({ 
       ...cat, 
@@ -27,6 +28,7 @@ export default function Categories() {
   );
   const [searchResults, setSearchResults] = useState(null);
 
+  // 1️⃣ Cargar videos
   useEffect(() => {
     async function loadVideos() {
       try {
@@ -34,15 +36,7 @@ export default function Categories() {
         const data = await res.json();
         const allVideos = data.videos || [];
         setVideos(allVideos);
-
-        const grouped = groupByCategory(allVideos);
-        const categoriesWithCounts = BASE_CATEGORIES.map((cat, i) => ({
-          ...cat,
-          color: COLORS[i % COLORS.length],
-          count: grouped[cat.slug]?.length || 0
-        }));
-
-        setDisplayCategories(categoriesWithCounts);
+        setFilteredVideos(allVideos);
       } catch (err) {
         console.error("Error cargando videos:", err);
       }
@@ -50,42 +44,43 @@ export default function Categories() {
     loadVideos();
   }, []);
 
+  // 2️⃣ Filtrar cuando cambia la búsqueda
   useEffect(() => {
     if (!search.trim()) {
-      // Reset categories if search is empty
-      const categoriesWithCounts = BASE_CATEGORIES.map((cat, i) => ({
-        ...cat,
-        color: COLORS[i % COLORS.length],
-        count: groupByCategory(videos)[cat.slug]?.length || 0
-      }));
-      setDisplayCategories(categoriesWithCounts);
+      setFilteredVideos(videos);
       setSearchResults(null);
-      return;
+    } else {
+      const results = searchVideos(videos, search);
+      setFilteredVideos(results);
+      setSearchResults({
+        query: search,
+        totalVideos: results.length,
+      });
     }
-
-    const matchedVideos = searchVideos(videos, search);
-    const grouped = groupByCategory(matchedVideos);
-
-    // ✅ CAMBIO: NO filtrar categorías vacías
-    const categoriesWithResults = BASE_CATEGORIES
-      .map((cat, index) => ({
-        ...cat,
-        color: COLORS[index % COLORS.length],
-        count: grouped[cat.slug]?.length || 0
-      }));
-
-    setDisplayCategories(categoriesWithResults);
-    setSearchResults({
-      query: search,
-      totalVideos: matchedVideos.length,
-      categoriesCount: categoriesWithResults.filter(c => c.count > 0).length
-    });
   }, [search, videos]);
 
+  // 3️⃣ Actualizar categorías
+  useEffect(() => {
+    const grouped = groupByCategory(filteredVideos);
+    
+    const categoriesWithCounts = BASE_CATEGORIES.map((cat, i) => ({
+      ...cat,
+      color: COLORS[i % COLORS.length],
+      count: grouped[cat.slug]?.length || 0
+    }));
+
+    setDisplayCategories(categoriesWithCounts);
+  }, [filteredVideos]);
+
   const handleCategoryClick = (cat) => {
+    if (cat.count === 0 && search.trim()) {
+      return; // No navegar si la categoría está vacía durante búsqueda
+    }
+    
     const url = search.trim() 
       ? `/category/${cat.slug}?q=${encodeURIComponent(search)}`
       : `/category/${cat.slug}`;
+    
     router.push(url);
   };
 
@@ -120,9 +115,7 @@ export default function Categories() {
           >
             {searchResults.totalVideos > 0 ? (
               <p className="text-gray-600">
-                ✨ Found <b className="text-pink-600">{searchResults.totalVideos}</b> cards 
-                in <b className="text-pink-600">{searchResults.categoriesCount}</b>{" "}
-                {searchResults.categoriesCount === 1 ? 'category' : 'categories'}
+                ✨ Found <b className="text-pink-600">{searchResults.totalVideos}</b> cards
               </p>
             ) : (
               <p className="text-gray-400">
@@ -153,13 +146,16 @@ export default function Categories() {
             <SwiperSlide key={cat.slug}>
               <button 
                 onClick={() => handleCategoryClick(cat)}
-                className="w-full"
+                className={`w-full ${
+                  search && cat.count === 0 ? 'opacity-40 cursor-not-allowed' : ''
+                }`}
+                disabled={search && cat.count === 0}
                 aria-label={`View ${cat.name} category`}
               >
                 <motion.div
                   className="flex flex-col items-center justify-center cursor-pointer relative"
-                  whileHover={{ scale: 1.07 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={search && cat.count === 0 ? {} : { scale: 1.07 }}
+                  whileTap={search && cat.count === 0 ? {} : { scale: 0.95 }}
                 >
                   <motion.div
                     className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md hover:shadow-lg transition-shadow relative"
@@ -173,7 +169,12 @@ export default function Categories() {
                       {cat.emoji}
                     </motion.span>
                     
-                    {/* ❌ REMOVIDO: Badge con count */}
+                    {/* Badge SOLO cuando hay búsqueda Y resultados */}
+                    {search && cat.count > 0 && (
+                      <div className="absolute -top-2 -right-2 bg-pink-500 text-white text-xs font-bold rounded-full w-7 h-7 flex items-center justify-center shadow-lg">
+                        {cat.count}
+                      </div>
+                    )}
                   </motion.div>
                   <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base text-center px-2">
                     {cat.name}
@@ -202,4 +203,4 @@ export default function Categories() {
       )}
     </section>
   );
-        }
+}
