@@ -1,229 +1,246 @@
 "use client";
-
 import React, { useState } from "react";
-import { ChevronDown, ChevronUp, Send, Gift } from "lucide-react";
+import { X, Info } from "lucide-react";
 
 export default function CheckoutModal({ total, gift, onGiftChange, onGiftRemove, onClose }) {
-  const [expandedPlan, setExpandedPlan] = useState("wonderdream");
   const [selectedPlan, setSelectedPlan] = useState("wonderdream");
-
-  const [showGift, setShowGift] = useState(false);
+  const [showGiftModal, setShowGiftModal] = useState(false);
   const [selectedGiftAmount, setSelectedGiftAmount] = useState(null);
-
-  const [sender, setSender] = useState({ name: "", email: "", phone: "" });
-  const [receiver, setReceiver] = useState({ name: "", email: "", phone: "" });
-
-  const amounts = [5, 10, 15, 20, 25, 50, 100];
+  const [showDetails, setShowDetails] = useState(null);
 
   const plans = {
     snapwish: {
       name: "SnapWish",
       price: 3.99,
-      features: [
-        "Static card",
+      details: [
+        "Static digital card",
         "Personalized message",
-        "Optional gift card",
+        "Includes optional gift card",
       ],
     },
     wonderdream: {
       name: "WonderDream",
       price: 7.99,
-      recommended: true,
-      features: [
+      details: [
         "Premium animated card",
-        "Photo included",
         "Personalized message",
-        "Optional gift card",
-        "Magic animations",
+        "Upload your photo",
+        "Gift card ready",
+        "Magic animations included",
       ],
-    }
+    },
   };
 
-  const toggleExpand = (plan) => {
-    setExpandedPlan(expandedPlan === plan ? null : plan);
-    setSelectedPlan(plan);
-  };
+  const giftCardAmounts = [5, 10, 15, 20, 25, 50, 100];
 
-  const totalPrice = (plans[selectedPlan].price + (selectedGiftAmount || 0)).toFixed(2);
-
-  const handleCheckout = () => {
-    alert(`Processing $${totalPrice} via Stripe...`);
+  const getTotal = () => {
+    let t = plans[selectedPlan].price;
+    if (selectedGiftAmount) t += selectedGiftAmount;
+    return t.toFixed(2);
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-xl rounded-3xl shadow-2xl p-6 overflow-hidden">
+    <div className="fixed inset-0 bg-black/50 z-[20000] flex items-center justify-center p-4">
+      <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl p-6 relative">
+        
+        {/* Close */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+        >
+          <X className="w-6 h-6" />
+        </button>
 
-        {/* HEADER */}
-        <h2 className="text-3xl font-bold text-center bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent mb-6">
-          Choose Your Everwish Experience
+        {/* Header */}
+        <h2 className="text-3xl font-bold text-center bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent mb-5">
+          Checkout
         </h2>
 
-        {/*  PLAN SELECTION  */}
-        <div className="space-y-4 mb-6">
-          {Object.entries(plans).map(([key, plan]) => {
-            const isOpen = expandedPlan === key;
-            return (
-              <div
-                key={key}
-                onClick={() => toggleExpand(key)}
-                className={`border rounded-2xl p-4 transition-all cursor-pointer ${
-                  isOpen ? "border-purple-500 bg-purple-50" : "border-gray-200 bg-gray-50"
-                }`}
-              >
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="font-bold text-lg">{plan.name}</p>
-                    <p className="text-purple-600 font-bold text-xl">${plan.price}</p>
-                  </div>
-
-                  {isOpen ? (
-                    <ChevronUp className="text-purple-600" />
-                  ) : (
-                    <ChevronDown className="text-gray-400" />
-                  )}
-                </div>
-
-                {isOpen && (
-                  <div className="mt-3 pl-1">
-                    <ul className="text-sm text-gray-700 space-y-1">
-                      {plan.features.map((f, i) => (
-                        <li key={i}>• {f}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* GIFT CARD SECTION */}
-        <div className="mb-6">
-          <label className="block font-semibold text-gray-800 mb-2">
-            Add Gift Card <span className="text-pink-500">*</span>
-          </label>
-
+        {/* PLAN SELECTOR */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          {/* SnapWish */}
           <div
-            onClick={() => setShowGift(!showGift)}
-            className={`border rounded-2xl p-4 cursor-pointer transition-all ${
-              showGift ? "border-purple-500 bg-purple-50" : "border-gray-200 bg-gray-50"
+            onClick={() => setSelectedPlan("snapwish")}
+            className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+              selectedPlan === "snapwish"
+                ? "border-pink-500 bg-pink-50 shadow-md"
+                : "border-gray-200 hover:border-pink-300"
             }`}
           >
-            <div className="flex justify-between items-center">
-              <p className="font-semibold text-gray-700 flex items-center gap-2">
-                <Gift size={20} className="text-purple-600" />
-                {selectedGiftAmount ? `Gift Card: $${selectedGiftAmount}` : "Add Gift Card Amount"}
-              </p>
+            <p className="font-bold text-gray-800 text-center">SnapWish</p>
+            <p className="text-2xl font-bold text-pink-500 text-center">$3.99</p>
 
-              {showGift ? (
-                <ChevronUp className="text-purple-600" />
-              ) : (
-                <ChevronDown className="text-gray-400" />
-              )}
-            </div>
+            {/* View Details */}
+            <button
+              onClick={() => setShowDetails(showDetails === "snapwish" ? null : "snapwish")}
+              className="mt-2 w-full text-xs text-pink-600 font-semibold flex items-center justify-center gap-1"
+            >
+              <Info className="w-4 h-4" />
+              View details
+            </button>
 
-            {showGift && (
-              <div className="mt-4 grid grid-cols-3 gap-3">
-                {amounts.map((amount) => (
-                  <button
-                    key={amount}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedGiftAmount(amount);
-                    }}
-                    className={`py-2 rounded-xl font-semibold border transition-all ${
-                      selectedGiftAmount === amount
-                        ? "bg-purple-600 text-white border-purple-600"
-                        : "bg-white text-purple-600 border-purple-300 hover:bg-purple-100"
-                    }`}
-                  >
-                    ${amount}
-                  </button>
+            {showDetails === "snapwish" && (
+              <ul className="mt-2 text-xs text-gray-600 space-y-1">
+                {plans.snapwish.details.map((d) => (
+                  <li key={d}>• {d}</li>
                 ))}
-              </div>
+              </ul>
+            )}
+          </div>
+
+          {/* WonderDream */}
+          <div
+            onClick={() => setSelectedPlan("wonderdream")}
+            className={`p-4 rounded-2xl border-2 cursor-pointer transition-all relative ${
+              selectedPlan === "wonderdream"
+                ? "border-purple-600 bg-purple-50 shadow-md"
+                : "border-gray-200 hover:border-purple-300"
+            }`}
+          >
+            <span className="absolute -top-2 right-2 bg-yellow-400 text-xs px-2 py-1 rounded-full font-bold">
+              ⭐ Popular
+            </span>
+
+            <p className="font-bold text-gray-800 text-center">WonderDream</p>
+            <p className="text-2xl font-bold text-purple-600 text-center">$7.99</p>
+
+            {/* View Details */}
+            <button
+              onClick={() => setShowDetails(showDetails === "wonderdream" ? null : "wonderdream")}
+              className="mt-2 w-full text-xs text-purple-700 font-semibold flex items-center justify-center gap-1"
+            >
+              <Info className="w-4 h-4" />
+              View details
+            </button>
+
+            {showDetails === "wonderdream" && (
+              <ul className="mt-2 text-xs text-gray-700 space-y-1">
+                {plans.wonderdream.details.map((d) => (
+                  <li key={d}>• {d}</li>
+                ))}
+              </ul>
             )}
           </div>
         </div>
 
-        {/* SENDER / RECEIVER */}
-        <div className="space-y-4 mb-6">
-          <div>
-            <label className="font-semibold text-gray-700 block mb-1">
-              Sender Information <span className="text-pink-500">*</span>
-            </label>
-            <div className="grid grid-cols-1 gap-3">
-              <input
-                type="text"
-                placeholder="Full Name"
-                className="border rounded-xl p-3 w-full"
-              />
-              <input
-                type="email"
-                placeholder="Email"
-                className="border rounded-xl p-3 w-full"
-              />
-              <input
-                type="tel"
-                placeholder="+1 (Phone)"
-                className="border rounded-xl p-3 w-full"
-              />
+        {/* GIFT CARD */}
+        <div className="mb-4">
+          <label className="block text-sm font-bold text-gray-700 mb-2">
+            Gift Card (optional)
+          </label>
+
+          {selectedGiftAmount ? (
+            <div className="p-4 bg-purple-50 border-2 border-purple-200 rounded-2xl">
+              <div className="flex items-center justify-between">
+                <p className="font-semibold text-purple-700">
+                  Gift Card: ${selectedGiftAmount}
+                </p>
+
+                <div className="flex gap-3">
+                  <button
+                    className="text-purple-600 text-sm font-bold"
+                    onClick={() => setShowGiftModal(true)}
+                  >
+                    Change
+                  </button>
+                  <button
+                    className="text-pink-600 text-sm font-bold"
+                    onClick={() => setSelectedGiftAmount(null)}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
             </div>
+          ) : (
+            <button
+              onClick={() => setShowGiftModal(true)}
+              className="w-full border-2 border-dashed border-gray-300 rounded-xl p-4 text-gray-600 font-semibold hover:border-purple-400 hover:bg-purple-50 hover:text-purple-600 transition"
+            >
+              + Add Gift Card
+            </button>
+          )}
+        </div>
+
+        {/* FORM */}
+        <div className="grid grid-cols-2 gap-3 mb-5">
+          {/* Sender */}
+          <div>
+            <label className="text-xs font-bold text-gray-600 mb-1 block">
+              Sender *
+            </label>
+            <input className="w-full border rounded-xl px-3 py-2 text-sm mb-1" placeholder="Name" />
+            <input className="w-full border rounded-xl px-3 py-2 text-sm mb-1" placeholder="Email" />
+            <input className="w-full border rounded-xl px-3 py-2 text-sm" placeholder="Phone" />
           </div>
 
+          {/* Recipient */}
           <div>
-            <label className="font-semibold text-gray-700 block mb-1">
-              Recipient Information <span className="text-pink-500">*</span>
+            <label className="text-xs font-bold text-gray-600 mb-1 block">
+              Recipient *
             </label>
-            <div className="grid grid-cols-1 gap-3">
-              <input
-                type="text"
-                placeholder="Full Name"
-                className="border rounded-xl p-3 w-full"
-              />
-              <input
-                type="email"
-                placeholder="Email"
-                className="border rounded-xl p-3 w-full"
-              />
-              <input
-                type="tel"
-                placeholder="+1 (Phone)"
-                className="border rounded-xl p-3 w-full"
-              />
-            </div>
+            <input className="w-full border rounded-xl px-3 py-2 text-sm mb-1" placeholder="Name" />
+            <input className="w-full border rounded-xl px-3 py-2 text-sm mb-1" placeholder="Email" />
+            <input className="w-full border rounded-xl px-3 py-2 text-sm" placeholder="Phone" />
           </div>
         </div>
 
-        {/* TOTAL SUMMARY */}
-        <div className="bg-pink-50 rounded-2xl p-4 mb-4">
-          <div className="flex justify-between text-gray-700 mb-1">
-            <span>{plans[selectedPlan].name} Plan</span>
+        {/* TOTAL */}
+        <div className="bg-gradient-to-r from-pink-50 to-purple-50 p-4 rounded-xl mb-4">
+          <div className="flex justify-between text-sm mb-2">
+            <span>{plans[selectedPlan].name}</span>
             <span>${plans[selectedPlan].price.toFixed(2)}</span>
           </div>
 
           {selectedGiftAmount && (
-            <div className="flex justify-between text-gray-700 mb-1">
+            <div className="flex justify-between text-sm">
               <span>Gift Card</span>
               <span>${selectedGiftAmount}</span>
             </div>
           )}
 
-          <div className="border-t pt-3 mt-3 flex justify-between font-bold text-xl text-purple-700">
-            <span>Total</span>
-            <span>${totalPrice}</span>
+          <div className="border-t mt-3 pt-2 flex justify-between">
+            <span className="font-bold text-gray-800 text-lg">Total</span>
+            <span className="font-bold text-purple-600 text-2xl">${getTotal()}</span>
           </div>
         </div>
 
-        {/* CHECKOUT BUTTON */}
-        <button
-          onClick={handleCheckout}
-          className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 hover:scale-[1.02] transition-all"
-        >
-          <Send size={22} />
-          Pay ${totalPrice}
+        {/* Pay Button */}
+        <button className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold py-4 rounded-xl text-lg">
+          Pay ${getTotal()} Now
         </button>
       </div>
+
+      {/* GIFT CARD MODAL */}
+      {showGiftModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-[21000]">
+          <div className="bg-white w-full max-w-md rounded-3xl p-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">Select Gift Card Amount</h3>
+
+            <div className="grid grid-cols-3 gap-3">
+              {giftCardAmounts.map((amount) => (
+                <button
+                  key={amount}
+                  onClick={() => {
+                    setSelectedGiftAmount(amount);
+                    setShowGiftModal(false);
+                  }}
+                  className="p-3 border rounded-xl text-sm font-bold text-purple-700 bg-purple-50 hover:bg-purple-200 transition"
+                >
+                  ${amount}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setShowGiftModal(false)}
+              className="w-full mt-5 border py-2 text-sm rounded-xl"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
-}
+                      }
