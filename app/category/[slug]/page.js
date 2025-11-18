@@ -49,10 +49,7 @@ export default function CategoryPage() {
         
         setCategoryVideos(filtered);
         
-        // PASO 3: Obtener subcategorías únicas
-        const uniqueSubs = getUniqueSubcategories(filtered);
-        
-        // PASO 4: Agrupar subcategorías según SUBCATEGORY_GROUPS
+        // PASO 3: Agrupar subcategorías según SUBCATEGORY_GROUPS
         const groupsData = {};
         const subGroups = SUBCATEGORY_GROUPS[slug] || {};
         
@@ -62,10 +59,8 @@ export default function CategoryPage() {
             return { name: subName, count };
           });
           
-          // Solo agregar grupos con al menos una subcategoría con videos
-          if (subsWithCount.some(s => s.count > 0)) {
-            groupsData[groupName] = subsWithCount;
-          }
+          // ✅ SIEMPRE agregar el grupo (incluso si todas tienen count=0)
+          groupsData[groupName] = subsWithCount;
         });
         
         console.log(`📂 Grupos encontrados:`, Object.keys(groupsData));
@@ -293,4 +288,4 @@ export default function CategoryPage() {
       </AnimatePresence>
     </main>
   );
-}
+          }
