@@ -6,6 +6,7 @@ import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { BASE_CATEGORIES } from "@/lib/categories-config";
+import { searchVideos, groupByCategory } from "@/lib/simple-search";
 import "swiper/css";
 
 const COLORS = [
@@ -41,7 +42,7 @@ export default function Categories() {
 
   useEffect(() => {
     if (!search.trim()) {
-      // ✅ SIN BÚSQUEDA: Mostrar todas las categorías
+      // ✅ SIN BÚSQUEDA: Mostrar todas
       const categoriesWithColors = BASE_CATEGORIES.map((cat, i) => ({
         ...cat,
         color: COLORS[i % COLORS.length]
@@ -51,62 +52,23 @@ export default function Categories() {
       return;
     }
 
-    const q = search.toLowerCase().trim();
+    // ✅ CON BÚSQUEDA: Usar searchVideos con priorización
+    const matchedVideos = searchVideos(videos, search);
+    const grouped = groupByCategory(matchedVideos);
 
-    // ✅ CON BÚSQUEDA: Filtrar videos
-    const matchedVideos = videos.filter(video => {
-      const searchable = [
-        video.name,
-        video.object,
-        ...(video.categories || []),
-        ...(video.subcategories || []),
-        ...(video.searchTerms || []),
-      ].filter(Boolean).join(" ").toLowerCase();
-      
-      return searchable.includes(q);
-    });
-
-    if (matchedVideos.length === 0) {
-      setDisplayCategories([]);
-      setSearchResults({ query: search, totalVideos: 0, categoriesCount: 0 });
-      return;
-    }
-
-    // ✅ FILTRAR CATEGORÍAS: Solo la categoría exacta
-    const matchedCategories = new Set();
-    
-    matchedVideos.forEach(video => {
-      if (video.subcategories) {
-        video.subcategories.forEach(sub => {
-          if (sub.toLowerCase() === q) {
-            video.categories?.forEach(cat => matchedCategories.add(cat));
-          }
-        });
-      }
-    });
-
-    if (matchedCategories.size === 0) {
-      matchedVideos.forEach(video => {
-        video.categories?.forEach(cat => {
-          if (cat.toLowerCase().includes(q)) {
-            matchedCategories.add(cat);
-          }
-        });
-      });
-    }
-
+    // ✅ SIEMPRE mostrar TODAS las categorías
     const categoriesWithResults = BASE_CATEGORIES
       .map((cat, index) => ({
         ...cat,
-        color: COLORS[index % COLORS.length]
-      }))
-      .filter(cat => matchedCategories.has(cat.slug));
+        color: COLORS[index % COLORS.length],
+        count: grouped[cat.slug]?.length || 0
+      }));
 
     setDisplayCategories(categoriesWithResults);
     setSearchResults({
       query: search,
       totalVideos: matchedVideos.length,
-      categoriesCount: categoriesWithResults.length
+      categoriesCount: categoriesWithResults.filter(c => c.count > 0).length
     });
   }, [search, videos]);
 
@@ -126,7 +88,7 @@ export default function Categories() {
       <div className="flex flex-col items-center mb-10">
         <input
           type="text"
-          placeholder="Search: Summer, Halloween, Birthday..."
+          placeholder="Search: St Patrick, Diwali, Veterans Day..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-80 md:w-96 px-4 py-3 rounded-full border-2 border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-pink-400 text-gray-700 text-center transition-all"
@@ -161,71 +123,54 @@ export default function Categories() {
         )}
       </div>
 
-      {displayCategories.length > 0 ? (
-        <Swiper
-          slidesPerView={3.2}
-          spaceBetween={16}
-          centeredSlides={true}
-          loop={displayCategories.length > 3}
-          autoplay={{ delay: 2500, disableOnInteraction: false }}
-          speed={1000}
-          breakpoints={{
-            0: { slidesPerView: 2.3, spaceBetween: 10 },
-            640: { slidesPerView: 3.4, spaceBetween: 14 },
-            1024: { slidesPerView: 5, spaceBetween: 18 },
-          }}
-          modules={[Autoplay]}
-          className="overflow-visible"
-        >
-          {displayCategories.map((cat) => (
-            <SwiperSlide key={cat.slug}>
-              <button 
-                onClick={() => handleCategoryClick(cat)}
-                className="w-full"
-                aria-label={`View ${cat.name} category`}
+      {/* ✅ SIEMPRE mostrar el carrusel (nunca vacío) */}
+      <Swiper
+        slidesPerView={3.2}
+        spaceBetween={16}
+        centeredSlides={true}
+        loop={displayCategories.length > 3}
+        autoplay={{ delay: 2500, disableOnInteraction: false }}
+        speed={1000}
+        breakpoints={{
+          0: { slidesPerView: 2.3, spaceBetween: 10 },
+          640: { slidesPerView: 3.4, spaceBetween: 14 },
+          1024: { slidesPerView: 5, spaceBetween: 18 },
+        }}
+        modules={[Autoplay]}
+        className="overflow-visible"
+      >
+        {displayCategories.map((cat) => (
+          <SwiperSlide key={cat.slug}>
+            <button 
+              onClick={() => handleCategoryClick(cat)}
+              className="w-full"
+              aria-label={`View ${cat.name} category`}
+            >
+              <motion.div
+                className="flex flex-col items-center justify-center cursor-pointer relative"
+                whileHover={{ scale: 1.07 }}
+                whileTap={{ scale: 0.95 }}
               >
                 <motion.div
-                  className="flex flex-col items-center justify-center cursor-pointer relative"
-                  whileHover={{ scale: 1.07 }}
-                  whileTap={{ scale: 0.95 }}
+                  className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md hover:shadow-lg transition-shadow relative"
+                  style={{ backgroundColor: cat.color }}
                 >
-                  <motion.div
-                    className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md hover:shadow-lg transition-shadow relative"
-                    style={{ backgroundColor: cat.color }}
+                  <motion.span
+                    className="text-4xl sm:text-5xl"
+                    animate={{ y: [0, -5, 0] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                   >
-                    <motion.span
-                      className="text-4xl sm:text-5xl"
-                      animate={{ y: [0, -5, 0] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                    >
-                      {cat.emoji}
-                    </motion.span>
-                  </motion.div>
-                  <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base text-center px-2">
-                    {cat.name}
-                  </p>
+                    {cat.emoji}
+                  </motion.span>
                 </motion.div>
-              </button>
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      ) : (
-        <div className="text-center py-10">
-          <p className="text-gray-500 text-sm mb-4">
-            {search 
-              ? `No matching categories for "${search}"`
-              : "Loading categories..."}
-          </p>
-          {search && (
-            <button
-              onClick={() => setSearch("")}
-              className="text-pink-500 hover:text-pink-600 font-semibold text-sm"
-            >
-              ← Clear search
+                <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base text-center px-2">
+                  {cat.name}
+                </p>
+              </motion.div>
             </button>
-          )}
-        </div>
-      )}
+          </SwiperSlide>
+        ))}
+      </Swiper>
     </section>
   );
-}
+                  }
