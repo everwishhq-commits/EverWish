@@ -40,182 +40,209 @@ export default function CheckoutModal({ total, gift, onGiftChange, onGiftRemove,
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-[20000] flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl p-6 relative">
-        
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[95vh] flex flex-col overflow-hidden">
         {/* Close */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-        >
-          <X className="w-6 h-6" />
-        </button>
-
-        {/* Header */}
-        <h2 className="text-3xl font-bold text-center bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent mb-5">
-          Checkout
-        </h2>
-
-        {/* PLAN SELECTOR */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          {/* SnapWish */}
-          <div
-            onClick={() => setSelectedPlan("snapwish")}
-            className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
-              selectedPlan === "snapwish"
-                ? "border-pink-500 bg-pink-50 shadow-md"
-                : "border-gray-200 hover:border-pink-300"
-            }`}
-          >
-            <p className="font-bold text-gray-800 text-center">SnapWish</p>
-            <p className="text-2xl font-bold text-pink-500 text-center">$3.99</p>
-
-            {/* View Details */}
-            <button
-              onClick={() => setShowDetails(showDetails === "snapwish" ? null : "snapwish")}
-              className="mt-2 w-full text-xs text-pink-600 font-semibold flex items-center justify-center gap-1"
-            >
-              <Info className="w-4 h-4" />
-              View details
-            </button>
-
-            {showDetails === "snapwish" && (
-              <ul className="mt-2 text-xs text-gray-600 space-y-1">
-                {plans.snapwish.details.map((d) => (
-                  <li key={d}>• {d}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          {/* WonderDream */}
-          <div
-            onClick={() => setSelectedPlan("wonderdream")}
-            className={`p-4 rounded-2xl border-2 cursor-pointer transition-all relative ${
-              selectedPlan === "wonderdream"
-                ? "border-purple-600 bg-purple-50 shadow-md"
-                : "border-gray-200 hover:border-purple-300"
-            }`}
-          >
-            <span className="absolute -top-2 right-2 bg-yellow-400 text-xs px-2 py-1 rounded-full font-bold">
-              ⭐ Popular
-            </span>
-
-            <p className="font-bold text-gray-800 text-center">WonderDream</p>
-            <p className="text-2xl font-bold text-purple-600 text-center">$7.99</p>
-
-            {/* View Details */}
-            <button
-              onClick={() => setShowDetails(showDetails === "wonderdream" ? null : "wonderdream")}
-              className="mt-2 w-full text-xs text-purple-700 font-semibold flex items-center justify-center gap-1"
-            >
-              <Info className="w-4 h-4" />
-              View details
-            </button>
-
-            {showDetails === "wonderdream" && (
-              <ul className="mt-2 text-xs text-gray-700 space-y-1">
-                {plans.wonderdream.details.map((d) => (
-                  <li key={d}>• {d}</li>
-                ))}
-              </ul>
-            )}
-          </div>
+        <div className="flex justify-end p-3">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X size={20} />
+          </button>
         </div>
 
-        {/* GIFT CARD */}
-        <div className="mb-4">
-          <label className="block text-sm font-bold text-gray-700 mb-2">
-            Gift Card (optional)
-          </label>
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto px-5 pb-5">
+          {/* Header */}
+          <div className="text-center mb-4">
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              Checkout
+            </h2>
+          </div>
 
-          {selectedGiftAmount ? (
-            <div className="p-4 bg-purple-50 border-2 border-purple-200 rounded-2xl">
-              <div className="flex items-center justify-between">
-                <p className="font-semibold text-purple-700">
-                  Gift Card: ${selectedGiftAmount}
-                </p>
+          {/* PLAN SELECTOR */}
+          <div className="space-y-2.5 mb-4">
+            {/* SnapWish */}
+            <div
+              onClick={() => setSelectedPlan("snapwish")}
+              className={`p-3 rounded-2xl border-2 cursor-pointer transition-all ${
+                selectedPlan === "snapwish"
+                  ? "border-pink-500 bg-pink-50 shadow-md"
+                  : "border-gray-200 hover:border-pink-300"
+              }`}
+            >
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-sm">SnapWish</span>
+                <span className="text-pink-600 font-bold text-sm">$3.99</span>
+              </div>
 
-                <div className="flex gap-3">
-                  <button
-                    className="text-purple-600 text-sm font-bold"
-                    onClick={() => setShowGiftModal(true)}
-                  >
-                    Change
-                  </button>
-                  <button
-                    className="text-pink-600 text-sm font-bold"
-                    onClick={() => setSelectedGiftAmount(null)}
-                  >
-                    Remove
-                  </button>
+              {/* View Details */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDetails(showDetails === "snapwish" ? null : "snapwish");
+                }}
+                className="mt-1.5 w-full text-xs text-pink-600 font-semibold flex items-center justify-center gap-1"
+              >
+                <Info size={12} />
+                View details
+              </button>
+
+              {showDetails === "snapwish" && (
+                <div className="mt-2 pt-2 border-t border-pink-200">
+                  <ul className="space-y-0.5 text-xs text-gray-600">
+                    {plans.snapwish.details.map((d) => (
+                      <li key={d}>• {d}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            {/* WonderDream */}
+            <div
+              onClick={() => setSelectedPlan("wonderdream")}
+              className={`p-3 rounded-2xl border-2 cursor-pointer transition-all relative ${
+                selectedPlan === "wonderdream"
+                  ? "border-purple-600 bg-purple-50 shadow-md"
+                  : "border-gray-200 hover:border-purple-300"
+              }`}
+            >
+              <div className="absolute -top-2 right-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+                ⭐ Popular
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-sm">WonderDream</span>
+                <span className="text-purple-700 font-bold text-sm">$7.99</span>
+              </div>
+
+              {/* View Details */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDetails(showDetails === "wonderdream" ? null : "wonderdream");
+                }}
+                className="mt-1.5 w-full text-xs text-purple-700 font-semibold flex items-center justify-center gap-1"
+              >
+                <Info size={12} />
+                View details
+              </button>
+
+              {showDetails === "wonderdream" && (
+                <div className="mt-2 pt-2 border-t border-purple-200">
+                  <ul className="space-y-0.5 text-xs text-gray-600">
+                    {plans.wonderdream.details.map((d) => (
+                      <li key={d}>• {d}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* GIFT CARD */}
+          <div className="space-y-2 mb-4">
+            <label className="text-xs font-semibold text-gray-700">
+              Gift Card (optional)
+            </label>
+
+            {selectedGiftAmount ? (
+              <div className="border-2 border-purple-200 bg-purple-50 rounded-xl p-2.5">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-semibold text-purple-700">
+                      Gift Card: ${selectedGiftAmount}
+                    </span>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowGiftModal(true)}
+                      className="flex-1 bg-white border border-purple-300 text-purple-700 py-1.5 rounded-lg text-xs font-semibold hover:bg-purple-50 transition"
+                    >
+                      Change
+                    </button>
+                    <button
+                      onClick={() => setSelectedGiftAmount(null)}
+                      className="flex-1 bg-white border border-gray-300 text-gray-600 py-1.5 rounded-lg text-xs font-semibold hover:bg-gray-50 transition"
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </div>
               </div>
+            ) : (
+              <button
+                onClick={() => setShowGiftModal(true)}
+                className="w-full border-2 border-dashed border-gray-300 rounded-xl p-3 text-gray-600 text-xs font-semibold hover:border-purple-400 hover:bg-purple-50 hover:text-purple-600 transition"
+              >
+                + Add Gift Card
+              </button>
+            )}
+          </div>
+
+          {/* FORM */}
+          <div className="space-y-2.5 mb-4">
+            {/* Sender */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-gray-700">
+                Sender *
+              </label>
+              <input className="w-full border rounded-lg px-3 py-1.5 text-xs" placeholder="Your name" />
+              <input className="w-full border rounded-lg px-3 py-1.5 text-xs" placeholder="Your email" />
+              <div className="flex gap-1.5">
+                <input className="w-20 border rounded-lg px-2 py-1.5 text-xs" placeholder="+1" />
+                <input className="flex-1 border rounded-lg px-3 py-1.5 text-xs" placeholder="Phone number" />
+              </div>
             </div>
-          ) : (
-            <button
-              onClick={() => setShowGiftModal(true)}
-              className="w-full border-2 border-dashed border-gray-300 rounded-xl p-4 text-gray-600 font-semibold hover:border-purple-400 hover:bg-purple-50 hover:text-purple-600 transition"
-            >
-              + Add Gift Card
-            </button>
-          )}
-        </div>
 
-        {/* FORM */}
-        <div className="grid grid-cols-2 gap-3 mb-5">
-          {/* Sender */}
-          <div>
-            <label className="text-xs font-bold text-gray-600 mb-1 block">
-              Sender *
-            </label>
-            <input className="w-full border rounded-xl px-3 py-2 text-sm mb-1" placeholder="Name" />
-            <input className="w-full border rounded-xl px-3 py-2 text-sm mb-1" placeholder="Email" />
-            <input className="w-full border rounded-xl px-3 py-2 text-sm" placeholder="Phone" />
-          </div>
-
-          {/* Recipient */}
-          <div>
-            <label className="text-xs font-bold text-gray-600 mb-1 block">
-              Recipient *
-            </label>
-            <input className="w-full border rounded-xl px-3 py-2 text-sm mb-1" placeholder="Name" />
-            <input className="w-full border rounded-xl px-3 py-2 text-sm mb-1" placeholder="Email" />
-            <input className="w-full border rounded-xl px-3 py-2 text-sm" placeholder="Phone" />
-          </div>
-        </div>
-
-        {/* TOTAL */}
-        <div className="bg-gradient-to-r from-pink-50 to-purple-50 p-4 rounded-xl mb-4">
-          <div className="flex justify-between text-sm mb-2">
-            <span>{plans[selectedPlan].name}</span>
-            <span>${plans[selectedPlan].price.toFixed(2)}</span>
-          </div>
-
-          {selectedGiftAmount && (
-            <div className="flex justify-between text-sm">
-              <span>Gift Card</span>
-              <span>${selectedGiftAmount}</span>
+            {/* Recipient */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-gray-700">
+                Recipient *
+              </label>
+              <input className="w-full border rounded-lg px-3 py-1.5 text-xs" placeholder="Recipient name" />
+              <input className="w-full border rounded-lg px-3 py-1.5 text-xs" placeholder="Recipient email" />
+              <div className="flex gap-1.5">
+                <input className="w-20 border rounded-lg px-2 py-1.5 text-xs" placeholder="+1" />
+                <input className="flex-1 border rounded-lg px-3 py-1.5 text-xs" placeholder="Phone number" />
+              </div>
             </div>
-          )}
-
-          <div className="border-t mt-3 pt-2 flex justify-between">
-            <span className="font-bold text-gray-800 text-lg">Total</span>
-            <span className="font-bold text-purple-600 text-2xl">${getTotal()}</span>
           </div>
-        </div>
 
-        {/* Pay Button */}
-        <button className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold py-4 rounded-xl text-lg">
-          Pay ${getTotal()} Now
-        </button>
+          {/* TOTAL */}
+          <div className="bg-gray-50 rounded-xl p-2.5 space-y-1.5 text-xs mb-4">
+            <div className="flex justify-between cursor-pointer hover:text-purple-600 transition">
+              <span>{plans[selectedPlan].name}</span>
+              <span>${plans[selectedPlan].price.toFixed(2)}</span>
+            </div>
+
+            {selectedGiftAmount && (
+              <div className="flex justify-between cursor-pointer hover:text-purple-600 transition">
+                <span>Gift Card</span>
+                <span>${selectedGiftAmount}</span>
+              </div>
+            )}
+
+            <div className="flex justify-between font-bold text-sm border-t pt-1.5">
+              <span>Total</span>
+              <span>${getTotal()}</span>
+            </div>
+          </div>
+
+          {/* Pay Button */}
+          <button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2.5 rounded-xl font-bold text-sm hover:opacity-90 transition">
+            Pay ${getTotal()} Now
+          </button>
+        </div>
       </div>
 
       {/* GIFT CARD MODAL */}
       {showGiftModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-[21000]">
-          <div className="bg-white w-full max-w-md rounded-3xl p-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Select Gift Card Amount</h3>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-sm">
+            <h3 className="text-xl font-bold text-center mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              Select Gift Card Amount
+            </h3>
 
             <div className="grid grid-cols-3 gap-3">
               {giftCardAmounts.map((amount) => (
@@ -234,7 +261,7 @@ export default function CheckoutModal({ total, gift, onGiftChange, onGiftRemove,
 
             <button
               onClick={() => setShowGiftModal(false)}
-              className="w-full mt-5 border py-2 text-sm rounded-xl"
+              className="w-full mt-5 border py-2 text-sm rounded-xl hover:bg-gray-50 transition"
             >
               Close
             </button>
@@ -243,4 +270,4 @@ export default function CheckoutModal({ total, gift, onGiftChange, onGiftRemove,
       )}
     </div>
   );
-                      }
+                        }
