@@ -6,7 +6,6 @@ import { Autoplay } from "swiper/modules";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { BASE_CATEGORIES } from "@/lib/categories-config";
-import { searchVideos, groupByCategory } from "@/lib/simple-search";
 import "swiper/css";
 
 const COLORS = [
@@ -21,8 +20,7 @@ export default function Categories() {
   const [displayCategories, setDisplayCategories] = useState(
     BASE_CATEGORIES.map((cat, i) => ({ 
       ...cat, 
-      color: COLORS[i % COLORS.length], 
-      count: 0 
+      color: COLORS[i % COLORS.length]
     }))
   );
   const [searchResults, setSearchResults] = useState(null);
@@ -34,15 +32,6 @@ export default function Categories() {
         const data = await res.json();
         const allVideos = data.videos || [];
         setVideos(allVideos);
-
-        const grouped = groupByCategory(allVideos);
-        const categoriesWithCounts = BASE_CATEGORIES.map((cat, i) => ({
-          ...cat,
-          color: COLORS[i % COLORS.length],
-          count: grouped[cat.slug]?.length || 0
-        }));
-
-        setDisplayCategories(categoriesWithCounts);
       } catch (err) {
         console.error("Error cargando videos:", err);
       }
@@ -52,27 +41,66 @@ export default function Categories() {
 
   useEffect(() => {
     if (!search.trim()) {
-      // Reset categories if search is empty
-      const categoriesWithCounts = BASE_CATEGORIES.map((cat, i) => ({
+      // ✅ SIN BÚSQUEDA: Mostrar todas las categorías
+      const categoriesWithColors = BASE_CATEGORIES.map((cat, i) => ({
         ...cat,
-        color: COLORS[i % COLORS.length],
-        count: groupByCategory(videos)[cat.slug]?.length || 0
+        color: COLORS[i % COLORS.length]
       }));
-      setDisplayCategories(categoriesWithCounts);
+      setDisplayCategories(categoriesWithColors);
       setSearchResults(null);
       return;
     }
 
-    const matchedVideos = searchVideos(videos, search);
-    const grouped = groupByCategory(matchedVideos);
+    const q = search.toLowerCase().trim();
+
+    // ✅ CON BÚSQUEDA: Filtrar videos
+    const matchedVideos = videos.filter(video => {
+      const searchable = [
+        video.name,
+        video.object,
+        ...(video.categories || []),
+        ...(video.subcategories || []),
+        ...(video.searchTerms || []),
+      ].filter(Boolean).join(" ").toLowerCase();
+      
+      return searchable.includes(q);
+    });
+
+    if (matchedVideos.length === 0) {
+      setDisplayCategories([]);
+      setSearchResults({ query: search, totalVideos: 0, categoriesCount: 0 });
+      return;
+    }
+
+    // ✅ FILTRAR CATEGORÍAS: Solo la categoría exacta
+    const matchedCategories = new Set();
+    
+    matchedVideos.forEach(video => {
+      if (video.subcategories) {
+        video.subcategories.forEach(sub => {
+          if (sub.toLowerCase() === q) {
+            video.categories?.forEach(cat => matchedCategories.add(cat));
+          }
+        });
+      }
+    });
+
+    if (matchedCategories.size === 0) {
+      matchedVideos.forEach(video => {
+        video.categories?.forEach(cat => {
+          if (cat.toLowerCase().includes(q)) {
+            matchedCategories.add(cat);
+          }
+        });
+      });
+    }
 
     const categoriesWithResults = BASE_CATEGORIES
       .map((cat, index) => ({
         ...cat,
-        color: COLORS[index % COLORS.length],
-        count: grouped[cat.slug]?.length || 0
+        color: COLORS[index % COLORS.length]
       }))
-      .filter(cat => cat.count > 0);
+      .filter(cat => matchedCategories.has(cat.slug));
 
     setDisplayCategories(categoriesWithResults);
     setSearchResults({
@@ -98,7 +126,7 @@ export default function Categories() {
       <div className="flex flex-col items-center mb-10">
         <input
           type="text"
-          placeholder="Search: St Patrick, Diwali, Veterans Day..."
+          placeholder="Search: Summer, Halloween, Birthday..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-80 md:w-96 px-4 py-3 rounded-full border-2 border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-pink-400 text-gray-700 text-center transition-all"
@@ -172,12 +200,6 @@ export default function Categories() {
                     >
                       {cat.emoji}
                     </motion.span>
-                    
-                    {cat.count > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg border-2 border-white z-10">
-                        {cat.count}
-                      </span>
-                    )}
                   </motion.div>
                   <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base text-center px-2">
                     {cat.name}
