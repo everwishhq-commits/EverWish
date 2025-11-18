@@ -1,173 +1,154 @@
-import React, { useState } from 'react';
-import { Heart, X, Sparkles, Send, ChevronDown, ChevronUp } from 'lucide-react';
+"use client";
+import React, { useState } from "react";
+import { X, ChevronDown, ChevronUp, Send } from "lucide-react";
 
-export default function EverwishQuickCheckout() {
-  const [selectedPlan, setSelectedPlan] = useState('wonderdream');
-  const [selectedGiftCard, setSelectedGiftCard] = useState(null);
-  const [showGiftCardModal, setShowGiftCardModal] = useState(false);
+export default function CheckoutModal({ total, gift, onGiftChange, onGiftRemove, onClose }) {
+  const [selectedPlan, setSelectedPlan] = useState("wonderdream");
+  const [showDetailsSnap, setShowDetailsSnap] = useState(false);
+  const [showDetailsWonder, setShowDetailsWonder] = useState(false);
+  const [showGiftModal, setShowGiftModal] = useState(false);
 
-  const [showSnapwishDetails, setShowSnapwishDetails] = useState(false);
-  const [showWonderDetails, setShowWonderDetails] = useState(false);
+  const [sender, setSender] = useState({ name: "", email: "", phone: "" });
+  const [receiver, setReceiver] = useState({ name: "", email: "", phone: "" });
+
+  const [selectedGiftAmount, setSelectedGiftAmount] = useState(null);
 
   const plans = {
-    snapwish: { name: 'SnapWish', price: 3.99 },
-    wonderdream: { name: 'WonderDream', price: 7.99 }
+    snapwish: {
+      name: "SnapWish",
+      price: 3.99,
+      details: [
+        "Static digital card",
+        "Personalized message",
+        "Optional gift card",
+      ],
+    },
+    wonderdream: {
+      name: "WonderDream",
+      price: 7.99,
+      details: [
+        "Premium animated card",
+        "Personalized message",
+        "Upload your photo",
+        "Optional gift card",
+        "Magic animations included",
+      ],
+    },
   };
 
-  const giftCards = [
-    { id: 'amazon', name: 'Amazon', icon: '🛒', amounts: [10, 25, 50, 100] },
-    { id: 'starbucks', name: 'Starbucks', icon: '☕', amounts: [5, 10, 15, 25] },
-    { id: 'target', name: 'Target', icon: '🎯', amounts: [10, 20, 25, 50] },
-    { id: 'apple', name: 'Apple', icon: '🍎', amounts: [15, 25, 50, 100] },
-    { id: 'walmart', name: 'Walmart', icon: '🏪', amounts: [10, 25, 50, 100] },
-    { id: 'visa', name: 'Visa', icon: '💳', amounts: [25, 50, 100, 200], premium: true },
-  ];
-
-  const handleGiftCardSelect = (card, amount) => {
-    setSelectedGiftCard({ ...card, amount });
-    setShowGiftCardModal(false);
-  };
+  const giftAmounts = [5, 10, 25, 50, 100];
 
   const getTotalPrice = () => {
-    let total = plans[selectedPlan].price;
-    if (selectedGiftCard) total += selectedGiftCard.amount;
-    return total.toFixed(2);
+    let base = plans[selectedPlan].price;
+    if (selectedGiftAmount) base += selectedGiftAmount;
+    return base.toFixed(2);
   };
 
-  const handleCheckout = async () => {
-    alert(`Processing $${getTotalPrice()} payment via Stripe...`);
+  const handleCheckout = () => {
+    alert(`Processing Stripe payment: $${getTotalPrice()}`);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-8">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center px-4 z-[99999]">
+      <div className="bg-white w-full max-w-md rounded-2xl shadow-xl p-6 relative">
         
-        {/* HEADER */}
-        <div className="text-center mb-6">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent mb-2">
-            Checkout 💜
-          </h1>
-          <p className="text-gray-600">Complete your order in seconds</p>
+        {/* ─── HEADER ─────────────────────────────────────────────── */}
+        <div className="absolute top-4 right-4">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X className="w-6 h-6" />
+          </button>
         </div>
 
-        {/* PLAN SELECTOR */}
-        <div className="mb-6">
-          <label className="block text-sm font-semibold text-gray-700 mb-3">Choose your plan:</label>
-          
-          <div className="grid grid-cols-2 gap-3">
+        <h2 className="text-2xl font-bold text-center mb-5 bg-gradient-to-r from-pink-500 to-purple-600 text-transparent bg-clip-text">
+          Checkout
+        </h2>
 
-            {/* SNAPWISH */}
-            <div>
+        {/* ─── PLAN SELECTOR ─────────────────────────────────────── */}
+        <div className="space-y-3 mb-6">
+          {/* WonderDream */}
+          <div
+            className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+              selectedPlan === "wonderdream"
+                ? "border-purple-500 bg-purple-50 shadow-md"
+                : "border-gray-200"
+            }`}
+            onClick={() => setSelectedPlan("wonderdream")}
+          >
+            <div className="flex justify-between items-center">
+              <p className="font-bold text-gray-800">WonderDream • ${plans.wonderdream.price}</p>
               <button
-                onClick={() => setSelectedPlan('snapwish')}
-                className={`w-full p-4 rounded-xl border-2 transition-all ${
-                  selectedPlan === 'snapwish'
-                    ? 'border-pink-500 bg-pink-50 shadow-lg'
-                    : 'border-gray-200 hover:border-pink-300'
-                }`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDetailsWonder(!showDetailsWonder);
+                }}
+                className="text-purple-600 text-sm flex items-center gap-1"
               >
-                <Heart className="w-6 h-6 text-pink-500 mx-auto mb-2" />
-                <p className="font-bold text-gray-800">SnapWish</p>
-
-                <p className="text-2xl font-bold text-pink-500">${plans.snapwish.price}</p>
-
-                {/* VIEW DETAILS BUTTON */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowSnapwishDetails(!showSnapwishDetails);
-                  }}
-                  className="text-xs text-pink-500 font-semibold mt-1 flex items-center gap-1 mx-auto"
-                >
-                  {showSnapwishDetails ? "Hide details" : "View details"}
-                  {showSnapwishDetails ? <ChevronUp size={12}/> : <ChevronDown size={12}/>}
-                </button>
-
-                {showSnapwishDetails && (
-                  <div className="text-xs text-gray-600 mt-2 leading-4 px-2">
-                    ✓ Static card  
-                    <br />✓ Personalized message  
-                    <br />✓ Optional digital gift card  
-                    <br />✓ Quick delivery  
-                  </div>
-                )}
+                {showDetailsWonder ? "Hide details" : "See details"}
+                {showDetailsWonder ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </button>
             </div>
 
+            {showDetailsWonder && (
+              <ul className="mt-2 text-sm text-gray-600 space-y-1">
+                {plans.wonderdream.details.map((d, i) => (
+                  <li key={i}>• {d}</li>
+                ))}
+              </ul>
+            )}
+          </div>
 
-            {/* WONDERDREAM */}
-            <div>
+          {/* SnapWish */}
+          <div
+            className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+              selectedPlan === "snapwish"
+                ? "border-pink-400 bg-pink-50 shadow-md"
+                : "border-gray-200"
+            }`}
+            onClick={() => setSelectedPlan("snapwish")}
+          >
+            <div className="flex justify-between items-center">
+              <p className="font-bold text-gray-800">SnapWish • ${plans.snapwish.price}</p>
               <button
-                onClick={() => setSelectedPlan('wonderdream')}
-                className={`w-full p-4 rounded-xl border-2 transition-all relative ${
-                  selectedPlan === 'wonderdream'
-                    ? 'border-purple-600 bg-purple-50 shadow-lg'
-                    : 'border-gray-200 hover:border-purple-300'
-                }`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDetailsSnap(!showDetailsSnap);
+                }}
+                className="text-pink-600 text-sm flex items-center gap-1"
               >
-                <span className="absolute -top-2 -right-2 bg-yellow-400 text-xs px-2 py-1 rounded-full font-bold">
-                  BEST
-                </span>
-
-                <Sparkles className="w-6 h-6 text-purple-600 mx-auto mb-2" />
-                <p className="font-bold text-gray-800">WonderDream</p>
-                
-                <p className="text-2xl font-bold text-purple-600">${plans.wonderdream.price}</p>
-
-                {/* VIEW DETAILS BUTTON */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowWonderDetails(!showWonderDetails);
-                  }}
-                  className="text-xs text-purple-600 font-semibold mt-1 flex items-center gap-1 mx-auto"
-                >
-                  {showWonderDetails ? "Hide details" : "View details"}
-                  {showWonderDetails ? <ChevronUp size={12}/> : <ChevronDown size={12}/>}
-                </button>
-
-                {showWonderDetails && (
-                  <div className="text-xs text-gray-600 mt-2 leading-4 px-2">
-                    ✓ Premium animated card  
-                    <br />✓ Personalized message  
-                    <br />✓ Upload your photo  
-                    <br />✓ Optional digital gift card  
-                    <br />✓ Magic emoji animations  
-                    <br />✓ Full immersive experience  
-                  </div>
-                )}
+                {showDetailsSnap ? "Hide details" : "See details"}
+                {showDetailsSnap ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </button>
             </div>
+
+            {showDetailsSnap && (
+              <ul className="mt-2 text-sm text-gray-600 space-y-1">
+                {plans.snapwish.details.map((d, i) => (
+                  <li key={i}>• {d}</li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
 
-        {/* GIFT CARDS (igual que antes, no modificado) */}
-        {/* ——————————————————————————————————————— */}
-        
+        {/* ─── GIFT CARD (ONLY AMOUNT) ───────────────────────────── */}
         <div className="mb-6">
-          <label className="block text-sm font-semibold text-gray-700 mb-3">
-            Gift Card (optional):
-          </label>
+          <p className="font-semibold text-gray-700 text-sm mb-2">Add Gift Card (optional)</p>
 
-          {selectedGiftCard ? (
-            <div className="flex items-center justify-between bg-purple-50 rounded-xl p-4 border-2 border-purple-200">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">{selectedGiftCard.icon}</span>
-                <div>
-                  <p className="font-bold text-gray-800">{selectedGiftCard.name}</p>
-                  <p className="text-sm text-gray-600">${selectedGiftCard.amount}</p>
-                </div>
-              </div>
-              <div className="flex gap-2">
+          {/* Selected gift */}
+          {selectedGiftAmount ? (
+            <div className="flex justify-between items-center p-3 bg-purple-50 border border-purple-200 rounded-xl">
+              <p className="font-medium text-gray-800">Gift Card: ${selectedGiftAmount}</p>
+
+              <div className="flex gap-3">
                 <button
-                  onClick={() => setShowGiftCardModal(true)}
-                  className="text-purple-600 hover:text-purple-700 font-semibold text-sm"
+                  onClick={() => setShowGiftModal(true)}
+                  className="text-purple-600 text-sm font-semibold"
                 >
                   Change
                 </button>
                 <button
-                  onClick={() => setSelectedGiftCard(null)}
-                  className="text-pink-500 hover:text-pink-700 font-semibold text-sm"
+                  onClick={() => setSelectedGiftAmount(null)}
+                  className="text-red-500 text-sm font-semibold"
                 >
                   Remove
                 </button>
@@ -175,99 +156,114 @@ export default function EverwishQuickCheckout() {
             </div>
           ) : (
             <button
-              onClick={() => setShowGiftCardModal(true)}
-              className="w-full border-2 border-dashed border-gray-300 rounded-xl p-6 text-gray-600 hover:border-purple-500 hover:bg-purple-50 hover:text-purple-600 transition-all font-semibold"
+              onClick={() => setShowGiftModal(true)}
+              className="w-full border-2 border-dashed border-gray-300 rounded-xl p-3 text-gray-600 text-sm font-semibold"
             >
-              🎁 + Add Gift Card
+              + Add Gift Card
             </button>
           )}
         </div>
 
-        {/* TOTAL SUMMARY + PAY BUTTON */}
-        <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-xl p-6 mb-6">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-gray-600">{plans[selectedPlan].name}</span>
-            <span className="font-semibold">${plans[selectedPlan].price}</span>
+        {/* ─── SENDER / RECEIVER ────────────────────────────────── */}
+        <div className="mb-6 grid grid-cols-2 gap-3">
+          <div>
+            <p className="text-sm font-semibold text-gray-700 mb-1">Sender</p>
+            <input
+              type="text"
+              placeholder="Name"
+              className="w-full p-2 border rounded-lg text-sm mb-2"
+              onChange={(e) => setSender({ ...sender, name: e.target.value })}
+            />
+            <input
+              type="email"
+              placeholder="Email"
+              className="w-full p-2 border rounded-lg text-sm mb-2"
+              onChange={(e) => setSender({ ...sender, email: e.target.value })}
+            />
+            <input
+              type="tel"
+              placeholder="Phone"
+              className="w-full p-2 border rounded-lg text-sm"
+              onChange={(e) => setSender({ ...sender, phone: e.target.value })}
+            />
           </div>
 
-          {selectedGiftCard && (
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-gray-600">{selectedGiftCard.name}</span>
-              <span className="font-semibold">${selectedGiftCard.amount}</span>
-            </div>
-          )}
-
-          <div className="border-t-2 border-purple-200 pt-3 mt-3">
-            <div className="flex justify-between items-center">
-              <span className="text-xl font-bold text-gray-800">Total</span>
-              <span className="text-3xl font-bold text-purple-600">${getTotalPrice()}</span>
-            </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-700 mb-1">Recipient</p>
+            <input
+              type="text"
+              placeholder="Name"
+              className="w-full p-2 border rounded-lg text-sm mb-2"
+              onChange={(e) => setReceiver({ ...receiver, name: e.target.value })}
+            />
+            <input
+              type="email"
+              placeholder="Email"
+              className="w-full p-2 border rounded-lg text-sm mb-2"
+              onChange={(e) => setReceiver({ ...receiver, email: e.target.value })}
+            />
+            <input
+              type="tel"
+              placeholder="Phone"
+              className="w-full p-2 border rounded-lg text-sm"
+              onChange={(e) => setReceiver({ ...receiver, phone: e.target.value })}
+            />
           </div>
         </div>
 
-        <p className="text-center text-xs text-gray-500 mb-4">🔒 Secure payment powered by Stripe</p>
+        {/* ─── TOTAL ────────────────────────────────────────────── */}
+        <div className="bg-purple-50 p-4 rounded-xl border border-purple-200 mb-4">
+          <div className="flex justify-between text-gray-700 text-sm">
+            <span>{plans[selectedPlan].name} Card</span>
+            <span>${plans[selectedPlan].price}</span>
+          </div>
+
+          {selectedGiftAmount && (
+            <div className="flex justify-between text-gray-700 text-sm mt-2">
+              <span>Gift Card</span>
+              <span>${selectedGiftAmount}</span>
+            </div>
+          )}
+
+          <div className="border-t border-purple-200 mt-3 pt-3 flex justify-between items-center">
+            <span className="text-lg font-bold text-gray-800">Total</span>
+            <span className="text-2xl font-bold text-purple-600">${getTotalPrice()}</span>
+          </div>
+        </div>
 
         <button
           onClick={handleCheckout}
-          className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-5 rounded-xl font-bold text-xl hover:shadow-2xl transition-all transform hover:scale-105 flex items-center justify-center gap-3"
+          className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 hover:scale-[1.02] transition-all"
         >
-          <Send className="w-6 h-6" />
-          Pay ${getTotalPrice()} now
+          <Send className="w-5 h-5" />
+          Pay ${getTotalPrice()}
         </button>
       </div>
 
-      {/* GIFT CARD MODAL (igual) */}
-      {showGiftCardModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-3xl w-full p-8 max-h-[90vh] overflow-y-auto">
+      {/* ─── GIFT CARD MODAL ───────────────────────────────────── */}
+      {showGiftModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center px-4 z-[99999]">
+          <div className="bg-white w-full max-w-sm p-6 rounded-2xl shadow-xl">
+            <h3 className="text-lg font-bold text-gray-800 mb-3">Select Gift Card Amount</h3>
 
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">🎁 Select Gift Card</h2>
-              <button
-                onClick={() => setShowGiftCardModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {giftCards.map((card) => (
-                <div key={card.id} className="border-2 border-gray-200 rounded-xl p-4 hover:border-purple-300 transition-all">
-                  <div className="text-center mb-3">
-                    <div className="text-4xl mb-2">{card.icon}</div>
-                    <h3 className="font-bold text-gray-800 text-sm">{card.name}</h3>
-
-                    {card.premium && (
-                      <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full mt-1 inline-block">
-                        Coming soon
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    {card.amounts.map((amount) => (
-                      <button
-                        key={amount}
-                        onClick={() => !card.premium && handleGiftCardSelect(card, amount)}
-                        disabled={card.premium}
-                        className={`py-2 rounded-lg font-bold text-sm transition-all ${
-                          card.premium
-                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                            : 'bg-purple-100 text-purple-700 hover:bg-purple-600 hover:text-white transform hover:scale-105'
-                        }`}
-                      >
-                        ${amount}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+            <div className="grid grid-cols-3 gap-3">
+              {giftAmounts.map((amount) => (
+                <button
+                  key={amount}
+                  onClick={() => {
+                    setSelectedGiftAmount(amount);
+                    setShowGiftModal(false);
+                  }}
+                  className="py-2 bg-purple-100 hover:bg-purple-600 hover:text-white rounded-lg font-semibold text-sm"
+                >
+                  ${amount}
+                </button>
               ))}
             </div>
 
             <button
-              onClick={() => setShowGiftCardModal(false)}
-              className="w-full mt-6 border-2 border-gray-300 text-gray-600 py-3 rounded-xl font-semibold hover:bg-gray-50 transition-all"
+              onClick={() => setShowGiftModal(false)}
+              className="w-full border mt-4 py-2 rounded-lg text-gray-600 font-semibold"
             >
               Close
             </button>
@@ -276,4 +272,4 @@ export default function EverwishQuickCheckout() {
       )}
     </div>
   );
-                  }
+}
