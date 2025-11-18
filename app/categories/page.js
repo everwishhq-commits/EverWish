@@ -54,16 +54,11 @@ export default function CategoriesPage() {
       count: grouped[cat.slug]?.length || 0
     }));
     
-    // 🔥 Si hay búsqueda, ordenar: con resultados primero
+    // 🔥 Si hay búsqueda, SOLO mostrar las que tienen resultados
     if (search.trim()) {
-      categoriesWithCounts = categoriesWithCounts.sort((a, b) => {
-        if (a.count > 0 && b.count === 0) return -1;
-        if (a.count === 0 && b.count > 0) return 1;
-        return 0;
-      });
+      categoriesWithCounts = categoriesWithCounts.filter(cat => cat.count > 0);
     }
     
-    console.log("📊 Categorías actualizadas:", categoriesWithCounts);
     setDisplayCategories(categoriesWithCounts);
   }, [filteredVideos, search]);
 
@@ -84,6 +79,14 @@ export default function CategoriesPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white p-4">
       <div className="max-w-5xl mx-auto">
+        {/* Botón Home */}
+        <button
+          onClick={() => router.push("/")}
+          className="text-pink-500 hover:text-pink-600 font-semibold mb-4"
+        >
+          ← Home
+        </button>
+
         <h1 className="text-4xl font-bold text-pink-600 text-center mb-2 mt-6">
           Categories
         </h1>
@@ -145,17 +148,7 @@ export default function CategoriesPage() {
           ))}
         </div>
 
-        {/* Debug info */}
-        {search && (
-          <div className="mt-8 p-4 bg-gray-100 rounded-xl text-xs">
-            <p className="font-bold mb-2">🔍 Debug Info:</p>
-            <p>Total videos: {videos.length}</p>
-            <p>Filtered: {filteredVideos.length}</p>
-            <p>Search term: "{search}"</p>
-            <p>Categories with results: {displayCategories.filter(c => c.count > 0).length}</p>
-          </div>
-        )}
       </div>
     </div>
   );
-                  }
+}
