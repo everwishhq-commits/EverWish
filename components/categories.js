@@ -21,7 +21,8 @@ export default function Categories() {
   const [displayCategories, setDisplayCategories] = useState(
     BASE_CATEGORIES.map((cat, i) => ({ 
       ...cat, 
-      color: COLORS[i % COLORS.length]
+      color: COLORS[i % COLORS.length], 
+      count: 0 
     }))
   );
   const [searchResults, setSearchResults] = useState(null);
@@ -33,6 +34,15 @@ export default function Categories() {
         const data = await res.json();
         const allVideos = data.videos || [];
         setVideos(allVideos);
+
+        const grouped = groupByCategory(allVideos);
+        const categoriesWithCounts = BASE_CATEGORIES.map((cat, i) => ({
+          ...cat,
+          color: COLORS[i % COLORS.length],
+          count: grouped[cat.slug]?.length || 0
+        }));
+
+        setDisplayCategories(categoriesWithCounts);
       } catch (err) {
         console.error("Error cargando videos:", err);
       }
@@ -42,21 +52,21 @@ export default function Categories() {
 
   useEffect(() => {
     if (!search.trim()) {
-      // ✅ SIN BÚSQUEDA: Mostrar todas
-      const categoriesWithColors = BASE_CATEGORIES.map((cat, i) => ({
+      // Reset categories if search is empty
+      const categoriesWithCounts = BASE_CATEGORIES.map((cat, i) => ({
         ...cat,
-        color: COLORS[i % COLORS.length]
+        color: COLORS[i % COLORS.length],
+        count: groupByCategory(videos)[cat.slug]?.length || 0
       }));
-      setDisplayCategories(categoriesWithColors);
+      setDisplayCategories(categoriesWithCounts);
       setSearchResults(null);
       return;
     }
 
-    // ✅ CON BÚSQUEDA: Usar searchVideos con priorización
     const matchedVideos = searchVideos(videos, search);
     const grouped = groupByCategory(matchedVideos);
 
-    // ✅ SIEMPRE mostrar TODAS las categorías
+    // ✅ CAMBIO: NO filtrar categorías vacías
     const categoriesWithResults = BASE_CATEGORIES
       .map((cat, index) => ({
         ...cat,
@@ -123,54 +133,73 @@ export default function Categories() {
         )}
       </div>
 
-      {/* ✅ SIEMPRE mostrar el carrusel (nunca vacío) */}
-      <Swiper
-        slidesPerView={3.2}
-        spaceBetween={16}
-        centeredSlides={true}
-        loop={displayCategories.length > 3}
-        autoplay={{ delay: 2500, disableOnInteraction: false }}
-        speed={1000}
-        breakpoints={{
-          0: { slidesPerView: 2.3, spaceBetween: 10 },
-          640: { slidesPerView: 3.4, spaceBetween: 14 },
-          1024: { slidesPerView: 5, spaceBetween: 18 },
-        }}
-        modules={[Autoplay]}
-        className="overflow-visible"
-      >
-        {displayCategories.map((cat) => (
-          <SwiperSlide key={cat.slug}>
-            <button 
-              onClick={() => handleCategoryClick(cat)}
-              className="w-full"
-              aria-label={`View ${cat.name} category`}
-            >
-              <motion.div
-                className="flex flex-col items-center justify-center cursor-pointer relative"
-                whileHover={{ scale: 1.07 }}
-                whileTap={{ scale: 0.95 }}
+      {displayCategories.length > 0 ? (
+        <Swiper
+          slidesPerView={3.2}
+          spaceBetween={16}
+          centeredSlides={true}
+          loop={displayCategories.length > 3}
+          autoplay={{ delay: 2500, disableOnInteraction: false }}
+          speed={1000}
+          breakpoints={{
+            0: { slidesPerView: 2.3, spaceBetween: 10 },
+            640: { slidesPerView: 3.4, spaceBetween: 14 },
+            1024: { slidesPerView: 5, spaceBetween: 18 },
+          }}
+          modules={[Autoplay]}
+          className="overflow-visible"
+        >
+          {displayCategories.map((cat) => (
+            <SwiperSlide key={cat.slug}>
+              <button 
+                onClick={() => handleCategoryClick(cat)}
+                className="w-full"
+                aria-label={`View ${cat.name} category`}
               >
                 <motion.div
-                  className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md hover:shadow-lg transition-shadow relative"
-                  style={{ backgroundColor: cat.color }}
+                  className="flex flex-col items-center justify-center cursor-pointer relative"
+                  whileHover={{ scale: 1.07 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <motion.span
-                    className="text-4xl sm:text-5xl"
-                    animate={{ y: [0, -5, 0] }}
-                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  <motion.div
+                    className="rounded-full flex items-center justify-center w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] mx-auto shadow-md hover:shadow-lg transition-shadow relative"
+                    style={{ backgroundColor: cat.color }}
                   >
-                    {cat.emoji}
-                  </motion.span>
+                    <motion.span
+                      className="text-4xl sm:text-5xl"
+                      animate={{ y: [0, -5, 0] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                      {cat.emoji}
+                    </motion.span>
+                    
+                    {/* ❌ REMOVIDO: Badge con count */}
+                  </motion.div>
+                  <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base text-center px-2">
+                    {cat.name}
+                  </p>
                 </motion.div>
-                <p className="mt-2 font-semibold text-gray-800 text-sm md:text-base text-center px-2">
-                  {cat.name}
-                </p>
-              </motion.div>
+              </button>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      ) : (
+        <div className="text-center py-10">
+          <p className="text-gray-500 text-sm mb-4">
+            {search 
+              ? `No matching categories for "${search}"`
+              : "Loading categories..."}
+          </p>
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="text-pink-500 hover:text-pink-600 font-semibold text-sm"
+            >
+              ← Clear search
             </button>
-          </SwiperSlide>
-        ))}
-      </Swiper>
+          )}
+        </div>
+      )}
     </section>
   );
-                  }
+        }
