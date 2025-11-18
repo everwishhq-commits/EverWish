@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { searchVideos, groupByCategory } from "@/lib/simple-search";
 import { BASE_CATEGORIES } from "@/lib/categories-config";
 
 export default function CategoriesPage() {
@@ -9,7 +8,6 @@ export default function CategoriesPage() {
   const [search, setSearch] = useState("");
   const [videos, setVideos] = useState([]);
   const [displayCategories, setDisplayCategories] = useState(BASE_CATEGORIES);
-  const [results, setResults] = useState(null);
 
   // Cargar videos desde el index ya generado
   useEffect(() => {
@@ -27,33 +25,65 @@ export default function CategoriesPage() {
     loadVideos();
   }, []);
 
-  // Actualizar resultados según búsqueda
+  // Actualizar categorías según búsqueda
   useEffect(() => {
     if (!search.trim()) {
+      // ✅ SIN BÚSQUEDA: Mostrar TODAS las categorías
       setDisplayCategories(BASE_CATEGORIES);
-      setResults(null);
       return;
     }
 
-    // Usar función de búsqueda con priorización
-    const matchedVideos = searchVideos(videos, search);
-    
-    // Agrupar por categoría base
-    const grouped = groupByCategory(matchedVideos);
+    const q = search.toLowerCase().trim();
 
-    // NO filtrar categorías vacías
-    const categoriesWithResults = BASE_CATEGORIES
-      .map(cat => ({ 
-        ...cat, 
-        count: grouped[cat.slug]?.length || 0 
-      }));
-      // Ya NO filtramos .filter(cat => cat.count > 0)
-
-    setDisplayCategories(categoriesWithResults);
-    setResults({
-      found: matchedVideos.length,
-      categoriesCount: categoriesWithResults.filter(c => c.count > 0).length
+    // ✅ CON BÚSQUEDA: Filtrar videos que coincidan
+    const matchedVideos = videos.filter(video => {
+      const searchable = [
+        video.name,
+        video.object,
+        ...(video.categories || []),
+        ...(video.subcategories || []),
+        ...(video.searchTerms || []),
+      ].filter(Boolean).join(" ").toLowerCase();
+      
+      return searchable.includes(q);
     });
+
+    if (matchedVideos.length === 0) {
+      setDisplayCategories([]);
+      return;
+    }
+
+    // ✅ FILTRAR CATEGORÍAS: Solo mostrar la categoría EXACTA
+    const matchedCategories = new Set();
+    
+    matchedVideos.forEach(video => {
+      if (video.subcategories) {
+        video.subcategories.forEach(sub => {
+          // Si la subcategoría coincide EXACTAMENTE con la búsqueda
+          if (sub.toLowerCase() === q) {
+            video.categories?.forEach(cat => matchedCategories.add(cat));
+          }
+        });
+      }
+    });
+
+    // Si no hay coincidencia exacta en subcategorías, buscar en categorías
+    if (matchedCategories.size === 0) {
+      matchedVideos.forEach(video => {
+        video.categories?.forEach(cat => {
+          if (cat.toLowerCase().includes(q)) {
+            matchedCategories.add(cat);
+          }
+        });
+      });
+    }
+
+    // Filtrar solo las categorías que coinciden
+    const filtered = BASE_CATEGORIES.filter(cat => 
+      matchedCategories.has(cat.slug)
+    );
+
+    setDisplayCategories(filtered.length > 0 ? filtered : []);
   }, [search, videos]);
 
   const handleCategoryClick = (cat) => {
@@ -79,7 +109,7 @@ export default function CategoriesPage() {
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search: St Patrick, zombie, turtle..."
+            placeholder="Search: Summer, Halloween, Birthday..."
             className="w-full px-4 py-3 rounded-full border-2 border-pink-200 focus:border-pink-400 focus:outline-none text-center shadow-sm transition-all"
           />
           {search && (
@@ -92,24 +122,7 @@ export default function CategoriesPage() {
           )}
         </div>
 
-        {/* Resultados de búsqueda */}
-        {results && (
-          <div className="text-center mb-6">
-            {results.found > 0 ? (
-              <p className="text-gray-600">
-                ✨ Found <span className="font-bold text-pink-600">{results.found}</span> cards 
-                in <span className="font-bold text-pink-600">{results.categoriesCount}</span>{" "}
-                {results.categoriesCount === 1 ? 'category' : 'categories'}
-              </p>
-            ) : (
-              <p className="text-gray-400">
-                No results for "<span className="font-semibold">{search}</span>"
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Grid de categorías - SIN CONTADORES VISIBLES */}
+        {/* Grid de categorías - SIN CONTADORES */}
         {displayCategories.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
             {displayCategories.map((cat, i) => (
@@ -124,21 +137,24 @@ export default function CategoriesPage() {
                 <div className="text-center font-semibold text-gray-800 text-sm leading-tight">
                   {cat.name}
                 </div>
-                {/* ❌ REMOVIDO: El badge con el contador */}
               </div>
             ))}
           </div>
         ) : (
           <div className="text-center py-20 bg-white rounded-3xl shadow-lg max-w-md mx-auto">
             <p className="text-gray-500 text-lg mb-4">
-              No categories match "<span className="font-semibold">{search}</span>"
+              {search 
+                ? `No categories match "${search}"`
+                : "Loading categories..."}
             </p>
-            <button 
-              onClick={() => setSearch("")} 
-              className="text-pink-500 hover:text-pink-600 font-semibold"
-            >
-              ← Clear search and see all
-            </button>
+            {search && (
+              <button 
+                onClick={() => setSearch("")} 
+                className="text-pink-500 hover:text-pink-600 font-semibold"
+              >
+                ← Clear search and see all
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -154,4 +170,4 @@ export default function CategoriesPage() {
       `}</style>
     </div>
   );
-              }
+}
