@@ -163,31 +163,31 @@ export default function CheckoutModal({ total, gift, onGiftChange, onGiftRemove,
         </div>
 
         {/* FORM */}
-        <div className="grid grid-cols-2 gap-3 mb-5">
+        <div className="space-y-3 mb-5">
           {/* Sender */}
           <div>
             <label className="text-xs font-bold text-gray-600 mb-1 block">
               Sender *
             </label>
             <input 
-              className="w-full border rounded-xl px-3 py-2 text-sm mb-1" 
+              className="w-full border rounded-xl px-3 py-2 text-sm mb-2" 
               placeholder="Name" 
               required 
             />
             <input 
-              className="w-full border rounded-xl px-2 py-2 text-xs mb-1" 
+              className="w-full border rounded-xl px-3 py-2 text-sm mb-2" 
               placeholder="Email" 
               type="email"
               required 
             />
-            <div className="flex gap-1">
+            <div className="flex gap-2">
               <input 
-                className="w-16 border rounded-xl px-2 py-2 text-xs" 
+                className="w-20 border rounded-xl px-3 py-2 text-sm" 
                 placeholder="+1" 
                 required 
               />
               <input 
-                className="flex-1 border rounded-xl px-2 py-2 text-xs" 
+                className="flex-1 border rounded-xl px-3 py-2 text-sm" 
                 placeholder="Phone" 
                 required 
               />
@@ -200,24 +200,24 @@ export default function CheckoutModal({ total, gift, onGiftChange, onGiftRemove,
               Recipient *
             </label>
             <input 
-              className="w-full border rounded-xl px-3 py-2 text-sm mb-1" 
+              className="w-full border rounded-xl px-3 py-2 text-sm mb-2" 
               placeholder="Name" 
               required 
             />
             <input 
-              className="w-full border rounded-xl px-2 py-2 text-xs mb-1" 
+              className="w-full border rounded-xl px-3 py-2 text-sm mb-2" 
               placeholder="Email" 
               type="email"
               required 
             />
-            <div className="flex gap-1">
+            <div className="flex gap-2">
               <input 
-                className="w-16 border rounded-xl px-2 py-2 text-xs" 
+                className="w-20 border rounded-xl px-3 py-2 text-sm" 
                 placeholder="+1" 
                 required 
               />
               <input 
-                className="flex-1 border rounded-xl px-2 py-2 text-xs" 
+                className="flex-1 border rounded-xl px-3 py-2 text-sm" 
                 placeholder="Phone" 
                 required 
               />
@@ -283,4 +283,4 @@ export default function CheckoutModal({ total, gift, onGiftChange, onGiftRemove,
       )}
     </div>
   );
-          }
+}
