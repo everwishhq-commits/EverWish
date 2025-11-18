@@ -27,25 +27,35 @@ export default function CategoriesPage() {
     loadVideos();
   }, []);
 
-  // Actualizar resultados según búsqueda
+  // 🔥 NUEVO: Actualizar resultados según búsqueda
   useEffect(() => {
     if (!search.trim()) {
-      // ✅ SIN BÚSQUEDA: Mostrar TODAS las categorías
-      setDisplayCategories(BASE_CATEGORIES);
+      // ✅ SIN BÚSQUEDA: Mostrar TODAS las categorías con sus conteos reales
+      const grouped = groupByCategory(videos);
+      const categoriesWithCounts = BASE_CATEGORIES.map(cat => ({
+        ...cat,
+        count: grouped[cat.slug]?.length || 0
+      }));
+      setDisplayCategories(categoriesWithCounts);
       setResults(null);
       return;
     }
 
-    // Usar función de búsqueda con priorización
-    const matchedVideos = searchVideos(videos, search);
+    // ✅ CON BÚSQUEDA: Filtrar videos y agrupar
+    console.log(`🔍 Buscando: "${search}"`);
     
-    // Agrupar por categoría base
+    // 1. Buscar videos que coincidan
+    const matchedVideos = searchVideos(videos, search);
+    console.log(`📊 Videos encontrados: ${matchedVideos.length}`);
+    
+    // 2. Agrupar por categoría
     const grouped = groupByCategory(matchedVideos);
-
-    // ✅ CAMBIO: NO filtrar categorías vacías
-    const categoriesWithResults = BASE_CATEGORIES.map(cat => ({ 
-      ...cat, 
-      count: grouped[cat.slug]?.length || 0 
+    console.log(`📂 Categorías con resultados:`, Object.keys(grouped));
+    
+    // 3. Crear categorías con conteos (TODAS, incluso las vacías)
+    const categoriesWithResults = BASE_CATEGORIES.map(cat => ({
+      ...cat,
+      count: grouped[cat.slug]?.length || 0
     }));
 
     setDisplayCategories(categoriesWithResults);
@@ -56,9 +66,12 @@ export default function CategoriesPage() {
   }, [search, videos]);
 
   const handleCategoryClick = (cat) => {
+    // 🔥 CRÍTICO: Pasar la búsqueda en la URL
     const url = search.trim()
       ? `/category/${cat.slug}?q=${encodeURIComponent(search)}`
       : `/category/${cat.slug}`;
+    
+    console.log(`🔗 Navegando a: ${url}`);
     router.push(url);
   };
 
@@ -108,14 +121,18 @@ export default function CategoriesPage() {
           </div>
         )}
 
-        {/* ✅ Grid de categorías - SIN CONTADOR */}
+        {/* Grid de categorías */}
         {displayCategories.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
             {displayCategories.map((cat, i) => (
               <div
                 key={i}
                 onClick={() => handleCategoryClick(cat)}
-                className="bg-white p-6 rounded-2xl shadow-md hover:shadow-xl cursor-pointer transition-all transform hover:scale-105 relative border-2 border-pink-100 hover:border-pink-300"
+                className={`bg-white p-6 rounded-2xl shadow-md hover:shadow-xl cursor-pointer transition-all transform hover:scale-105 relative border-2 ${
+                  search && cat.count === 0 
+                    ? 'border-gray-200 opacity-50' 
+                    : 'border-pink-100 hover:border-pink-300'
+                }`}
               >
                 <div className="text-5xl text-center mb-3 animate-bounce-slow">
                   {cat.emoji}
@@ -123,7 +140,13 @@ export default function CategoriesPage() {
                 <div className="text-center font-semibold text-gray-800 text-sm leading-tight">
                   {cat.name}
                 </div>
-                {/* ❌ REMOVIDO: Badge con count */}
+                
+                {/* 🔥 NUEVO: Mostrar contador solo cuando HAY búsqueda */}
+                {search && cat.count > 0 && (
+                  <div className="absolute top-2 right-2 bg-pink-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
+                    {cat.count}
+                  </div>
+                )}
               </div>
             ))}
           </div>
