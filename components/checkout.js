@@ -108,14 +108,23 @@ function CheckoutForm({ total, gift, onSuccess, onError, isAdmin, cardData }) {
             email: formData.recipientEmail,
             phone: formData.recipientPhone,
           },
-          message: cardData.message,
+          message: cardData?.message || "",
+          cardSlug: cardData?.slug || "custom-card", // 🔥 AGREGADO
           gift,
         }),
       });
 
-      const { clientSecret } = await res.json();
+      const data = await res.json();
 
-      if (!clientSecret) throw new Error("No client secret received");
+      if (!res.ok) {
+        throw new Error(data.error || "Error creating payment");
+      }
+
+      const { clientSecret } = data;
+
+      if (!clientSecret) {
+        throw new Error("No client secret received");
+      }
 
       // 2. Confirmar pago
       const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
@@ -131,14 +140,19 @@ function CheckoutForm({ total, gift, onSuccess, onError, isAdmin, cardData }) {
         }
       );
 
-      if (stripeError) throw new Error(stripeError.message);
+      if (stripeError) {
+        throw new Error(stripeError.message);
+      }
 
       // 3. Pago exitoso
+      console.log("✅ Payment successful:", paymentIntent.id);
       onSuccess({
         type: "payment",
         paymentIntent,
       });
+
     } catch (err) {
+      console.error("❌ Payment error:", err);
       setError(err.message);
       onError?.(err);
     } finally {
@@ -316,9 +330,10 @@ export default function CheckoutModal({ total, gift, onClose, cardData }) {
     const user = getCurrentUser();
     if (user) {
       setUserEmail(user.email);
-      setIsAdminUser(isAdmin(user.email));
+      const adminCheck = isAdminUser(user.email, user.phone);
+      setIsAdminUser(adminCheck);
       
-      if (isAdmin(user.email)) {
+      if (adminCheck) {
         console.log("👑 Admin user detected:", user.email);
       }
     }
@@ -326,10 +341,15 @@ export default function CheckoutModal({ total, gift, onClose, cardData }) {
 
   const handleSuccess = (result) => {
     console.log("Payment/Send successful:", result);
-    alert(isAdminUser ? "✅ Card sent successfully!" : "🎉 Payment successful!");
-    onClose();
-    // Aquí puedes redirigir a una página de éxito
-    window.location.href = "/success";
+    
+    if (result.type === "payment") {
+      alert("🎉 Payment successful! Card will be sent shortly.");
+      // Redirigir a página de éxito
+      window.location.href = "/success";
+    } else {
+      alert("✅ Card sent successfully!");
+      onClose();
+    }
   };
 
   const handleError = (error) => {
@@ -433,12 +453,14 @@ export default function CheckoutModal({ total, gift, onClose, cardData }) {
                 </p>
                 <div className="flex gap-3">
                   <button
+                    type="button"
                     className="text-purple-600 text-sm font-bold"
                     onClick={() => setShowGiftModal(true)}
                   >
                     Change
                   </button>
                   <button
+                    type="button"
                     className="text-pink-600 text-sm font-bold"
                     onClick={() => setSelectedGiftAmount(null)}
                   >
@@ -449,6 +471,7 @@ export default function CheckoutModal({ total, gift, onClose, cardData }) {
             </div>
           ) : (
             <button
+              type="button"
               onClick={() => setShowGiftModal(true)}
               className="w-full border-2 border-dashed border-gray-300 rounded-xl p-4 text-gray-600 font-semibold hover:border-purple-400 hover:bg-purple-50 hover:text-purple-600 transition"
             >
@@ -520,4 +543,4 @@ export default function CheckoutModal({ total, gift, onClose, cardData }) {
       )}
     </div>
   );
-            }
+}
