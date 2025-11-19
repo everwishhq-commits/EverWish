@@ -145,26 +145,70 @@ function CheckoutForm({ total, gift, onSuccess, onError, isAdmin, cardData }) {
       }
 
       const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
-        clientSecret,
-        {
-          payment_method: {
-            card: elements.getElement(CardElement),
-            billing_details: {
-              name: formData.senderName,
-              email: formData.senderEmail,
-            },
-          },
-        }
-      );
+  clientSecret,
+  {
+    payment_method: {
+      card: elements.getElement(CardElement),
+      billing_details: {
+        name: formData.senderName,
+        email: formData.senderEmail,
+      },
+    },
+  }
+);
 
-      if (stripeError) {
-        throw new Error(stripeError.message);
-      }
+if (stripeError) {
+  throw new Error(stripeError.message);
+}
 
-      onSuccess({
-        type: "payment",
-        paymentIntent,
-      });
+// 🔥 NUEVO: Guardar en Google Drive
+try {
+  const saveRes = await fetch("/api/save-card", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      paymentIntentId: paymentIntent.id,
+      sender: {
+        name: formData.senderName,
+        email: formData.senderEmail,
+        phone: formData.senderPhone || "",
+      },
+      recipient: {
+        name: formData.recipientName,
+        email: formData.recipientEmail,
+        phone: formData.recipientPhone || "",
+      },
+      cardData: {
+        slug: cardData?.slug || "custom-card",
+        message: cardData?.message || "",
+        animation: cardData?.animation || "",
+      },
+      amount: Math.round(total * 100),
+    }),
+  });
+
+  const saveData = await saveRes.json();
+
+  if (saveRes.ok && saveData.success) {
+    // Guardar usuario en localStorage
+    localStorage.setItem("everwishUser", JSON.stringify({
+      email: formData.senderEmail,
+      phone: formData.senderPhone || "",
+      name: formData.senderName,
+      everwishId: saveData.everwishId,
+    }));
+  } else {
+    console.error("Error saving to Drive:", saveData.error);
+  }
+} catch (saveError) {
+  console.error("Error saving card:", saveError);
+  // No bloqueamos el éxito del pago si falla el guardado
+}
+
+onSuccess({
+  type: "payment",
+  paymentIntent,
+});
 
     } catch (err) {
       setError(err.message);
