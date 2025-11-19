@@ -1,24 +1,13 @@
 // app/api/payment_intents/route.js
 import Stripe from "stripe";
 
-// ⚠️ Validar que la clave secreta existe
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-
-if (!stripeSecretKey) {
-  console.error("❌ ERROR: STRIPE_SECRET_KEY no está configurada");
-}
-
-// Inicializar Stripe
-const stripe = stripeSecretKey
-  ? new Stripe(stripeSecretKey, {
-      apiVersion: "2024-06-20",
-    })
-  : null;
-
 export async function POST(req) {
   try {
-    // Validar que Stripe esté inicializado
-    if (!stripe) {
+    // ✅ Validar DENTRO de la función POST (no al inicio del archivo)
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+
+    if (!stripeSecretKey) {
+      console.error("❌ ERROR: STRIPE_SECRET_KEY no está configurada");
       return new Response(
         JSON.stringify({ 
           error: "Stripe no está configurado. Contacta al administrador." 
@@ -29,6 +18,11 @@ export async function POST(req) {
         }
       );
     }
+
+    // Inicializar Stripe
+    const stripe = new Stripe(stripeSecretKey, {
+      apiVersion: "2024-06-20",
+    });
 
     const body = await req.json();
 
@@ -141,4 +135,4 @@ export async function POST(req) {
       }
     );
   }
-        }
+}
