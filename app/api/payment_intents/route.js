@@ -3,7 +3,7 @@ import Stripe from "stripe";
 
 export async function POST(req) {
   try {
-    // ✅ Validar DENTRO de la función POST (no al inicio del archivo)
+    // ✅ Validar clave DENTRO de la función POST
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 
     if (!stripeSecretKey) {
@@ -91,7 +91,7 @@ export async function POST(req) {
         
         // Detalles de la tarjeta
         card_slug: cardSlug,
-        message: message.substring(0, 500), // Limitar a 500 caracteres
+        message: message.substring(0, 500),
         
         // Gift card (opcional)
         gift_brand: gift.brand || "",
@@ -123,7 +123,6 @@ export async function POST(req) {
   } catch (err) {
     console.error("❌ Error en Stripe PaymentIntent:", err);
 
-    // Respuesta de error más específica
     return new Response(
       JSON.stringify({
         error: err.message || "Error al procesar el pago",
