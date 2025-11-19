@@ -579,6 +579,13 @@ export default function CheckoutModal({ total, gift, onClose, cardData }) {
             </div>
             <button
               onClick={() => setShowGiftModal(false)}
-              className="w-full mt-5 border-2 py-3 text-sm rounded-xl hover:bg-gray-50 transition"
+              className="w-full mt-5 border-2 py-3 text-sm rounded-xl hover:bg-gray-50 transition font-semibold"
             >
-        
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
