@@ -14,18 +14,24 @@ export async function POST(req) {
       cardPrice = 5,
     } = body || {};
 
+    // ✅ Validar clave DENTRO de la función
     const secret = process.env.STRIPE_SECRET_KEY;
 
-    // 🧩 Validación clave secreta
     if (!secret) {
-      return new Response(JSON.stringify({ error: "❌ Falta STRIPE_SECRET_KEY" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+      console.error("❌ ERROR: STRIPE_SECRET_KEY no está configurada");
+      return new Response(
+        JSON.stringify({ error: "❌ Stripe no está configurado" }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
 
-    // ⚙️ Inicializa Stripe (sin apiVersion por compatibilidad)
-    const stripe = new Stripe(secret);
+    // ⚙️ Inicializa Stripe
+    const stripe = new Stripe(secret, {
+      apiVersion: "2024-06-20",
+    });
 
     const siteUrl =
       process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
@@ -63,8 +69,8 @@ export async function POST(req) {
       mode: "payment",
       payment_method_types: ["card"],
       line_items,
-      success_url: `${siteUrl}/share/${encodeURIComponent(slug)}?success=1`,
-      cancel_url: `${siteUrl}/edit/${encodeURIComponent(slug)}?canceled=1`,
+      success_url: `${siteUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${siteUrl}/cancel`,
       metadata: {
         slug,
         anim,
@@ -75,16 +81,22 @@ export async function POST(req) {
       },
     });
 
-    return new Response(JSON.stringify({ url: session.url }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ url: session.url }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+
   } catch (e) {
-    // ⚠️ Muestra el error real
-    console.error("Stripe error:", e.message);
-    return new Response(JSON.stringify({ error: e.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    console.error("❌ Stripe error:", e.message);
+    return new Response(
+      JSON.stringify({ error: e.message }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
   }
-                                       }
+}
