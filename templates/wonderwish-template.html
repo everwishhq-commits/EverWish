@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WonderWish Card</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      overflow: hidden;
+    }
+
+    .card-container {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: loop 10s infinite;
+      position: relative;
+    }
+
+    @keyframes loop {
+      0%, 40% {
+        transform: scale(1);
+      }
+      50%, 100% {
+        transform: scale(0.5) translateY(-30%);
+      }
+    }
+
+    .particle {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: white;
+      border-radius: 50%;
+      animation: float 3s infinite;
+    }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0);
+        opacity: 0;
+      }
+      50% {
+        opacity: 1;
+      }
+    }
+
+    .card {
+      width: 80%;
+      max-width: 400px;
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      text-align: center;
+      position: relative;
+      z-index: 10;
+    }
+
+    .card h1 {
+      font-size: 2em;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .card p {
+      font-size: 1.2em;
+      color: #666;
+      line-height: 1.6;
+    }
+
+    .user-photo {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      margin: 20px auto;
+      background: #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3em;
+    }
+
+    .message-section {
+      opacity: 0;
+      animation: fadeIn 1s 5s forwards;
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="card-container">
+    <!-- Particles -->
+    <div class="particle" style="top: 10%; left: 20%; animation-delay: 0s;"></div>
+    <div class="particle" style="top: 30%; left: 80%; animation-delay: 1s;"></div>
+    <div class="particle" style="top: 60%; left: 10%; animation-delay: 2s;"></div>
+    <div class="particle" style="top: 80%; left: 70%; animation-delay: 1.5s;"></div>
+
+    <div class="card">
+      <h1>✨ {{DESIGN}}</h1>
+      
+      <div class="user-photo">
+        {{#if USER_PHOTO}}
+        <img src="{{USER_PHOTO}}" alt="User" style="width: 100%; height: 100%; border-radius: 50%;">
+        {{else}}
+        👤
+        {{/if}}
+      </div>
+
+      <p>{{MESSAGE}}</p>
+      
+      <div class="message-section">
+        <h2>Creado con ❤️</h2>
+        <p>EverWish</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
