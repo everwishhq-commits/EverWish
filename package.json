@@ -1,77 +1,37 @@
 {
-  "name": "everwish-video-system",
+  "name": "everwish",
   "version": "1.0.0",
-  "description": "Sistema de generación y envío de videos para EverWish",
-  "main": "index.js",
+  "description": "Everwish - Digital greeting cards platform",
+  "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/generateindex.js && next build",
     "start": "next start",
-    "test-video-snapwish": "node scripts/test-video-snapwish.js",
-    "test-video-wonderwish": "node scripts/test-video-wonderwish.js",
-    "test-complete": "node scripts/test-complete-flow.js"
+    "lint": "next lint",
+    "generate-index": "node scripts/generateindex.js"
   },
   "dependencies": {
-    "next": "^14.0.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "puppeteer": "^21.0.0",
-    "cloudinary": "^1.41.0",
-    "twilio": "^4.19.0",
-    "resend": "^2.0.0",
-    "dotenv": "^16.3.1"
+    "next": "^14.2.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "framer-motion": "^11.0.0",
+    "axios": "^1.6.0",
+    "stripe": "^14.0.0",
+    "@stripe/stripe-js": "^2.4.0",
+    "@stripe/react-stripe-js": "^2.4.0",
+    "swiper": "^11.0.0",
+    "lucide-react": "^0.344.0",
+    "googleapis": "^131.0.0",
+    "pg": "^8.11.0"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0"
+    "autoprefixer": "^10.4.0",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.4.0",
+    "eslint": "^8.0.0",
+    "eslint-config-next": "^14.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
-```
-
----
-
-## 📄 **ARCHIVO 3: `.gitignore`**
-```
-# Dependencies
-node_modules/
-.pnp
-.pnp.js
-
-# Testing
-coverage/
-
-# Next.js
-.next/
-out/
-build/
-dist/
-
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Debug logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# OS
-.DS_Store
-Thumbs.db
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Temporary files
-public/temp-videos/
-*.mp4
-*.webm
-
-# SSH Keys
-*.key
-*.pem
