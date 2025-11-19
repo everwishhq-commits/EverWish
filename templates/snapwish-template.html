@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SnapWish Card</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      overflow: hidden;
+    }
+
+    .card-container {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: loop 10s infinite;
+    }
+
+    @keyframes loop {
+      0%, 40% {
+        transform: scale(1);
+      }
+      50%, 100% {
+        transform: scale(0.5) translateY(-30%);
+      }
+    }
+
+    .card {
+      width: 80%;
+      max-width: 400px;
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+
+    .card h1 {
+      font-size: 2em;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .card p {
+      font-size: 1.2em;
+      color: #666;
+      line-height: 1.6;
+    }
+
+    .message-section {
+      opacity: 0;
+      animation: fadeIn 1s 5s forwards;
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+
+    .message-section h2 {
+      font-size: 1.5em;
+      color: #667eea;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="card-container">
+    <div class="card">
+      <h1>🎉 {{DESIGN}}</h1>
+      <p>{{MESSAGE}}</p>
+      
+      <div class="message-section">
+        <h2>Creado con ❤️</h2>
+        <p>EverWish</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
