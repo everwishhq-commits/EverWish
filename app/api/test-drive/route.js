@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    // Verificar que las variables existan
     if (!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL) {
       return NextResponse.json({ 
         error: 'Missing GOOGLE_SERVICE_ACCOUNT_EMAIL' 
@@ -22,7 +21,6 @@ export async function GET() {
       }, { status: 500 });
     }
 
-    // Configurar autenticación
     const auth = new google.auth.GoogleAuth({
       credentials: {
         client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
@@ -33,7 +31,6 @@ export async function GET() {
 
     const drive = google.drive({ version: 'v3', auth });
 
-    // Crear archivo de prueba
     const fileMetadata = {
       name: `test-everwish-${Date.now()}.txt`,
       parents: [process.env.EVERWISH_DRIVE_FOLDER_ID],
@@ -68,23 +65,3 @@ export async function GET() {
     }, { status: 500 });
   }
 }
-```
-
-### **3. Commit el archivo:**
-- Scroll hacia abajo
-- En "Commit message" escribe: `Add Google Drive test endpoint`
-- Haz clic en **"Commit changes"**
-
----
-
-## **⏱️ PASO 2: Esperar el deploy**
-
-Vercel detectará automáticamente el cambio y hará un nuevo deploy (toma 1-2 minutos).
-
----
-
-## **🎯 PASO 3: Probar el endpoint**
-
-Cuando termine el deploy, abre esta URL en tu navegador:
-```
-https://tu-proyecto.vercel.app/api/test-drive
