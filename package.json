@@ -10,7 +10,7 @@
     "lint": "next lint",
     "generate-index": "node scripts/generateindex.js"
   },
-  "dependencies": {
+ "dependencies": {
   "next": "^14.2.0",
   "react": "^18.3.0",
   "react-dom": "^18.3.0",
@@ -22,12 +22,7 @@
   "swiper": "^11.0.0",
   "lucide-react": "^0.344.0",
   "googleapis": "^131.0.0",
-  "pg": "^8.11.0",
-  "dotenv": "^16.3.1",
-  "cloudinary": "^1.41.0",
-  "resend": "^2.0.0",
-  "twilio": "^4.19.0",
-  "puppeteer": "^21.6.0"
+  "pg": "^8.11.0"
 },
   "devDependencies": {
     "autoprefixer": "^10.4.0",
