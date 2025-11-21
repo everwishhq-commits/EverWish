@@ -1,4 +1,5 @@
 import { everwishDrive } from '@/lib/everwish-drive';
+import { tremendous } from '@/lib/tremendous';
 
 export async function POST(req) {
   try {
@@ -7,15 +8,32 @@ export async function POST(req) {
       sender, 
       recipient, 
       cardData,
-      amount 
+      amount,
+      gift
     } = await req.json();
 
     console.log('💾 Saving card after payment:', paymentIntentId);
 
-    // Generar ID único
     const cardId = `EW${Date.now()}${Math.random().toString(36).substr(2, 9)}`.toUpperCase();
 
-    // Preparar datos de la tarjeta
+    let giftCardResult = null;
+    if (gift && gift.amount > 0) {
+      console.log('🎁 Creating gift card:', gift);
+      
+      giftCardResult = await tremendous.createOrder({
+        amount: gift.amount,
+        recipientEmail: recipient.email,
+        recipientName: recipient.name,
+        senderEmail: sender.email,
+        senderName: sender.name,
+        message: cardData.message || 'You received a gift card!',
+      });
+
+      if (!giftCardResult.success) {
+        console.error('⚠️ Failed to create gift card:', giftCardResult.error);
+      }
+    }
+
     const cardInfo = {
       id: cardId,
       slug: cardData.slug || 'custom-card',
@@ -36,24 +54,26 @@ export async function POST(req) {
         amount: amount,
         status: 'succeeded',
       },
+      giftCard: giftCardResult ? {
+        orderId: giftCardResult.orderId,
+        amount: gift.amount,
+        status: giftCardResult.success ? 'sent' : 'failed',
+        link: giftCardResult.rewardLink,
+      } : null,
       status: 'paid',
       createdAt: new Date().toISOString(),
     };
 
-    // Guardar tarjeta en Drive
     const cardResult = await everwishDrive.saveCard(cardInfo);
 
     if (!cardResult) {
       throw new Error('Failed to save card to Drive');
     }
 
-    // Obtener o crear usuario
     let user = await everwishDrive.getUserByEmail(sender.email);
-
     const everwishId = cardId.substring(0, 12);
 
     if (!user) {
-      // Crear nuevo usuario
       user = {
         email: sender.email,
         phone: sender.phone || '',
@@ -63,16 +83,14 @@ export async function POST(req) {
         createdAt: new Date().toISOString(),
       };
     } else {
-      // Actualizar usuario existente
       user.cards = user.cards || [];
       if (!user.cards.includes(cardId)) {
         user.cards.push(cardId);
       }
-      user.name = sender.name; // Actualizar nombre por si cambió
-      user.phone = sender.phone || user.phone; // Actualizar teléfono
+      user.name = sender.name;
+      user.phone = sender.phone || user.phone;
     }
 
-    // Guardar usuario
     await everwishDrive.saveUser(user);
 
     console.log('✅ Card saved successfully:', cardId);
@@ -81,6 +99,7 @@ export async function POST(req) {
       success: true, 
       cardId,
       everwishId,
+      giftCard: giftCardResult,
     });
 
   } catch (error) {
