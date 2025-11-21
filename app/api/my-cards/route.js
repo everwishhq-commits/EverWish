@@ -2,9 +2,8 @@ import { everwishDrive } from '@/lib/everwish-drive';
 
 export async function GET(req) {
   try {
-    const { searchParams } = new URL(req.url);
-    const email = searchParams.get('email');
-
+    const email = req.nextUrl.searchParams.get('email');
+    
     if (!email) {
       return Response.json({ 
         error: 'Email is required' 
