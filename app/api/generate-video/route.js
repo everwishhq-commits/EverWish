@@ -1,35 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-
 /**
  * API Endpoint: Generate Video with Creatomate
- * 
- * Generates an MP4 video using Creatomate template with:
- * - Background video loop
- * - User's personalized message
- * - User's uploaded photo
- * - Card image
- * 
- * The video consists of a 10-second cycle that repeats 5 times (50 seconds total)
+ * Genera videos MP4 usando el template configurado en Creatomate
  */
 
-interface GenerateVideoRequest {
-  cardImage: string;        // URL to the card/background image
-  message: string;          // Personalized message from sender
-  userPhoto: string;        // URL to user's uploaded photo
-  recipientName: string;    // Recipient's name
-  videoSlug: string;        // Selected video background slug
-  plan: 'snapwish' | 'wonderdream'; // Plan type
-}
-
-interface CreatomateResponse {
-  id: string;
-  status: string;
-  url?: string;
-}
-
-export async function POST(request: NextRequest) {
+export async function POST(request) {
   try {
-    const body: GenerateVideoRequest = await request.json();
+    const body = await request.json();
     
     const {
       cardImage,
@@ -40,44 +16,42 @@ export async function POST(request: NextRequest) {
       plan
     } = body;
 
-    // Validate required fields
+    // Validar campos requeridos
     if (!message || !recipientName) {
-      return NextResponse.json(
+      return Response.json(
         { error: 'Missing required fields: message and recipientName' },
         { status: 400 }
       );
     }
 
-    // Creatomate API credentials
+    // Credenciales de Creatomate
     const CREATOMATE_API_KEY = process.env.CREATOMATE_API_KEY;
     const CREATOMATE_TEMPLATE_ID = process.env.CREATOMATE_TEMPLATE_ID;
 
     if (!CREATOMATE_API_KEY || !CREATOMATE_TEMPLATE_ID) {
-      return NextResponse.json(
+      return Response.json(
         { error: 'Creatomate credentials not configured' },
         { status: 500 }
       );
     }
 
-    // Prepare modifications for the template
-    // These will replace the dynamic variables in Creatomate
+    // Preparar modificaciones para el template
     const modifications = {
       'cardImage': cardImage || 'https://placeholder.com/card.jpg',
       'message': message,
       'userPhoto': userPhoto || 'https://placeholder.com/user.jpg',
     };
 
-    // Create video render request
+    // Request para Creatomate
     const renderRequest = {
       template_id: CREATOMATE_TEMPLATE_ID,
       modifications: modifications,
-      // Output settings
       output: {
         format: 'mp4',
         width: 720,
         height: 1280,
         frame_rate: 60,
-        duration: 50, // 5 cycles of 10 seconds each
+        duration: 50, // 5 ciclos de 10 segundos
       },
     };
 
@@ -86,7 +60,7 @@ export async function POST(request: NextRequest) {
       modifications
     });
 
-    // Call Creatomate API to create the render
+    // Llamar a Creatomate API
     const response = await fetch('https://api.creatomate.com/v1/renders', {
       method: 'POST',
       headers: {
@@ -99,19 +73,17 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ Creatomate API error:', errorText);
-      return NextResponse.json(
+      return Response.json(
         { error: 'Failed to create video render', details: errorText },
         { status: response.status }
       );
     }
 
-    const renderData: CreatomateResponse = await response.json();
+    const renderData = await response.json();
 
     console.log('✅ Creatomate render created:', renderData);
 
-    // Return render ID and status
-    // The video URL will be available after processing completes
-    return NextResponse.json({
+    return Response.json({
       success: true,
       renderId: renderData.id,
       status: renderData.status,
@@ -120,23 +92,23 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('❌ Error generating video:', error);
-    return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+    return Response.json(
+      { error: 'Internal server error', details: error.message },
       { status: 500 }
     );
   }
 }
 
 /**
- * GET endpoint to check render status
+ * GET endpoint para verificar el estado del render
  */
-export async function GET(request: NextRequest) {
+export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const renderId = searchParams.get('renderId');
 
     if (!renderId) {
-      return NextResponse.json(
+      return Response.json(
         { error: 'Missing renderId parameter' },
         { status: 400 }
       );
@@ -145,13 +117,13 @@ export async function GET(request: NextRequest) {
     const CREATOMATE_API_KEY = process.env.CREATOMATE_API_KEY;
 
     if (!CREATOMATE_API_KEY) {
-      return NextResponse.json(
+      return Response.json(
         { error: 'Creatomate API key not configured' },
         { status: 500 }
       );
     }
 
-    // Check render status
+    // Verificar estado del render
     const response = await fetch(`https://api.creatomate.com/v1/renders/${renderId}`, {
       method: 'GET',
       headers: {
@@ -162,25 +134,25 @@ export async function GET(request: NextRequest) {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ Error checking render status:', errorText);
-      return NextResponse.json(
+      return Response.json(
         { error: 'Failed to check render status', details: errorText },
         { status: response.status }
       );
     }
 
-    const renderData: CreatomateResponse = await response.json();
+    const renderData = await response.json();
 
-    return NextResponse.json({
+    return Response.json({
       success: true,
       renderId: renderData.id,
       status: renderData.status,
-      url: renderData.url, // Available when status is 'succeeded'
+      url: renderData.url, // Disponible cuando status es 'succeeded'
     });
 
   } catch (error) {
     console.error('❌ Error checking render status:', error);
-    return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+    return Response.json(
+      { error: 'Internal server error', details: error.message },
       { status: 500 }
     );
   }
