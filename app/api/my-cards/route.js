@@ -1,9 +1,13 @@
+export const dynamic = "force-dynamic"; // ⬅️ evita prerender y elimina el error
+
 import { everwishDrive } from '@/lib/everwish-drive';
 
 export async function GET(req) {
   try {
-    const email = req.nextUrl.searchParams.get('email');
-    
+    // ⬅️ Esto corrige el WARNING de Next.js
+    const url = new URL(req.url);
+    const email = url.searchParams.get('email');
+
     if (!email) {
       return Response.json({ 
         error: 'Email is required' 
