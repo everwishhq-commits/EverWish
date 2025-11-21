@@ -5,7 +5,6 @@ import { Elements, CardElement, useStripe, useElements } from "@stripe/react-str
 import { X, Info, Loader2 } from "lucide-react";
 import { isAdminUser, getCurrentUser } from "@/lib/admin-config";
 
-// ✅ Validar si existe la clave
 const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
 if (!stripePublishableKey) {
@@ -145,70 +144,72 @@ function CheckoutForm({ total, gift, onSuccess, onError, isAdmin, cardData }) {
       }
 
       const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
-  clientSecret,
-  {
-    payment_method: {
-      card: elements.getElement(CardElement),
-      billing_details: {
-        name: formData.senderName,
-        email: formData.senderEmail,
-      },
-    },
-  }
-);
+        clientSecret,
+        {
+          payment_method: {
+            card: elements.getElement(CardElement),
+            billing_details: {
+              name: formData.senderName,
+              email: formData.senderEmail,
+            },
+          },
+        }
+      );
 
-if (stripeError) {
-  throw new Error(stripeError.message);
-}
+      if (stripeError) {
+        throw new Error(stripeError.message);
+      }
 
-// 🔥 NUEVO: Guardar en Google Drive
-try {
-  const saveRes = await fetch("/api/save-card", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      paymentIntentId: paymentIntent.id,
-      sender: {
-        name: formData.senderName,
-        email: formData.senderEmail,
-        phone: formData.senderPhone || "",
-      },
-      recipient: {
-        name: formData.recipientName,
-        email: formData.recipientEmail,
-        phone: formData.recipientPhone || "",
-      },
-      cardData: {
-        slug: cardData?.slug || "custom-card",
-        message: cardData?.message || "",
-        animation: cardData?.animation || "",
-      },
-      amount: Math.round(total * 100),
-    }),
-  });
+      try {
+        const saveRes = await fetch("/api/save-card", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            paymentIntentId: paymentIntent.id,
+            sender: {
+              name: formData.senderName,
+              email: formData.senderEmail,
+              phone: formData.senderPhone || "",
+            },
+            recipient: {
+              name: formData.recipientName,
+              email: formData.recipientEmail,
+              phone: formData.recipientPhone || "",
+            },
+            cardData: {
+              slug: cardData?.slug || "custom-card",
+              message: cardData?.message || "",
+              animation: cardData?.animation || "",
+            },
+            amount: Math.round(total * 100),
+            gift: gift ? { amount: gift.amount } : null,
+          }),
+        });
 
-  const saveData = await saveRes.json();
+        const saveData = await saveRes.json();
 
-  if (saveRes.ok && saveData.success) {
-    // Guardar usuario en localStorage
-    localStorage.setItem("everwishUser", JSON.stringify({
-      email: formData.senderEmail,
-      phone: formData.senderPhone || "",
-      name: formData.senderName,
-      everwishId: saveData.everwishId,
-    }));
-  } else {
-    console.error("Error saving to Drive:", saveData.error);
-  }
-} catch (saveError) {
-  console.error("Error saving card:", saveError);
-  // No bloqueamos el éxito del pago si falla el guardado
-}
+        if (saveRes.ok && saveData.success) {
+          localStorage.setItem("everwishUser", JSON.stringify({
+            email: formData.senderEmail,
+            phone: formData.senderPhone || "",
+            name: formData.senderName,
+            everwishId: saveData.everwishId,
+          }));
+          
+          if (saveData.giftCard && saveData.giftCard.success) {
+            console.log('🎁 Gift card sent successfully!');
+          }
+        } else {
+          console.error("Error saving to Drive:", saveData.error);
+        }
+      } catch (saveError) {
+        console.error("Error saving card:", saveError);
+      }
 
-onSuccess({
-  type: "payment",
-  paymentIntent,
-});
+      onSuccess({
+        type: "payment",
+        paymentIntent,
+      });
 
     } catch (err) {
       setError(err.message);
@@ -220,7 +221,6 @@ onSuccess({
 
   return (
     <form onSubmit={isAdmin ? handleAdminSend : handlePayment} className="space-y-4">
-      {/* Sender Info */}
       <div className="space-y-2">
         <label className="text-xs font-bold text-gray-600">Sender *</label>
         <input
@@ -250,7 +250,6 @@ onSuccess({
         />
       </div>
 
-      {/* Recipient Info */}
       <div className="space-y-2">
         <label className="text-xs font-bold text-gray-600">Recipient *</label>
         <input
@@ -280,7 +279,6 @@ onSuccess({
         />
       </div>
 
-      {/* Payment Section */}
       {!isAdmin && (
         <div className="space-y-2">
           <label className="text-xs font-bold text-gray-600">
@@ -314,14 +312,12 @@ onSuccess({
         </div>
       )}
 
-      {/* Error Message */}
       {error && (
         <div className="bg-red-50 border-2 border-red-200 rounded-xl p-3 text-sm text-red-700">
           <strong>Error:</strong> {error}
         </div>
       )}
 
-      {/* Admin Badge */}
       {isAdmin && (
         <div className="bg-purple-50 border border-purple-200 rounded-xl p-3 text-sm text-purple-700 flex items-center gap-2">
           <span className="text-xl">👑</span>
@@ -329,7 +325,6 @@ onSuccess({
         </div>
       )}
 
-      {/* Submit Button */}
       <button
         type="submit"
         disabled={processing || (!stripe && !isAdmin)}
@@ -595,48 +590,4 @@ export default function CheckoutModal({ total, gift, onClose, cardData }) {
         {stripePromise ? (
           <Elements stripe={stripePromise}>
             <CheckoutForm
-              total={getTotal()}
-              gift={selectedGiftAmount ? { amount: selectedGiftAmount } : null}
-              onSuccess={handleSuccess}
-              onError={handleError}
-              isAdmin={isAdminUser}
-              cardData={cardData}
-            />
-          </Elements>
-        ) : (
-          <div className="text-center py-8 text-red-600">
-            <strong>Error:</strong> Stripe is not configured properly.
-          </div>
-        )}
-      </div>
-
-      {showGiftModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-[21000]">
-          <div className="bg-white w-full max-w-md rounded-3xl p-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Select Gift Card Amount</h3>
-            <div className="grid grid-cols-3 gap-3">
-              {giftCardAmounts.map((amount) => (
-                <button
-                  key={amount}
-                  onClick={() => {
-                    setSelectedGiftAmount(amount);
-                    setShowGiftModal(false);
-                  }}
-                  className="p-3 border-2 rounded-xl text-sm font-bold text-purple-700 bg-purple-50 hover:bg-purple-200 border-purple-300 hover:border-purple-500 transition"
-                >
-                  ${amount}
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={() => setShowGiftModal(false)}
-              className="w-full mt-5 border-2 py-3 text-sm rounded-xl hover:bg-gray-50 transition font-semibold"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+       
