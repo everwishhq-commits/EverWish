@@ -1,56 +1,59 @@
 #!/usr/bin/env node
 /**
- * 🎬 GENERADOR DE INDEX.JSON - VERSIÓN SIMPLE
+ * 🎬 GENERADOR DE INDEX.JSON - OPTIMIZADO PARA VERCEL
  * 
- * Lee archivos .mp4 y usa keyword-mapping.js para clasificar
+ * - Evita doble ejecución en builds
+ * - No genera warnings en análisis estático
+ * - Mantiene TODA tu lógica original
  */
 
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from 'node:url';
-import { classifyByKeywords } from '../lib/keyword-mapping.js';
+import { fileURLToPath } from "node:url";
+import { classifyByKeywords } from "../lib/keyword-mapping.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// 🟢 Evita doble ejecución en Vercel
+if (process.env.GENERATE_INDEX_RAN === "1") {
+  process.exit(0);
+}
+process.env.GENERATE_INDEX_RAN = "1";
 
 /**
  * Busca todos los .mp4 recursivamente
  */
 function getAllMp4Files(dir) {
   if (!fs.existsSync(dir)) return [];
-  
+
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   const results = [];
-  
+
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       results.push(...getAllMp4Files(fullPath));
-    } else if (entry.name.match(/\.mp4$/i)) {
+    } else if (entry.name.toLowerCase().endsWith(".mp4")) {
       results.push(fullPath);
     }
   }
-  
+
   return results;
 }
 
 /**
- * Extrae el objeto principal del nombre
- * Ejemplo: "india_diwali_romance_1A.mp4" → "India"
+ * Extrae el objeto principal (primer chunk del nombre)
  */
 function extractObject(filename) {
-  const nameWithoutExt = filename.replace(/\.mp4$/i, '');
-  const parts = nameWithoutExt.split('_');
-  
-  // El primer elemento es el objeto
+  const nameWithoutExt = filename.replace(/\.mp4$/i, "");
+  const parts = nameWithoutExt.split("_");
   const object = parts[0] || "Unknown";
-  
-  // Capitalizar primera letra
   return object.charAt(0).toUpperCase() + object.slice(1).toLowerCase();
 }
 
 /**
- * Extrae el variant (1A, 2A, etc.)
+ * Extrae variant (1A, 2A...)
  */
 function extractVariant(filename) {
   const match = filename.match(/_(\d+[A-Z])\.mp4$/i);
@@ -61,9 +64,10 @@ function extractVariant(filename) {
  * FUNCIÓN PRINCIPAL
  */
 function generateIndex() {
-  console.log("🎬 Generando index.json...\n");
-  
-  const videosRoot = path.join(process.cwd(), "public/videos");
+  console.log("🎬 Generando index.json...");
+
+  const root = process.cwd();
+  const videosRoot = path.join(root, "public/videos");
   const indexFile = path.join(videosRoot, "index.json");
 
   if (!fs.existsSync(videosRoot)) {
@@ -71,30 +75,30 @@ function generateIndex() {
     process.exit(1);
   }
 
-  // 1. Buscar todos los .mp4
+  // Buscar .mp4
   const mp4Files = getAllMp4Files(videosRoot);
-  
+
   if (mp4Files.length === 0) {
-    const emptyIndex = {
-      videos: [],
-      generated: new Date().toISOString(),
-      total: 0
-    };
-    fs.writeFileSync(indexFile, JSON.stringify(emptyIndex, null, 2));
-    console.warn("⚠️  No se encontraron archivos .mp4");
+    fs.writeFileSync(
+      indexFile,
+      JSON.stringify(
+        { videos: [], generated: new Date().toISOString(), total: 0 },
+        null,
+        2
+      )
+    );
+    console.warn("⚠️ No se encontraron archivos .mp4");
     return;
   }
 
-  console.log(`📹 Archivos encontrados: ${mp4Files.length}\n`);
+  console.log(`📹 Archivos encontrados: ${mp4Files.length}`);
 
-  // 2. Procesar cada video
-  const videos = mp4Files.map(filePath => {
-    const relativePath = path.relative(path.join(process.cwd(), "public"), filePath);
-    const urlPath = "/" + relativePath.replaceAll("\\", "/");
+  // Procesar videos
+  const videos = mp4Files.map((filePath) => {
+    const relative = path.relative(path.join(root, "public"), filePath);
+    const urlPath = "/" + relative.replace(/\\/g, "/");
     const basename = path.basename(filePath);
     const nameWithoutExt = basename.replace(/\.mp4$/i, "");
-
-    // 🔥 Clasificación simple por palabras clave
     const classification = classifyByKeywords(basename);
 
     return {
@@ -109,7 +113,7 @@ function generateIndex() {
     };
   });
 
-  // 3. Crear el index.json
+  // Crear JSON
   const indexData = {
     videos,
     generated: new Date().toISOString(),
@@ -118,14 +122,13 @@ function generateIndex() {
 
   fs.writeFileSync(indexFile, JSON.stringify(indexData, null, 2), "utf8");
 
-  // 4. Mostrar resumen
   console.log(`✅ Index generado: ${indexFile}`);
-  console.log(`📊 Total: ${videos.length} videos\n`);
+  console.log(`📊 Total: ${videos.length} videos`);
 
-  // Contar por categoría
+  // Contar por categoría (solo para logs del developer)
   const categoryCounts = {};
-  videos.forEach(v => {
-    v.categories.forEach(cat => {
+  videos.forEach((v) => {
+    v.categories.forEach((cat) => {
       categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
     });
   });
@@ -137,14 +140,14 @@ function generateIndex() {
       console.log(`   ${cat}: ${count}`);
     });
 
-  console.log("\n✅ ¡Listo!\n");
+  console.log("✅ ¡Listo!");
 }
 
 // Ejecutar
 try {
   generateIndex();
   process.exit(0);
-} catch (error) {
-  console.error("❌ Error:", error);
+} catch (err) {
+  console.error("❌ Error:", err);
   process.exit(1);
-}
+                                             }
