@@ -1,27 +1,37 @@
+export const dynamic = "force-dynamic"; 
+// ⬆️ Evita prerender estático y elimina TODOS los warnings de Next/Vercel
+
 import { NextResponse } from "next/server";
-import fs from "node:fs";
+import fs from "node:fs/promises";
 import path from "node:path";
 
 export async function GET() {
   try {
-    // Ruta al index ya generado
+    // Ruta al index generado
     const indexFile = path.join(process.cwd(), "public/videos/index.json");
 
-    if (!fs.existsSync(indexFile)) {
+    // Comprobar existencia usando promises (no bloquea)
+    try {
+      await fs.access(indexFile);
+    } catch {
       return NextResponse.json(
         { error: "Index file missing", videos: [] },
         { status: 404 }
       );
     }
 
-    // Leer el index.json
-    const rawData = fs.readFileSync(indexFile, "utf8");
+    // Leer contenido del JSON
+    const rawData = await fs.readFile(indexFile, "utf8");
     const indexData = JSON.parse(rawData);
 
-    // Devolver videos tal como fueron generados
+    // Respuesta limpia y dinámica
     return NextResponse.json(
       { videos: indexData.videos },
-      { headers: { "Cache-Control": "no-store" } }
+      {
+        headers: {
+          "Cache-Control": "no-store" // evita caching estático en Vercel
+        }
+      }
     );
 
   } catch (err) {
