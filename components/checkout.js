@@ -354,9 +354,7 @@ function CheckoutForm({ total, gift, onSuccess, onError, isAdmin, cardData }) {
       </button>
     </form>
   );
-}
-
-export default function CheckoutModal({ total, gift, onClose, cardData }) {
+                    }export default function CheckoutModal({ total, gift, onClose, cardData }) {
   const [selectedPlan, setSelectedPlan] = useState("wonderdream");
   const [showGiftModal, setShowGiftModal] = useState(false);
   const [selectedGiftAmount, setSelectedGiftAmount] = useState(null);
@@ -588,4 +586,50 @@ export default function CheckoutModal({ total, gift, onClose, cardData }) {
         )}
 
         {stripePromise ? (
-          <Elements stripe={stripePromise}
+          <Elements stripe={stripePromise}>
+            <CheckoutForm
+              total={getTotal()}
+              gift={selectedGiftAmount ? { amount: selectedGiftAmount } : null}
+              onSuccess={handleSuccess}
+              onError={handleError}
+              isAdmin={isAdminUserState}
+              cardData={cardData}
+            />
+          </Elements>
+        ) : (
+          <div className="text-center py-8 text-red-600">
+            <strong>Error:</strong> Stripe is not configured properly.
+          </div>
+        )}
+      </div>
+
+      {showGiftModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-[21000]">
+          <div className="bg-white w-full max-w-md rounded-3xl p-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">Select Gift Card Amount</h3>
+            <div className="grid grid-cols-3 gap-3">
+              {giftCardAmounts.map((amount) => (
+                <button
+                  key={amount}
+                  onClick={() => {
+                    setSelectedGiftAmount(amount);
+                    setShowGiftModal(false);
+                  }}
+                  className="p-3 border-2 rounded-xl text-sm font-bold text-purple-700 bg-purple-50 hover:bg-purple-200 border-purple-300 hover:border-purple-500 transition"
+                >
+                  ${amount}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowGiftModal(false)}
+              className="w-full mt-5 border-2 py-3 text-sm rounded-xl hover:bg-gray-50 transition font-semibold"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
