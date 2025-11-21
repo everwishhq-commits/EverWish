@@ -361,7 +361,7 @@ export default function CheckoutModal({ total, gift, onClose, cardData }) {
   const [showGiftModal, setShowGiftModal] = useState(false);
   const [selectedGiftAmount, setSelectedGiftAmount] = useState(null);
   const [showDetails, setShowDetails] = useState(null);
-  const [isAdminUser, setIsAdminUser] = useState(false);
+  const [isAdminUserState, setIsAdminUserState] = useState(false);
   const [stripeReady, setStripeReady] = useState(false);
 
   const plans = {
@@ -409,7 +409,7 @@ export default function CheckoutModal({ total, gift, onClose, cardData }) {
     const user = getCurrentUser();
     if (user) {
       const adminCheck = isAdminUser(user.email, user.phone);
-      setIsAdminUser(adminCheck);
+      setIsAdminUserState(adminCheck);
     }
   }, []);
 
@@ -427,7 +427,7 @@ export default function CheckoutModal({ total, gift, onClose, cardData }) {
     console.error("❌ Error:", error);
   };
 
-  if (!stripeReady && !isAdminUser) {
+  if (!stripeReady && !isAdminUserState) {
     return (
       <div className="fixed inset-0 bg-black/50 z-[20000] flex items-center justify-center p-4">
         <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl p-8 text-center">
@@ -457,10 +457,10 @@ export default function CheckoutModal({ total, gift, onClose, cardData }) {
         </button>
 
         <h2 className="text-3xl font-bold text-center bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent mb-5">
-          {isAdminUser ? "👑 Admin Checkout" : "Checkout"}
+          {isAdminUserState ? "👑 Admin Checkout" : "Checkout"}
         </h2>
 
-        {!isAdminUser && (
+        {!isAdminUserState && (
           <div className="grid grid-cols-2 gap-3 mb-4">
             <button
               type="button"
@@ -568,7 +568,7 @@ export default function CheckoutModal({ total, gift, onClose, cardData }) {
           )}
         </div>
 
-        {!isAdminUser && (
+        {!isAdminUserState && (
           <div className="bg-gradient-to-r from-pink-50 to-purple-50 p-4 rounded-xl mb-4 border border-pink-200">
             <div className="flex justify-between text-sm mb-2">
               <span className="text-gray-700">{plans[selectedPlan].name}</span>
@@ -588,6 +588,4 @@ export default function CheckoutModal({ total, gift, onClose, cardData }) {
         )}
 
         {stripePromise ? (
-          <Elements stripe={stripePromise}>
-            <CheckoutForm
-       
+          <Elements stripe={stripePromise}
