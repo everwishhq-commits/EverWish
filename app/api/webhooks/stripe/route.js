@@ -22,11 +22,59 @@ export async function POST(req) {
 
   console.log('✅ Webhook recibido:', event.type);
 
-  // Manejar pago exitoso
-  if (event.type === 'payment_intent.succeeded') {
-    const paymentIntent = event.data.object;
-    
-    try {
+  try {
+    // ============================================================
+    // MANEJAR CHECKOUT SESSION COMPLETED (Checkout Sessions)
+    // ============================================================
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object;
+      
+      console.log('💳 Session completada:', session.id);
+      console.log('📦 Metadata:', session.metadata);
+
+      // Parsear metadata
+      const sender = JSON.parse(session.metadata.sender || '{}');
+      const recipient = JSON.parse(session.metadata.recipient || '{}');
+      const gift = JSON.parse(session.metadata.gift || '{}');
+
+      // Obtener Payment Intent ID
+      const paymentIntentId = session.payment_intent;
+
+      await processCard({
+        paymentIntentId,
+        sender: {
+          email: sender.email,
+          name: sender.name,
+          phone: sender.phone || null,
+        },
+        recipient: {
+          name: recipient.name,
+          email: recipient.email || null,
+          phone: recipient.phone || null,
+        },
+        cardData: {
+          slug: session.metadata.slug,
+          message: session.metadata.message,
+          type: session.metadata.anim,
+          recipientName: recipient.name,
+          senderName: sender.name,
+        },
+        amount: session.amount_total,
+        giftAmount: gift.amount || 0,
+      });
+
+      console.log('✅ Tarjeta procesada desde Checkout Session');
+    }
+
+    // ============================================================
+    // MANEJAR PAYMENT INTENT SUCCEEDED (Payment Intents directo)
+    // ============================================================
+    if (event.type === 'payment_intent.succeeded') {
+      const paymentIntent = event.data.object;
+      
+      console.log('💳 Payment Intent exitoso:', paymentIntent.id);
+      console.log('📦 Metadata:', paymentIntent.metadata);
+
       const {
         sender_email,
         sender_name,
@@ -35,14 +83,10 @@ export async function POST(req) {
         recipient_email,
         recipient_phone,
         card_slug,
-        card_message,
-        card_type,
+        message,
         gift_amount,
       } = paymentIntent.metadata;
 
-      console.log('💳 Procesando pago para:', sender_email);
-
-      // Procesar tarjeta automáticamente
       await processCard({
         paymentIntentId: paymentIntent.id,
         sender: {
@@ -57,8 +101,8 @@ export async function POST(req) {
         },
         cardData: {
           slug: card_slug,
-          message: card_message,
-          type: card_type,
+          message: message,
+          type: 'animated', // o el tipo que uses
           recipientName: recipient_name,
           senderName: sender_name,
         },
@@ -66,20 +110,23 @@ export async function POST(req) {
         giftAmount: gift_amount || 0,
       });
 
-      console.log('✅ Tarjeta procesada exitosamente');
-
-    } catch (error) {
-      console.error('❌ Error procesando tarjeta:', error);
-      // No retornar error para que Stripe no reintente
+      console.log('✅ Tarjeta procesada desde Payment Intent');
     }
-  }
 
-  // Manejar pago fallido
-  if (event.type === 'payment_intent.payment_failed') {
-    const paymentIntent = event.data.object;
-    console.error('❌ Pago fallido:', paymentIntent.id);
-    
-    // Aquí podrías enviar un email al usuario notificando el fallo
+    // ============================================================
+    // MANEJAR PAGO FALLIDO
+    // ============================================================
+    if (event.type === 'payment_intent.payment_failed') {
+      const paymentIntent = event.data.object;
+      console.error('❌ Pago fallido:', paymentIntent.id);
+      
+      // Aquí podrías enviar un email al usuario notificando el fallo
+    }
+
+  } catch (error) {
+    console.error('❌ Error procesando webhook:', error);
+    console.error('Stack:', error.stack);
+    // No retornar error para que Stripe no reintente
   }
 
   return new Response(JSON.stringify({ received: true }), { status: 200 });
