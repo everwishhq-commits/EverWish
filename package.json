@@ -28,7 +28,8 @@
     "cloudinary": "^2.0.0",
     "resend": "^3.0.0",
     "twilio": "^5.0.0",
-    "puppeteer": "^21.0.0"
+    "puppeteer": "^21.0.0",
+    "@aws-sdk/client-s3": "^3.682.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.37",
