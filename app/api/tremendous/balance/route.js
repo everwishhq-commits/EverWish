@@ -1,13 +1,10 @@
-import { tremendous } from '@/lib/tremendous';
+// ❌ Este endpoint ha sido ELIMINADO
+// Las gift cards ya no están disponibles
 
 export async function GET() {
-  try {
-    const result = await tremendous.getBalance();
-    return Response.json(result);
-  } catch (error) {
-    return Response.json({ 
-      success: false, 
-      error: error.message 
-    }, { status: 500 });
-  }
+  return Response.json({ 
+    success: false,
+    error: 'Gift card service is not available',
+    balance: 0
+  }, { status: 410 }); // 410 = Gone
 }
