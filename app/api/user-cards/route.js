@@ -1,6 +1,9 @@
 // app/api/user-cards/route.js
 import { NextResponse } from "next/server";
 
+// Marcar como dynamic route para evitar error de build
+export const dynamic = 'force-dynamic';
+
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
