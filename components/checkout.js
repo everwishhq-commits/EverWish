@@ -32,13 +32,12 @@ function CheckoutForm({ total, onSuccess, onError, isAdmin, cardData }) {
   const validateForm = () => {
     const errors = [];
     
-    // ✅ CAMPOS OBLIGATORIOS
     if (!formData.senderName?.trim()) errors.push("Sender name is required");
     if (!formData.senderEmail?.trim()) errors.push("Sender email is required");
-    if (!formData.senderPhone?.trim()) errors.push("Sender phone is required"); // ← NUEVO
+    if (!formData.senderPhone?.trim()) errors.push("Sender phone is required");
     if (!formData.recipientName?.trim()) errors.push("Recipient name is required");
     if (!formData.recipientEmail?.trim()) errors.push("Recipient email is required");
-    if (!formData.recipientPhone?.trim()) errors.push("Recipient phone is required"); // ← NUEVO
+    if (!formData.recipientPhone?.trim()) errors.push("Recipient phone is required");
     
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (formData.senderEmail && !emailRegex.test(formData.senderEmail)) {
@@ -48,7 +47,6 @@ function CheckoutForm({ total, onSuccess, onError, isAdmin, cardData }) {
       errors.push("Recipient email format is invalid");
     }
     
-    // Validar teléfono básico (mínimo 10 dígitos)
     const phoneRegex = /\d{10,}/;
     if (formData.senderPhone && !phoneRegex.test(formData.senderPhone.replace(/\D/g, ''))) {
       errors.push("Sender phone must have at least 10 digits");
@@ -192,14 +190,6 @@ function CheckoutForm({ total, onSuccess, onError, isAdmin, cardData }) {
         const saveData = await saveRes.json();
 
         if (saveRes.ok && saveData.success) {
-          // 💾 Guardar usuario en localStorage PARA AUTO-LOGIN
-          localStorage.setItem("everwishUser", JSON.stringify({
-            email: formData.senderEmail,
-            phone: formData.senderPhone,
-            name: formData.senderName,
-            everwishId: saveData.everwishId,
-          }));
-          
           console.log('✅ Card saved successfully!');
           console.log('🔗 Card link:', saveData.cardLink);
         } else {
@@ -209,10 +199,13 @@ function CheckoutForm({ total, onSuccess, onError, isAdmin, cardData }) {
         console.error("Error saving card:", saveError);
       }
 
-      // 🎯 SIN MODAL - DIRECTO A SUCCESS CON REDIRECT A MYSPACE
+      // ✅ PASAR DATOS DEL SENDER A onSuccess
       onSuccess({
         type: "payment",
         paymentIntent,
+        senderEmail: formData.senderEmail,
+        senderPhone: formData.senderPhone,
+        senderName: formData.senderName,
       });
 
     } catch (err) {
@@ -418,8 +411,21 @@ export default function CheckoutModal({ total, onClose, cardData }) {
 
   const handleSuccess = (result) => {
     if (result.type === "payment") {
-      // 🎯 REDIRECCIÓN DIRECTA A MYSPACE (sin modal intermedio)
-      window.location.href = "/myspace";
+      // 💾 GUARDAR usuario en localStorage con nombre correcto
+      const userData = {
+        email: result.senderEmail || "",
+        phone: result.senderPhone || "",
+        name: result.senderName || "",
+        loginDate: new Date().toISOString()
+      };
+      
+      localStorage.setItem("everwish_user", JSON.stringify(userData));
+      console.log("✅ Usuario guardado en localStorage:", userData);
+      
+      // 🎯 Pequeño delay para asegurar que se guardó
+      setTimeout(() => {
+        window.location.href = "/myspace";
+      }, 100);
     } else {
       alert("✅ Card sent successfully!");
       onClose();
@@ -552,4 +558,5 @@ export default function CheckoutModal({ total, onClose, cardData }) {
       </div>
     </div>
   );
-}
+      }
+                                   
