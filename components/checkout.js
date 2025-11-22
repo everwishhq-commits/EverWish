@@ -32,10 +32,13 @@ function CheckoutForm({ total, onSuccess, onError, isAdmin, cardData }) {
   const validateForm = () => {
     const errors = [];
     
+    // ✅ CAMPOS OBLIGATORIOS
     if (!formData.senderName?.trim()) errors.push("Sender name is required");
     if (!formData.senderEmail?.trim()) errors.push("Sender email is required");
+    if (!formData.senderPhone?.trim()) errors.push("Sender phone is required"); // ← NUEVO
     if (!formData.recipientName?.trim()) errors.push("Recipient name is required");
     if (!formData.recipientEmail?.trim()) errors.push("Recipient email is required");
+    if (!formData.recipientPhone?.trim()) errors.push("Recipient phone is required"); // ← NUEVO
     
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (formData.senderEmail && !emailRegex.test(formData.senderEmail)) {
@@ -43,6 +46,15 @@ function CheckoutForm({ total, onSuccess, onError, isAdmin, cardData }) {
     }
     if (formData.recipientEmail && !emailRegex.test(formData.recipientEmail)) {
       errors.push("Recipient email format is invalid");
+    }
+    
+    // Validar teléfono básico (mínimo 10 dígitos)
+    const phoneRegex = /\d{10,}/;
+    if (formData.senderPhone && !phoneRegex.test(formData.senderPhone.replace(/\D/g, ''))) {
+      errors.push("Sender phone must have at least 10 digits");
+    }
+    if (formData.recipientPhone && !phoneRegex.test(formData.recipientPhone.replace(/\D/g, ''))) {
+      errors.push("Recipient phone must have at least 10 digits");
     }
     
     if (errors.length > 0) {
@@ -161,12 +173,12 @@ function CheckoutForm({ total, onSuccess, onError, isAdmin, cardData }) {
             sender: {
               name: formData.senderName,
               email: formData.senderEmail,
-              phone: formData.senderPhone || "",
+              phone: formData.senderPhone,
             },
             recipient: {
               name: formData.recipientName,
               email: formData.recipientEmail,
-              phone: formData.recipientPhone || "",
+              phone: formData.recipientPhone,
             },
             cardData: {
               slug: cardData?.slug || "custom-card",
@@ -180,26 +192,24 @@ function CheckoutForm({ total, onSuccess, onError, isAdmin, cardData }) {
         const saveData = await saveRes.json();
 
         if (saveRes.ok && saveData.success) {
-          // 💾 Guardar usuario en localStorage
+          // 💾 Guardar usuario en localStorage PARA AUTO-LOGIN
           localStorage.setItem("everwishUser", JSON.stringify({
             email: formData.senderEmail,
-            phone: formData.senderPhone || "",
+            phone: formData.senderPhone,
             name: formData.senderName,
             everwishId: saveData.everwishId,
           }));
           
           console.log('✅ Card saved successfully!');
           console.log('🔗 Card link:', saveData.cardLink);
-          
-          // 🎉 Mostrar link al usuario
-          alert(`✅ Card created!\n\n🔗 Share this link:\n${saveData.cardLink}`);
         } else {
-          console.error("Error saving to Drive:", saveData.error);
+          console.error("Error saving to R2:", saveData.error);
         }
       } catch (saveError) {
         console.error("Error saving card:", saveError);
       }
 
+      // 🎯 SIN MODAL - DIRECTO A SUCCESS CON REDIRECT A MYSPACE
       onSuccess({
         type: "payment",
         paymentIntent,
@@ -216,13 +226,13 @@ function CheckoutForm({ total, onSuccess, onError, isAdmin, cardData }) {
   return (
     <form onSubmit={isAdmin ? handleAdminSend : handlePayment} className="space-y-4">
       <div className="space-y-2">
-        <label className="text-xs font-bold text-gray-600">Sender *</label>
+        <label className="text-xs font-bold text-gray-600">Sender * (You)</label>
         <input
           name="senderName"
           value={formData.senderName}
           onChange={handleInputChange}
           className="w-full border rounded-xl px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-200 outline-none"
-          placeholder="Full Name"
+          placeholder="Your Full Name"
           required
         />
         <input
@@ -231,7 +241,7 @@ function CheckoutForm({ total, onSuccess, onError, isAdmin, cardData }) {
           value={formData.senderEmail}
           onChange={handleInputChange}
           className="w-full border rounded-xl px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-200 outline-none"
-          placeholder="email@example.com"
+          placeholder="your@email.com (required for login)"
           required
         />
         <input
@@ -240,18 +250,19 @@ function CheckoutForm({ total, onSuccess, onError, isAdmin, cardData }) {
           value={formData.senderPhone}
           onChange={handleInputChange}
           className="w-full border rounded-xl px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-200 outline-none"
-          placeholder="+1 (555) 123-4567 (optional)"
+          placeholder="+1 (555) 123-4567 (required for login)"
+          required
         />
       </div>
 
       <div className="space-y-2">
-        <label className="text-xs font-bold text-gray-600">Recipient *</label>
+        <label className="text-xs font-bold text-gray-600">Recipient * (To)</label>
         <input
           name="recipientName"
           value={formData.recipientName}
           onChange={handleInputChange}
           className="w-full border rounded-xl px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-200 outline-none"
-          placeholder="Full Name"
+          placeholder="Recipient Full Name"
           required
         />
         <input
@@ -260,7 +271,7 @@ function CheckoutForm({ total, onSuccess, onError, isAdmin, cardData }) {
           value={formData.recipientEmail}
           onChange={handleInputChange}
           className="w-full border rounded-xl px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-200 outline-none"
-          placeholder="email@example.com"
+          placeholder="recipient@email.com (required for delivery)"
           required
         />
         <input
@@ -269,7 +280,8 @@ function CheckoutForm({ total, onSuccess, onError, isAdmin, cardData }) {
           value={formData.recipientPhone}
           onChange={handleInputChange}
           className="w-full border rounded-xl px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-200 outline-none"
-          placeholder="+1 (555) 123-4567 (optional)"
+          placeholder="+1 (555) 123-4567 (required for delivery)"
+          required
         />
       </div>
 
@@ -346,6 +358,10 @@ function CheckoutForm({ total, onSuccess, onError, isAdmin, cardData }) {
           </>
         )}
       </button>
+
+      <p className="text-xs text-center text-gray-500 mt-2">
+        📧 Your email and phone will be your login credentials
+      </p>
     </form>
   );
 }
@@ -402,7 +418,8 @@ export default function CheckoutModal({ total, onClose, cardData }) {
 
   const handleSuccess = (result) => {
     if (result.type === "payment") {
-      window.location.href = "/success";
+      // 🎯 REDIRECCIÓN DIRECTA A MYSPACE (sin modal intermedio)
+      window.location.href = "/myspace";
     } else {
       alert("✅ Card sent successfully!");
       onClose();
