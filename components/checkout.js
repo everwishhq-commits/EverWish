@@ -2,20 +2,15 @@
 import React, { useState, useEffect } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
-import { X, Info, Loader2 } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import { isAdminUser, getCurrentUser } from "@/lib/admin-config";
 
 const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-
-if (!stripePublishableKey) {
-  console.error("❌ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY no está configurada");
-}
-
 const stripePromise = stripePublishableKey 
   ? loadStripe(stripePublishableKey) 
   : Promise.resolve(null);
 
-function CheckoutForm({ total, gift, onSuccess, onError, isAdmin, cardData }) {
+function CheckoutForm({ total, onSuccess, onError, isAdmin, cardData }) {
   const stripe = useStripe();
   const elements = useElements();
   const [processing, setProcessing] = useState(false);
@@ -97,14 +92,11 @@ function CheckoutForm({ total, gift, onSuccess, onError, isAdmin, cardData }) {
     e.preventDefault();
 
     if (!stripe || !elements) {
-      const msg = "Stripe is not loaded. Please refresh the page.";
-      setError(msg);
+      setError("Stripe is not loaded. Please refresh the page.");
       return;
     }
 
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setProcessing(true);
     setError(null);
@@ -127,7 +119,6 @@ function CheckoutForm({ total, gift, onSuccess, onError, isAdmin, cardData }) {
           },
           message: cardData?.message || "",
           cardSlug: cardData?.slug || "custom-card",
-          gift,
         }),
       });
 
@@ -160,6 +151,7 @@ function CheckoutForm({ total, gift, onSuccess, onError, isAdmin, cardData }) {
         throw new Error(stripeError.message);
       }
 
+      // 🔗 Guardar tarjeta y obtener link
       try {
         const saveRes = await fetch("/api/save-card", {
           method: "POST",
@@ -182,13 +174,13 @@ function CheckoutForm({ total, gift, onSuccess, onError, isAdmin, cardData }) {
               animation: cardData?.animation || "",
             },
             amount: Math.round(total * 100),
-            gift: gift ? { amount: gift.amount } : null,
           }),
         });
 
         const saveData = await saveRes.json();
 
         if (saveRes.ok && saveData.success) {
+          // 💾 Guardar usuario en localStorage
           localStorage.setItem("everwishUser", JSON.stringify({
             email: formData.senderEmail,
             phone: formData.senderPhone || "",
@@ -196,9 +188,11 @@ function CheckoutForm({ total, gift, onSuccess, onError, isAdmin, cardData }) {
             everwishId: saveData.everwishId,
           }));
           
-          if (saveData.giftCard && saveData.giftCard.success) {
-            console.log('🎁 Gift card sent successfully!');
-          }
+          console.log('✅ Card saved successfully!');
+          console.log('🔗 Card link:', saveData.cardLink);
+          
+          // 🎉 Mostrar link al usuario
+          alert(`✅ Card created!\n\n🔗 Share this link:\n${saveData.cardLink}`);
         } else {
           console.error("Error saving to Drive:", saveData.error);
         }
@@ -354,10 +348,10 @@ function CheckoutForm({ total, gift, onSuccess, onError, isAdmin, cardData }) {
       </button>
     </form>
   );
-                    }export default function CheckoutModal({ total, gift, onClose, cardData }) {
+}
+
+export default function CheckoutModal({ total, onClose, cardData }) {
   const [selectedPlan, setSelectedPlan] = useState("wonderdream");
-  const [showGiftModal, setShowGiftModal] = useState(false);
-  const [selectedGiftAmount, setSelectedGiftAmount] = useState(null);
   const [showDetails, setShowDetails] = useState(null);
   const [isAdminUserState, setIsAdminUserState] = useState(false);
   const [stripeReady, setStripeReady] = useState(false);
@@ -369,7 +363,7 @@ function CheckoutForm({ total, gift, onSuccess, onError, isAdmin, cardData }) {
       details: [
         "Static digital card",
         "Personalized message",
-        "Includes optional gift card",
+        "Instant delivery",
       ],
     },
     wonderdream: {
@@ -379,18 +373,13 @@ function CheckoutForm({ total, gift, onSuccess, onError, isAdmin, cardData }) {
         "Premium animated card",
         "Personalized message",
         "Upload your photo",
-        "Gift card (optional)",
         "Magic animations included",
       ],
     },
   };
 
-  const giftCardAmounts = [5, 10, 15, 20, 25, 50, 100];
-
   const getTotal = () => {
-    let t = plans[selectedPlan].price;
-    if (selectedGiftAmount) t += selectedGiftAmount;
-    return t;
+    return plans[selectedPlan].price;
   };
 
   useEffect(() => {
@@ -413,7 +402,6 @@ function CheckoutForm({ total, gift, onSuccess, onError, isAdmin, cardData }) {
 
   const handleSuccess = (result) => {
     if (result.type === "payment") {
-      alert("🎉 Payment successful! Your card will be sent shortly.");
       window.location.href = "/success";
     } else {
       alert("✅ Card sent successfully!");
@@ -434,11 +422,6 @@ function CheckoutForm({ total, gift, onSuccess, onError, isAdmin, cardData }) {
           <p className="text-gray-600 text-sm mb-4">
             Initializing secure payment with Stripe
           </p>
-          {!stripePublishableKey && (
-            <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 text-sm text-red-700">
-              <strong>Configuration Error:</strong> Stripe key is missing.
-            </div>
-          )}
         </div>
       </div>
     );
@@ -477,9 +460,8 @@ function CheckoutForm({ total, gift, onSuccess, onError, isAdmin, cardData }) {
                   e.stopPropagation();
                   setShowDetails(showDetails === "snapwish" ? null : "snapwish");
                 }}
-                className="mt-2 w-full text-xs text-pink-600 font-semibold flex items-center justify-center gap-1"
+                className="mt-2 w-full text-xs text-pink-600 font-semibold"
               >
-                <Info className="w-4 h-4" />
                 View details
               </button>
               {showDetails === "snapwish" && (
@@ -511,9 +493,8 @@ function CheckoutForm({ total, gift, onSuccess, onError, isAdmin, cardData }) {
                   e.stopPropagation();
                   setShowDetails(showDetails === "wonderdream" ? null : "wonderdream");
                 }}
-                className="mt-2 w-full text-xs text-purple-700 font-semibold flex items-center justify-center gap-1"
+                className="mt-2 w-full text-xs text-purple-700 font-semibold"
               >
-                <Info className="w-4 h-4" />
                 View details
               </button>
               {showDetails === "wonderdream" && (
@@ -527,58 +508,9 @@ function CheckoutForm({ total, gift, onSuccess, onError, isAdmin, cardData }) {
           </div>
         )}
 
-        <div className="mb-4">
-          <label className="block text-sm font-bold text-gray-700 mb-2">
-            🎁 Gift Card (optional)
-          </label>
-          {selectedGiftAmount ? (
-            <div className="p-4 bg-purple-50 border-2 border-purple-200 rounded-2xl">
-              <div className="flex items-center justify-between">
-                <p className="font-semibold text-purple-700">
-                  Gift Card: ${selectedGiftAmount}
-                </p>
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    className="text-purple-600 text-sm font-bold hover:underline"
-                    onClick={() => setShowGiftModal(true)}
-                  >
-                    Change
-                  </button>
-                  <button
-                    type="button"
-                    className="text-pink-600 text-sm font-bold hover:underline"
-                    onClick={() => setSelectedGiftAmount(null)}
-                  >
-                    Remove
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setShowGiftModal(true)}
-              className="w-full border-2 border-dashed border-gray-300 rounded-xl p-4 text-gray-600 font-semibold hover:border-purple-400 hover:bg-purple-50 hover:text-purple-600 transition"
-            >
-              + Add Gift Card
-            </button>
-          )}
-        </div>
-
         {!isAdminUserState && (
           <div className="bg-gradient-to-r from-pink-50 to-purple-50 p-4 rounded-xl mb-4 border border-pink-200">
-            <div className="flex justify-between text-sm mb-2">
-              <span className="text-gray-700">{plans[selectedPlan].name}</span>
-              <span className="font-semibold">${plans[selectedPlan].price.toFixed(2)}</span>
-            </div>
-            {selectedGiftAmount && (
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-gray-700">Gift Card</span>
-                <span className="font-semibold">${selectedGiftAmount.toFixed(2)}</span>
-              </div>
-            )}
-            <div className="border-t border-pink-200 mt-3 pt-3 flex justify-between items-center">
+            <div className="flex justify-between items-center">
               <span className="font-bold text-gray-800 text-lg">Total</span>
               <span className="font-bold text-purple-600 text-3xl">${getTotal().toFixed(2)}</span>
             </div>
@@ -589,7 +521,6 @@ function CheckoutForm({ total, gift, onSuccess, onError, isAdmin, cardData }) {
           <Elements stripe={stripePromise}>
             <CheckoutForm
               total={getTotal()}
-              gift={selectedGiftAmount ? { amount: selectedGiftAmount } : null}
               onSuccess={handleSuccess}
               onError={handleError}
               isAdmin={isAdminUserState}
@@ -602,34 +533,6 @@ function CheckoutForm({ total, gift, onSuccess, onError, isAdmin, cardData }) {
           </div>
         )}
       </div>
-
-      {showGiftModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-[21000]">
-          <div className="bg-white w-full max-w-md rounded-3xl p-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Select Gift Card Amount</h3>
-            <div className="grid grid-cols-3 gap-3">
-              {giftCardAmounts.map((amount) => (
-                <button
-                  key={amount}
-                  onClick={() => {
-                    setSelectedGiftAmount(amount);
-                    setShowGiftModal(false);
-                  }}
-                  className="p-3 border-2 rounded-xl text-sm font-bold text-purple-700 bg-purple-50 hover:bg-purple-200 border-purple-300 hover:border-purple-500 transition"
-                >
-                  ${amount}
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={() => setShowGiftModal(false)}
-              className="w-full mt-5 border-2 py-3 text-sm rounded-xl hover:bg-gray-50 transition font-semibold"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
