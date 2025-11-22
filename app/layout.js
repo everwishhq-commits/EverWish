@@ -1,4 +1,6 @@
 import "./globals.css";
+import TempUserInitializer from "@/components/TempUserInitializer";
+import { DraftNotificationBanner } from "@/hooks/useDraftNotifications";
 
 export const metadata = {
   title: "Everwish",
@@ -8,7 +10,16 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="es">
-      <body>{children}</body>
+      <body>
+        {/* Inicializar usuario temporal automáticamente */}
+        <TempUserInitializer />
+        
+        {/* Banner de notificaciones de drafts */}
+        <DraftNotificationBanner />
+        
+        {/* Contenido de la app */}
+        {children}
+      </body>
     </html>
   );
 }
