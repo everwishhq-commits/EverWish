@@ -1,4 +1,5 @@
-import { everwishDrive } from '@/lib/everwish-drive';
+// app/api/save-card/route.js
+import { r2Storage } from '@/lib/r2-storage';
 
 export async function POST(req) {
   try {
@@ -21,14 +22,14 @@ export async function POST(req) {
     console.log('🔗 Card link:', cardLink);
 
     // ========================================
-    // GUARDAR TARJETA EN DRIVE
+    // GUARDAR TARJETA EN R2
     // ========================================
     const cardInfo = {
       id: cardId,
       slug: cardData.slug || 'custom-card',
       message: cardData.message || '',
       animation: cardData.animation || '',
-      link: cardLink, // 🔗 Link de la tarjeta
+      link: cardLink,
       sender: {
         name: sender.name,
         email: sender.email,
@@ -48,10 +49,9 @@ export async function POST(req) {
       createdAt: new Date().toISOString(),
     };
 
-    const cardResult = await everwishDrive.saveCard(cardInfo);
-
-    if (!cardResult) {
-      throw new Error('Failed to save card to Drive');
+    const cardResult = await r2Storage.saveCard(cardInfo);
+    if (!cardResult.success) {
+      throw new Error('Failed to save card to R2');
     }
 
     console.log('✅ Card saved successfully:', cardId);
@@ -59,7 +59,7 @@ export async function POST(req) {
     // ========================================
     // GUARDAR/ACTUALIZAR USUARIO
     // ========================================
-    let user = await everwishDrive.getUserByEmail(sender.email);
+    let user = await r2Storage.getUserByEmail(sender.email);
     const everwishId = cardId.substring(0, 12);
 
     if (!user) {
@@ -80,8 +80,7 @@ export async function POST(req) {
       user.phone = sender.phone || user.phone;
     }
 
-    await everwishDrive.saveUser(user);
-
+    await r2Storage.saveUser(user);
     console.log('✅ User updated successfully');
 
     // ========================================
@@ -92,7 +91,7 @@ export async function POST(req) {
       
       const emailResult = await sendCardEmail({
         to: recipient.email,
-        from: '[email protected]', // Cambia por tu dominio verificado
+        from: '[email protected]',
         cardLink,
         message: cardData.message,
         senderName: sender.name,
@@ -103,20 +102,17 @@ export async function POST(req) {
         console.log('✅ Email sent successfully');
       } else {
         console.warn('⚠️ Email failed to send:', emailResult.error);
-        // No fallar el proceso si el email no se envía
       }
     } catch (emailError) {
       console.error('❌ Error sending email:', emailError);
-      // No fallar el proceso si el email no se envía
     }
 
     return Response.json({
       success: true,
       cardId,
       everwishId,
-      cardLink, // 🔗 Incluir link en la respuesta
+      cardLink,
     });
-
   } catch (error) {
     console.error('❌ Error saving card:', error);
     return Response.json({ 
