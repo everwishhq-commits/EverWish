@@ -16,24 +16,50 @@ export async function POST(req) {
 
     const cardId = `EW${Date.now()}${Math.random().toString(36).substr(2, 9)}`.toUpperCase();
 
+    // ========================================
+    // GIFT CARD - AHORA CON MANEJO DE ERRORES
+    // ========================================
     let giftCardResult = null;
+    
     if (gift && gift.amount > 0) {
       console.log('🎁 Creating gift card:', gift);
       
-      giftCardResult = await tremendous.createOrder({
-        amount: gift.amount,
-        recipientEmail: recipient.email,
-        recipientName: recipient.name,
-        senderEmail: sender.email,
-        senderName: sender.name,
-        message: cardData.message || 'You received a gift card!',
-      });
+      try {
+        giftCardResult = await tremendous.createOrder({
+          amount: gift.amount,
+          recipientEmail: recipient.email,
+          recipientName: recipient.name,
+          senderEmail: sender.email,
+          senderName: sender.name,
+          message: cardData.message || 'You received a gift card!',
+        });
 
-      if (!giftCardResult.success) {
-        console.error('⚠️ Failed to create gift card:', giftCardResult.error);
+        if (!giftCardResult.success) {
+          console.warn('⚠️ Gift card creation failed:', giftCardResult.error);
+          // NO lanzar error - continuar sin gift card
+          giftCardResult = {
+            success: false,
+            error: giftCardResult.error,
+            orderId: null,
+          };
+        } else {
+          console.log('✅ Gift card created successfully:', giftCardResult.orderId);
+        }
+      } catch (giftError) {
+        // ✅ CAPTURAR error de Tremendous
+        console.error('❌ Tremendous API Error:', giftError);
+        giftCardResult = {
+          success: false,
+          error: giftError.message || 'Failed to create gift card',
+          orderId: null,
+        };
+        // ✅ NO detener el proceso - continuar guardando la tarjeta
       }
     }
 
+    // ========================================
+    // GUARDAR TARJETA EN DRIVE
+    // ========================================
     const cardInfo = {
       id: cardId,
       slug: cardData.slug || 'custom-card',
@@ -58,7 +84,8 @@ export async function POST(req) {
         orderId: giftCardResult.orderId,
         amount: gift.amount,
         status: giftCardResult.success ? 'sent' : 'failed',
-        link: giftCardResult.rewardLink,
+        link: giftCardResult.rewardLink || null,
+        error: giftCardResult.error || null,
       } : null,
       status: 'paid',
       createdAt: new Date().toISOString(),
@@ -70,6 +97,9 @@ export async function POST(req) {
       throw new Error('Failed to save card to Drive');
     }
 
+    // ========================================
+    // GUARDAR/ACTUALIZAR USUARIO
+    // ========================================
     let user = await everwishDrive.getUserByEmail(sender.email);
     const everwishId = cardId.substring(0, 12);
 
@@ -95,12 +125,22 @@ export async function POST(req) {
 
     console.log('✅ Card saved successfully:', cardId);
 
-    return Response.json({ 
+    // ========================================
+    // RESPUESTA CON WARNING SI GIFT FALLÓ
+    // ========================================
+    const response = { 
       success: true, 
       cardId,
       everwishId,
       giftCard: giftCardResult,
-    });
+    };
+
+    // Agregar advertencia si gift card falló
+    if (gift && gift.amount > 0 && (!giftCardResult || !giftCardResult.success)) {
+      response.warning = 'Card saved but gift card creation failed. Contact support.';
+    }
+
+    return Response.json(response);
 
   } catch (error) {
     console.error('❌ Error saving card:', error);
