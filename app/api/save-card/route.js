@@ -1,5 +1,4 @@
 import { everwishDrive } from '@/lib/everwish-drive';
-import { tremendous } from '@/lib/tremendous';
 
 export async function POST(req) {
   try {
@@ -9,7 +8,6 @@ export async function POST(req) {
       recipient, 
       cardData,
       amount,
-      gift
     } = await req.json();
 
     console.log('💾 Saving card after payment:', paymentIntentId);
@@ -17,45 +15,10 @@ export async function POST(req) {
     const cardId = `EW${Date.now()}${Math.random().toString(36).substr(2, 9)}`.toUpperCase();
 
     // ========================================
-    // GIFT CARD - AHORA CON MANEJO DE ERRORES
+    // CREAR LINK DE LA TARJETA
     // ========================================
-    let giftCardResult = null;
-    
-    if (gift && gift.amount > 0) {
-      console.log('🎁 Creating gift card:', gift);
-      
-      try {
-        giftCardResult = await tremendous.createOrder({
-          amount: gift.amount,
-          recipientEmail: recipient.email,
-          recipientName: recipient.name,
-          senderEmail: sender.email,
-          senderName: sender.name,
-          message: cardData.message || 'You received a gift card!',
-        });
-
-        if (!giftCardResult.success) {
-          console.warn('⚠️ Gift card creation failed:', giftCardResult.error);
-          // NO lanzar error - continuar sin gift card
-          giftCardResult = {
-            success: false,
-            error: giftCardResult.error,
-            orderId: null,
-          };
-        } else {
-          console.log('✅ Gift card created successfully:', giftCardResult.orderId);
-        }
-      } catch (giftError) {
-        // ✅ CAPTURAR error de Tremendous
-        console.error('❌ Tremendous API Error:', giftError);
-        giftCardResult = {
-          success: false,
-          error: giftError.message || 'Failed to create gift card',
-          orderId: null,
-        };
-        // ✅ NO detener el proceso - continuar guardando la tarjeta
-      }
-    }
+    const cardLink = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://everwish.cards'}/view/${cardId}`;
+    console.log('🔗 Card link:', cardLink);
 
     // ========================================
     // GUARDAR TARJETA EN DRIVE
@@ -65,6 +28,7 @@ export async function POST(req) {
       slug: cardData.slug || 'custom-card',
       message: cardData.message || '',
       animation: cardData.animation || '',
+      link: cardLink, // 🔗 Link de la tarjeta
       sender: {
         name: sender.name,
         email: sender.email,
@@ -80,13 +44,6 @@ export async function POST(req) {
         amount: amount,
         status: 'succeeded',
       },
-      giftCard: giftCardResult ? {
-        orderId: giftCardResult.orderId,
-        amount: gift.amount,
-        status: giftCardResult.success ? 'sent' : 'failed',
-        link: giftCardResult.rewardLink || null,
-        error: giftCardResult.error || null,
-      } : null,
       status: 'paid',
       createdAt: new Date().toISOString(),
     };
@@ -96,6 +53,8 @@ export async function POST(req) {
     if (!cardResult) {
       throw new Error('Failed to save card to Drive');
     }
+
+    console.log('✅ Card saved successfully:', cardId);
 
     // ========================================
     // GUARDAR/ACTUALIZAR USUARIO
@@ -123,24 +82,32 @@ export async function POST(req) {
 
     await everwishDrive.saveUser(user);
 
-    console.log('✅ Card saved successfully:', cardId);
+    console.log('✅ User updated successfully');
 
     // ========================================
-    // RESPUESTA CON WARNING SI GIFT FALLÓ
+    // AQUÍ DEBERÍAS ENVIAR EL EMAIL/SMS
     // ========================================
-    const response = { 
-      success: true, 
+    console.log('📧 TODO: Send card link to recipient');
+    console.log(`   To: ${recipient.email}`);
+    console.log(`   Link: ${cardLink}`);
+
+    // TODO: Implementar envío con Resend o Twilio
+    // await sendEmail({
+    //   to: recipient.email,
+    //   subject: `${sender.name} sent you a special card! 💌`,
+    //   html: `
+    //     <h1>You received a card from ${sender.name}!</h1>
+    //     <p>${cardData.message}</p>
+    //     <a href="${cardLink}">View your card</a>
+    //   `
+    // });
+
+    return Response.json({
+      success: true,
       cardId,
       everwishId,
-      giftCard: giftCardResult,
-    };
-
-    // Agregar advertencia si gift card falló
-    if (gift && gift.amount > 0 && (!giftCardResult || !giftCardResult.success)) {
-      response.warning = 'Card saved but gift card creation failed. Contact support.';
-    }
-
-    return Response.json(response);
+      cardLink, // 🔗 Incluir link en la respuesta
+    });
 
   } catch (error) {
     console.error('❌ Error saving card:', error);
