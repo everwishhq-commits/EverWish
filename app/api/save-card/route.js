@@ -91,7 +91,7 @@ export async function POST(req) {
       
       const emailResult = await sendCardEmail({
         to: recipient.email,
-        from: 'Everwish <admin@everwish.cards>',
+        from: 'Everwish <hello@everwish.cards>',
         cardLink,
         message: cardData.message,
         senderName: sender.name,
