@@ -85,22 +85,30 @@ export async function POST(req) {
     console.log('✅ User updated successfully');
 
     // ========================================
-    // AQUÍ DEBERÍAS ENVIAR EL EMAIL/SMS
+    // ENVIAR EMAIL CON EL LINK
     // ========================================
-    console.log('📧 TODO: Send card link to recipient');
-    console.log(`   To: ${recipient.email}`);
-    console.log(`   Link: ${cardLink}`);
+    try {
+      const { sendCardEmail } = await import('@/lib/email-sender');
+      
+      const emailResult = await sendCardEmail({
+        to: recipient.email,
+        from: '[email protected]', // Cambia por tu dominio verificado
+        cardLink,
+        message: cardData.message,
+        senderName: sender.name,
+        recipientName: recipient.name,
+      });
 
-    // TODO: Implementar envío con Resend o Twilio
-    // await sendEmail({
-    //   to: recipient.email,
-    //   subject: `${sender.name} sent you a special card! 💌`,
-    //   html: `
-    //     <h1>You received a card from ${sender.name}!</h1>
-    //     <p>${cardData.message}</p>
-    //     <a href="${cardLink}">View your card</a>
-    //   `
-    // });
+      if (emailResult.success) {
+        console.log('✅ Email sent successfully');
+      } else {
+        console.warn('⚠️ Email failed to send:', emailResult.error);
+        // No fallar el proceso si el email no se envía
+      }
+    } catch (emailError) {
+      console.error('❌ Error sending email:', emailError);
+      // No fallar el proceso si el email no se envía
+    }
 
     return Response.json({
       success: true,
