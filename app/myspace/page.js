@@ -9,6 +9,7 @@ export default function MySpace() {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loginEmail, setLoginEmail] = useState("");
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     // Cargar usuario desde localStorage
@@ -27,17 +28,26 @@ export default function MySpace() {
 
   async function loadCards(email) {
     setLoading(true);
+    setError(null);
+    
     try {
+      console.log('📂 Loading cards for:', email);
+      
       const res = await fetch(`/api/my-cards?email=${encodeURIComponent(email)}`);
       const data = await res.json();
       
+      console.log('📦 API Response:', data);
+      
       if (data.success) {
         setCards(data.cards || []);
+        console.log(`✅ Loaded ${data.cards?.length || 0} cards`);
       } else {
-        console.error('Error from API:', data.error);
+        console.error('❌ API Error:', data.error);
+        setError(data.error || 'Failed to load cards');
       }
     } catch (error) {
-      console.error('Error loading cards:', error);
+      console.error('❌ Error loading cards:', error);
+      setError('Network error. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -52,10 +62,13 @@ export default function MySpace() {
     }
 
     setLoading(true);
+    setError(null);
 
     try {
       const res = await fetch(`/api/my-cards?email=${encodeURIComponent(loginEmail)}`);
       const data = await res.json();
+
+      console.log('🔐 Login response:', data);
 
       if (data.success && data.cards && data.cards.length > 0) {
         const userData = {
@@ -67,10 +80,12 @@ export default function MySpace() {
         localStorage.setItem("everwishUser", JSON.stringify(userData));
         setUser(userData);
         setCards(data.cards);
+        console.log('✅ Login successful');
       } else {
         alert("No cards found for this email. Make sure you've purchased at least one card.");
       }
     } catch (error) {
+      console.error('❌ Login error:', error);
       alert("Error: " + error.message);
     } finally {
       setLoading(false);
@@ -84,7 +99,9 @@ export default function MySpace() {
     setLoginEmail("");
   }
 
+  // ============================================================
   // LOGIN SCREEN
+  // ============================================================
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 flex items-center justify-center p-4">
@@ -137,10 +154,13 @@ export default function MySpace() {
     );
   }
 
+  // ============================================================
   // MYSPACE DASHBOARD
+  // ============================================================
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 p-6">
       <div className="max-w-5xl mx-auto">
+        
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -168,13 +188,25 @@ export default function MySpace() {
           </div>
         </motion.div>
 
-        {/* Cards Grid */}
+        {/* Error Message */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="bg-red-100 border-2 border-red-300 rounded-xl p-4 mb-6 text-red-700"
+          >
+            ❌ {error}
+          </motion.div>
+        )}
+
+        {/* Loading State */}
         {loading ? (
           <div className="text-center py-20">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-pink-500 border-t-transparent"></div>
             <p className="mt-4 text-gray-600">Loading your cards...</p>
           </div>
         ) : cards.length === 0 ? (
+          /* No Cards State */
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -195,6 +227,7 @@ export default function MySpace() {
             </Link>
           </motion.div>
         ) : (
+          /* Cards Grid */
           <div className="grid gap-6">
             {cards.map((card, index) => (
               <motion.div
@@ -205,6 +238,7 @@ export default function MySpace() {
                 className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition border border-pink-100"
               >
                 <div className="flex flex-col md:flex-row gap-6">
+                  
                   {/* Card Info */}
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-3">
@@ -233,12 +267,46 @@ export default function MySpace() {
                       <span className="text-xs bg-pink-100 text-pink-700 px-3 py-1 rounded-full">
                         To: {card.recipient?.name || 'Unknown'}
                       </span>
+                      {card.recipient?.email && (
+                        <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full">
+                          📧 {card.recipient.email}
+                        </span>
+                      )}
                     </div>
 
+                    {/* Card Link */}
+                    {card.link && (
+                      <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                        <p className="text-xs text-gray-600 mb-1 font-semibold">🔗 Share link:</p>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={card.link}
+                            readOnly
+                            className="flex-1 text-xs bg-white border rounded px-2 py-1 font-mono"
+                          />
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(card.link);
+                              alert('✅ Link copied!');
+                            }}
+                            className="px-3 py-1 bg-pink-500 text-white rounded text-xs font-semibold hover:bg-pink-600"
+                          >
+                            Copy
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="flex gap-3">
-                      <button className="text-sm bg-pink-500 text-white px-4 py-2 rounded-full font-semibold hover:bg-pink-600 transition">
-                        👁️ View
-                      </button>
+                      <a
+                        href={card.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm bg-pink-500 text-white px-4 py-2 rounded-full font-semibold hover:bg-pink-600 transition"
+                      >
+                        👁️ View Card
+                      </a>
                       <button className="text-sm bg-purple-100 text-purple-700 px-4 py-2 rounded-full font-semibold hover:bg-purple-200 transition">
                         🔁 Re-send
                       </button>
@@ -250,21 +318,34 @@ export default function MySpace() {
                     <div className="text-xs text-gray-500 space-y-2">
                       <p>
                         <strong>Card ID:</strong><br/>
-                        {card.id}
+                        <span className="font-mono text-[10px]">{card.id}</span>
                       </p>
                       <p>
                         <strong>Created:</strong><br/>
                         {new Date(card.createdAt).toLocaleDateString()}
                       </p>
-                      <p>
-                        <strong>Amount:</strong><br/>
-                        ${(card.payment?.amount / 100).toFixed(2)}
-                      </p>
+                      {card.payment?.amount && (
+                        <p>
+                          <strong>Amount:</strong><br/>
+                          ${(card.payment.amount / 100).toFixed(2)}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
               </motion.div>
             ))}
+          </div>
+        )}
+
+        {/* Debug Info (solo en desarrollo) */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mt-8 bg-gray-100 rounded-xl p-4 text-xs">
+            <p className="font-bold mb-2">🔧 Debug Info:</p>
+            <p>User: {JSON.stringify(user)}</p>
+            <p>Cards loaded: {cards.length}</p>
+            <p>Loading: {loading ? 'Yes' : 'No'}</p>
+            <p>Error: {error || 'None'}</p>
           </div>
         )}
       </div>
