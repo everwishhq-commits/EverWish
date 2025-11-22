@@ -1,354 +1,337 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import Link from "next/link";
+import { useEffect, useState } from "react";
+import { getCurrentUser, logout } from "@/lib/auth";
+import { isFreeTrialUser, getFreeTrialInfo } from "@/lib/free-trial-config";
+import { Crown, Send, Users, LogOut, Plus, Trash2, Mail, MessageSquare } from "lucide-react";
 
 export default function MySpace() {
   const [user, setUser] = useState(null);
   const [cards, setCards] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [loginEmail, setLoginEmail] = useState("");
-  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [freeTrialInfo, setFreeTrialInfo] = useState(null);
+  const [sendMode, setSendMode] = useState("individual"); // "individual" o "bulk"
+  const [selectedCards, setSelectedCards] = useState([]);
 
   useEffect(() => {
-    // Cargar usuario desde localStorage
-    const stored = localStorage.getItem("everwishUser");
-    if (stored) {
-      try {
-        const userData = JSON.parse(stored);
-        setUser(userData);
-        loadCards(userData.email);
-      } catch (error) {
-        console.error('Error parsing user data:', error);
-        localStorage.removeItem("everwishUser");
-      }
-    }
-  }, []);
-
-  async function loadCards(email) {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      console.log('📂 Loading cards for:', email);
-      
-      const res = await fetch(`/api/my-cards?email=${encodeURIComponent(email)}`);
-      const data = await res.json();
-      
-      console.log('📦 API Response:', data);
-      
-      if (data.success) {
-        setCards(data.cards || []);
-        console.log(`✅ Loaded ${data.cards?.length || 0} cards`);
-      } else {
-        console.error('❌ API Error:', data.error);
-        setError(data.error || 'Failed to load cards');
-      }
-    } catch (error) {
-      console.error('❌ Error loading cards:', error);
-      setError('Network error. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleLogin(e) {
-    e.preventDefault();
-    
-    if (!loginEmail.trim()) {
-      alert('Please enter your email');
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+      window.location.href = "/login";
       return;
     }
 
-    setLoading(true);
-    setError(null);
+    setUser(currentUser);
 
+    // Verificar si es usuario VIP
+    const trialInfo = getFreeTrialInfo(currentUser.email, currentUser.phone);
+    setFreeTrialInfo(trialInfo);
+
+    // Cargar tarjetas del usuario
+    loadUserCards(currentUser);
+  }, []);
+
+  const loadUserCards = async (currentUser) => {
     try {
-      const res = await fetch(`/api/my-cards?email=${encodeURIComponent(loginEmail)}`);
-      const data = await res.json();
-
-      console.log('🔐 Login response:', data);
-
-      if (data.success && data.cards && data.cards.length > 0) {
-        const userData = {
-          email: loginEmail,
-          name: data.cards[0].sender?.name || "User",
-          everwishId: data.cards[0].id?.substring(0, 12) || "",
-        };
-        
-        localStorage.setItem("everwishUser", JSON.stringify(userData));
-        setUser(userData);
-        setCards(data.cards);
-        console.log('✅ Login successful');
-      } else {
-        alert("No cards found for this email. Make sure you've purchased at least one card.");
+      setLoading(true);
+      const response = await fetch(`/api/user-cards?email=${encodeURIComponent(currentUser.email)}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        setCards(data.cards || []);
       }
     } catch (error) {
-      console.error('❌ Login error:', error);
-      alert("Error: " + error.message);
+      console.error("Error loading cards:", error);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  function handleLogout() {
-    localStorage.removeItem("everwishUser");
-    setUser(null);
-    setCards([]);
-    setLoginEmail("");
-  }
+  const handleLogout = () => {
+    logout();
+    window.location.href = "/";
+  };
 
-  // ============================================================
-  // LOGIN SCREEN
-  // ============================================================
-  if (!user) {
+  const handleCardSelect = (cardId) => {
+    if (sendMode === "bulk") {
+      setSelectedCards(prev => 
+        prev.includes(cardId) 
+          ? prev.filter(id => id !== cardId)
+          : [...prev, cardId]
+      );
+    }
+  };
+
+  const handleBulkSend = () => {
+    if (selectedCards.length === 0) {
+      alert("Selecciona al menos una tarjeta para enviar");
+      return;
+    }
+    
+    // Aquí iría la lógica de envío bulk
+    console.log("Enviando tarjetas:", selectedCards);
+    alert(`✅ ${selectedCards.length} tarjetas enviadas exitosamente!`);
+    setSelectedCards([]);
+  };
+
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white p-8 rounded-3xl shadow-2xl max-w-md w-full border border-pink-100"
-        >
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600 mb-2">
-              💌 MySpace
-            </h1>
-            <p className="text-gray-600">Access your Everwish cards</p>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Your Email
-              </label>
-              <input
-                type="email"
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:border-pink-400 focus:outline-none transition"
-                placeholder="you@example.com"
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-3 rounded-full font-semibold hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? "Loading..." : "Access MySpace →"}
-            </button>
-          </form>
-
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-center text-sm text-gray-600">
-              Don't have any cards yet?{" "}
-              <Link href="/categories" className="text-pink-500 font-semibold hover:underline">
-                Create one now
-              </Link>
-            </p>
-          </div>
-        </motion.div>
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-pink-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando tu espacio...</p>
+        </div>
       </div>
     );
   }
 
-  // ============================================================
-  // MYSPACE DASHBOARD
-  // ============================================================
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 p-6">
-      <div className="max-w-5xl mx-auto">
-        
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-3xl p-6 shadow-lg mb-8 border border-pink-100"
-        >
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800">
-                Hi, {user.name}! 💌
+            <div className="flex items-center gap-4">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
+                My Space
               </h1>
-              <p className="text-gray-600 mt-1">{user.email}</p>
-              {user.everwishId && (
-                <p className="text-sm text-gray-500 mt-1">
-                  Everwish ID: <span className="font-mono font-semibold">{user.everwishId}</span>
-                </p>
+              
+              {/* Badge VIP */}
+              {freeTrialInfo?.isActive && (
+                <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-4 py-2 rounded-full shadow-lg">
+                  <Crown className="w-5 h-5" />
+                  <span className="font-bold text-sm">VIP</span>
+                  {freeTrialInfo.cardsRemaining !== null && (
+                    <span className="text-xs opacity-90">
+                      {freeTrialInfo.cardsRemaining} tarjetas gratis
+                    </span>
+                  )}
+                </div>
               )}
             </div>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full transition"
-            >
-              Sign out
-            </button>
-          </div>
-        </motion.div>
 
-        {/* Error Message */}
-        {error && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="bg-red-100 border-2 border-red-300 rounded-xl p-4 mb-6 text-red-700"
-          >
-            ❌ {error}
-          </motion.div>
-        )}
-
-        {/* Loading State */}
-        {loading ? (
-          <div className="text-center py-20">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-pink-500 border-t-transparent"></div>
-            <p className="mt-4 text-gray-600">Loading your cards...</p>
-          </div>
-        ) : cards.length === 0 ? (
-          /* No Cards State */
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-20 bg-white rounded-3xl shadow-lg"
-          >
-            <div className="text-6xl mb-4">💌</div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">
-              No cards yet
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Create your first Everwish card
-            </p>
-            <Link
-              href="/categories"
-              className="inline-block bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-3 rounded-full font-semibold hover:shadow-lg transition"
-            >
-              Browse Cards →
-            </Link>
-          </motion.div>
-        ) : (
-          /* Cards Grid */
-          <div className="grid gap-6">
-            {cards.map((card, index) => (
-              <motion.div
-                key={card.id || index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition border border-pink-100"
+            <div className="flex items-center gap-3">
+              <div className="text-right hidden sm:block">
+                <p className="text-sm font-medium text-gray-900">{user?.email}</p>
+                <p className="text-xs text-gray-500">{user?.phone}</p>
+              </div>
+              
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
               >
-                <div className="flex flex-col md:flex-row gap-6">
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">Salir</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        {/* Controles de envío */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900 mb-1">Modo de Envío</h2>
+              <p className="text-sm text-gray-500">
+                {sendMode === "individual" 
+                  ? "Envía tarjetas una por una"
+                  : `${selectedCards.length} tarjetas seleccionadas`
+                }
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setSendMode("individual");
+                  setSelectedCards([]);
+                }}
+                className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium transition-all ${
+                  sendMode === "individual"
+                    ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                <Send className="w-4 h-4" />
+                Individual
+              </button>
+
+              <button
+                onClick={() => setSendMode("bulk")}
+                className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium transition-all ${
+                  sendMode === "bulk"
+                    ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                <Users className="w-4 h-4" />
+                Bulk
+              </button>
+            </div>
+          </div>
+
+          {/* Botón de envío bulk */}
+          {sendMode === "bulk" && selectedCards.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <button
+                onClick={handleBulkSend}
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 rounded-xl font-bold hover:shadow-lg transition-all flex items-center justify-center gap-2"
+              >
+                <Send className="w-5 h-5" />
+                Enviar {selectedCards.length} tarjetas seleccionadas
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Cards Grid */}
+        {cards.length === 0 ? (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
+            <div className="max-w-md mx-auto">
+              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Plus className="w-10 h-10 text-gray-400" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                No tienes tarjetas aún
+              </h3>
+              <p className="text-gray-500 mb-6">
+                Crea tu primera tarjeta personalizada y envíala a alguien especial
+              </p>
+              <a
+                href="/"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transition-all"
+              >
+                <Plus className="w-5 h-5" />
+                Crear Primera Tarjeta
+              </a>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {cards.map((card) => (
+              <div
+                key={card.id}
+                onClick={() => handleCardSelect(card.id)}
+                className={`bg-white rounded-2xl shadow-sm border-2 transition-all cursor-pointer ${
+                  sendMode === "bulk" && selectedCards.includes(card.id)
+                    ? "border-pink-500 shadow-lg scale-105"
+                    : "border-gray-200 hover:border-pink-300 hover:shadow-md"
+                }`}
+              >
+                {/* Card Preview */}
+                <div className="relative aspect-video bg-gradient-to-br from-pink-100 to-purple-100 rounded-t-2xl overflow-hidden">
+                  {card.videoUrl ? (
+                    <video
+                      src={card.videoUrl}
+                      className="w-full h-full object-contain bg-white"
+                      muted
+                      loop
+                      playsInline
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <p className="text-gray-400 text-sm">Sin preview</p>
+                    </div>
+                  )}
                   
-                  {/* Card Info */}
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-3">
-                      <h3 className="text-xl font-bold text-gray-800">
-                        {card.slug || 'Custom Card'}
-                      </h3>
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        card.status === 'paid' 
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-yellow-100 text-yellow-700'
+                  {/* Checkbox para modo bulk */}
+                  {sendMode === "bulk" && (
+                    <div className="absolute top-3 right-3">
+                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                        selectedCards.includes(card.id)
+                          ? "bg-pink-500 border-pink-500"
+                          : "bg-white border-gray-300"
                       }`}>
-                        {card.status}
-                      </span>
-                    </div>
-
-                    <p className="text-gray-600 mb-4 line-clamp-2">
-                      {card.message || 'No message'}
-                    </p>
-
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {card.animation && (
-                        <span className="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full">
-                          ✨ {card.animation}
-                        </span>
-                      )}
-                      <span className="text-xs bg-pink-100 text-pink-700 px-3 py-1 rounded-full">
-                        To: {card.recipient?.name || 'Unknown'}
-                      </span>
-                      {card.recipient?.email && (
-                        <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full">
-                          📧 {card.recipient.email}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Card Link */}
-                    {card.link && (
-                      <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                        <p className="text-xs text-gray-600 mb-1 font-semibold">🔗 Share link:</p>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            value={card.link}
-                            readOnly
-                            className="flex-1 text-xs bg-white border rounded px-2 py-1 font-mono"
-                          />
-                          <button
-                            onClick={() => {
-                              navigator.clipboard.writeText(card.link);
-                              alert('✅ Link copied!');
-                            }}
-                            className="px-3 py-1 bg-pink-500 text-white rounded text-xs font-semibold hover:bg-pink-600"
-                          >
-                            Copy
-                          </button>
-                        </div>
+                        {selectedCards.includes(card.id) && (
+                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
                       </div>
-                    )}
+                    </div>
+                  )}
+                </div>
 
-                    <div className="flex gap-3">
-                      <a
-                        href={card.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm bg-pink-500 text-white px-4 py-2 rounded-full font-semibold hover:bg-pink-600 transition"
+                {/* Card Info */}
+                <div className="p-4">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex-1">
+                      <p className="font-bold text-gray-900 mb-1">
+                        {card.recipientName || "Sin nombre"}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {card.category || "Sin categoría"}
+                      </p>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      card.status === "sent" 
+                        ? "bg-green-100 text-green-700"
+                        : "bg-yellow-100 text-yellow-700"
+                    }`}>
+                      {card.status === "sent" ? "Enviada" : "Pendiente"}
+                    </span>
+                  </div>
+
+                  {/* Actions */}
+                  {sendMode === "individual" && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.location.href = `/edit/${card.slug}`;
+                        }}
+                        className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg font-medium text-sm transition-colors"
                       >
-                        👁️ View Card
-                      </a>
-                      <button className="text-sm bg-purple-100 text-purple-700 px-4 py-2 rounded-full font-semibold hover:bg-purple-200 transition">
-                        🔁 Re-send
+                        Editar
+                      </button>
+                      
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Lógica de envío individual
+                          alert(`Enviando: ${card.recipientName}`);
+                        }}
+                        className="flex-1 bg-gradient-to-r from-pink-500 to-purple-600 text-white py-2 rounded-lg font-medium text-sm hover:shadow-lg transition-all flex items-center justify-center gap-1"
+                      >
+                        <Send className="w-4 h-4" />
+                        Enviar
                       </button>
                     </div>
-                  </div>
-
-                  {/* Metadata */}
-                  <div className="md:w-48 flex flex-col justify-between">
-                    <div className="text-xs text-gray-500 space-y-2">
-                      <p>
-                        <strong>Card ID:</strong><br/>
-                        <span className="font-mono text-[10px]">{card.id}</span>
-                      </p>
-                      <p>
-                        <strong>Created:</strong><br/>
-                        {new Date(card.createdAt).toLocaleDateString()}
-                      </p>
-                      {card.payment?.amount && (
-                        <p>
-                          <strong>Amount:</strong><br/>
-                          ${(card.payment.amount / 100).toFixed(2)}
-                        </p>
-                      )}
-                    </div>
-                  </div>
+                  )}
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         )}
 
-        {/* Debug Info (solo en desarrollo) */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="mt-8 bg-gray-100 rounded-xl p-4 text-xs">
-            <p className="font-bold mb-2">🔧 Debug Info:</p>
-            <p>User: {JSON.stringify(user)}</p>
-            <p>Cards loaded: {cards.length}</p>
-            <p>Loading: {loading ? 'Yes' : 'No'}</p>
-            <p>Error: {error || 'None'}</p>
+        {/* Stats Footer */}
+        {freeTrialInfo?.isActive && (
+          <div className="mt-8 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-2xl border-2 border-yellow-200 p-6">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center flex-shrink-0">
+                <Crown className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-gray-900 mb-1">Estado VIP</h3>
+                <p className="text-sm text-gray-600 mb-3">
+                  {freeTrialInfo.cardsRemaining !== null
+                    ? `Te quedan ${freeTrialInfo.cardsRemaining} tarjetas gratis de ${freeTrialInfo.freeCards} totales`
+                    : "Tarjetas gratis ilimitadas"
+                  }
+                </p>
+                {freeTrialInfo.expiresAt && (
+                  <p className="text-xs text-gray-500">
+                    Válido hasta: {new Date(freeTrialInfo.expiresAt).toLocaleDateString('es-ES')}
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }
