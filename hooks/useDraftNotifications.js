@@ -87,12 +87,6 @@ export function useDraftNotifications() {
         }
       };
 
-      // await fetch("/api/send-email", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify(emailData)
-      // });
-
       console.log("✅ Notificación programada:", emailData);
 
     } catch (error) {
@@ -121,7 +115,7 @@ export function DraftNotificationBanner({ onDismiss }) {
   if (!shouldNotify || !draftStats) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-50 animate-slide-up">
+    <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-50">
       <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-2xl shadow-2xl p-4">
         <div className="flex items-start gap-3">
           <div className="text-2xl">🛒</div>
@@ -212,4 +206,4 @@ export function sendBrowserNotification(title, body, link) {
       notification.close();
     };
   }
-          }
+                  }
